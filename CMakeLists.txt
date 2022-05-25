@@ -22,3 +22,18 @@ add_executable(${PROJECT_NAME}-bin
 
 target_link_libraries(${PROJECT_NAME}-bin
   ${PROJECT_NAME})
+
+enable_testing()
+
+macro(declare_test name)
+  message(STATUS "Add test: ${name}")
+  add_executable(test_${name} tests/${name}.cpp)
+  target_include_directories(test_${name} PUBLIC 3rdparty/Catch2/single_include)
+  target_link_libraries(test_${name} PUBLIC ${PROJECT_NAME})
+  set_target_properties(test_${name}
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests)
+  add_test(NAME test_${name} COMMAND test_${name})
+endmacro()
+
+declare_test(variables)
