@@ -17,6 +17,20 @@ TEST_CASE("declare_variable", "instructions") {
   REQUIRE(prg.getData1(5) == 0);
 }
 
+TEST_CASE("set_variable", "instructions") {
+  using namespace beast;
+
+  const int32_t variable_index = 43;
+  const int32_t variable_content = 77612;
+
+  Program prg(9);
+  prg.setVariable(variable_index, variable_content);
+
+  REQUIRE(prg.getData1(0) == 0x02);
+  REQUIRE(prg.getData4(1) == variable_index);
+  REQUIRE(prg.getData4(5) == variable_content);
+}
+
 TEST_CASE("undeclare_variable", "instructions") {
   using namespace beast;
 
