@@ -1,5 +1,7 @@
 #include <beast/cpu_virtual_machine.hpp>
 
+#include <chrono>
+#include <ctime>
 #include <iostream>
 
 namespace beast {
@@ -11,7 +13,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     instruction = session.getData1();
   } catch(...) {
     // Unable to get more data; the program came to an unexpected end.
-    std::cerr << "Program ended unexpectedly." << std::endl;
+    panic("Program ended unexpectedly.");
     return false;
   }
 
@@ -23,15 +25,21 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index = session.getData4();
     const Program::VariableType variable_type =
         static_cast<Program::VariableType>(session.getData1());
+    debug("register_variable(" + std::to_string(variable_index) + ", " + std::to_string(static_cast<int32_t>(variable_type)) + ")");
     session.registerVariable(variable_index, variable_type);
   } break;
 
   case 0x02: {  // set variable
-    // Todo: Implement
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1();
+    const int32_t variable_content = session.getData4();
+    debug("set_variable(" + std::to_string(variable_index) + ", " + std::to_string(variable_content) + ", " + std::to_string(follow_links) + ")");
+    session.setVariable(variable_index, variable_content, follow_links);
   } break;
 
   case 0x03: {  // undeclare variable
     const int32_t variable_index = session.getData4();
+    debug("undeclare_variable(" + std::to_string(variable_index) + ")");
     session.unregisterVariable(variable_index);
   } break;
 
@@ -149,6 +157,50 @@ bool CpuVirtualMachine::step(VmSession& session) {
   }
   
   return !session.isAtEnd();
+}
+
+void CpuVirtualMachine::message(MessageSeverity severity, const std::string& message) {
+  std::ostream& out_stream = std::cout;
+  uint32_t color_fg = 0;
+  uint32_t color_bg = 0;
+  std::string prefix;
+
+  switch (severity) {
+  case MessageSeverity::Debug: {
+    color_fg = 90;
+    prefix = "DBG";
+  } break;
+
+  case MessageSeverity::Info: {
+    color_fg = 97;
+    prefix = "INF";
+  } break;
+
+  case MessageSeverity::Warning: {
+    color_fg = 33;
+    prefix = "WRN";
+  } break;
+
+  case MessageSeverity::Error: {
+    color_fg = 31;
+    prefix = "ERR";
+  } break;
+
+  case MessageSeverity::Panic: {
+    color_fg = 31;
+    color_bg = 107;
+    prefix = "PNC";
+  } break;
+  }
+
+  const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  char timestamp_buffer[100];
+  const size_t timestamp_length = std::strftime(timestamp_buffer, 100, "%F %T", localtime(&time));
+  const std::string timestamp(timestamp_buffer, timestamp_length);
+  out_stream << "\033[1;" << color_fg << (color_bg != 0 ? ";" + std::to_string(color_bg) : "") << "m"
+             << "[" << timestamp << " " << prefix << "] "
+             << message
+             << "\033[0m" << std::endl;
 }
 
 }  // namespace beast

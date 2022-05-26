@@ -15,7 +15,8 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/cpu_virtual_machine.cpp
   src/program.cpp
-  src/vm_session.cpp)
+  src/vm_session.cpp
+  src/virtual_machine.cpp)
 
 add_executable(${PROJECT_NAME}-bin
   src/main.cpp)

@@ -8,6 +8,9 @@ namespace beast {
 class CpuVirtualMachine : public VirtualMachine {
  public:
   bool step(VmSession& session) override;
+
+ protected:
+  void message(MessageSeverity severity, const std::string& message) override;
 };
 
 }  // namespace beast
