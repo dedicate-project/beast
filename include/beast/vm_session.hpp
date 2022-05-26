@@ -24,7 +24,7 @@ class VmSession {
 
   void registerVariable(int32_t variable_index, Program::VariableType variable_type);
 
-  void setVariable(int32_t variable_index, int32_t value);
+  void setVariable(int32_t variable_index, int32_t value, bool follow_links);
 
   void unregisterVariable(int32_t variable_index);
 

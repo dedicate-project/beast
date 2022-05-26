@@ -49,9 +49,10 @@ void Program::declareVariable(int32_t variable_index, VariableType variable_type
   appendData1(static_cast<unsigned char>(variable_type));
 }
 
-void Program::setVariable(int32_t variable_index, int32_t content) {
+void Program::setVariable(int32_t variable_index, int32_t content, bool follow_links) {
   appendData1(0x02);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
   appendData4(content);
 }
 

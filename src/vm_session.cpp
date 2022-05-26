@@ -1,5 +1,7 @@
 #include <beast/vm_session.hpp>
 
+#include <set>
+
 namespace beast {
 
 VmSession::VmSession(
@@ -53,7 +55,25 @@ void VmSession::registerVariable(int32_t variable_index, Program::VariableType v
   variables_[variable_index] = std::make_pair(variable_type, 0);
 }
 
-void VmSession::setVariable(int32_t variable_index, int32_t value) {
+  void VmSession::setVariable(int32_t variable_index, int32_t value, bool follow_links) {
+  std::set<int32_t> visited_indices;
+  while (variables_.find(variable_index) != variables_.end()) {
+    if (variables_[variable_index].first == Program::VariableType::Int32 || !follow_links) {
+      variables_[variable_index].second = value;
+      return;
+    } else if (variables_[variable_index].first == Program::VariableType::Link) {
+      if (visited_indices.find(variable_index) != visited_indices.end()) {
+        throw std::runtime_error("Circular variable index link.");
+      }
+      visited_indices.insert(variable_index);
+      variable_index = variables_[variable_index].second;
+    } else {
+      throw std::runtime_error("Invalid declarative variable type.");
+    }
+  }
+
+  // Undeclared variables cannot be set.
+  throw std::runtime_error("Variable index not declared.");
 }
 
 void VmSession::unregisterVariable(int32_t variable_index) {

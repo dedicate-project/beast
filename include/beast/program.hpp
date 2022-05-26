@@ -27,7 +27,7 @@ class Program {
 
   void declareVariable(int32_t variable_index, VariableType variable_type);
 
-  void setVariable(int32_t variable_index, int32_t content);
+  void setVariable(int32_t variable_index, int32_t content, bool follow_links = true);
 
   void undeclareVariable(int32_t variable_index);
 

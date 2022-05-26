@@ -9,9 +9,10 @@ int main(int argc, char** argv) {
   prg.declareVariable(0, Program::VariableType::Int32);
   prg.undeclareVariable(0);
   prg.declareVariable(0, Program::VariableType::Int32);
+  prg.setVariable(0, 0x100);
   prg.undeclareVariable(0);
-  // prg.setVariable(0, 0x100);
-  // prg.undeclareVariable(0);
+  prg.declareVariable(1, Program::VariableType::Link);
+  prg.setVariable(1, 0x0, false);
   // prg.addConstantToVariable(0, 1, 2);
   // prg.addVariableToVariable(0, 1, 2);
   // prg.subtractConstantFromVariable(0, 1, 2);
