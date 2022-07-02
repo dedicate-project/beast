@@ -108,7 +108,7 @@ void Program::relativeJumpToVariableAddressIfVariableLessThanZero(
   appendData4(variable_index);
   appendData4(relative_jump_address_variable_index);
 }
-                                                              
+
 void Program::relativeJumpToVariableAddressIfVariableEqualsZero(
     int32_t variable_index, int32_t relative_jump_address_variable_index) {
   appendData1(0x0a);
@@ -129,7 +129,7 @@ void Program::absoluteJumpToVariableAddressIfVariableLessThanZero(
   appendData4(variable_index);
   appendData4(absolute_jump_address_variable_index);
 }
-                                                              
+
 void Program::absoluteJumpToVariableAddressIfVariableEqualsZero(
     int32_t variable_index, int32_t absolute_jump_address_variable_index) {
   appendData1(0x0d);
@@ -150,7 +150,7 @@ void Program::relativeJumpToAddressIfVariableLessThanZero(
   appendData4(variable_index);
   appendData4(relative_jump_address);
 }
-                                                              
+
 void Program::relativeJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, int32_t relative_jump_address) {
   appendData1(0x10);
@@ -171,7 +171,7 @@ void Program::absoluteJumpToAddressIfVariableLessThanZero(
   appendData4(variable_index);
   appendData4(absolute_jump_address);
 }
-                                                              
+
 void Program::absoluteJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, int32_t absolute_jump_address) {
   appendData1(0x13);
@@ -213,9 +213,10 @@ void Program::loadCurrentAddressIntoVariable(int32_t variable_index) {
   appendData4(variable_index);
 }
 
-void Program::printVariable(int32_t variable_index) {
+void Program::printVariable(int32_t variable_index, bool follow_links) {
   appendData1(0x1a);
   appendData4(variable_index);
+  appendData1(follow_links);
 }
 
 void Program::setStringTableEntry(int32_t string_table_index, std::string string) {
@@ -224,6 +225,7 @@ void Program::setStringTableEntry(int32_t string_table_index, std::string string
   }
 
   appendData1(0x1b);
+  appendData4(string_table_index);
   appendData2(string.size());
   std::memcpy(&data_[pointer_], string.data(), string.size());
   pointer_ += string.size();

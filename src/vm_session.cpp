@@ -88,4 +88,40 @@ void VmSession::unregisterVariable(int32_t variable_index) {
   variables_.erase(variable_index);
 }
 
+void VmSession::setStringTableEntry(int32_t string_table_index, const std::string& string_content) {
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  if (string_content.size() > max_string_size_) {
+    throw std::runtime_error("String too long.");
+  }
+
+  string_table_[string_table_index] = string_content;
+}
+
+const std::string& VmSession::getStringTableEntry(int32_t string_table_index) {
+  if (string_table_.find(string_table_index) == string_table_.end()) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  return string_table_[string_table_index];
+}
+
+void VmSession::appendToPrintBuffer(const std::string& string) {
+  print_buffer_ += string;
+}
+
+const std::string& VmSession::getPrintBuffer() const {
+  return print_buffer_;
+}
+
+void VmSession::clearPrintBuffer() {
+  print_buffer_ = "";
+}
+
+int32_t VmSession::getIntegerVariable(int32_t variable_index) {
+  // ...
+}
+
 }  // namespace beast

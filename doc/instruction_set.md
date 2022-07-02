@@ -28,9 +28,9 @@ Instruction Set
 | load input count into variable        | 0x17            | 4 bytes: unsigned var index; var needs to be of int type                                                                            | n    |
 | load output count into variable       | 0x18            | 4 bytes: unsigned var index; var needs to be of int type                                                                            | n    |
 | load current address into variable    | 0x19            | 4 bytes: unsigned var index; var needs to be of int type                                                                            | n    |
-| print variable                        | 0x1a            | 4 bytes: unsigned var index                                                                                                         | n    |
-| set string table entry                | 0x1b            | 4 bytes: unsigned string table index, 2 bytes: length n of string, n bytes: string                                                  | n    |
-| print string from string table        | 0x1c            | 4 bytes: unsigned string table index                                                                                                | n    |
+| print variable                        | 0x1a            | 4 bytes: unsigned var index, 1 byte: follow links                                                                                   | n    |
+| set string table entry                | 0x1b            | 4 bytes: unsigned string table index, 2 bytes: length n of string, n bytes: string                                                  | y    |
+| print string from string table        | 0x1c            | 4 bytes: unsigned string table index                                                                                                | y    |
 | load string table limit into variable | 0x1d            | 4 bytes: unsigned var index                                                                                                         | n    |
 | terminate                             | 0x1e            | 1 byte: return code                                                                                                                 | n    |
 | copy variable                         | 0x1f            | 4 bytes: unsigned source var index, 4 bytes: unsigned destination var index                                                         | n    |

@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iostream>
 
 #include <beast/cpu_virtual_machine.hpp>
 
@@ -35,9 +36,9 @@ int main(int argc, char** argv) {
   // prg.loadInputCountIntoVariable(0);
   // prg.loadOutputCountIntoVariable(1);
   // prg.loadCurrentAddressIntoVariable(0);
-  // prg.printVariable(0);
-  // prg.setStringTableEntry(0, "test");
-  // prg.printStringFromStringTable(0);
+  prg.printVariable(0, false);
+  prg.setStringTableEntry(0, "test");
+  prg.printStringFromStringTable(0);
   // prg.loadStringTableLimitIntoVariable(0);
   // prg.terminate(0);
   // prg.copyVariable(0, 1);
@@ -46,8 +47,11 @@ int main(int argc, char** argv) {
   VmSession session(prg, 500, 100, 50);
 
   while (vm.step(session)) {
-    // ...
+    std::cout << session.getPrintBuffer();
+    session.clearPrintBuffer();
   }
+
+  std::cout << std::endl;
 
   return EXIT_SUCCESS;
 }

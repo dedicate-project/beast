@@ -132,15 +132,29 @@ bool CpuVirtualMachine::step(VmSession& session) {
   } break;
 
   case 0x1a: {  // print variable
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1();
+    debug("print_variable(" + std::to_string(variable_index) + ", " + std::to_string(follow_links) + ")");
+    session.appendToPrintBuffer(session.getVariable(variable_index, follow_links));
     // Todo: Implement
   } break;
 
   case 0x1b: {  // set string table entry
-    // Todo: Implement
+    const int32_t string_table_index = session.getData4();
+    const int16_t string_length = session.getData2();
+    char buffer[string_length];
+    for (unsigned int idx = 0; idx < string_length; ++idx) {
+      buffer[idx] = session.getData1();
+    }
+    const std::string string_content = std::string(buffer, string_length);
+    debug("set_string_table_entry(" + std::to_string(string_table_index) + ", " + std::to_string(string_length) + ", '" + string_content + "')");
+    session.setStringTableEntry(string_table_index, string_content);
   } break;
 
   case 0x1c: {  // print string from string table
-    // Todo: Implement
+    const int32_t string_table_index = session.getData4();
+    debug("print_string_from_string_table(" + std::to_string(string_table_index) + ")");
+    session.appendToPrintBuffer(session.getStringTableEntry(string_table_index));
   } break;
 
   case 0x1d: {  // load string table limit into variable
@@ -155,7 +169,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     // Todo: Implement
   } break;
   }
-  
+
   return !session.isAtEnd();
 }
 
