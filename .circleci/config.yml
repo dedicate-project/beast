@@ -15,12 +15,25 @@ jobs:
           command: |
             cd build
             cmake ..
+            make
       - persist_to_workspace:
           root: .
           paths:
             - "build"
+  test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Execute tests
+          command:
+            cd build
+            make test
 
 workflows:
   say-hello-workflow:
     jobs:
       - build
+      - test
