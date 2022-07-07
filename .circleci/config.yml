@@ -42,7 +42,7 @@ jobs:
           at: .
       - run:
           name: Execute tests
-          command:
+          command: |
             cd build
             make test
 
