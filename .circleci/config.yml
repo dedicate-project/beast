@@ -20,11 +20,11 @@ jobs:
           command: |
             cd build
             cmake ..
-            make
       - run:
           name: Build
           command: |
             cd build
+            pwd
             make
       - persist_to_workspace:
           root: .
