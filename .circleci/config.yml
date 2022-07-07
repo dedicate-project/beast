@@ -9,7 +9,7 @@ jobs:
       - run:
           name: Pull git submodules
           command: |
-            git submodule update
+            git submodule update --remote
       - run:
           name: Install dependencies
           command: |
