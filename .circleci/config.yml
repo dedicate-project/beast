@@ -4,6 +4,7 @@ jobs:
   build:
     docker:
       - image: cimg/base:stable
+    resource_class: small
     steps:
       - checkout
       - run:
@@ -37,6 +38,7 @@ jobs:
   test:
     docker:
       - image: cimg/base:stable
+    resource_class: small
     steps:
       - attach_workspace:
           at: .
