@@ -11,7 +11,7 @@ namespace beast {
 class VmSession {
  public:
   VmSession(
-      const Program program, size_t variable_count, size_t string_table_count,
+      Program program, size_t variable_count, size_t string_table_count,
       size_t max_string_size);
 
   int32_t getData4();
@@ -24,6 +24,8 @@ class VmSession {
 
   void registerVariable(int32_t variable_index, Program::VariableType variable_type);
 
+  int32_t getRealVariableIndex(int32_t variable_index, bool follow_links);
+
   void setVariable(int32_t variable_index, int32_t value, bool follow_links);
 
   void unregisterVariable(int32_t variable_index);
@@ -34,11 +36,11 @@ class VmSession {
 
   void appendToPrintBuffer(const std::string& string);
 
+  void appendVariableToPrintBuffer(int32_t variable_index, bool follow_links);
+
   const std::string& getPrintBuffer() const;
 
   void clearPrintBuffer();
-
-  int32_t getIntegerVariable(int32_t variable_index);
 
  private:
   Program program_;

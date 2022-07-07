@@ -18,7 +18,7 @@ int32_t Program::getData4(int32_t offset) {
     throw std::runtime_error("Unable to retrieve data (not enough data left).");
   }
 
-  int32_t buffer;
+  int32_t buffer = 0x0;
   std::memcpy(&buffer, &data_[offset], 4);
   return buffer;
 }
@@ -28,7 +28,7 @@ int16_t Program::getData2(int32_t offset) {
     throw std::runtime_error("Unable to retrieve data (not enough data left).");
   }
 
-  int16_t buffer;
+  int16_t buffer = 0x0;
   std::memcpy(&buffer, &data_[offset], 2);
   return buffer;
 }
@@ -38,7 +38,7 @@ int8_t Program::getData1(int32_t offset) {
     throw std::runtime_error("Unable to retrieve data (not enough data left).");
   }
 
-  int8_t buffer;
+  int8_t buffer = 0x0;
   std::memcpy(&buffer, &data_[offset], 1);
   return buffer;
 }
@@ -216,7 +216,7 @@ void Program::loadCurrentAddressIntoVariable(int32_t variable_index) {
 void Program::printVariable(int32_t variable_index, bool follow_links) {
   appendData1(0x1a);
   appendData4(variable_index);
-  appendData1(follow_links);
+  appendData1(follow_links ? 0x1 : 0x0);
 }
 
 void Program::setStringTableEntry(int32_t string_table_index, std::string string) {

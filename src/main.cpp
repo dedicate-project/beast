@@ -3,17 +3,17 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-int main(int argc, char** argv) {
-  using namespace beast;
-
-  Program prg(500);
-  prg.declareVariable(0, Program::VariableType::Int32);
+int main(int /*argc*/, char** /*argv*/) {
+  beast::Program prg(500);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.undeclareVariable(0);
-  prg.declareVariable(0, Program::VariableType::Int32);
-  prg.setVariable(0, 0x100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0x100, true);
   prg.undeclareVariable(0);
-  prg.declareVariable(1, Program::VariableType::Link);
-  prg.setVariable(1, 0x0, false);
+  prg.declareVariable(1, beast::Program::VariableType::Link);
+  prg.setVariable(1, 0x2, false);
+  prg.declareVariable(2, beast::Program::VariableType::Int32);
+  prg.setVariable(2, 0x120, true);
   // prg.addConstantToVariable(0, 1, 2);
   // prg.addVariableToVariable(0, 1, 2);
   // prg.subtractConstantFromVariable(0, 1, 2);
@@ -36,15 +36,16 @@ int main(int argc, char** argv) {
   // prg.loadInputCountIntoVariable(0);
   // prg.loadOutputCountIntoVariable(1);
   // prg.loadCurrentAddressIntoVariable(0);
-  prg.printVariable(0, false);
+  prg.printVariable(1, true);
   prg.setStringTableEntry(0, "test");
+  prg.printStringFromStringTable(0);
   prg.printStringFromStringTable(0);
   // prg.loadStringTableLimitIntoVariable(0);
   // prg.terminate(0);
   // prg.copyVariable(0, 1);
 
-  CpuVirtualMachine vm;
-  VmSession session(prg, 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  beast::VmSession session(std::move(prg), 500, 100, 50);
 
   while (vm.step(session)) {
     std::cout << session.getPrintBuffer();

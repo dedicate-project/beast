@@ -5,9 +5,9 @@
 namespace beast {
 
 VmSession::VmSession(
-    const Program program, size_t variable_count, size_t string_table_count,
+    Program program, size_t variable_count, size_t string_table_count,
     size_t max_string_size)
-  : program_{program}, pointer_{0}, variable_count_{variable_count}
+  : program_{std::move(program)}, pointer_{0}, variable_count_{variable_count}
   , string_table_count_{string_table_count}, max_string_size_{max_string_size} {
 }
 
@@ -55,13 +55,15 @@ void VmSession::registerVariable(int32_t variable_index, Program::VariableType v
   variables_[variable_index] = std::make_pair(variable_type, 0);
 }
 
-  void VmSession::setVariable(int32_t variable_index, int32_t value, bool follow_links) {
+int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_links) {
   std::set<int32_t> visited_indices;
   while (variables_.find(variable_index) != variables_.end()) {
-    if (variables_[variable_index].first == Program::VariableType::Int32 || !follow_links) {
-      variables_[variable_index].second = value;
-      return;
-    } else if (variables_[variable_index].first == Program::VariableType::Link) {
+    if (variables_[variable_index].first != Program::VariableType::Link || !follow_links) {
+      // This is a non-link variable, return it.
+      return variable_index;
+    }
+
+    if (variables_[variable_index].first == Program::VariableType::Link) {
       if (visited_indices.find(variable_index) != visited_indices.end()) {
         throw std::runtime_error("Circular variable index link.");
       }
@@ -74,6 +76,10 @@ void VmSession::registerVariable(int32_t variable_index, Program::VariableType v
 
   // Undeclared variables cannot be set.
   throw std::runtime_error("Variable index not declared.");
+}
+
+void VmSession::setVariable(int32_t variable_index, int32_t value, bool follow_links) {
+  variables_[getRealVariableIndex(variable_index, follow_links)].second = value;
 }
 
 void VmSession::unregisterVariable(int32_t variable_index) {
@@ -112,16 +118,24 @@ void VmSession::appendToPrintBuffer(const std::string& string) {
   print_buffer_ += string;
 }
 
+void VmSession::appendVariableToPrintBuffer(int32_t variable_index, bool follow_links) {
+  variable_index = getRealVariableIndex(variable_index, follow_links);
+  if (variables_[variable_index].first == Program::VariableType::Int32) {
+    appendToPrintBuffer(std::to_string(variables_[variable_index].second));
+  } else if (variables_[variable_index].first == Program::VariableType::Link) {
+    appendToPrintBuffer("L{" + std::to_string(variables_[variable_index].second) + "}");
+  } else {
+    throw std::runtime_error("Cannot print unsupported variable type (" +
+                             std::to_string(static_cast<int32_t>(variables_[variable_index].first)) + ").");
+  }
+}
+
 const std::string& VmSession::getPrintBuffer() const {
   return print_buffer_;
 }
 
 void VmSession::clearPrintBuffer() {
   print_buffer_ = "";
-}
-
-int32_t VmSession::getIntegerVariable(int32_t variable_index) {
-  // ...
 }
 
 }  // namespace beast

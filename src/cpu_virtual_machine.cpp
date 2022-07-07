@@ -7,7 +7,7 @@
 namespace beast {
 
 bool CpuVirtualMachine::step(VmSession& session) {
-  int8_t instruction;
+  uint8_t instruction = 0x0;
   try {
     // Try to get next major instruction symbol.
     instruction = session.getData1();
@@ -23,17 +23,16 @@ bool CpuVirtualMachine::step(VmSession& session) {
 
   case 0x01: {  // declare variable
     const int32_t variable_index = session.getData4();
-    const Program::VariableType variable_type =
-        static_cast<Program::VariableType>(session.getData1());
+    const auto variable_type = static_cast<Program::VariableType>(session.getData1());
     debug("register_variable(" + std::to_string(variable_index) + ", " + std::to_string(static_cast<int32_t>(variable_type)) + ")");
     session.registerVariable(variable_index, variable_type);
   } break;
 
   case 0x02: {  // set variable
     const int32_t variable_index = session.getData4();
-    const bool follow_links = session.getData1();
+    const bool follow_links = session.getData1() != 0x0;
     const int32_t variable_content = session.getData4();
-    debug("set_variable(" + std::to_string(variable_index) + ", " + std::to_string(variable_content) + ", " + std::to_string(follow_links) + ")");
+    debug("set_variable(" + std::to_string(variable_index) + ", " + std::to_string(variable_content) + ", " + (follow_links ? "true" : "false") + ")");
     session.setVariable(variable_index, variable_content, follow_links);
   } break;
 
@@ -43,7 +42,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.unregisterVariable(variable_index);
   } break;
 
-  case 0x04: {  // add constant to variable
+  /*case 0x04: {  // add constant to variable
     // Todo: Implement
   } break;
 
@@ -129,24 +128,24 @@ bool CpuVirtualMachine::step(VmSession& session) {
 
   case 0x19: {  // load current address into variable
     // Todo: Implement
-  } break;
+  } break;*/
 
   case 0x1a: {  // print variable
     const int32_t variable_index = session.getData4();
-    const bool follow_links = session.getData1();
-    debug("print_variable(" + std::to_string(variable_index) + ", " + std::to_string(follow_links) + ")");
-    session.appendToPrintBuffer(session.getVariable(variable_index, follow_links));
+    const bool follow_links = session.getData1() != 0x0;
+    debug("print_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+    session.appendVariableToPrintBuffer(variable_index, follow_links);
     // Todo: Implement
   } break;
 
   case 0x1b: {  // set string table entry
     const int32_t string_table_index = session.getData4();
     const int16_t string_length = session.getData2();
-    char buffer[string_length];
+    std::vector<char> buffer(string_length);
     for (unsigned int idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
-    const std::string string_content = std::string(buffer, string_length);
+    const std::string string_content = std::string(buffer.data(), string_length);
     debug("set_string_table_entry(" + std::to_string(string_table_index) + ", " + std::to_string(string_length) + ", '" + string_content + "')");
     session.setStringTableEntry(string_table_index, string_content);
   } break;
@@ -157,7 +156,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.appendToPrintBuffer(session.getStringTableEntry(string_table_index));
   } break;
 
-  case 0x1d: {  // load string table limit into variable
+  /*case 0x1d: {  // load string table limit into variable
     // Todo: Implement
   } break;
 
@@ -167,7 +166,11 @@ bool CpuVirtualMachine::step(VmSession& session) {
 
   case 0x1f: {  // copy variable
     // Todo: Implement
-  } break;
+  } break;*/
+
+  default: {
+    throw std::runtime_error("Undefined instruction reached.");
+  }
   }
 
   return !session.isAtEnd();
@@ -208,9 +211,9 @@ void CpuVirtualMachine::message(MessageSeverity severity, const std::string& mes
   }
 
   const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  char timestamp_buffer[100];
-  const size_t timestamp_length = std::strftime(timestamp_buffer, 100, "%F %T", localtime(&time));
-  const std::string timestamp(timestamp_buffer, timestamp_length);
+  std::vector<char> timestamp_buffer(100);
+  const size_t timestamp_length = std::strftime(timestamp_buffer.data(), 100, "%F %T", localtime(&time));
+  const std::string timestamp(timestamp_buffer.data(), timestamp_length);
   out_stream << "\033[1;" << color_fg << (color_bg != 0 ? ";" + std::to_string(color_bg) : "") << "m"
              << "[" << timestamp << " " << prefix << "] "
              << message
