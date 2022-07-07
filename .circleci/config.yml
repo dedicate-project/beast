@@ -21,6 +21,11 @@ jobs:
             cd build
             cmake ..
             make
+      - run:
+          name: Build
+          command: |
+            cd build
+            make
       - persist_to_workspace:
           root: .
           paths:
@@ -41,4 +46,7 @@ workflows:
   build-and-test:
     jobs:
       - build
-      - test
+      - test:
+          requires:
+            - build
+          
