@@ -7,6 +7,10 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Pull git submodules
+          command: |
+            git submodule update
+      - run:
           name: Install dependencies
           command: |
             sudo apt-get update
@@ -24,7 +28,6 @@ jobs:
           name: Build
           command: |
             cd build
-            pwd
             make
       - persist_to_workspace:
           root: .
