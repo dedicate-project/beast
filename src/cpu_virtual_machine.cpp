@@ -158,13 +158,15 @@ bool CpuVirtualMachine::step(VmSession& session) {
 
   /*case 0x1d: {  // load string table limit into variable
     // Todo: Implement
-  } break;
+  } break;*/
 
   case 0x1e: {  // terminate
-    // Todo: Implement
+    const int8_t return_code = session.getData1();
+    debug("terminate(" + std::to_string(return_code) + ")");
+    session.terminate(return_code);
   } break;
 
-  case 0x1f: {  // copy variable
+  /*case 0x1f: {  // copy variable
     // Todo: Implement
   } break;*/
 

@@ -241,7 +241,7 @@ void Program::loadStringTableLimitIntoVariable(int32_t variable_index) {
   appendData4(variable_index);
 }
 
-void Program::terminate(unsigned char return_code) {
+void Program::terminate(int8_t return_code) {
   appendData1(0x1e);
   appendData1(return_code);
 }

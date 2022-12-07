@@ -32,5 +32,5 @@ Instruction Set
 | set string table entry                | 0x1b            | 4 bytes: unsigned string table index, 2 bytes: length n of string, n bytes: string                                                  | y    |
 | print string from string table        | 0x1c            | 4 bytes: unsigned string table index                                                                                                | y    |
 | load string table limit into variable | 0x1d            | 4 bytes: unsigned var index                                                                                                         | n    |
-| terminate                             | 0x1e            | 1 byte: return code                                                                                                                 | n    |
+| terminate                             | 0x1e            | 1 byte: return code                                                                                                                 | y    |
 | copy variable                         | 0x1f            | 4 bytes: unsigned source var index, 4 bytes: unsigned destination var index                                                         | n    |

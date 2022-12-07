@@ -8,7 +8,8 @@ VmSession::VmSession(
     Program program, size_t variable_count, size_t string_table_count,
     size_t max_string_size)
   : program_{std::move(program)}, pointer_{0}, variable_count_{variable_count}
-  , string_table_count_{string_table_count}, max_string_size_{max_string_size} {
+  , string_table_count_{string_table_count}, max_string_size_{max_string_size}
+  , was_terminated_{false}, return_code_{0} {
 }
 
 int32_t VmSession::getData4() {
@@ -30,7 +31,7 @@ int8_t VmSession::getData1() {
 }
 
 bool VmSession::isAtEnd() {
-  return pointer_ >= program_.getSize();
+  return was_terminated_ || pointer_ >= program_.getSize();
 }
 
 void VmSession::registerVariable(int32_t variable_index, Program::VariableType variable_type) {
@@ -136,6 +137,15 @@ const std::string& VmSession::getPrintBuffer() const {
 
 void VmSession::clearPrintBuffer() {
   print_buffer_ = "";
+}
+
+void VmSession::terminate(int8_t return_code) {
+  return_code_ = return_code;
+  was_terminated_ = true;
+}
+
+int8_t VmSession::getReturnCode() const {
+  return return_code_;
 }
 
 }  // namespace beast

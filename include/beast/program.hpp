@@ -101,7 +101,7 @@ class Program {
 
   void loadStringTableLimitIntoVariable(int32_t variable_index);
 
-  void terminate(unsigned char return_code);
+  void terminate(int8_t return_code);
 
   void copyVariable(int32_t source_variable_index, int32_t destination_variable_index);
 
@@ -115,6 +115,7 @@ class Program {
   void appendData1(int8_t data);
 
   std::vector<unsigned char> data_;
+
   uint32_t pointer_;
 };
 

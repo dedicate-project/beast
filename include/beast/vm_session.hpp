@@ -42,6 +42,10 @@ class VmSession {
 
   void clearPrintBuffer();
 
+  void terminate(int8_t return_code);
+
+  int8_t getReturnCode() const;
+
  private:
   Program program_;
 
@@ -58,6 +62,10 @@ class VmSession {
   std::map<int32_t, std::string> string_table_;
 
   std::string print_buffer_;
+
+  bool was_terminated_;
+
+  int8_t return_code_;
 };
 
 }  // namespace beast

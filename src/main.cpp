@@ -39,6 +39,7 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.printVariable(1, true);
   prg.setStringTableEntry(0, "test");
   prg.printStringFromStringTable(0);
+  prg.terminate(127);
   prg.printStringFromStringTable(0);
   // prg.loadStringTableLimitIntoVariable(0);
   // prg.terminate(0);
@@ -53,6 +54,7 @@ int main(int /*argc*/, char** /*argv*/) {
   }
 
   std::cout << std::endl;
+  std::cout << ">> Return code = " << static_cast<int32_t>(session.getReturnCode()) << std::endl;
 
   return EXIT_SUCCESS;
 }
