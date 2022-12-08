@@ -8,14 +8,32 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.undeclareVariable(0);
   prg.declareVariable(0, beast::Program::VariableType::Int32);
-  prg.setVariable(0, 0x100, true);
-  prg.undeclareVariable(0);
+  prg.setVariable(0, 0x10, true);
   prg.declareVariable(1, beast::Program::VariableType::Link);
   prg.setVariable(1, 0x2, false);
   prg.declareVariable(2, beast::Program::VariableType::Int32);
   prg.setVariable(2, 0x120, true);
-  // prg.addConstantToVariable(0, 1, 2);
-  // prg.addVariableToVariable(0, 1, 2);
+  prg.addConstantToVariable(2, 1, true);
+  prg.addVariableToVariable(0, true, 2, true);
+  prg.undeclareVariable(0);
+  prg.declareVariable(10, beast::Program::VariableType::Int32);
+  prg.setVariable(10, 0x48, true);  // H
+  prg.declareVariable(11, beast::Program::VariableType::Int32);
+  prg.setVariable(11, 0x65, true);  // e
+  prg.declareVariable(12, beast::Program::VariableType::Int32);
+  prg.setVariable(12, 0x6c, true);  // l
+  prg.declareVariable(13, beast::Program::VariableType::Int32);
+  prg.setVariable(13, 0x6c, true);  // l
+  prg.declareVariable(14, beast::Program::VariableType::Int32);
+  prg.setVariable(14, 0x6f, true);  // o
+  prg.declareVariable(15, beast::Program::VariableType::Int32);
+  prg.setVariable(15, 0x10, true);  // \n
+  prg.printVariable(10, true, true);
+  prg.printVariable(11, true, true);
+  prg.printVariable(12, true, true);
+  prg.printVariable(13, true, true);
+  prg.printVariable(14, true, true);
+  prg.printVariable(15, true, true);
   // prg.subtractConstantFromVariable(0, 1, 2);
   // prg.subtractVariableFromVariable(0, 1, 2);
   // prg.relativeJumpToVariableAddressIfVariableGreaterThanZero(0, 1);
@@ -36,7 +54,7 @@ int main(int /*argc*/, char** /*argv*/) {
   // prg.loadInputCountIntoVariable(0);
   // prg.loadOutputCountIntoVariable(1);
   // prg.loadCurrentAddressIntoVariable(0);
-  prg.printVariable(1, true);
+  prg.printVariable(1, true, false);
   prg.setStringTableEntry(0, "test");
   prg.printStringFromStringTable(0);
   prg.terminate(127);

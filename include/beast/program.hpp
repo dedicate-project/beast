@@ -31,11 +31,11 @@ class Program {
 
   void undeclareVariable(int32_t variable_index);
 
-  void addConstantToVariable(int32_t source_variable_index, int32_t destination_variable_index,
-                             int32_t constant_to_add);
+  void addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
-  void addVariableToVariable(int32_t source_variable_index, int32_t destination_variable_index,
-                             int32_t variable_index_to_add);
+  void addVariableToVariable(
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links);
 
   void subtractConstantFromVariable(
     int32_t source_variable_index, int32_t destination_variable_index,
@@ -93,7 +93,7 @@ class Program {
 
   void loadCurrentAddressIntoVariable(int32_t variable_index);
 
-  void printVariable(int32_t variable_index, bool follow_links);
+  void printVariable(int32_t variable_index, bool follow_links, bool as_char);
 
   void setStringTableEntry(int32_t string_table_index, std::string string);
 

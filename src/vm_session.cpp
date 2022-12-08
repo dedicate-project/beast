@@ -119,10 +119,16 @@ void VmSession::appendToPrintBuffer(const std::string& string) {
   print_buffer_ += string;
 }
 
-void VmSession::appendVariableToPrintBuffer(int32_t variable_index, bool follow_links) {
+void VmSession::appendVariableToPrintBuffer(
+    int32_t variable_index, bool follow_links, bool as_char) {
   variable_index = getRealVariableIndex(variable_index, follow_links);
   if (variables_[variable_index].first == Program::VariableType::Int32) {
-    appendToPrintBuffer(std::to_string(variables_[variable_index].second));
+    if (as_char) {
+      const auto val = static_cast<char>(static_cast<uint32_t>(variables_[variable_index].second) & 0xff);
+      appendToPrintBuffer(std::string(&val, 1));
+    } else {
+      appendToPrintBuffer(std::to_string(variables_[variable_index].second));
+    }
   } else if (variables_[variable_index].first == Program::VariableType::Link) {
     appendToPrintBuffer("L{" + std::to_string(variables_[variable_index].second) + "}");
   } else {
@@ -147,5 +153,17 @@ void VmSession::terminate(int8_t return_code) {
 int8_t VmSession::getReturnCode() const {
   return return_code_;
 }
+
+void VmSession::addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links) {
+  variables_[getRealVariableIndex(variable_index, follow_links)].second += constant;
+}
+
+void VmSession::addVariableToVariable(
+    int32_t source_variable, int32_t destination_variable, bool follow_source_links,
+    bool follow_destination_links) {
+  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second +=
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
+}
+
 
 }  // namespace beast

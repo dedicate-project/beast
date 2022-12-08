@@ -42,15 +42,24 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.unregisterVariable(variable_index);
   } break;
 
-  /*case 0x04: {  // add constant to variable
-    // Todo: Implement
+  case 0x04: {  // add constant to variable
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    debug("add_constant_to_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ")");
+    session.addConstantToVariable(variable_index, constant, follow_links);
   } break;
 
   case 0x05: {  // add variable to variable
-    // Todo: Implement
+    const int32_t source_variable = session.getData4();
+    const bool follow_source_links = session.getData1() != 0x0;
+    const int32_t destination_variable = session.getData4();
+    const bool follow_destination_links = session.getData1() != 0x0;
+    debug("add_variable_to_variable(" + std::to_string(source_variable) + ", " + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable) + ", " + (follow_destination_links ? "true" : "false") + ")");
+    session.addVariableToVariable(source_variable, destination_variable, follow_source_links, follow_destination_links);
   } break;
 
-  case 0x06: {  // subtract constant from variable
+  /*case 0x06: {  // subtract constant from variable
     // Todo: Implement
   } break;
 
@@ -133,8 +142,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
   case 0x1a: {  // print variable
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
-    debug("print_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
-    session.appendVariableToPrintBuffer(variable_index, follow_links);
+    const bool as_char = session.getData1() != 0x0;
+    debug("print_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ", " + (as_char ? "true" : "false") + ")");
+    session.appendVariableToPrintBuffer(variable_index, follow_links, as_char);
     // Todo: Implement
   } break;
 

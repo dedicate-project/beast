@@ -61,21 +61,21 @@ void Program::undeclareVariable(int32_t variable_index) {
   appendData4(variable_index);
 }
 
-void Program::addConstantToVariable(
-    int32_t source_variable_index, int32_t destination_variable_index, int32_t constant_to_add) {
+void Program::addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links) {
   appendData1(0x04);
-  appendData4(source_variable_index);
-  appendData4(destination_variable_index);
-  appendData4(constant_to_add);
+  appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
+  appendData4(constant);
 }
 
 void Program::addVariableToVariable(
-    int32_t source_variable_index, int32_t destination_variable_index,
-    int32_t variable_index_to_add) {
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x05);
   appendData4(source_variable_index);
+  appendData1(follow_source_links ? 0x1 : 0x0);
   appendData4(destination_variable_index);
-  appendData4(variable_index_to_add);
+  appendData1(follow_destination_links ? 0x1 : 0x0);
 }
 
 void Program::subtractConstantFromVariable(
@@ -213,10 +213,11 @@ void Program::loadCurrentAddressIntoVariable(int32_t variable_index) {
   appendData4(variable_index);
 }
 
-void Program::printVariable(int32_t variable_index, bool follow_links) {
+void Program::printVariable(int32_t variable_index, bool follow_links, bool as_char) {
   appendData1(0x1a);
   appendData4(variable_index);
   appendData1(follow_links ? 0x1 : 0x0);
+  appendData1(as_char ? 0x1 : 0x0);
 }
 
 void Program::setStringTableEntry(int32_t string_table_index, std::string string) {

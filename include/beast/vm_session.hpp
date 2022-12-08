@@ -36,7 +36,7 @@ class VmSession {
 
   void appendToPrintBuffer(const std::string& string);
 
-  void appendVariableToPrintBuffer(int32_t variable_index, bool follow_links);
+  void appendVariableToPrintBuffer(int32_t variable_index, bool follow_links, bool as_char);
 
   const std::string& getPrintBuffer() const;
 
@@ -45,6 +45,10 @@ class VmSession {
   void terminate(int8_t return_code);
 
   int8_t getReturnCode() const;
+
+  void addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links);
+
+  void addVariableToVariable(int32_t source_variable, int32_t destination_variable, bool follow_source_links, bool follow_destination_links);
 
  private:
   Program program_;
