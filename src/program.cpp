@@ -78,21 +78,21 @@ void Program::addVariableToVariable(
   appendData1(follow_destination_links ? 0x1 : 0x0);
 }
 
-void Program::subtractConstantFromVariable(
-    int32_t source_variable_index, int32_t destination_variable_index, int32_t constant_to_subtract) {
+void Program::subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links) {
   appendData1(0x06);
-  appendData4(source_variable_index);
-  appendData4(destination_variable_index);
-  appendData4(constant_to_subtract);
+  appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
+  appendData4(constant);
 }
 
 void Program::subtractVariableFromVariable(
-    int32_t source_variable_index, int32_t destination_variable_index,
-    int32_t variable_index_to_subtract) {
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x07);
   appendData4(source_variable_index);
+  appendData1(follow_source_links ? 0x1 : 0x0);
   appendData4(destination_variable_index);
-  appendData4(variable_index_to_subtract);
+  appendData1(follow_destination_links ? 0x1 : 0x0);
 }
 
 void Program::relativeJumpToVariableAddressIfVariableGreaterThanZero(

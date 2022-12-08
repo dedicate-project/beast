@@ -37,13 +37,11 @@ class Program {
     int32_t source_variable_index, bool follow_source_links,
     int32_t destination_variable_index, bool follow_destination_links);
 
-  void subtractConstantFromVariable(
-    int32_t source_variable_index, int32_t destination_variable_index,
-    int32_t constant_to_subtract);
+  void subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
   void subtractVariableFromVariable(
-    int32_t source_variable_index, int32_t destination_variable_index,
-    int32_t variable_index_to_subtract);
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links);
 
   void relativeJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t variable_index, int32_t relative_jump_address_variable_index);

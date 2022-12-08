@@ -50,6 +50,10 @@ class VmSession {
 
   void addVariableToVariable(int32_t source_variable, int32_t destination_variable, bool follow_source_links, bool follow_destination_links);
 
+  void subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links);
+
+  void subtractVariableFromVariable(int32_t source_variable, int32_t destination_variable, bool follow_source_links, bool follow_destination_links);
+
  private:
   Program program_;
 

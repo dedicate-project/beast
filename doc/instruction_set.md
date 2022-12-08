@@ -8,8 +8,8 @@ Instruction Set
 | undeclare variable                    | 0x03            | 4 bytes: unsigned var index                                                                                                         | y    |
 | add constant to variable              | 0x04            | 4 bytes: unsigned var index, 1 byte: follow links, 4 bytes: constant to add                                                         | y    |
 | add variable to variable              | 0x05            | 4 bytes: unsigned source var index, 1 byte: follow src links, 4 bytes: unsigned destination var index, 1 byte: follow dest links    | y    |
-| subtract constant from variable       | 0x06            | 4 bytes: unsigned source var index, 4 bytes: unsigned destination var index, 4 bytes: constant to subtract, based on declared type  | n    |
-| subtract variable from variable       | 0x07            | 4 bytes: unsigned source var index, 4 bytes: unsigned destination var index, 4 bytes: var index to subtract, based on declared type | n    |
+| subtract constant from variable       | 0x06            | 4 bytes: unsigned var index, 1 byte: follow links, 4 bytes: constant to subtract                                                    | y    |
+| subtract variable from variable       | 0x07            | 4 bytes: unsigned source var index, 1 byte: follow src links, 4 bytes: unsigned destination var index, 1 byte: follow dest links    | y    |
 | rel jump to var addr if variable > 0  | 0x08            | 4 bytes: unsigned var index, 4 bytes: rel jump address variable index; var needs to be of int type                                  | n    |
 | rel jump to var addr if variable < 0  | 0x09            | 4 bytes: unsigned var index, 4 bytes: rel jump address variable index; var needs to be of int type                                  | n    |
 | rel jump to var addr if variable = 0  | 0x0a            | 4 bytes: unsigned var index, 4 bytes: rel jump address variable index; var needs to be of int type                                  | n    |

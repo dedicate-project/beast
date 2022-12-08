@@ -28,14 +28,14 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.setVariable(14, 0x6f, true);  // o
   prg.declareVariable(15, beast::Program::VariableType::Int32);
   prg.setVariable(15, 0x10, true);  // \n
+  prg.subtractConstantFromVariable(10, 1, true);
+  prg.subtractVariableFromVariable(1, true, 11, true);
   prg.printVariable(10, true, true);
   prg.printVariable(11, true, true);
   prg.printVariable(12, true, true);
   prg.printVariable(13, true, true);
   prg.printVariable(14, true, true);
   prg.printVariable(15, true, true);
-  // prg.subtractConstantFromVariable(0, 1, 2);
-  // prg.subtractVariableFromVariable(0, 1, 2);
   // prg.relativeJumpToVariableAddressIfVariableGreaterThanZero(0, 1);
   // prg.relativeJumpToVariableAddressIfVariableLessThanZero(0, 1);
   // prg.relativeJumpToVariableAddressIfVariableEqualsZero(0, 1);

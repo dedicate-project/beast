@@ -165,5 +165,15 @@ void VmSession::addVariableToVariable(
       variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
 }
 
+void VmSession::subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links) {
+  variables_[getRealVariableIndex(variable_index, follow_links)].second -= constant;
+}
+
+void VmSession::subtractVariableFromVariable(
+    int32_t source_variable, int32_t destination_variable, bool follow_source_links,
+    bool follow_destination_links) {
+  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second -=
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
+}
 
 }  // namespace beast
