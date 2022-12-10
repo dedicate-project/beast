@@ -44,7 +44,8 @@ class Program {
     int32_t destination_variable_index, bool follow_destination_links);
 
   void relativeJumpToVariableAddressIfVariableGreaterThanZero(
-    int32_t variable_index, int32_t relative_jump_address_variable_index);
+    int32_t variable_index, bool follow_links,
+    int32_t relative_jump_address_variable_index, bool follow_addr_links);
 
   void relativeJumpToVariableAddressIfVariableLessThanZero(
     int32_t variable_index, int32_t relative_jump_address_variable_index);
@@ -102,6 +103,8 @@ class Program {
   void terminate(int8_t return_code);
 
   void copyVariable(int32_t source_variable_index, int32_t destination_variable_index);
+
+  void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index, bool follow_links);
 
  private:
   bool canFit(int32_t bytes);

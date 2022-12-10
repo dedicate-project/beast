@@ -54,6 +54,8 @@ class VmSession {
 
   void subtractVariableFromVariable(int32_t source_variable, int32_t destination_variable, bool follow_source_links, bool follow_destination_links);
 
+  void relativeJumpToVariableAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+
  private:
   Program program_;
 

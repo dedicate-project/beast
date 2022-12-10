@@ -36,7 +36,13 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.printVariable(13, true, true);
   prg.printVariable(14, true, true);
   prg.printVariable(15, true, true);
-  // prg.relativeJumpToVariableAddressIfVariableGreaterThanZero(0, 1);
+  prg.declareVariable(16, beast::Program::VariableType::Int32);
+  prg.setVariable(16, 0, true);
+  prg.declareVariable(17, beast::Program::VariableType::Int32);
+  prg.setVariable(17, 14, true);
+  prg.relativeJumpToVariableAddressIfVariableGreaterThanZero(16, true, 17, true);
+  prg.setStringTableEntry(1, "Ok");
+  prg.printStringFromStringTable(1);
   // prg.relativeJumpToVariableAddressIfVariableLessThanZero(0, 1);
   // prg.relativeJumpToVariableAddressIfVariableEqualsZero(0, 1);
   // prg.absoluteJumpToVariableAddressIfVariableGreaterThanZero(0, 1);
