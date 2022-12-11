@@ -40,4 +40,5 @@ macro(declare_test name)
 endmacro()
 
 declare_test(noop)
+declare_test(programs)
 declare_test(variables)

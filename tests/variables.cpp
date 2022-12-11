@@ -38,3 +38,33 @@ TEST_CASE("undeclare_variable", "instructions") {
   REQUIRE(prg.getData1(0) == 0x03);
   REQUIRE(prg.getData4(1) == variable_index);
 }
+
+TEST_CASE("add_constant_to_variable", "instructions") {
+  const int32_t variable_index = 22;
+  const int32_t constant = -91;
+  const bool follow_links = true;
+
+  beast::Program prg(10);
+  prg.addConstantToVariable(variable_index, constant, follow_links);
+
+  REQUIRE(prg.getData1(0) == 0x04);
+  REQUIRE(prg.getData4(1) == variable_index);
+  REQUIRE(prg.getData1(5) == (follow_links ? 0x1 : 0x0));
+  REQUIRE(prg.getData4(6) == constant);
+}
+
+TEST_CASE("add_variable_to_variable", "instructions") {
+  const int32_t source_variable_index = 10;
+  const bool follow_source_links = true;
+  const int32_t destination_variable_index = 20;
+  const bool follow_destination_links = true;
+
+  beast::Program prg(11);
+  prg.addVariableToVariable(source_variable_index, follow_source_links, destination_variable_index, follow_destination_links);
+
+  REQUIRE(prg.getData1(0) == 0x05);
+  REQUIRE(prg.getData4(1) == source_variable_index);
+  REQUIRE(prg.getData1(5) == (follow_source_links ? 0x1 : 0x0));
+  REQUIRE(prg.getData4(6) == destination_variable_index);
+  REQUIRE(prg.getData1(10) == (follow_destination_links ? 0x1 : 0x0));
+}
