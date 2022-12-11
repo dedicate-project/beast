@@ -5,7 +5,7 @@
 #include <beast/cpu_virtual_machine.hpp>
 
 TEST_CASE("declare_variable", "instructions") {
-  const int variable_index = 43;
+  const int32_t variable_index = 43;
 
   beast::Program prg(6);
   prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
@@ -30,7 +30,7 @@ TEST_CASE("set_variable", "instructions") {
 }
 
 TEST_CASE("undeclare_variable", "instructions") {
-  const int variable_index = 43;
+  const int32_t variable_index = 43;
 
   beast::Program prg(6);
   prg.undeclareVariable(variable_index);
