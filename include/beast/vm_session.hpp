@@ -20,6 +20,8 @@ class VmSession {
 
   int8_t getData1();
 
+  int32_t getVariableValue(int32_t variable_index, bool follow_links);
+
   bool isAtEnd();
 
   void registerVariable(int32_t variable_index, Program::VariableType variable_type);

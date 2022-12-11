@@ -30,6 +30,10 @@ int8_t VmSession::getData1() {
   return data;
 }
 
+int32_t VmSession::getVariableValue(int32_t variable_index, bool follow_links) {
+  return variables_[getRealVariableIndex(variable_index, follow_links)].second;
+}
+
 bool VmSession::isAtEnd() {
   return was_terminated_ || pointer_ >= program_.getSize();
 }
