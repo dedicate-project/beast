@@ -43,6 +43,10 @@ int8_t Program::getData1(int32_t offset) {
   return buffer;
 }
 
+void Program::noop() {
+  appendData1(0x00);
+}
+
 void Program::declareVariable(int32_t variable_index, VariableType variable_type) {
   appendData1(0x01);
   appendData4(variable_index);

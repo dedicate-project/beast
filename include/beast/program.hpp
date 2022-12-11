@@ -25,6 +25,8 @@ class Program {
 
   int8_t getData1(int32_t offset);
 
+  void noop();
+
   void declareVariable(int32_t variable_index, VariableType variable_type);
 
   void setVariable(int32_t variable_index, int32_t content, bool follow_links);
