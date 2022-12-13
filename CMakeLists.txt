@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
   include(CodeCoverage)
 
@@ -17,7 +17,9 @@ if(CMAKE_BUILD_TYPE MATCHES DEBUG)
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
     EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/*)
-endif(CMAKE_BUILD_TYPE MATCHES DEBUG)
+else()
+  add_compile_options(-O3)
+endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -38,9 +40,9 @@ add_executable(${PROJECT_NAME}-bin
 target_link_libraries(${PROJECT_NAME}-bin
   ${PROJECT_NAME})
 
-if(CMAKE_BUILD_TYPE MATCHES DEBUG)
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
   target_link_libraries(${PROJECT_NAME}-bin gcov)
-endif(CMAKE_BUILD_TYPE MATCHES DEBUG)
+endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 enable_testing()
 
@@ -49,9 +51,9 @@ macro(declare_test name)
   add_executable(test_${name} tests/${name}.cpp)
   target_include_directories(test_${name} PUBLIC 3rdparty/Catch2/single_include)
   target_link_libraries(test_${name} PUBLIC ${PROJECT_NAME})
-  if(CMAKE_BUILD_TYPE MATCHES DEBUG)
-    target_link_libraries(test_${name} gcov)
-  endif(CMAKE_BUILD_TYPE MATCHES DEBUG)
+  if(CMAKE_BUILD_TYPE MATCHES "Debug")
+    target_link_libraries(test_${name} PUBLIC gcov)
+  endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
   set_target_properties(test_${name}
     PROPERTIES
