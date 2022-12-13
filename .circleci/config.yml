@@ -52,8 +52,14 @@ jobs:
       - run:
           name: Install npm
           command: sudo apt-get install -y npm
+      - run:
+          name: Generate coverage report
+          command: |
+            cd build
+            make coverage
       - coveralls/upload:
-          path_to_lcov: build/coverage.info
+          path_to_lcov: ./build/coverage.info
+          token: COVERALLS_REPO_TOKEN
 
 workflows:
   build-and-test:
