@@ -130,11 +130,15 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToVariableAddressIfVariableEq0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  /*case 0x0e: {  // rel jump if variable > 0
-    // Todo: Implement
+  case 0x0e: {  // rel jump if variable > 0
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr = session.getData4();
+    debug("relative_jump_to_address_if_variable_gt_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+    session.relativeJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x0f: {  // rel jump if variable < 0
+  /*case 0x0f: {  // rel jump if variable < 0
     // Todo: Implement
   } break;
 

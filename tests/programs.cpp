@@ -327,3 +327,29 @@ TEST_CASE("terminate_loop_while_variable_eq_0_with_variable_jump_address", "prog
 
   REQUIRE(session.getVariableValue(1, true) == 4);
 }
+
+TEST_CASE("print_conditionally_if_var_gt_0_with_fixed_rel_addr", "programs") {
+  const std::string output = "Output";
+  const std::string checkpoint = "Checkpoint";
+
+  beast::Program prg(150);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 1, true);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, 0, true);
+  // Jump the next two instructions only if variable 0 > 0
+  prg.relativeJumpToAddressIfVariableGreaterThanZero(0, true, 22);
+  prg.setStringTableEntry(0, checkpoint);
+  prg.printStringFromStringTable(0);
+
+  // Jump the next two instructions only if variable 1 > 0
+  prg.relativeJumpToAddressIfVariableGreaterThanZero(1, true, 18);
+  prg.setStringTableEntry(1, output);
+  prg.printStringFromStringTable(1);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getPrintBuffer() == output);
+}

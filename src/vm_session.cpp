@@ -228,4 +228,11 @@ void VmSession::absoluteJumpToVariableAddressIfVariableEq0(
   }
 }
 
+void VmSession::relativeJumpToAddressIfVariableGt0(
+    int32_t condition_variable, bool follow_condition_links, int32_t addr) {
+  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second > 0) {
+    pointer_ += addr;
+  }
+}
+
 }  // namespace beast
