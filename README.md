@@ -1,6 +1,7 @@
 # BEAST - Binary Evolution And Sentience Toolkit
 
 [![CircleCI badge](https://circleci.com/gh/dedicate-project/beast.svg?style=svg)](https://circleci.com/gh/dedicate-project/beast)
+[![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
 
 
 ## Operators
