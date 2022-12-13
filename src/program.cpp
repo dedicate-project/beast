@@ -9,7 +9,7 @@ Program::Program(int32_t space)
   : data_(space, 0x00), pointer_{0} {
 }
 
-int32_t Program::getSize() {
+int32_t Program::getSize() const {
   return data_.size();
 }
 
@@ -41,6 +41,10 @@ int8_t Program::getData1(int32_t offset) {
   int8_t buffer = 0x0;
   std::memcpy(&buffer, &data_[offset], 1);
   return buffer;
+}
+
+int32_t Program::getPointer() const {
+  return pointer_;
 }
 
 void Program::noop() {

@@ -17,13 +17,15 @@ class Program {
 
   Program(int32_t space);
 
-  int32_t getSize();
+  int32_t getSize() const;
 
   int32_t getData4(int32_t offset);
 
   int16_t getData2(int32_t offset);
 
   int8_t getData1(int32_t offset);
+
+  int32_t getPointer() const;
 
   void noop();
 
