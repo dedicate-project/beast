@@ -27,7 +27,7 @@ jobs:
           name: Setup cmake
           command: |
             cd build
-            cmake ..
+            cmake -DCMAKE_BUILD_TYPE=Debug ..
       - run:
           name: Build
           command: |
@@ -50,9 +50,10 @@ jobs:
             cd build
             make test
       - run:
-          name: Install npm
-          command: sudo apt-get install -y npm
-      - coveralls/upload
+          name: Install npm and lcov
+          command: sudo apt-get install -y npm lcov
+      - coveralls/upload:
+          path_to_lcov: coverage/coverage.info
 
 workflows:
   build-and-test:
