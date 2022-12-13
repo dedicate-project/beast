@@ -53,7 +53,7 @@ jobs:
           name: Install npm
           command: sudo apt-get install -y npm
       - coveralls/upload:
-          path_to_lcov: build/coverage/coverage.info
+          path_to_lcov: build/coverage.info
 
 workflows:
   build-and-test:
