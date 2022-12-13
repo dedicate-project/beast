@@ -51,7 +51,9 @@ jobs:
             make test
       - run:
           name: Install npm and lcov
-          command: sudo apt-get install -y npm lcov
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y npm lcov
       - run:
           name: Generate coverage report
           command: |
