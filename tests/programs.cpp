@@ -353,3 +353,55 @@ TEST_CASE("print_conditionally_if_var_gt_0_with_fixed_rel_addr", "programs") {
 
   REQUIRE(session.getPrintBuffer() == output);
 }
+
+TEST_CASE("print_conditionally_if_var_lt_0_with_fixed_rel_addr", "programs") {
+  const std::string output = "Output";
+  const std::string checkpoint = "Checkpoint";
+
+  beast::Program prg(150);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, -1, true);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, 0, true);
+  // Jump the next two instructions only if variable 0 < 0
+  prg.relativeJumpToAddressIfVariableLessThanZero(0, true, 22);
+  prg.setStringTableEntry(0, checkpoint);
+  prg.printStringFromStringTable(0);
+
+  // Jump the next two instructions only if variable 1 < 0
+  prg.relativeJumpToAddressIfVariableLessThanZero(1, true, 18);
+  prg.setStringTableEntry(1, output);
+  prg.printStringFromStringTable(1);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getPrintBuffer() == output);
+}
+
+TEST_CASE("print_conditionally_if_var_eq_0_with_fixed_rel_addr", "programs") {
+  const std::string output = "Output";
+  const std::string checkpoint = "Checkpoint";
+
+  beast::Program prg(150);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, 1, true);
+  // Jump the next two instructions only if variable 0 == 0
+  prg.relativeJumpToAddressIfVariableEqualsZero(0, true, 22);
+  prg.setStringTableEntry(0, checkpoint);
+  prg.printStringFromStringTable(0);
+
+  // Jump the next two instructions only if variable 1 == 0
+  prg.relativeJumpToAddressIfVariableEqualsZero(1, true, 18);
+  prg.setStringTableEntry(1, output);
+  prg.printStringFromStringTable(1);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getPrintBuffer() == output);
+}

@@ -138,15 +138,23 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
-  /*case 0x0f: {  // rel jump if variable < 0
-    // Todo: Implement
+  case 0x0f: {  // rel jump if variable < 0
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr = session.getData4();
+    debug("relative_jump_to_address_if_variable_lt_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+    session.relativeJumpToAddressIfVariableLt0(condition_variable, follow_condition_links, addr);
   } break;
 
   case 0x10: {  // rel jump if variable = 0
-    // Todo: Implement
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr = session.getData4();
+    debug("relative_jump_to_address_if_variable_eq_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+    session.relativeJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x11: {  // abs jump if variable > 0
+  /*case 0x11: {  // abs jump if variable > 0
     // Todo: Implement
   } break;
 
@@ -188,7 +196,6 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool as_char = session.getData1() != 0x0;
     debug("print_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ", " + (as_char ? "true" : "false") + ")");
     session.appendVariableToPrintBuffer(variable_index, follow_links, as_char);
-    // Todo: Implement
   } break;
 
   case 0x1b: {  // set string table entry

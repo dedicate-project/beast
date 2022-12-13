@@ -172,16 +172,18 @@ void Program::relativeJumpToAddressIfVariableGreaterThanZero(
 }
 
 void Program::relativeJumpToAddressIfVariableLessThanZero(
-    int32_t variable_index, int32_t relative_jump_address) {
+    int32_t variable_index, bool follow_links, int32_t relative_jump_address) {
   appendData1(0x0f);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
   appendData4(relative_jump_address);
 }
 
 void Program::relativeJumpToAddressIfVariableEqualsZero(
-    int32_t variable_index, int32_t relative_jump_address) {
+    int32_t variable_index, bool follow_links, int32_t relative_jump_address) {
   appendData1(0x10);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
   appendData4(relative_jump_address);
 }
 
