@@ -18,7 +18,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y clang-tidy
+            sudo apt-get install -y clang-tidy lcov
       - run:
           name: Create build directory
           command: |
@@ -27,7 +27,7 @@ jobs:
           name: Setup cmake
           command: |
             cd build
-            cmake ..
+            cmake -DCMAKE_BUILD_TYPE=Debug ..
       - run:
           name: Build
           command: |
@@ -36,7 +36,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - "build"
+            - "."
   test:
     docker:
       - image: cimg/base:stable
@@ -50,9 +50,18 @@ jobs:
             cd build
             make test
       - run:
-          name: Install npm
-          command: sudo apt-get install -y npm
-      - coveralls/upload
+          name: Install npm and lcov
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y npm lcov
+      - run:
+          name: Generate coverage report
+          command: |
+            cd build
+            make coverage
+      - coveralls/upload:
+          path_to_lcov: ./build/coverage.info
+          token: COVERALLS_REPO_TOKEN
 
 workflows:
   build-and-test:
