@@ -181,3 +181,59 @@ TEST_CASE("print_conditionally_if_var_not_gt_0", "programs") {
 
   REQUIRE(session.getPrintBuffer() == output);
 }
+
+TEST_CASE("print_conditionally_if_var_not_lt_0", "programs") {
+  const std::string output = "Output";
+  const std::string checkpoint = "Checkpoint";
+
+  beast::Program prg(150);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, -1, true);
+  prg.declareVariable(2, beast::Program::VariableType::Int32);
+  prg.setVariable(2, 22, true);
+  prg.relativeJumpToVariableAddressIfVariableLessThanZero(1, true, 2, true);
+  prg.setStringTableEntry(0, checkpoint);
+  prg.printStringFromStringTable(0);
+
+  prg.declareVariable(3, beast::Program::VariableType::Int32);
+  prg.setVariable(3, 1, true);
+  prg.declareVariable(4, beast::Program::VariableType::Int32);
+  prg.setVariable(4, 18, true);
+  prg.relativeJumpToVariableAddressIfVariableLessThanZero(3, true, 4, true);
+  prg.setStringTableEntry(1, output);
+  prg.printStringFromStringTable(1);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getPrintBuffer() == output);
+}
+
+TEST_CASE("print_conditionally_if_var_not_eq_0", "programs") {
+  const std::string output = "Output";
+  const std::string checkpoint = "Checkpoint";
+
+  beast::Program prg(150);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, 0, true);
+  prg.declareVariable(2, beast::Program::VariableType::Int32);
+  prg.setVariable(2, 22, true);
+  prg.relativeJumpToVariableAddressIfVariableEqualsZero(1, true, 2, true);
+  prg.setStringTableEntry(0, checkpoint);
+  prg.printStringFromStringTable(0);
+
+  prg.declareVariable(3, beast::Program::VariableType::Int32);
+  prg.setVariable(3, 1, true);
+  prg.declareVariable(4, beast::Program::VariableType::Int32);
+  prg.setVariable(4, 18, true);
+  prg.relativeJumpToVariableAddressIfVariableEqualsZero(3, true, 4, true);
+  prg.setStringTableEntry(1, output);
+  prg.printStringFromStringTable(1);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getPrintBuffer() == output);
+}
