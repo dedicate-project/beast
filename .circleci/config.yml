@@ -18,7 +18,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y clang-tidy
+            sudo apt-get install -y clang-tidy lcov
       - run:
           name: Create build directory
           command: |
@@ -50,8 +50,8 @@ jobs:
             cd build
             make test
       - run:
-          name: Install npm and lcov
-          command: sudo apt-get install -y npm lcov
+          name: Install npm
+          command: sudo apt-get install -y npm
       - coveralls/upload:
           path_to_lcov: coverage/coverage.info
 
