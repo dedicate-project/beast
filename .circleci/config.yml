@@ -50,8 +50,8 @@ jobs:
             cd build
             make test
       - run:
-          name: Install npm
-          command: sudo apt-get install -y npm
+          name: Install npm and lcov
+          command: sudo apt-get install -y npm lcov
       - run:
           name: Generate coverage report
           command: |
