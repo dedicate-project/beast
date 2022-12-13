@@ -16,7 +16,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/*)
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/src/main.cpp)
 else()
   add_compile_options(-O3)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
