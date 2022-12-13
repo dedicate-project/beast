@@ -2,3 +2,6 @@
 	path = 3rdparty/Catch2
 	url = https://github.com/catchorg/Catch2.git
         branch = v2.x
+[submodule "3rdparty/cmake-modules"]
+	path = 3rdparty/cmake-modules
+	url = https://github.com/bilke/cmake-modules.git
