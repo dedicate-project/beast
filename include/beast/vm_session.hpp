@@ -62,6 +62,12 @@ class VmSession {
 
   void relativeJumpToVariableAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
 
+  void absoluteJumpToVariableAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+
+  void absoluteJumpToVariableAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+
+  void absoluteJumpToVariableAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+
  private:
   Program program_;
 

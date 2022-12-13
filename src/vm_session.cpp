@@ -204,4 +204,28 @@ void VmSession::relativeJumpToVariableAddressIfVariableEq0(
   }
 }
 
+void VmSession::absoluteJumpToVariableAddressIfVariableGt0(
+    int32_t condition_variable, bool follow_condition_links,
+    int32_t addr_variable, bool follow_addr_links) {
+  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second > 0) {
+    pointer_ = variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  }
+}
+
+void VmSession::absoluteJumpToVariableAddressIfVariableLt0(
+    int32_t condition_variable, bool follow_condition_links,
+    int32_t addr_variable, bool follow_addr_links) {
+  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second < 0) {
+    pointer_ = variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  }
+}
+
+void VmSession::absoluteJumpToVariableAddressIfVariableEq0(
+    int32_t condition_variable, bool follow_condition_links,
+    int32_t addr_variable, bool follow_addr_links) {
+  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second == 0) {
+    pointer_ = variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  }
+}
+
 }  // namespace beast

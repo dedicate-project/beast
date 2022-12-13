@@ -134,24 +134,33 @@ void Program::relativeJumpToVariableAddressIfVariableEqualsZero(
 }
 
 void Program::absoluteJumpToVariableAddressIfVariableGreaterThanZero(
-    int32_t variable_index, int32_t absolute_jump_address_variable_index) {
+    int32_t variable_index, bool follow_links,
+    int32_t absolute_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0b);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
   appendData4(absolute_jump_address_variable_index);
+  appendData1(follow_addr_links ? 0x1 : 0x0);
 }
 
 void Program::absoluteJumpToVariableAddressIfVariableLessThanZero(
-    int32_t variable_index, int32_t absolute_jump_address_variable_index) {
+    int32_t variable_index, bool follow_links,
+    int32_t absolute_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0c);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
   appendData4(absolute_jump_address_variable_index);
+  appendData1(follow_addr_links ? 0x1 : 0x0);
 }
 
 void Program::absoluteJumpToVariableAddressIfVariableEqualsZero(
-    int32_t variable_index, int32_t absolute_jump_address_variable_index) {
+    int32_t variable_index, bool follow_links,
+    int32_t absolute_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0d);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
   appendData4(absolute_jump_address_variable_index);
+  appendData1(follow_addr_links ? 0x1 : 0x0);
 }
 
 void Program::relativeJumpToAddressIfVariableGreaterThanZero(

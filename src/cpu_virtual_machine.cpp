@@ -103,19 +103,34 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToVariableAddressIfVariableEq0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  /*case 0x0b: {  // abs jump to var addr if variable > 0
-    // Todo: Implement
+  case 0x0b: {  // abs jump to var addr if variable > 0
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr_variable = session.getData4();
+    const bool follow_addr_links = session.getData1() != 0x0;
+    debug("absolute_jump_to_variable_address_if_variable_gt_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+    session.absoluteJumpToVariableAddressIfVariableGt0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
   case 0x0c: {  // abs jump to var addr if variable < 0
-    // Todo: Implement
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr_variable = session.getData4();
+    const bool follow_addr_links = session.getData1() != 0x0;
+    debug("absolute_jump_to_variable_address_if_variable_lt_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+    session.absoluteJumpToVariableAddressIfVariableLt0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
   case 0x0d: {  // abs jump to var addr if variable = 0
-    // Todo: Implement
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr_variable = session.getData4();
+    const bool follow_addr_links = session.getData1() != 0x0;
+    debug("absolute_jump_to_variable_address_if_variable_eq_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+    session.absoluteJumpToVariableAddressIfVariableEq0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x0e: {  // rel jump if variable > 0
+  /*case 0x0e: {  // rel jump if variable > 0
     // Todo: Implement
   } break;
 
