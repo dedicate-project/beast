@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  coveralls: coveralls/coveralls@1.0.6
 
 jobs:
   build:
@@ -47,6 +49,10 @@ jobs:
           command: |
             cd build
             make test
+      - run:
+          name: Install npm
+          command: sudo apt-get install -y npm
+      - coveralls/upload
 
 workflows:
   build-and-test:
