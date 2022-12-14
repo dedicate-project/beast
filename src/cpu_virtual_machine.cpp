@@ -154,19 +154,31 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
-  /*case 0x11: {  // abs jump if variable > 0
-    // Todo: Implement
+  case 0x11: {  // abs jump if variable > 0
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr = session.getData4();
+    debug("absolute_jump_to_address_if_variable_gt_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+    session.absoluteJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
   case 0x12: {  // abs jump if variable < 0
-    // Todo: Implement
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr = session.getData4();
+    debug("absolute_jump_to_address_if_variable_lt_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+    session.absoluteJumpToAddressIfVariableLt0(condition_variable, follow_condition_links, addr);
   } break;
 
   case 0x13: {  // abs jump if variable = 0
-    // Todo: Implement
+    const int32_t condition_variable = session.getData4();
+    const bool follow_condition_links = session.getData1() != 0x0;
+    const int32_t addr = session.getData4();
+    debug("absolute_jump_to_address_if_variable_eq_0(" + std::to_string(condition_variable) + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+    session.absoluteJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x14: {  // load memory size into variable
+  /*case 0x14: {  // load memory size into variable
     // Todo: Implement
   } break;
 

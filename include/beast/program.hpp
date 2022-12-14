@@ -81,13 +81,13 @@ class Program {
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
 
   void absoluteJumpToAddressIfVariableGreaterThanZero(
-    int32_t variable_index, int32_t absolute_jump_address);
+    int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
 
   void absoluteJumpToAddressIfVariableLessThanZero(
-    int32_t variable_index, int32_t absolute_jump_address);
+    int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
 
   void absoluteJumpToAddressIfVariableEqualsZero(
-    int32_t variable_index, int32_t absolute_jump_address);
+    int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
 
   void loadMemorySizeIntoVariable(int32_t variable_index);
 
