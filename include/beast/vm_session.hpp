@@ -80,6 +80,8 @@ class VmSession {
 
   void absoluteJumpToAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
+  void loadMemorySizeIntoVariable(int32_t variable, bool follow_links);
+
  private:
   Program program_;
 

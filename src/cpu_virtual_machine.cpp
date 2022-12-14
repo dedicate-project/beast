@@ -178,11 +178,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
-  /*case 0x14: {  // load memory size into variable
-    // Todo: Implement
+  case 0x14: {  // load memory size into variable
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_memory_size_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadMemorySizeIntoVariable(variable, follow_links);
   } break;
 
-  case 0x15: {  // check if variable is input
+  /*case 0x15: {  // check if variable is input
     // Todo: Implement
   } break;
 

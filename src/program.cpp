@@ -211,9 +211,10 @@ void Program::absoluteJumpToAddressIfVariableEqualsZero(
   appendData4(absolute_jump_address);
 }
 
-void Program::loadMemorySizeIntoVariable(int32_t variable_index) {
+void Program::loadMemorySizeIntoVariable(int32_t variable_index, bool follow_links) {
   appendData1(0x14);
   appendData4(variable_index);
+  appendData1(follow_links ? 0x1 : 0x0);
 }
 
 void Program::checkIfVariableIsInput(

@@ -486,3 +486,16 @@ TEST_CASE("terminate_loop_while_variable_eq_0_with_fixed_jump_address", "program
 
   REQUIRE(session.getVariableValue(1, true) == 4);
 }
+
+TEST_CASE("store_variable_memory_size_into_variable", "programs") {
+  beast::Program prg(100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.loadMemorySizeIntoVariable(0, true);
+
+  beast::VmSession session(std::move(prg), 128, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 128);
+}

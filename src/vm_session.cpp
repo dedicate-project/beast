@@ -270,4 +270,8 @@ void VmSession::absoluteJumpToAddressIfVariableEq0(
   }
 }
 
+void VmSession::loadMemorySizeIntoVariable(int32_t variable, bool follow_links) {
+  variables_[getRealVariableIndex(variable, follow_links)].second = variable_count_;
+}
+
 }  // namespace beast

@@ -89,7 +89,7 @@ class Program {
   void absoluteJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
 
-  void loadMemorySizeIntoVariable(int32_t variable_index);
+  void loadMemorySizeIntoVariable(int32_t variable_index, bool follow_links);
 
   void checkIfVariableIsInput(int32_t source_variable_index, int32_t destination_variable_index);
 
