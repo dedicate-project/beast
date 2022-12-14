@@ -499,3 +499,53 @@ TEST_CASE("store_variable_memory_size_into_variable", "programs") {
 
   REQUIRE(session.getVariableValue(0, true) == 128);
 }
+
+TEST_CASE("inputs_can_be_determined", "programs") {
+  const int32_t input_variable_index = 42;
+  const int32_t result1_variable_index = 11;
+  const int32_t regular_variable_index = 25;
+  const int32_t result2_variable_index = 30;
+
+  beast::Program prg(100);
+  prg.declareVariable(result1_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(result1_variable_index, 0, true);
+  prg.declareVariable(result2_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(result2_variable_index, 0, true);
+  prg.declareVariable(regular_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(regular_variable_index, 0, true);
+  prg.checkIfVariableIsInput(input_variable_index, true, result1_variable_index, true);
+  prg.checkIfVariableIsInput(regular_variable_index, true, result2_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  session.setVariableBehavior(input_variable_index, beast::VmSession::VariableIoBehavior::Input);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(result1_variable_index, true) == 0x1);
+  REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
+}
+
+TEST_CASE("outputs_can_be_determined", "programs") {
+  const int32_t output_variable_index = 29;
+  const int32_t result1_variable_index = 110;
+  const int32_t regular_variable_index = 2;
+  const int32_t result2_variable_index = 80;
+
+  beast::Program prg(100);
+  prg.declareVariable(result1_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(result1_variable_index, 0, true);
+  prg.declareVariable(result2_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(result2_variable_index, 0, true);
+  prg.declareVariable(regular_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(regular_variable_index, 0, true);
+  prg.checkIfVariableIsOutput(output_variable_index, true, result1_variable_index, true);
+  prg.checkIfVariableIsOutput(regular_variable_index, true, result2_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  session.setVariableBehavior(output_variable_index, beast::VmSession::VariableIoBehavior::Output);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(result1_variable_index, true) == 0x1);
+  REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
+}

@@ -12,6 +12,16 @@ VmSession::VmSession(
   , was_terminated_{false}, return_code_{0} {
 }
 
+void VmSession::setVariableBehavior(int32_t variable_index, VariableIoBehavior behavior) {
+  VariableDescriptor descriptor({Program::VariableType::Int32, behavior, false});
+  variables_[variable_index] = std::make_pair(descriptor, 0);
+}
+
+VmSession::VariableIoBehavior VmSession::getVariableBehavior(
+    int32_t variable_index, bool follow_links) {
+  return variables_[getRealVariableIndex(variable_index, follow_links)].first.behavior;
+}
+
 int32_t VmSession::getData4() {
   int32_t data = program_.getData4(pointer_);
   pointer_ += 4;
@@ -57,18 +67,19 @@ void VmSession::registerVariable(int32_t variable_index, Program::VariableType v
     throw std::runtime_error("Variables cache full.");
   }
 
-  variables_[variable_index] = std::make_pair(variable_type, 0);
+  VariableDescriptor descriptor({variable_type, VariableIoBehavior::Store, false});
+  variables_[variable_index] = std::make_pair(descriptor, 0);
 }
 
 int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_links) {
   std::set<int32_t> visited_indices;
   while (variables_.find(variable_index) != variables_.end()) {
-    if (variables_[variable_index].first != Program::VariableType::Link || !follow_links) {
+    if (variables_[variable_index].first.type != Program::VariableType::Link || !follow_links) {
       // This is a non-link variable, return it.
       return variable_index;
     }
 
-    if (variables_[variable_index].first == Program::VariableType::Link) {
+    if (variables_[variable_index].first.type == Program::VariableType::Link) {
       if (visited_indices.find(variable_index) != visited_indices.end()) {
         throw std::runtime_error("Circular variable index link.");
       }
@@ -126,18 +137,18 @@ void VmSession::appendToPrintBuffer(const std::string& string) {
 void VmSession::appendVariableToPrintBuffer(
     int32_t variable_index, bool follow_links, bool as_char) {
   variable_index = getRealVariableIndex(variable_index, follow_links);
-  if (variables_[variable_index].first == Program::VariableType::Int32) {
+  if (variables_[variable_index].first.type == Program::VariableType::Int32) {
     if (as_char) {
       const auto val = static_cast<char>(static_cast<uint32_t>(variables_[variable_index].second) & 0xff);
       appendToPrintBuffer(std::string(&val, 1));
     } else {
       appendToPrintBuffer(std::to_string(variables_[variable_index].second));
     }
-  } else if (variables_[variable_index].first == Program::VariableType::Link) {
+  } else if (variables_[variable_index].first.type == Program::VariableType::Link) {
     appendToPrintBuffer("L{" + std::to_string(variables_[variable_index].second) + "}");
   } else {
     throw std::runtime_error("Cannot print unsupported variable type (" +
-                             std::to_string(static_cast<int32_t>(variables_[variable_index].first)) + ").");
+                             std::to_string(static_cast<int32_t>(variables_[variable_index].first.type)) + ").");
   }
 }
 
@@ -272,6 +283,20 @@ void VmSession::absoluteJumpToAddressIfVariableEq0(
 
 void VmSession::loadMemorySizeIntoVariable(int32_t variable, bool follow_links) {
   variables_[getRealVariableIndex(variable, follow_links)].second = variable_count_;
+}
+
+void VmSession::checkIfVariableIsInput(
+    int32_t source_variable, bool follow_source_links,
+    int32_t destination_variable, bool follow_destination_links) {
+  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second =
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Input ? 0x1 : 0x0;
+}
+
+void VmSession::checkIfVariableIsOutput(
+    int32_t source_variable, bool follow_source_links,
+    int32_t destination_variable, bool follow_destination_links) {
+  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second =
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Output ? 0x1 : 0x0;
 }
 
 }  // namespace beast

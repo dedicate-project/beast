@@ -218,17 +218,23 @@ void Program::loadMemorySizeIntoVariable(int32_t variable_index, bool follow_lin
 }
 
 void Program::checkIfVariableIsInput(
-    int32_t source_variable_index, int32_t destination_variable_index) {
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x15);
   appendData4(source_variable_index);
+  appendData1(follow_source_links ? 0x1 : 0x0);
   appendData4(destination_variable_index);
+  appendData1(follow_destination_links ? 0x1 : 0x0);
 }
 
 void Program::checkIfVariableIsOutput(
-    int32_t source_variable_index, int32_t destination_variable_index) {
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x16);
   appendData4(source_variable_index);
+  appendData1(follow_source_links ? 0x1 : 0x0);
   appendData4(destination_variable_index);
+  appendData1(follow_destination_links ? 0x1 : 0x0);
 }
 
 void Program::loadInputCountIntoVariable(int32_t variable_index) {

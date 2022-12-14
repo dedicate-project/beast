@@ -91,9 +91,13 @@ class Program {
 
   void loadMemorySizeIntoVariable(int32_t variable_index, bool follow_links);
 
-  void checkIfVariableIsInput(int32_t source_variable_index, int32_t destination_variable_index);
+  void checkIfVariableIsInput(
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links);
 
-  void checkIfVariableIsOutput(int32_t source_variable_index, int32_t destination_variable_index);
+  void checkIfVariableIsOutput(
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links);
 
   void loadInputCountIntoVariable(int32_t variable_index);
 

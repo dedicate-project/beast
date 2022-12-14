@@ -10,9 +10,25 @@ namespace beast {
 
 class VmSession {
  public:
+  enum class VariableIoBehavior {
+    Store = 0,  // Variable is used for in-memory storage only, no I/O behavior is expected
+    Input = 1,  // Variable is expected to receive input from outside
+    Output = 2  // Variable is expected to be read from outside
+  };
+
+  typedef struct VariableDescriptor {
+    Program::VariableType type;
+    VariableIoBehavior behavior;
+    bool changed_since_last_interaction;
+  } VariableDescriptor;
+
   VmSession(
       Program program, size_t variable_count, size_t string_table_count,
       size_t max_string_size);
+
+  void setVariableBehavior(int32_t variable_index, VariableIoBehavior behavior);
+
+  VariableIoBehavior getVariableBehavior(int32_t variable_index, bool follow_links);
 
   int32_t getData4();
 
@@ -82,6 +98,10 @@ class VmSession {
 
   void loadMemorySizeIntoVariable(int32_t variable, bool follow_links);
 
+  void checkIfVariableIsInput(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
+
+  void checkIfVariableIsOutput(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
+
  private:
   Program program_;
 
@@ -93,7 +113,7 @@ class VmSession {
 
   size_t max_string_size_;
 
-  std::map<int32_t, std::pair<Program::VariableType, int32_t>> variables_;
+  std::map<int32_t, std::pair<VariableDescriptor, int32_t>> variables_;
 
   std::map<int32_t, std::string> string_table_;
 

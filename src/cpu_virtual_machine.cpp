@@ -185,15 +185,25 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.loadMemorySizeIntoVariable(variable, follow_links);
   } break;
 
-  /*case 0x15: {  // check if variable is input
-    // Todo: Implement
+  case 0x15: {  // check if variable is input
+    const int32_t source_variable = session.getData4();
+    const bool follow_source_links = session.getData1() != 0x0;
+    const int32_t destination_variable = session.getData4();
+    const bool follow_destination_links = session.getData1() != 0x0;
+    debug("check_if_variable_is_input(" + std::to_string(source_variable) + ", " + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable) + ", " + (follow_destination_links ? "true" : "false") + ")");
+    session.checkIfVariableIsInput(source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
 
   case 0x16: {  // check if variable is output
-    // Todo: Implement
+    const int32_t source_variable = session.getData4();
+    const bool follow_source_links = session.getData1() != 0x0;
+    const int32_t destination_variable = session.getData4();
+    const bool follow_destination_links = session.getData1() != 0x0;
+    debug("check_if_variable_is_output(" + std::to_string(source_variable) + ", " + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable) + ", " + (follow_destination_links ? "true" : "false") + ")");
+    session.checkIfVariableIsOutput(source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
 
-  case 0x17: {  // load input count into variable
+  /*case 0x17: {  // load input count into variable
     // Todo: Implement
   } break;
 
