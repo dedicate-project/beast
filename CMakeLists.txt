@@ -61,6 +61,7 @@ macro(declare_test name)
   add_test(NAME test_${name} COMMAND test_${name})
 endmacro()
 
+declare_test(cpu_vm)
 declare_test(noop)
 declare_test(programs)
 declare_test(variables)
