@@ -53,6 +53,6 @@ enum class OpCode : int8_t {
   UnconditionalJump                          = 0x2e
 };
 
-}
+}  // namespace beast
 
 #endif  // BEAST_OPCODES_HPP_
