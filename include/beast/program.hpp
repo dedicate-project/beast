@@ -17,6 +17,8 @@ class Program {
     Link = 1    // A link to another variable (resolved when the variable content is accessed)
   };
 
+  Program();
+
   Program(int32_t space);
 
   int32_t getSize() const;
@@ -28,6 +30,10 @@ class Program {
   int8_t getData1(int32_t offset);
 
   int32_t getPointer() const;
+
+  void insertProgram(Program& other);
+
+  const std::vector<unsigned char>& getData() const;
 
   void noop();
 
@@ -140,9 +146,13 @@ class Program {
 
   void appendCode1(OpCode opcode);
 
+  void ensureSize(int32_t size);
+
   std::vector<unsigned char> data_;
 
   uint32_t pointer_;
+
+  bool grows_dynamically_;
 };
 
 }  // namespace beast

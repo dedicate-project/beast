@@ -52,3 +52,11 @@ TEST_CASE("adding_too_large_string_table_entry_instruction_throws", "program") {
 
   REQUIRE(threw == true);
 }
+
+TEST_CASE("dymamically_growing_programs_assume_a_fitting_size", "program") {
+  beast::Program prg;
+  prg.declareVariable(10, beast::Program::VariableType::Int32);
+  prg.setVariable(10, 0x48, true);
+
+  REQUIRE(prg.getSize() == 16);
+}

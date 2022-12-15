@@ -654,3 +654,50 @@ TEST_CASE("termination_prevents_further_execution_and_sets_return_code", "progra
   REQUIRE(session.getVariableValue(0, true) == 0);
   REQUIRE(session.getReturnCode() == return_code);
 }
+
+TEST_CASE("inserted_programs_work_as_intended", "programs") {
+  const int32_t index = 3;
+  const int32_t value1 = 73;
+  const int32_t value2 = 62;
+
+  beast::Program prg1;
+  prg1.declareVariable(index, beast::Program::VariableType::Int32);
+  prg1.setVariable(index, value1, true);
+
+  beast::Program prg2;
+  prg2.setVariable(index, value2, true);
+
+  beast::Program prg3;
+  prg3.insertProgram(prg1);
+  prg3.insertProgram(prg2);
+
+  beast::VmSession session(std::move(prg3), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(index, true) == value2);
+}
+
+TEST_CASE("undeclared_variables_cannot_be_set", "programs") {
+  const int32_t index = 3;
+  const int32_t value = 73;
+
+  beast::Program prg;
+  prg.declareVariable(index, beast::Program::VariableType::Int32);
+  prg.undeclareVariable(index);
+  prg.setVariable(index, value, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  vm.step(session);
+  vm.step(session);
+
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}

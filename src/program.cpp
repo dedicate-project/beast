@@ -5,8 +5,12 @@
 
 namespace beast {
 
+Program::Program()
+  : pointer_{0}, grows_dynamically_{true} {
+}
+
 Program::Program(int32_t space)
-  : data_(space, 0x00), pointer_{0} {
+  : data_(space, 0x00), pointer_{0}, grows_dynamically_{false} {
 }
 
 int32_t Program::getSize() const {
@@ -45,6 +49,21 @@ int8_t Program::getData1(int32_t offset) {
 
 int32_t Program::getPointer() const {
   return pointer_;
+}
+
+void Program::insertProgram(Program& other) {
+  const int32_t to_fit = other.getSize();
+  if (!canFit(to_fit)) { 
+    throw std::runtime_error("Unable to fit other program into program.");
+  }
+  for (int32_t idx = 0; idx < to_fit; ++idx) {
+    data_[pointer_ + idx] = other.getData()[idx];
+  }
+  pointer_ += to_fit;
+}
+
+const std::vector<unsigned char>& Program::getData() const {
+  return data_;
 }
 
 void Program::noop() {
@@ -310,6 +329,9 @@ void Program::checkIfInputWasSet(
 }
 
 bool Program::canFit(int32_t bytes) {
+  if (grows_dynamically_) {
+    ensureSize(pointer_ + bytes);
+  }
   return bytes <= data_.size() - pointer_;
 }
 
@@ -340,6 +362,12 @@ void Program::appendFlag1(bool flag) {
 
 void Program::appendCode1(OpCode opcode) {
   appendData1(static_cast<int8_t>(opcode));
+}
+
+void Program::ensureSize(int32_t size) {
+  if (data_.size() < size) {
+    data_.resize(size);
+  }
 }
 
 }  // namespace beast
