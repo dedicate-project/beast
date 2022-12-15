@@ -4,13 +4,15 @@
 #include <ctime>
 #include <iostream>
 
+#include <beast/opcodes.hpp>
+
 namespace beast {
 
 bool CpuVirtualMachine::step(VmSession& session) {
-  uint8_t instruction = 0x0;
+  OpCode instruction = OpCode::NoOp;
   try {
     // Try to get next major instruction symbol.
-    instruction = session.getData1();
+    instruction = static_cast<OpCode>(session.getData1());
   } catch(...) {
     // Unable to get more data; the program came to an unexpected end.
     panic("Program ended unexpectedly.");
@@ -18,17 +20,17 @@ bool CpuVirtualMachine::step(VmSession& session) {
   }
 
   switch (instruction) {
-  case 0x00:  // noop
+  case OpCode::NoOp:
     break;
 
-  case 0x01: {  // declare variable
+  case OpCode::DeclareVariable: {
     const int32_t variable_index = session.getData4();
     const auto variable_type = static_cast<Program::VariableType>(session.getData1());
     debug("register_variable(" + std::to_string(variable_index) + ", " + std::to_string(static_cast<int32_t>(variable_type)) + ")");
     session.registerVariable(variable_index, variable_type);
   } break;
 
-  case 0x02: {  // set variable
+  case OpCode::SetVariable: {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     const int32_t variable_content = session.getData4();
@@ -36,13 +38,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.setVariable(variable_index, variable_content, follow_links);
   } break;
 
-  case 0x03: {  // undeclare variable
+  case OpCode::UndeclareVariable: {
     const int32_t variable_index = session.getData4();
     debug("undeclare_variable(" + std::to_string(variable_index) + ")");
     session.unregisterVariable(variable_index);
   } break;
 
-  case 0x04: {  // add constant to variable
+  case OpCode::AddConstantToVariable: {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     const int32_t constant = session.getData4();
@@ -50,7 +52,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.addConstantToVariable(variable_index, constant, follow_links);
   } break;
 
-  case 0x05: {  // add variable to variable
+  case OpCode::AddVariableToVariable: {
     const int32_t source_variable = session.getData4();
     const bool follow_source_links = session.getData1() != 0x0;
     const int32_t destination_variable = session.getData4();
@@ -59,7 +61,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.addVariableToVariable(source_variable, destination_variable, follow_source_links, follow_destination_links);
   } break;
 
-  case 0x06: {  // subtract constant from variable
+  case OpCode::SubtractConstantFromVariable: {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     const int32_t constant = session.getData4();
@@ -67,7 +69,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.subtractConstantFromVariable(variable_index, constant, follow_links);
   } break;
 
-  case 0x07: {  // subtract variable from variable
+  case OpCode::SubtractVariableFromVariable: {
     const int32_t source_variable = session.getData4();
     const bool follow_source_links = session.getData1() != 0x0;
     const int32_t destination_variable = session.getData4();
@@ -76,7 +78,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.subtractVariableFromVariable(source_variable, destination_variable, follow_source_links, follow_destination_links);
   } break;
 
-  case 0x08: {  // rel jump to var addr if variable > 0
+  case OpCode::RelativeJumpToVariableAddressIfVariableGt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr_variable = session.getData4();
@@ -85,7 +87,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToVariableAddressIfVariableGt0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x09: {  // rel jump to var addr if variable < 0
+  case OpCode::RelativeJumpToVariableAddressIfVariableLt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr_variable = session.getData4();
@@ -94,7 +96,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToVariableAddressIfVariableLt0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x0a: {  // rel jump to var addr if variable = 0
+  case OpCode::RelativeJumpToVariableAddressIfVariableEq0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr_variable = session.getData4();
@@ -103,7 +105,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToVariableAddressIfVariableEq0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x0b: {  // abs jump to var addr if variable > 0
+  case OpCode::AbsoluteJumpToVariableAddressIfVariableGt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr_variable = session.getData4();
@@ -112,7 +114,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToVariableAddressIfVariableGt0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x0c: {  // abs jump to var addr if variable < 0
+  case OpCode::AbsoluteJumpToVariableAddressIfVariableLt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr_variable = session.getData4();
@@ -121,7 +123,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToVariableAddressIfVariableLt0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x0d: {  // abs jump to var addr if variable = 0
+  case OpCode::AbsoluteJumpToVariableAddressIfVariableEq0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr_variable = session.getData4();
@@ -130,7 +132,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToVariableAddressIfVariableEq0(condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
 
-  case 0x0e: {  // rel jump if variable > 0
+  case OpCode::RelativeJumpIfVariableGt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
@@ -138,7 +140,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x0f: {  // rel jump if variable < 0
+  case OpCode::RelativeJumpIfVariableLt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
@@ -146,7 +148,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToAddressIfVariableLt0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x10: {  // rel jump if variable = 0
+  case OpCode::RelativeJumpIfVariableEq0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
@@ -154,7 +156,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.relativeJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x11: {  // abs jump if variable > 0
+  case OpCode::AbsoluteJumpIfVariableGt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
@@ -162,7 +164,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x12: {  // abs jump if variable < 0
+  case OpCode::AbsoluteJumpIfVariableLt0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
@@ -170,7 +172,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToAddressIfVariableLt0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x13: {  // abs jump if variable = 0
+  case OpCode::AbsoluteJumpIfVariableEq0: {
     const int32_t condition_variable = session.getData4();
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
@@ -178,14 +180,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.absoluteJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
-  case 0x14: {  // load memory size into variable
+  case OpCode::LoadMemorySizeIntoVariable: {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_memory_size_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
     session.loadMemorySizeIntoVariable(variable, follow_links);
   } break;
 
-  case 0x15: {  // check if variable is input
+  case OpCode::CheckIfVariableIsInput: {
     const int32_t source_variable = session.getData4();
     const bool follow_source_links = session.getData1() != 0x0;
     const int32_t destination_variable = session.getData4();
@@ -194,7 +196,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.checkIfVariableIsInput(source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
 
-  case 0x16: {  // check if variable is output
+  case OpCode::CheckIfVariableIsOutput: {
     const int32_t source_variable = session.getData4();
     const bool follow_source_links = session.getData1() != 0x0;
     const int32_t destination_variable = session.getData4();
@@ -203,19 +205,19 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.checkIfVariableIsOutput(source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
 
-  /*case 0x17: {  // load input count into variable
-    // Todo: Implement
-  } break;
-
-  case 0x18: {  // load output count into variable
-    // Todo: Implement
-  } break;
-
-  case 0x19: {  // load current address into variable
+  /*case OpCode::LoadInputCountIntoVariable: {
     // Todo: Implement
   } break;*/
 
-  case 0x1a: {  // print variable
+  /*case OpCode::LoadOutputCountIntoVariable: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::LoadCurrentAddressIntoVariable: {
+    // Todo: Implement
+  } break;*/
+
+  case OpCode::PrintVariable: {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     const bool as_char = session.getData1() != 0x0;
@@ -223,7 +225,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.appendVariableToPrintBuffer(variable_index, follow_links, as_char);
   } break;
 
-  case 0x1b: {  // set string table entry
+  case OpCode::SetStringTableEntry: {
     const int32_t string_table_index = session.getData4();
     const int16_t string_length = session.getData2();
     std::vector<char> buffer(string_length);
@@ -235,23 +237,83 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.setStringTableEntry(string_table_index, string_content);
   } break;
 
-  case 0x1c: {  // print string from string table
+  case OpCode::PrintStringFromStringTable: {
     const int32_t string_table_index = session.getData4();
     debug("print_string_from_string_table(" + std::to_string(string_table_index) + ")");
     session.appendToPrintBuffer(session.getStringTableEntry(string_table_index));
   } break;
 
-  /*case 0x1d: {  // load string table limit into variable
+  /*case OpCode::LoadStringTableLimitIntoVariable: {
     // Todo: Implement
   } break;*/
 
-  case 0x1e: {  // terminate
+  case OpCode::Terminate: {
     const int8_t return_code = session.getData1();
     debug("terminate(" + std::to_string(return_code) + ")");
     session.terminate(return_code);
   } break;
 
-  /*case 0x1f: {  // copy variable
+  /*case OpCode::CopyVariable: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::LoadStringItemLengthIntoVariable: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::LoadStringItemIntoVariables: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::PerformSystemCall: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::BitShiftVariableLeft: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::BitShiftVariableRight: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::BitWiseInvertVariable: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::BitWiseAndTwoVariables: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::BitWiseOrTwoVariables: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::BitWiseXorTwoVariables: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::LoadRandomValueIntoVariable: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::ModuloVariableByConstant: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::ModuloVariableByVariable: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::RotateVariableLeft: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::RotateVariableRight: {
+    // Todo: Implement
+  } break;*/
+  
+  /*case OpCode::UnconditionalJump: {
     // Todo: Implement
   } break;*/
 
