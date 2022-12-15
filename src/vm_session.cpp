@@ -299,4 +299,11 @@ void VmSession::checkIfVariableIsOutput(
       variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Output ? 0x1 : 0x0;
 }
 
+void VmSession::copyVariable(
+    int32_t source_variable, bool follow_source_links,
+    int32_t destination_variable, bool follow_destination_links) {
+  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second =
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
+}
+
 }  // namespace beast

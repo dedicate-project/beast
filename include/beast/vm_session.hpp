@@ -102,6 +102,8 @@ class VmSession {
 
   void checkIfVariableIsOutput(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
 
+  void copyVariable(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
+
  private:
   Program program_;
 

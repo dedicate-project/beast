@@ -117,7 +117,9 @@ class Program {
 
   void terminate(int8_t return_code);
 
-  void copyVariable(int32_t source_variable_index, int32_t destination_variable_index);
+  void copyVariable(
+      int32_t source_variable_index, bool follow_source_links,
+      int32_t destination_variable_index, bool follow_destination_links);
 
   void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index, bool follow_links);
 

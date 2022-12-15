@@ -286,10 +286,14 @@ void Program::terminate(int8_t return_code) {
   appendData1(return_code);
 }
 
-void Program::copyVariable(int32_t source_variable_index, int32_t destination_variable_index) {
+void Program::copyVariable(
+    int32_t source_variable_index, bool follow_source_links,
+    int32_t destination_variable_index, bool follow_destination_links) {
   appendCode1(OpCode::CopyVariable);
   appendData4(source_variable_index);
+  appendFlag1(follow_source_links);
   appendData4(destination_variable_index);
+  appendFlag1(follow_destination_links);
 }
 
 bool Program::canFit(int32_t bytes) {

@@ -549,3 +549,22 @@ TEST_CASE("outputs_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(result1_variable_index, true) == 0x1);
   REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
 }
+
+TEST_CASE("copying_a_variable_copies_its_value", "programs") {
+  const int32_t source_variable_index = 3;
+  const int32_t destination_variable_index = 7;
+  const int32_t value = 73;
+
+  beast::Program prg(100);
+  prg.declareVariable(source_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(source_variable_index, value, true);
+  prg.declareVariable(destination_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(destination_variable_index, 0, true);
+  prg.copyVariable(source_variable_index, true, destination_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(source_variable_index, true) == session.getVariableValue(destination_variable_index, true));
+}

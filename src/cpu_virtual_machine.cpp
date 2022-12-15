@@ -253,66 +253,71 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.terminate(return_code);
   } break;
 
-  /*case OpCode::CopyVariable: {
-    // Todo: Implement
-  } break;*/
-  
+  case OpCode::CopyVariable: {
+    const int32_t source_variable = session.getData4();
+    const bool follow_source_links = session.getData1() != 0x0;
+    const int32_t destination_variable = session.getData4();
+    const bool follow_destination_links = session.getData1() != 0x0;
+    debug("copy_variable(" + std::to_string(source_variable) + ", " + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable) + ", " + (follow_destination_links ? "true" : "false") + ")");
+    session.copyVariable(source_variable, follow_source_links, destination_variable, follow_destination_links);
+  } break;
+
   /*case OpCode::LoadStringItemLengthIntoVariable: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::LoadStringItemIntoVariables: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::PerformSystemCall: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::BitShiftVariableLeft: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::BitShiftVariableRight: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::BitWiseInvertVariable: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::BitWiseAndTwoVariables: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::BitWiseOrTwoVariables: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::BitWiseXorTwoVariables: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::LoadRandomValueIntoVariable: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::ModuloVariableByConstant: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::ModuloVariableByVariable: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::RotateVariableLeft: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::RotateVariableRight: {
     // Todo: Implement
   } break;*/
-  
+
   /*case OpCode::UnconditionalJump: {
     // Todo: Implement
   } break;*/
