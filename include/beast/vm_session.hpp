@@ -38,6 +38,8 @@ class VmSession {
 
   int32_t getVariableValue(int32_t variable_index, bool follow_links);
 
+  void setVariableValue(int32_t variable_index, bool follow_links, int32_t value);
+
   bool isAtEnd();
 
   void registerVariable(int32_t variable_index, Program::VariableType variable_type);
@@ -111,6 +113,10 @@ class VmSession {
   void loadCurrentAddressIntoVariable(int32_t variable, bool follow_links);
 
  private:
+  int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
+
+  void setVariableValueInternal(int32_t variable_index, bool follow_links, int32_t value);
+
   Program program_;
 
   int32_t pointer_;

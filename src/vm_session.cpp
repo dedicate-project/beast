@@ -41,7 +41,35 @@ int8_t VmSession::getData1() {
 }
 
 int32_t VmSession::getVariableValue(int32_t variable_index, bool follow_links) {
-  return variables_[getRealVariableIndex(variable_index, follow_links)].second;
+  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.first.behavior == VariableIoBehavior::Output) {
+    variable.first.changed_since_last_interaction = false;
+  }
+  return variable.second;
+}
+
+int32_t VmSession::getVariableValueInternal(int32_t variable_index, bool follow_links) {
+  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.first.behavior == VariableIoBehavior::Input) {
+    variable.first.changed_since_last_interaction = false;
+  }
+  return variable.second;
+}
+
+void VmSession::setVariableValue(int32_t variable_index, bool follow_links, int32_t value) {
+  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.first.behavior == VariableIoBehavior::Input) {
+    variable.first.changed_since_last_interaction = true;
+  }
+  variable.second = value;
+}
+
+void VmSession::setVariableValueInternal(int32_t variable_index, bool follow_links, int32_t value) {
+  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.first.behavior == VariableIoBehavior::Output) {
+    variable.first.changed_since_last_interaction = true;
+  }
+  variable.second = value;
 }
 
 bool VmSession::isAtEnd() {
@@ -84,7 +112,7 @@ int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_link
         throw std::runtime_error("Circular variable index link.");
       }
       visited_indices.insert(variable_index);
-      variable_index = variables_[variable_index].second;
+      variable_index = getVariableValueInternal(variable_index, false);
     } else {
       throw std::runtime_error("Invalid declarative variable type.");
     }
@@ -95,7 +123,7 @@ int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_link
 }
 
 void VmSession::setVariable(int32_t variable_index, int32_t value, bool follow_links) {
-  variables_[getRealVariableIndex(variable_index, follow_links)].second = value;
+  setVariableValueInternal(variable_index, follow_links, value);
 }
 
 void VmSession::unregisterVariable(int32_t variable_index) {
@@ -139,13 +167,13 @@ void VmSession::appendVariableToPrintBuffer(
   variable_index = getRealVariableIndex(variable_index, follow_links);
   if (variables_[variable_index].first.type == Program::VariableType::Int32) {
     if (as_char) {
-      const auto val = static_cast<char>(static_cast<uint32_t>(variables_[variable_index].second) & 0xff);
+      const auto val = static_cast<char>(static_cast<uint32_t>(getVariableValueInternal(variable_index, false)) & 0xff);
       appendToPrintBuffer(std::string(&val, 1));
     } else {
-      appendToPrintBuffer(std::to_string(variables_[variable_index].second));
+      appendToPrintBuffer(std::to_string(getVariableValueInternal(variable_index, false)));
     }
   } else if (variables_[variable_index].first.type == Program::VariableType::Link) {
-    appendToPrintBuffer("L{" + std::to_string(variables_[variable_index].second) + "}");
+    appendToPrintBuffer("L{" + std::to_string(getVariableValueInternal(variable_index, false)) + "}");
   } else {
     throw std::runtime_error("Cannot print unsupported variable type (" +
                              std::to_string(static_cast<int32_t>(variables_[variable_index].first.type)) + ").");
@@ -170,140 +198,147 @@ int8_t VmSession::getReturnCode() const {
 }
 
 void VmSession::addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links) {
-  variables_[getRealVariableIndex(variable_index, follow_links)].second += constant;
+  setVariableValueInternal(variable_index, follow_links, getVariableValueInternal(variable_index, follow_links) + constant);
 }
 
 void VmSession::addVariableToVariable(
     int32_t source_variable, int32_t destination_variable, bool follow_source_links,
     bool follow_destination_links) {
-  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second +=
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
+  setVariableValueInternal(
+      destination_variable, follow_destination_links,
+      getVariableValueInternal(destination_variable, follow_destination_links) +
+      getVariableValueInternal(source_variable, follow_source_links));
 }
 
 void VmSession::subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links) {
-  variables_[getRealVariableIndex(variable_index, follow_links)].second -= constant;
+  setVariableValueInternal(variable_index, follow_links, getVariableValueInternal(variable_index, follow_links) - constant);
 }
 
 void VmSession::subtractVariableFromVariable(
     int32_t source_variable, int32_t destination_variable, bool follow_source_links,
     bool follow_destination_links) {
-  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second -=
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
+  setVariableValueInternal(
+      destination_variable, follow_destination_links,
+      getVariableValueInternal(destination_variable, follow_destination_links) -
+      getVariableValueInternal(source_variable, follow_source_links));
 }
 
 void VmSession::relativeJumpToVariableAddressIfVariableGt0(
     int32_t condition_variable, bool follow_condition_links,
     int32_t addr_variable, bool follow_addr_links) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second > 0) {
-    pointer_ += variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  if (getVariableValueInternal(condition_variable, follow_condition_links) > 0) {
+    pointer_ += getVariableValueInternal(addr_variable, follow_addr_links);
   }
 }
 
 void VmSession::relativeJumpToVariableAddressIfVariableLt0(
     int32_t condition_variable, bool follow_condition_links,
     int32_t addr_variable, bool follow_addr_links) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second < 0) {
-    pointer_ += variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  if (getVariableValueInternal(condition_variable, follow_condition_links) < 0) {
+    pointer_ += getVariableValueInternal(addr_variable, follow_addr_links);
   }
 }
 
 void VmSession::relativeJumpToVariableAddressIfVariableEq0(
     int32_t condition_variable, bool follow_condition_links,
     int32_t addr_variable, bool follow_addr_links) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second == 0) {
-    pointer_ += variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  if (getVariableValueInternal(condition_variable, follow_condition_links) == 0) {
+    pointer_ += getVariableValueInternal(addr_variable, follow_addr_links);
   }
 }
 
 void VmSession::absoluteJumpToVariableAddressIfVariableGt0(
     int32_t condition_variable, bool follow_condition_links,
     int32_t addr_variable, bool follow_addr_links) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second > 0) {
-    pointer_ = variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  if (getVariableValueInternal(condition_variable, follow_condition_links) > 0) {
+    pointer_ = getVariableValueInternal(addr_variable, follow_addr_links);
   }
 }
 
 void VmSession::absoluteJumpToVariableAddressIfVariableLt0(
     int32_t condition_variable, bool follow_condition_links,
     int32_t addr_variable, bool follow_addr_links) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second < 0) {
-    pointer_ = variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  if (getVariableValueInternal(condition_variable, follow_condition_links) < 0) {
+    pointer_ = getVariableValueInternal(addr_variable, follow_addr_links);
   }
 }
 
 void VmSession::absoluteJumpToVariableAddressIfVariableEq0(
     int32_t condition_variable, bool follow_condition_links,
     int32_t addr_variable, bool follow_addr_links) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second == 0) {
-    pointer_ = variables_[getRealVariableIndex(addr_variable, follow_addr_links)].second;
+  if (getVariableValueInternal(condition_variable, follow_condition_links) == 0) {
+    pointer_ = getVariableValueInternal(addr_variable, follow_addr_links);
   }
 }
 
 void VmSession::relativeJumpToAddressIfVariableGt0(
     int32_t condition_variable, bool follow_condition_links, int32_t addr) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second > 0) {
+  if (getVariableValueInternal(condition_variable, follow_condition_links) > 0) {
     pointer_ += addr;
   }
 }
 
 void VmSession::relativeJumpToAddressIfVariableLt0(
     int32_t condition_variable, bool follow_condition_links, int32_t addr) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second < 0) {
+  if (getVariableValueInternal(condition_variable, follow_condition_links) < 0) {
     pointer_ += addr;
   }
 }
 
 void VmSession::relativeJumpToAddressIfVariableEq0(
     int32_t condition_variable, bool follow_condition_links, int32_t addr) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second == 0) {
+  if (getVariableValueInternal(condition_variable, follow_condition_links) == 0) {
     pointer_ += addr;
   }
 }
 
 void VmSession::absoluteJumpToAddressIfVariableGt0(
     int32_t condition_variable, bool follow_condition_links, int32_t addr) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second > 0) {
+  if (getVariableValueInternal(condition_variable, follow_condition_links) > 0) {
     pointer_ = addr;
   }
 }
 
 void VmSession::absoluteJumpToAddressIfVariableLt0(
     int32_t condition_variable, bool follow_condition_links, int32_t addr) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second < 0) {
+  if (getVariableValueInternal(condition_variable, follow_condition_links) < 0) {
     pointer_ = addr;
   }
 }
 
 void VmSession::absoluteJumpToAddressIfVariableEq0(
     int32_t condition_variable, bool follow_condition_links, int32_t addr) {
-  if (variables_[getRealVariableIndex(condition_variable, follow_condition_links)].second == 0) {
+  if (getVariableValueInternal(condition_variable, follow_condition_links) == 0) {
     pointer_ = addr;
   }
 }
 
 void VmSession::loadMemorySizeIntoVariable(int32_t variable, bool follow_links) {
-  variables_[getRealVariableIndex(variable, follow_links)].second = variable_count_;
+  setVariableValueInternal(variable, follow_links, variable_count_);
 }
 
 void VmSession::checkIfVariableIsInput(
     int32_t source_variable, bool follow_source_links,
     int32_t destination_variable, bool follow_destination_links) {
-  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second =
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Input ? 0x1 : 0x0;
+  setVariableValueInternal(
+      destination_variable, follow_destination_links,
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Input ? 0x1 : 0x0);
 }
 
 void VmSession::checkIfVariableIsOutput(
     int32_t source_variable, bool follow_source_links,
     int32_t destination_variable, bool follow_destination_links) {
-  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second =
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Output ? 0x1 : 0x0;
+  setVariableValueInternal(
+      destination_variable, follow_destination_links,
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Output ? 0x1 : 0x0);
 }
 
 void VmSession::copyVariable(
     int32_t source_variable, bool follow_source_links,
     int32_t destination_variable, bool follow_destination_links) {
-  variables_[getRealVariableIndex(destination_variable, follow_destination_links)].second =
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
+  setVariableValueInternal(
+      destination_variable, follow_destination_links,
+      getVariableValueInternal(source_variable, follow_source_links));
 }
 
 void VmSession::loadInputCountIntoVariable(int32_t variable, bool follow_links) {
@@ -313,7 +348,7 @@ void VmSession::loadInputCountIntoVariable(int32_t variable, bool follow_links) 
       input_count++;
     }
   }
-  variables_[getRealVariableIndex(variable, follow_links)].second = input_count;
+  setVariableValueInternal(variable, follow_links, input_count);
 }
 
 void VmSession::loadOutputCountIntoVariable(int32_t variable, bool follow_links) {
@@ -323,11 +358,11 @@ void VmSession::loadOutputCountIntoVariable(int32_t variable, bool follow_links)
       output_count++;
     }
   }
-  variables_[getRealVariableIndex(variable, follow_links)].second = output_count;
+  setVariableValueInternal(variable, follow_links, output_count);
 }
 
 void VmSession::loadCurrentAddressIntoVariable(int32_t variable, bool follow_links) {
-  variables_[getRealVariableIndex(variable, follow_links)].second = pointer_;
+  setVariableValueInternal(variable, follow_links, pointer_);
 }
 
 }  // namespace beast
