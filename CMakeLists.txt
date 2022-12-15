@@ -63,5 +63,6 @@ endmacro()
 
 declare_test(cpu_vm)
 declare_test(noop)
+declare_test(program)
 declare_test(programs)
 declare_test(variables)
