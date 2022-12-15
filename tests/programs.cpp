@@ -617,3 +617,24 @@ TEST_CASE("current_address_can_be_determined", "programs") {
 
   REQUIRE(session.getVariableValue(0, true) == 22);
 }
+
+TEST_CASE("set_input_can_be_determined", "programs") {
+  beast::Program prg(100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, 1, true);
+  prg.checkIfInputWasSet(2, true, 0, true);
+  prg.checkIfInputWasSet(3, true, 1, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  session.setVariableBehavior(2, beast::VmSession::VariableIoBehavior::Input);
+  session.setVariableBehavior(3, beast::VmSession::VariableIoBehavior::Input);
+
+  session.setVariableValue(2, true, 1);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 1);
+  REQUIRE(session.getVariableValue(1, true) == 0);
+}

@@ -365,4 +365,15 @@ void VmSession::loadCurrentAddressIntoVariable(int32_t variable, bool follow_lin
   setVariableValueInternal(variable, follow_links, pointer_);
 }
 
+void VmSession::checkIfInputWasSet(
+    int32_t variable_index, bool follow_links,
+    int32_t destination_variable, bool follow_destination_links) {
+  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.first.behavior != VariableIoBehavior::Input) {
+    throw std::runtime_error("Variable is not an input.");
+  }
+
+  setVariableValueInternal(destination_variable, follow_destination_links, variable.first.changed_since_last_interaction ? 0x1 : 0x0);
+}
+
 }  // namespace beast

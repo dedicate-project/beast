@@ -299,6 +299,16 @@ void Program::copyVariable(
   appendFlag1(follow_destination_links);
 }
 
+void Program::checkIfInputWasSet(
+    int32_t variable_index, bool follow_links,
+    int32_t destination_variable_index, bool follow_destination_links) {
+  appendCode1(OpCode::CheckIfInputWasSet);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+  appendData4(destination_variable_index);
+  appendFlag1(follow_destination_links);
+}
+
 bool Program::canFit(int32_t bytes) {
   return bytes <= data_.size() - pointer_;
 }

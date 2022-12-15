@@ -123,6 +123,10 @@ class Program {
 
   void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index, bool follow_links);
 
+  void checkIfInputWasSet(
+      int32_t variable_index, bool follow_links,
+      int32_t destination_variable_index, bool follow_destination_links);
+
  private:
   bool canFit(int32_t bytes);
 

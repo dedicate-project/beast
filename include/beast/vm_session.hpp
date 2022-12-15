@@ -112,6 +112,8 @@ class VmSession {
 
   void loadCurrentAddressIntoVariable(int32_t variable, bool follow_links);
 
+  void checkIfInputWasSet(int32_t variable_index, bool follow_links, int32_t destination_variable, bool follow_destination_links);
+
  private:
   int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
 

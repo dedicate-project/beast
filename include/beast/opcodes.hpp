@@ -50,7 +50,8 @@ enum class OpCode : int8_t {
   ModuloVariableByVariable                   = 0x2b,
   RotateVariableLeft                         = 0x2c,
   RotateVariableRight                        = 0x2d,
-  UnconditionalJump                          = 0x2e
+  UnconditionalJump                          = 0x2e,
+  CheckIfInputWasSet                         = 0x2f
 };
 
 }  // namespace beast
