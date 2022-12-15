@@ -638,3 +638,19 @@ TEST_CASE("set_input_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(0, true) == 1);
   REQUIRE(session.getVariableValue(1, true) == 0);
 }
+
+TEST_CASE("termination_prevents_further_execution_and_sets_return_code", "programs") {
+  const int8_t return_code = 127;
+  beast::Program prg(100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.terminate(return_code);
+  prg.setVariable(0, 1, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 0);
+  REQUIRE(session.getReturnCode() == return_code);
+}
