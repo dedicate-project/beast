@@ -128,6 +128,8 @@ class Program {
 
   void appendData1(int8_t data);
 
+  void appendFlag1(bool flag);
+
   std::vector<unsigned char> data_;
 
   uint32_t pointer_;

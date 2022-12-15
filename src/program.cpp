@@ -60,7 +60,7 @@ void Program::declareVariable(int32_t variable_index, VariableType variable_type
 void Program::setVariable(int32_t variable_index, int32_t content, bool follow_links) {
   appendData1(0x02);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(content);
 }
 
@@ -72,7 +72,7 @@ void Program::undeclareVariable(int32_t variable_index) {
 void Program::addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links) {
   appendData1(0x04);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(constant);
 }
 
@@ -81,15 +81,15 @@ void Program::addVariableToVariable(
     int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x05);
   appendData4(source_variable_index);
-  appendData1(follow_source_links ? 0x1 : 0x0);
+  appendFlag1(follow_source_links);
   appendData4(destination_variable_index);
-  appendData1(follow_destination_links ? 0x1 : 0x0);
+  appendFlag1(follow_destination_links);
 }
 
 void Program::subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links) {
   appendData1(0x06);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(constant);
 }
 
@@ -98,9 +98,9 @@ void Program::subtractVariableFromVariable(
     int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x07);
   appendData4(source_variable_index);
-  appendData1(follow_source_links ? 0x1 : 0x0);
+  appendFlag1(follow_source_links);
   appendData4(destination_variable_index);
-  appendData1(follow_destination_links ? 0x1 : 0x0);
+  appendFlag1(follow_destination_links);
 }
 
 void Program::relativeJumpToVariableAddressIfVariableGreaterThanZero(
@@ -108,9 +108,9 @@ void Program::relativeJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t relative_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x08);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(relative_jump_address_variable_index);
-  appendData1(follow_addr_links ? 0x1 : 0x0);
+  appendFlag1(follow_addr_links);
 }
 
 void Program::relativeJumpToVariableAddressIfVariableLessThanZero(
@@ -118,9 +118,9 @@ void Program::relativeJumpToVariableAddressIfVariableLessThanZero(
     int32_t relative_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x09);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(relative_jump_address_variable_index);
-  appendData1(follow_addr_links ? 0x1 : 0x0);
+  appendFlag1(follow_addr_links);
 }
 
 void Program::relativeJumpToVariableAddressIfVariableEqualsZero(
@@ -128,9 +128,9 @@ void Program::relativeJumpToVariableAddressIfVariableEqualsZero(
     int32_t relative_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0a);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(relative_jump_address_variable_index);
-  appendData1(follow_addr_links ? 0x1 : 0x0);
+  appendFlag1(follow_addr_links);
 }
 
 void Program::absoluteJumpToVariableAddressIfVariableGreaterThanZero(
@@ -138,9 +138,9 @@ void Program::absoluteJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t absolute_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0b);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(absolute_jump_address_variable_index);
-  appendData1(follow_addr_links ? 0x1 : 0x0);
+  appendFlag1(follow_addr_links);
 }
 
 void Program::absoluteJumpToVariableAddressIfVariableLessThanZero(
@@ -148,9 +148,9 @@ void Program::absoluteJumpToVariableAddressIfVariableLessThanZero(
     int32_t absolute_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0c);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(absolute_jump_address_variable_index);
-  appendData1(follow_addr_links ? 0x1 : 0x0);
+  appendFlag1(follow_addr_links);
 }
 
 void Program::absoluteJumpToVariableAddressIfVariableEqualsZero(
@@ -158,16 +158,16 @@ void Program::absoluteJumpToVariableAddressIfVariableEqualsZero(
     int32_t absolute_jump_address_variable_index, bool follow_addr_links) {
   appendData1(0x0d);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(absolute_jump_address_variable_index);
-  appendData1(follow_addr_links ? 0x1 : 0x0);
+  appendFlag1(follow_addr_links);
 }
 
 void Program::relativeJumpToAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address) {
   appendData1(0x0e);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(relative_jump_address);
 }
 
@@ -175,7 +175,7 @@ void Program::relativeJumpToAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address) {
   appendData1(0x0f);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(relative_jump_address);
 }
 
@@ -183,7 +183,7 @@ void Program::relativeJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address) {
   appendData1(0x10);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(relative_jump_address);
 }
 
@@ -191,7 +191,7 @@ void Program::absoluteJumpToAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address) {
   appendData1(0x11);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(absolute_jump_address);
 }
 
@@ -199,7 +199,7 @@ void Program::absoluteJumpToAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address) {
   appendData1(0x12);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(absolute_jump_address);
 }
 
@@ -207,14 +207,14 @@ void Program::absoluteJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address) {
   appendData1(0x13);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
   appendData4(absolute_jump_address);
 }
 
 void Program::loadMemorySizeIntoVariable(int32_t variable_index, bool follow_links) {
   appendData1(0x14);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
+  appendFlag1(follow_links);
 }
 
 void Program::checkIfVariableIsInput(
@@ -222,9 +222,9 @@ void Program::checkIfVariableIsInput(
     int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x15);
   appendData4(source_variable_index);
-  appendData1(follow_source_links ? 0x1 : 0x0);
+  appendFlag1(follow_source_links);
   appendData4(destination_variable_index);
-  appendData1(follow_destination_links ? 0x1 : 0x0);
+  appendFlag1(follow_destination_links);
 }
 
 void Program::checkIfVariableIsOutput(
@@ -232,9 +232,9 @@ void Program::checkIfVariableIsOutput(
     int32_t destination_variable_index, bool follow_destination_links) {
   appendData1(0x16);
   appendData4(source_variable_index);
-  appendData1(follow_source_links ? 0x1 : 0x0);
+  appendFlag1(follow_source_links);
   appendData4(destination_variable_index);
-  appendData1(follow_destination_links ? 0x1 : 0x0);
+  appendFlag1(follow_destination_links);
 }
 
 void Program::loadInputCountIntoVariable(int32_t variable_index) {
@@ -255,8 +255,8 @@ void Program::loadCurrentAddressIntoVariable(int32_t variable_index) {
 void Program::printVariable(int32_t variable_index, bool follow_links, bool as_char) {
   appendData1(0x1a);
   appendData4(variable_index);
-  appendData1(follow_links ? 0x1 : 0x0);
-  appendData1(as_char ? 0x1 : 0x0);
+  appendFlag1(follow_links);
+  appendFlag1(as_char);
 }
 
 void Program::setStringTableEntry(int32_t string_table_index, std::string string) {
@@ -315,6 +315,10 @@ void Program::appendData1(int8_t data) {
 
   std::memcpy(&data_[pointer_], &data, 1);
   pointer_ += 1;
+}
+
+void Program::appendFlag1(bool flag) {
+  appendData1(flag ? 0x1 : 0x0);
 }
 
 }  // namespace beast
