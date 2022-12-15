@@ -3,8 +3,62 @@
 [![CircleCI badge](https://circleci.com/gh/dedicate-project/beast.svg?style=svg)](https://circleci.com/gh/dedicate-project/beast)
 [![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
 
+This project defines and implements a virtual machine with a custom instruction set. It operates on byte level and supports all common low-level machine operations, but functions in an entirely virtual environment. This project does not build an x86 interpreter or anything alike, but makes available a custom byte-level machine language that can be used to experiment with code transformations and custom low-level operators.
 
-## Operators
+
+## Building
+
+First, install the dependencies (assuming you're working on a Ubuntu system):
+```bash
+sudo apt install clang-tidy ccache
+```
+
+To build the project, check out the source code:
+```bash
+git clone https://github.com/dedicate-project/beast/
+```
+
+Then, inside the repository, perform the following actions to actually build the code:
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+To run all tests, afterwards run:
+```bash
+make test
+```
+
+If you want to create a coverage report, install these additional dependencies:
+```bash
+sudo apt install lcov npm
+```
+
+And run this:
+```bash
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make
+make coverage
+```
+
+
+## Adding a new Operator
+
+To add a new operator, you need to follow these steps:
+
+1. Add a new opcode in `include/beast/opcodes.hpp`: Append the new opcode with the next higher hex value at the end of the enum class `OpCode`.
+1. Add a signature for this opcode in `include/beast/program.hpp`: This way, client programs can add the operator to a program.
+1. Add the program implementation into `src/program.cpp`: This is the implementation of the signature you added in the previous step. Follow the example of existing operators, but in general: Use `appendCode1(...)` with the opcode you added in the first step, and then add any bytes you deem necessary for your operator.
+1. Extend the `switch` in `src/cpu_virtual_machine.cpp` in the function `step()`: Add a case for your new opcode, read all parameters (no need to read the opcode, that's done automatically), print a `debug` statement with the operator signature, and call a `VmSession` function that matches your operator.
+1. If there is no suitable `VmSession` function, define its signature in `include/beast/vm_session.hpp`: This is a function that explicitly accepts the parameters for your operator. See the existing ones for how to define them.
+1. Implement the `VmSession` function you just defined in `src/vm_session.cpp`: Perform the actual logic that should be executed if the VM encounters your operator. Again, see existing operators for how to do it.
+
+
+## Defined Operators
 
 | Operator                                          | Code | Prm # | Description                                                                                                                                                                                                                                                                                                                                                   | Impl |
 |---------------------------------------------------|------|-------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------|
