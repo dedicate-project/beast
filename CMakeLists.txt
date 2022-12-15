@@ -43,7 +43,7 @@ target_link_libraries(feedloop
   ${PROJECT_NAME})
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  target_link_libraries(${PROJECT_NAME}-bin gcov)
+  target_link_libraries(feedloop gcov)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 enable_testing()
