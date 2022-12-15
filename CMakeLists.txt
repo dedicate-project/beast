@@ -18,7 +18,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/src/main.cpp)
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/*)
 else()
   add_compile_options(-O3)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -36,10 +36,10 @@ add_library(${PROJECT_NAME}
   src/vm_session.cpp
   src/virtual_machine.cpp)
 
-add_executable(${PROJECT_NAME}-bin
-  src/main.cpp)
+add_executable(feedloop
+  examples/feedloop.cpp)
 
-target_link_libraries(${PROJECT_NAME}-bin
+target_link_libraries(feedloop
   ${PROJECT_NAME})
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
