@@ -205,17 +205,26 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.checkIfVariableIsOutput(source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
 
-  /*case OpCode::LoadInputCountIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadInputCountIntoVariable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_input_count_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadInputCountIntoVariable(variable, follow_links);
+  } break;
 
-  /*case OpCode::LoadOutputCountIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadOutputCountIntoVariable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_output_count_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadOutputCountIntoVariable(variable, follow_links);
+  } break;
 
-  /*case OpCode::LoadCurrentAddressIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadCurrentAddressIntoVariable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_current_address_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadCurrentAddressIntoVariable(variable, follow_links);
+  } break;
 
   case OpCode::PrintVariable: {
     const int32_t variable_index = session.getData4();

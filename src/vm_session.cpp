@@ -306,4 +306,28 @@ void VmSession::copyVariable(
       variables_[getRealVariableIndex(source_variable, follow_source_links)].second;
 }
 
+void VmSession::loadInputCountIntoVariable(int32_t variable, bool follow_links) {
+  int32_t input_count = 0;
+  for (const std::pair<const int32_t, std::pair<VariableDescriptor, int32_t>>& pair : variables_) {
+    if (pair.second.first.behavior == VariableIoBehavior::Input) {
+      input_count++;
+    }
+  }
+  variables_[getRealVariableIndex(variable, follow_links)].second = input_count;
+}
+
+void VmSession::loadOutputCountIntoVariable(int32_t variable, bool follow_links) {
+  int32_t output_count = 0;
+  for (const std::pair<const int32_t, std::pair<VariableDescriptor, int32_t>>& pair : variables_) {
+    if (pair.second.first.behavior == VariableIoBehavior::Output) {
+      output_count++;
+    }
+  }
+  variables_[getRealVariableIndex(variable, follow_links)].second = output_count;
+}
+
+void VmSession::loadCurrentAddressIntoVariable(int32_t variable, bool follow_links) {
+  variables_[getRealVariableIndex(variable, follow_links)].second = pointer_;
+}
+
 }  // namespace beast

@@ -237,19 +237,22 @@ void Program::checkIfVariableIsOutput(
   appendFlag1(follow_destination_links);
 }
 
-void Program::loadInputCountIntoVariable(int32_t variable_index) {
+void Program::loadInputCountIntoVariable(int32_t variable_index, bool follow_links) {
   appendCode1(OpCode::LoadInputCountIntoVariable);
   appendData4(variable_index);
+  appendFlag1(follow_links);
 }
 
-void Program::loadOutputCountIntoVariable(int32_t variable_index) {
+void Program::loadOutputCountIntoVariable(int32_t variable_index, bool follow_links) {
   appendCode1(OpCode::LoadOutputCountIntoVariable);
   appendData4(variable_index);
+  appendFlag1(follow_links);
 }
 
-void Program::loadCurrentAddressIntoVariable(int32_t variable_index) {
+void Program::loadCurrentAddressIntoVariable(int32_t variable_index, bool follow_links) {
   appendCode1(OpCode::LoadCurrentAddressIntoVariable);
   appendData4(variable_index);
+  appendFlag1(follow_links);
 }
 
 void Program::printVariable(int32_t variable_index, bool follow_links, bool as_char) {

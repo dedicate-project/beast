@@ -101,11 +101,11 @@ class Program {
     int32_t source_variable_index, bool follow_source_links,
     int32_t destination_variable_index, bool follow_destination_links);
 
-  void loadInputCountIntoVariable(int32_t variable_index);
+  void loadInputCountIntoVariable(int32_t variable_index, bool follow_links);
 
-  void loadOutputCountIntoVariable(int32_t variable_index);
+  void loadOutputCountIntoVariable(int32_t variable_index, bool follow_links);
 
-  void loadCurrentAddressIntoVariable(int32_t variable_index);
+  void loadCurrentAddressIntoVariable(int32_t variable_index, bool follow_links);
 
   void printVariable(int32_t variable_index, bool follow_links, bool as_char);
 

@@ -568,3 +568,52 @@ TEST_CASE("copying_a_variable_copies_its_value", "programs") {
 
   REQUIRE(session.getVariableValue(source_variable_index, true) == session.getVariableValue(destination_variable_index, true));
 }
+
+TEST_CASE("input_count_can_be_determined", "programs") {
+  beast::Program prg(100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.loadInputCountIntoVariable(0, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  session.setVariableBehavior(3, beast::VmSession::VariableIoBehavior::Output);
+  session.setVariableBehavior(5, beast::VmSession::VariableIoBehavior::Input);
+  session.setVariableBehavior(8, beast::VmSession::VariableIoBehavior::Output);
+  session.setVariableBehavior(62, beast::VmSession::VariableIoBehavior::Output);
+  session.setVariableBehavior(120, beast::VmSession::VariableIoBehavior::Input);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 2);
+}
+
+TEST_CASE("output_count_can_be_determined", "programs") {
+  beast::Program prg(100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.loadOutputCountIntoVariable(0, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  session.setVariableBehavior(3, beast::VmSession::VariableIoBehavior::Output);
+  session.setVariableBehavior(5, beast::VmSession::VariableIoBehavior::Input);
+  session.setVariableBehavior(8, beast::VmSession::VariableIoBehavior::Output);
+  session.setVariableBehavior(62, beast::VmSession::VariableIoBehavior::Output);
+  session.setVariableBehavior(120, beast::VmSession::VariableIoBehavior::Input);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 3);
+}
+
+TEST_CASE("current_address_can_be_determined", "programs") {
+  beast::Program prg(100);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.loadCurrentAddressIntoVariable(0, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 22);
+}
