@@ -133,6 +133,8 @@ class Program {
       int32_t variable_index, bool follow_links,
       int32_t destination_variable_index, bool follow_destination_links);
 
+  void loadStringTableItemLengthLimitIntoVariable(int32_t variable_index, bool follow_links);
+
  private:
   bool canFit(int32_t bytes);
 

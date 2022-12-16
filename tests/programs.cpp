@@ -717,3 +717,19 @@ TEST_CASE("string_table_limit_can_be_determined", "programs") {
 
   REQUIRE(session.getVariableValue(index, true) == string_table_limit);
 }
+
+TEST_CASE("string_table_item_length_limit_can_be_determined", "programs") {
+  const int32_t index = 7;
+  const int32_t string_table_item_length_limit = 17;
+
+  beast::Program prg;
+  prg.declareVariable(index, beast::Program::VariableType::Int32);
+  prg.setVariable(index, 0, true);
+  prg.loadStringTableItemLengthLimitIntoVariable(index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, string_table_item_length_limit);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(index, true) == string_table_item_length_limit);
+}

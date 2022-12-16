@@ -51,7 +51,8 @@ enum class OpCode : int8_t {
   RotateVariableLeft                         = 0x2c,
   RotateVariableRight                        = 0x2d,
   UnconditionalJump                          = 0x2e,
-  CheckIfInputWasSet                         = 0x2f
+  CheckIfInputWasSet                         = 0x2f,
+  LoadStringTableItemLengthLimitIntoVariable = 0x30
 };
 
 }  // namespace beast

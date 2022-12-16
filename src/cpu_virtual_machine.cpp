@@ -343,6 +343,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.checkIfInputWasSet(variable, follow_links, destination_variable, follow_destination_links);
   } break;
 
+  case OpCode::LoadStringTableItemLengthLimitIntoVariable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_string_table_item_length_limit_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadStringTableItemLengthLimitIntoVariable(variable, follow_links);
+  } break;
+
   default: {
     throw std::runtime_error("Undefined instruction reached.");
   }

@@ -329,6 +329,13 @@ void Program::checkIfInputWasSet(
   appendFlag1(follow_destination_links);
 }
 
+void Program::loadStringTableItemLengthLimitIntoVariable(
+    int32_t variable_index, bool follow_links) {
+  appendCode1(OpCode::LoadStringTableItemLengthLimitIntoVariable);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+}
+
 bool Program::canFit(int32_t bytes) {
   if (grows_dynamically_) {
     ensureSize(pointer_ + bytes);

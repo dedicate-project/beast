@@ -380,4 +380,9 @@ void VmSession::loadStringTableLimitIntoVariable(int32_t variable_index, bool fo
   setVariableValueInternal(variable_index, follow_links, string_table_count_);
 }
 
+void VmSession::loadStringTableItemLengthLimitIntoVariable(
+    int32_t variable_index, bool follow_links) {
+  setVariableValueInternal(variable_index, follow_links, max_string_size_);
+}
+
 }  // namespace beast
