@@ -137,6 +137,14 @@ class Program {
 
   void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
 
+  void unconditionalJumpToAbsoluteAddress(int32_t addr);
+
+  void unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links);
+
+  void unconditionalJumpToRelativeAddress(int32_t addr);
+
+  void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
+
  private:
   bool canFit(int32_t bytes);
 

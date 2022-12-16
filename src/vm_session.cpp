@@ -388,7 +388,7 @@ void VmSession::loadStringTableItemLengthLimitIntoVariable(
 
 void VmSession::loadRandomValueIntoVariable(int32_t variable_index, bool follow_links) {
   // NOTE(fairlight1337): The initialization of the `rng` variable is not linted here to prevent
-  // clang-tidy to complain about seeding with a value from the default constructor. Since we're
+  // clang-tidy from complain about seeding with a value from the default constructor. Since we're
   // using `random_device` to seed `rng` right after, this warning is discarded explicitly.
   // NOLINTNEXTLINE
   std::mt19937 rng;
@@ -396,6 +396,22 @@ void VmSession::loadRandomValueIntoVariable(int32_t variable_index, bool follow_
   rng.seed(rd());
   std::uniform_int_distribution<int32_t> distribution;
   setVariableValueInternal(variable_index, follow_links, distribution(rng));
+}
+
+void VmSession::unconditionalJumpToAbsoluteAddress(int32_t addr) {
+  pointer_ = addr;
+}
+
+void VmSession::unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links) {
+  pointer_ = getVariableValueInternal(variable_index, follow_links);
+}
+
+void VmSession::unconditionalJumpToRelativeAddress(int32_t addr) {
+  pointer_ += addr;
+}
+
+void VmSession::unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links) {
+  pointer_ += getVariableValueInternal(variable_index, follow_links);
 }
 
 }  // namespace beast

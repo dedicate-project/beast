@@ -53,7 +53,7 @@ int32_t Program::getPointer() const {
 
 void Program::insertProgram(Program& other) {
   const int32_t to_fit = other.getSize();
-  if (!canFit(to_fit)) { 
+  if (!canFit(to_fit)) {
     throw std::runtime_error("Unable to fit other program into program.");
   }
   for (int32_t idx = 0; idx < to_fit; ++idx) {
@@ -338,6 +338,28 @@ void Program::loadStringTableItemLengthLimitIntoVariable(
 
 void Program::loadRandomValueIntoVariable(int32_t variable_index, bool follow_links) {
   appendCode1(OpCode::LoadRandomValueIntoVariable);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+}
+
+void Program::unconditionalJumpToAbsoluteAddress(int32_t addr) {
+  appendCode1(OpCode::UnconditionalJumpToAbsoluteAddress);
+  appendData4(addr);
+}
+
+void Program::unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links) {
+  appendCode1(OpCode::UnconditionalJumpToAbsoluteVariableAddress);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+}
+
+void Program::unconditionalJumpToRelativeAddress(int32_t addr) {
+  appendCode1(OpCode::UnconditionalJumpToRelativeAddress);
+  appendData4(addr);
+}
+
+void Program::unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links) {
+  appendCode1(OpCode::UnconditionalJumpToRelativeVariableAddress);
   appendData4(variable_index);
   appendFlag1(follow_links);
 }

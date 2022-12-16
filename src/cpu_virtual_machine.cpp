@@ -333,9 +333,31 @@ bool CpuVirtualMachine::step(VmSession& session) {
     // Todo: Implement
   } break;*/
 
-  /*case OpCode::UnconditionalJump: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::UnconditionalJumpToAbsoluteAddress: {
+    const int32_t addr = session.getData4();
+    debug("unconditional_jump_to_absolute_address(" + std::to_string(addr) + ")");
+    session.unconditionalJumpToAbsoluteAddress(addr);
+  } break;
+
+  case OpCode::UnconditionalJumpToAbsoluteVariableAddress: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("unconditional_jump_to_absolute_variable_address(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.unconditionalJumpToAbsoluteVariableAddress(variable, follow_links);
+  } break;
+
+  case OpCode::UnconditionalJumpToRelativeAddress: {
+    const int32_t addr = session.getData4();
+    debug("unconditional_jump_to_relative_address(" + std::to_string(addr) + ")");
+    session.unconditionalJumpToRelativeAddress(addr);
+  } break;
+
+  case OpCode::UnconditionalJumpToRelativeVariableAddress: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("unconditional_jump_to_relative_variable_address(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.unconditionalJumpToRelativeVariableAddress(variable, follow_links);
+  } break;
 
   case OpCode::CheckIfInputWasSet: {
     const int32_t variable = session.getData4();

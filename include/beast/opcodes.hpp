@@ -50,9 +50,12 @@ enum class OpCode : int8_t {
   ModuloVariableByVariable                   = 0x2b,
   RotateVariableLeft                         = 0x2c,
   RotateVariableRight                        = 0x2d,
-  UnconditionalJump                          = 0x2e,
-  CheckIfInputWasSet                         = 0x2f,
-  LoadStringTableItemLengthLimitIntoVariable = 0x30
+  UnconditionalJumpToAbsoluteAddress         = 0x2e,
+  UnconditionalJumpToAbsoluteVariableAddress = 0x2f,
+  UnconditionalJumpToRelativeAddress         = 0x30,
+  UnconditionalJumpToRelativeVariableAddress = 0x31,
+  CheckIfInputWasSet                         = 0x32,
+  LoadStringTableItemLengthLimitIntoVariable = 0x33
 };
 
 }  // namespace beast
