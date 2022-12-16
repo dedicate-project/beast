@@ -60,3 +60,19 @@ TEST_CASE("dymamically_growing_programs_assume_a_fitting_size", "program") {
 
   REQUIRE(prg.getSize() == 16);
 }
+
+TEST_CASE("inserting_a_too_large_program_throws", "program") {
+  beast::Program prg1;
+  prg1.declareVariable(0, beast::Program::VariableType::Int32);
+  prg1.setVariable(0, 0, true);
+
+  beast::Program prg2(10);
+  bool threw = false;
+  try {
+    prg2.insertProgram(prg1);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
