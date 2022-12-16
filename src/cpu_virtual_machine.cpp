@@ -274,9 +274,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.copyVariable(source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
 
-  /*case OpCode::LoadStringItemLengthIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadStringItemLengthIntoVariable: {
+    const int32_t string_table_index = session.getData4();
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_string_item_length_into_variable(" + std::to_string(string_table_index) + ", " + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadStringItemLengthIntoVariable(string_table_index, variable_index, follow_links);
+  } break;
 
   /*case OpCode::LoadStringItemIntoVariables: {
     // Todo: Implement

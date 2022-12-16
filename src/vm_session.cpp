@@ -414,4 +414,13 @@ void VmSession::unconditionalJumpToRelativeVariableAddress(int32_t variable_inde
   pointer_ += getVariableValueInternal(variable_index, follow_links);
 }
 
+void VmSession::loadStringItemLengthIntoVariable(
+    int32_t string_table_index, int32_t variable_index, bool follow_links) {
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  setVariableValueInternal(variable_index, follow_links, string_table_[string_table_index].size());
+}
+
 }  // namespace beast

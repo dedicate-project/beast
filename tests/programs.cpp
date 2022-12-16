@@ -830,3 +830,26 @@ TEST_CASE("unconditional_jump_to_relative_variable_address_works", "programs") {
 
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
+
+TEST_CASE("string_table_item_length_can_be_determined", "programs") {
+  const std::string entry1 = "Entry";
+  const std::string entry2 = "Another entry";
+
+  beast::Program prg;
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.declareVariable(1, beast::Program::VariableType::Int32);
+  prg.setVariable(1, 0, true);
+  prg.setStringTableEntry(0, entry1);
+  prg.setStringTableEntry(1, entry2);
+
+  prg.loadStringItemLengthIntoVariable(0, 0, true);
+  prg.loadStringItemLengthIntoVariable(1, 1, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == entry1.size());
+  REQUIRE(session.getVariableValue(1, true) == entry2.size());
+}

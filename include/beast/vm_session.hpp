@@ -128,6 +128,8 @@ class VmSession {
 
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
 
+  void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index, bool follow_links);
+
  private:
   int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
 

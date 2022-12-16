@@ -364,6 +364,14 @@ void Program::unconditionalJumpToRelativeVariableAddress(int32_t variable_index,
   appendFlag1(follow_links);
 }
 
+void Program::loadStringItemLengthIntoVariable(
+    int32_t string_table_index, int32_t variable_index, bool follow_links) {
+  appendCode1(OpCode::LoadStringItemLengthIntoVariable);
+  appendData4(string_table_index);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+}
+
 bool Program::canFit(int32_t bytes) {
   if (grows_dynamically_) {
     ensureSize(pointer_ + bytes);
