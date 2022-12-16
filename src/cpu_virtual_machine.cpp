@@ -375,6 +375,24 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.loadStringTableItemLengthLimitIntoVariable(variable, follow_links);
   } break;
 
+  /*case OpCode::PushVariableOnStack: {
+  } break;*/
+
+  /*case OpCode::PushConstantOnStack: {
+  } break;*/
+
+  /*case OpCode::PopVariableFromStack: {
+  } break;*/
+
+  /*case OpCode::PopFromStack: {
+  } break;*/
+
+  /*case OpCode::IsStackEmpty: {
+  } break;*/
+
+  /*case OpCode::SwapVariables: {
+  } break;*/
+
   default: {
     throw std::runtime_error("Undefined instruction reached.");
   }

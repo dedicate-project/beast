@@ -55,7 +55,13 @@ enum class OpCode : int8_t {
   UnconditionalJumpToRelativeAddress         = 0x30,
   UnconditionalJumpToRelativeVariableAddress = 0x31,
   CheckIfInputWasSet                         = 0x32,
-  LoadStringTableItemLengthLimitIntoVariable = 0x33
+  LoadStringTableItemLengthLimitIntoVariable = 0x33,
+  PushVariableOnStack                        = 0x34,
+  PushConstantOnStack                        = 0x35,
+  PopVariableFromStack                       = 0x36,
+  PopFromStack                               = 0x37,
+  IsStackEmpty                               = 0x38,
+  SwapVariables                              = 0x39
 };
 
 }  // namespace beast
