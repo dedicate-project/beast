@@ -376,4 +376,8 @@ void VmSession::checkIfInputWasSet(
   setVariableValueInternal(destination_variable, follow_destination_links, variable.first.changed_since_last_interaction ? 0x1 : 0x0);
 }
 
+void VmSession::loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links) {
+  setVariableValueInternal(variable_index, follow_links, string_table_count_);
+}
+
 }  // namespace beast

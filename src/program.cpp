@@ -298,9 +298,10 @@ void Program::printStringFromStringTable(int32_t string_table_index) {
   appendData4(string_table_index);
 }
 
-void Program::loadStringTableLimitIntoVariable(int32_t variable_index) {
+void Program::loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links) {
   appendCode1(OpCode::LoadStringTableLimitIntoVariable);
   appendData4(variable_index);
+  appendFlag1(follow_links);
 }
 
 void Program::terminate(int8_t return_code) {

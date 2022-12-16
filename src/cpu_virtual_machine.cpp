@@ -252,9 +252,12 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.appendToPrintBuffer(session.getStringTableEntry(string_table_index));
   } break;
 
-  /*case OpCode::LoadStringTableLimitIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadStringTableLimitIntoVariable: {
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_string_table_limit_into_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadStringTableLimitIntoVariable(variable_index, follow_links);
+  } break;
 
   case OpCode::Terminate: {
     const int8_t return_code = session.getData1();

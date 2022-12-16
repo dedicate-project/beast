@@ -701,3 +701,19 @@ TEST_CASE("undeclared_variables_cannot_be_set", "programs") {
 
   REQUIRE(threw == true);
 }
+
+TEST_CASE("string_table_limit_can_be_determined", "programs") {
+  const int32_t index = 7;
+  const int32_t string_table_limit = 25;
+
+  beast::Program prg;
+  prg.declareVariable(index, beast::Program::VariableType::Int32);
+  prg.setVariable(index, 0, true);
+  prg.loadStringTableLimitIntoVariable(index, true);
+
+  beast::VmSession session(std::move(prg), 500, string_table_limit, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(index, true) == string_table_limit);
+}

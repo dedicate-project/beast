@@ -119,7 +119,7 @@ class Program {
 
   void printStringFromStringTable(int32_t string_table_index);
 
-  void loadStringTableLimitIntoVariable(int32_t variable_index);
+  void loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links);
 
   void terminate(int8_t return_code);
 
