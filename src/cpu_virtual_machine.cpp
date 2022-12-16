@@ -310,9 +310,12 @@ bool CpuVirtualMachine::step(VmSession& session) {
     // Todo: Implement
   } break;*/
 
-  /*case OpCode::LoadRandomValueIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadRandomValueIntoVariable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_random_value_into_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    session.loadRandomValueIntoVariable(variable, follow_links);
+  } break;
 
   /*case OpCode::ModuloVariableByConstant: {
     // Todo: Implement

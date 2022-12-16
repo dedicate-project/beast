@@ -733,3 +733,39 @@ TEST_CASE("string_table_item_length_limit_can_be_determined", "programs") {
 
   REQUIRE(session.getVariableValue(index, true) == string_table_item_length_limit);
 }
+
+TEST_CASE("load_random_value_into_variable", "programs") {
+  const int32_t index = 2;
+
+  // Assuming that at least one of 10 random values is != 0.
+
+  beast::Program prg;
+  prg.declareVariable(index, beast::Program::VariableType::Int32);
+  prg.setVariable(index, 0, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+  prg.loadRandomValueIntoVariable(index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  vm.step(session);
+  vm.step(session);
+
+  bool any_is_random = false;
+  while (vm.step(session)) {
+    vm.step(session);
+    if (session.getVariableValue(index, true) != 0) {
+      any_is_random = true;
+      break;
+    }
+  }
+
+  REQUIRE(any_is_random == true);
+}

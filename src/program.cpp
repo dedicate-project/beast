@@ -336,6 +336,12 @@ void Program::loadStringTableItemLengthLimitIntoVariable(
   appendFlag1(follow_links);
 }
 
+void Program::loadRandomValueIntoVariable(int32_t variable_index, bool follow_links) {
+  appendCode1(OpCode::LoadRandomValueIntoVariable);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+}
+
 bool Program::canFit(int32_t bytes) {
   if (grows_dynamically_) {
     ensureSize(pointer_ + bytes);

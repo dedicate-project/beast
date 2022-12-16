@@ -118,6 +118,8 @@ class VmSession {
 
   void loadStringTableItemLengthLimitIntoVariable(int32_t variable_index, bool follow_links);
 
+  void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
+
  private:
   int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
 

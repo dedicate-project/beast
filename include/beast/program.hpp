@@ -135,6 +135,8 @@ class Program {
 
   void loadStringTableItemLengthLimitIntoVariable(int32_t variable_index, bool follow_links);
 
+  void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
+
  private:
   bool canFit(int32_t bytes);
 

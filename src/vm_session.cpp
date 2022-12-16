@@ -1,5 +1,6 @@
 #include <beast/vm_session.hpp>
 
+#include <random>
 #include <set>
 
 namespace beast {
@@ -383,6 +384,18 @@ void VmSession::loadStringTableLimitIntoVariable(int32_t variable_index, bool fo
 void VmSession::loadStringTableItemLengthLimitIntoVariable(
     int32_t variable_index, bool follow_links) {
   setVariableValueInternal(variable_index, follow_links, max_string_size_);
+}
+
+void VmSession::loadRandomValueIntoVariable(int32_t variable_index, bool follow_links) {
+  // NOTE(fairlight1337): The initialization of the `rng` variable is not linted here to prevent
+  // clang-tidy to complain about seeding with a value from the default constructor. Since we're
+  // using `random_device` to seed `rng` right after, this warning is discarded explicitly.
+  // NOLINTNEXTLINE
+  std::mt19937 rng;
+  std::random_device rd;
+  rng.seed(rd());
+  std::uniform_int_distribution<int32_t> distribution;
+  setVariableValueInternal(variable_index, follow_links, distribution(rng));
 }
 
 }  // namespace beast
