@@ -16,6 +16,8 @@ sudo apt install clang-tidy ccache
 To build the project, check out the source code:
 ```bash
 git clone https://github.com/dedicate-project/beast/
+cd beast
+git submodule update
 ```
 
 Then, inside the repository, perform the following actions to actually build the code:
