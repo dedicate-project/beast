@@ -387,7 +387,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
   /*case OpCode::PopFromStack: {
   } break;*/
 
-  /*case OpCode::IsStackEmpty: {
+  /*case OpCode::CheckIfStackIsEmpty: {
   } break;*/
 
   /*case OpCode::SwapVariables: {

@@ -60,7 +60,7 @@ enum class OpCode : int8_t {
   PushConstantOnStack                        = 0x35,
   PopVariableFromStack                       = 0x36,
   PopFromStack                               = 0x37,
-  IsStackEmpty                               = 0x38,
+  CheckIfStackIsEmpty                        = 0x38,
   SwapVariables                              = 0x39
 };
 
