@@ -29,7 +29,6 @@ int main(int /*argc*/, char** /*argv*/) {
   const int32_t loop_start_address = prg.getPointer();
   prg.checkIfInputWasSet(input_variable, true, input_changed_variable, true);
   prg.absoluteJumpToAddressIfVariableEqualsZero(input_changed_variable, true, loop_start_address);
-  prg.addConstantToVariable(input_variable, 0, true);
   prg.subtractConstantFromVariable(count_variable, 1, true);
   prg.printVariable(count_variable, true, false);
   prg.absoluteJumpToAddressIfVariableGreaterThanZero(count_variable, true, loop_start_address);
