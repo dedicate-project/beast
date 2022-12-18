@@ -380,21 +380,47 @@ bool CpuVirtualMachine::step(VmSession& session) {
   } break;
 
   /*case OpCode::PushVariableOnStack: {
+    // Todo: Implement
   } break;*/
 
   /*case OpCode::PushConstantOnStack: {
+    // Todo: Implement
   } break;*/
 
   /*case OpCode::PopVariableFromStack: {
+    // Todo: Implement
   } break;*/
 
   /*case OpCode::PopFromStack: {
+    // Todo: Implement
   } break;*/
 
   /*case OpCode::CheckIfStackIsEmpty: {
+    // Todo: Implement
   } break;*/
 
   /*case OpCode::SwapVariables: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::SetVariableStringTableEntry: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::PrintVariableStringFromStringTable: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::LoadVariableStringItemLengthIntoVariable: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::LoadVariableStringItemIntoVariables: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::TerminateWithVariableReturnCode: {
+    // Todo: Implement
   } break;*/
 
   default: {

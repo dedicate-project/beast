@@ -61,7 +61,12 @@ enum class OpCode : int8_t {
   PopVariableFromStack                       = 0x36,
   PopFromStack                               = 0x37,
   CheckIfStackIsEmpty                        = 0x38,
-  SwapVariables                              = 0x39
+  SwapVariables                              = 0x39,
+  SetVariableStringTableEntry                = 0x3a,
+  PrintVariableStringFromStringTable         = 0x3b,
+  LoadVariableStringItemLengthIntoVariable   = 0x3c,
+  LoadVariableStringItemIntoVariables        = 0x3d,
+  TerminateWithVariableReturnCode            = 0x3e
 };
 
 }  // namespace beast
