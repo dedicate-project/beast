@@ -98,7 +98,7 @@ make test
 
 To not build the tests (and save some time while developing or you just don't need them) you can disable them in CMake using this when configuring the build:
 ```bash
-cmake -DBEAST_BUILD_TEST=NO ..
+cmake -DBEAST_BUILD_TESTS=NO ..
 ```
 
 If you want to create a coverage report, install these additional dependencies:
