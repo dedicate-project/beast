@@ -41,7 +41,7 @@ Writing BEAST programs is straight forward. Take the following "Hello World!" ex
 
 #include <beast/cpu_virtual_machine.hpp>
 
-int main(int /*argc*/, char /*argv*/) {
+int main(int /*argc*/, char** /*argv*/) {
   // Define the program to run. This just sets a string table entry and prints it.
   beast::Program prg;
   prg.setStringTableEntry(0, "Hello World!");
@@ -94,6 +94,11 @@ make
 To run all tests, afterwards run:
 ```bash
 make test
+```
+
+To not build the tests (and save some time while developing or you just don't need them) you can disable them in CMake using this when configuring the build:
+```bash
+cmake -DBEAST_BUILD_TEST=NO ..
 ```
 
 If you want to create a coverage report, install these additional dependencies:
