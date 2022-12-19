@@ -17,7 +17,7 @@ if read_the_docs_build:
     input_dir = '../include/beast'
     output_dir = 'build'
     configureDoxyfile(input_dir, output_dir)
-    subprocess.call('doxygen docs/Doxyfile', shell=True)
+    subprocess.call('doxygen', shell=True)
     breathe_projects['BEAST'] = output_dir + '/doxygen/xml'
 
 project = 'BEAST'
