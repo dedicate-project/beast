@@ -33,6 +33,42 @@ The String Table's layout is also simple:
 * The number of supported string table entries and their maximum length are a property of the respective VmSession instance holding the table.
 
 
+## A Simple Example
+
+Writing BEAST programs is straight forward. Take the following "Hello World!" example:
+```cpp
+#include <iostream>
+
+#include <beast/cpu_virtual_machine.hpp>
+
+int main(int /*argc*/, char /*argv*/) {
+  // Define the program to run. This just sets a string table entry and prints it.
+  beast::Program prg;
+  prg.setStringTableEntry(0, "Hello World!");
+  prg.printStringFromStringTable(0);
+  
+  // Define the VM session based on `prg`. It has space for 10 variables and can
+  // store 5 string table entries, each being 25 characters long at most.
+  beast::VmSession session(std::move(prg), 10, 5, 25);
+  // This is the CPU based virtual machine to run the program/session in.
+  beast::CpuVirtualMachine vm;
+  
+  // Run the program for as long as it runs.
+  while (vm.step(session)) {
+    // Send to output whatever the current step wants to print and clear the internal
+    // buffer afterwards.
+    std::cout << session.getPrintBuffer();
+    session.clearPrintBuffer();
+  }
+  
+  std::cout << std::endl;
+  
+  // Return the program's return (potentially error) code.
+  return session.getReturnCode();
+}
+```
+
+
 ## Building
 
 First, install the dependencies (assuming you're working on a Ubuntu system):
