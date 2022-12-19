@@ -9,6 +9,15 @@
 This project defines and implements a virtual machine with a custom instruction set. It operates on byte level and supports all common low-level machine operations, but functions in an entirely virtual environment. This project does not build an x86 interpreter or anything alike, but makes available a custom byte-level machine language that can be used to experiment with code transformations and custom low-level operators.
 
 
+## Architecture
+
+The BEAST system architecture is driven by three main elements: Virtual Machines (VMs), VM Sessions, and Programs. The following diagram shows how these relate to each other:
+
+![BEAST Architecture](images/architecture.png)
+
+A Virtual Machine can be instantiated and be used with one or more VM Sessions. Each VM Session hosts one Program, alongside its state (which consists of a Variable Memory and a String Table).
+
+
 ## Building
 
 First, install the dependencies (assuming you're working on a Ubuntu system):
