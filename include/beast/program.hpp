@@ -21,7 +21,7 @@ class Program {
 
   Program(int32_t space);
 
-  int32_t getSize() const;
+  size_t getSize() const;
 
   int32_t getData4(int32_t offset);
 

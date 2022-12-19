@@ -13,7 +13,7 @@ Program::Program(int32_t space)
   : data_(space, 0x00), pointer_{0}, grows_dynamically_{false} {
 }
 
-int32_t Program::getSize() const {
+size_t Program::getSize() const {
   return data_.size();
 }
 
@@ -52,11 +52,11 @@ int32_t Program::getPointer() const {
 }
 
 void Program::insertProgram(Program& other) {
-  const int32_t to_fit = other.getSize();
+  const size_t to_fit = other.getSize();
   if (!canFit(to_fit)) {
     throw std::runtime_error("Unable to fit other program into program.");
   }
-  for (int32_t idx = 0; idx < to_fit; ++idx) {
+  for (uint32_t idx = 0; idx < to_fit; ++idx) {
     data_[pointer_ + idx] = other.getData()[idx];
   }
   pointer_ += to_fit;
