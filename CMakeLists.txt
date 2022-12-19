@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(beast)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -8,6 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
+
+add_subdirectory("docs")
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
