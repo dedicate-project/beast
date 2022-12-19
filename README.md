@@ -1,8 +1,8 @@
 # BEAST - Binary Evolution And Sentience Toolkit
 
-[![CircleCI badge](https://circleci.com/gh/dedicate-project/beast.svg?style=svg)](https://circleci.com/gh/dedicate-project/beast)
-[![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
+[![CircleCI badge](https://circleci.com/gh/dedicate-project/beast.svg?style=shield)](https://circleci.com/gh/dedicate-project/beast)
 [![Documentation Status](https://readthedocs.org/projects/beast-project/badge/?version=latest)](https://beast-project.readthedocs.io/en/latest/?badge=latest)
+[![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
 
 This project defines and implements a virtual machine with a custom instruction set. It operates on byte level and supports all common low-level machine operations, but functions in an entirely virtual environment. This project does not build an x86 interpreter or anything alike, but makes available a custom byte-level machine language that can be used to experiment with code transformations and custom low-level operators.
 
