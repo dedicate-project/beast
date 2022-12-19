@@ -1,5 +1,5 @@
-find_package(Doxygen REQUIRED)
-find_package(Sphinx REQUIRED)
+find_package(Doxygen)
+find_package(Sphinx)
 
 if(DOXYGEN_FOUND AND SPHINX_FOUND)
   # Find the public headers
