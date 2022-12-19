@@ -18,7 +18,7 @@ if read_the_docs_build:
     output_dir = 'build'
     configureDoxyfile(input_dir, output_dir)
     subprocess.call('doxygen docs/Doxyfile', shell=True)
-    breathe_projects['BEAST'] = output_dir + '/xml'
+    breathe_projects['BEAST'] = output_dir + '/doxygen/xml'
 
 project = 'BEAST'
 copyright = '2022, Jan Winkler'
