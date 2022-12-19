@@ -33,6 +33,7 @@ jobs:
         languages: ${{matrix.language}}
     - run: |
         mkdir build
+        cd build
         cmake ..
         make
 
