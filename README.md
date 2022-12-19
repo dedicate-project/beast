@@ -15,7 +15,22 @@ The BEAST system architecture is driven by three main elements: Virtual Machines
 
 ![BEAST Architecture](images/architecture.png)
 
-A Virtual Machine can be instantiated and be used with one or more VM Sessions. Each VM Session hosts one Program, alongside its state (which consists of a Variable Memory and a String Table).
+A Virtual Machine can be instantiated and be used with one or more VM Sessions. Each VM Session hosts one Program, alongside its state (which consists of a Variable Memory and a String Table). Each Program consists of zero or more operators. The size of a Program is virtually arbitrary (it must fit into the host's system memory).
+
+The Variable Memory's layout is simple:
+* It is defined to hold a maximum number of indexed variables of a fixed size of 8 bytes (internally managed as ``int32_t``).
+* Variables can be either of type ``int32_t`` or of type ``link``. For ``int32_t`` variables, they store values directly. For ``link`` variables, when they are read, the read process is redirected to the memory address denoted by the stored value. Example:
+  * Variable ``0`` of type ``int32_t`` has value ``128``.
+  * Variable ``1`` of type ``link`` has value ``0``.
+  * Reading variable ``1`` returns the value ``128``.
+  * Setting variable ``1`` effectively sets the value of variable ``0``.
+  * The redirection can be ignored for each call working with variables to be able to modify/read a link's redirection value.
+* The number of supported variables is a property of the respective VmSession instance holding the Variable Memory.
+
+The String Table's layout is also simple:
+* It is defined to hold a maximum number of indexed strings of a maximum length.
+* For each item, its size can be read.
+* The number of supported string table entries and their maximum length are a property of the respective VmSession instance holding the table.
 
 
 ## Building
