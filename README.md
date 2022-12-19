@@ -41,7 +41,7 @@ Writing BEAST programs is straight forward. Take the following "Hello World!" ex
 
 #include <beast/cpu_virtual_machine.hpp>
 
-int main(int /*argc*/, char /*argv*/) {
+int main(int /*argc*/, char** /*argv*/) {
   // Define the program to run. This just sets a string table entry and prints it.
   beast::Program prg;
   prg.setStringTableEntry(0, "Hello World!");
