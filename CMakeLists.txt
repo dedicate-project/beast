@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(beast LANGUAGES CXX)
 
+option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls,-llvmlibc-callee-namespace")
@@ -50,25 +52,27 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   target_link_libraries(feedloop gcov)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
-enable_testing()
+if(BEAST_BUILD_TESTS)
+  enable_testing()
 
-macro(declare_test name)
-  message(STATUS "Add test: ${name}")
-  add_executable(test_${name} tests/${name}.cpp)
-  target_include_directories(test_${name} PUBLIC 3rdparty/Catch2/single_include)
-  target_link_libraries(test_${name} PUBLIC ${PROJECT_NAME})
-  if(CMAKE_BUILD_TYPE MATCHES "Debug")
-    target_link_libraries(test_${name} PUBLIC gcov)
-  endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+  macro(declare_test name)
+    message(STATUS "Add test: ${name}")
+    add_executable(test_${name} tests/${name}.cpp)
+    target_include_directories(test_${name} PUBLIC 3rdparty/Catch2/single_include)
+    target_link_libraries(test_${name} PUBLIC ${PROJECT_NAME})
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+      target_link_libraries(test_${name} PUBLIC gcov)
+    endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
-  set_target_properties(test_${name}
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests)
-  add_test(NAME test_${name} COMMAND test_${name})
-endmacro()
+    set_target_properties(test_${name}
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/tests)
+    add_test(NAME test_${name} COMMAND test_${name})
+  endmacro()
 
-declare_test(cpu_vm)
-declare_test(noop)
-declare_test(program)
-declare_test(programs)
-declare_test(variables)
+  declare_test(cpu_vm)
+  declare_test(noop)
+  declare_test(program)
+  declare_test(programs)
+  declare_test(variables)
+endif(BEAST_BUILD_TESTS)
