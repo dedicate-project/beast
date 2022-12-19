@@ -2,6 +2,7 @@
 
 #include <random>
 #include <set>
+#include <stdexcept>
 
 namespace beast {
 
