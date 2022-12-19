@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(beast)
+project(beast LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
