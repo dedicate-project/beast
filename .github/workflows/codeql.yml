@@ -38,7 +38,7 @@ jobs:
         git submodule update
         mkdir build
         cd build
-        cmake ..
+        cmake -DBEAST_BUILD_TESTS=NO ..
         make
 
     - name: Perform CodeQL Analysis
