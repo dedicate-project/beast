@@ -18,7 +18,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y clang-tidy lcov ccache doxygen
+            sudo apt-get install -y clang-tidy lcov ccache doxygen python
             python -m pip install breathe sphinx_rtd_theme
       - run:
           name: Create build directory
@@ -54,7 +54,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y npm lcov ccache doxygen
+            sudo apt-get install -y npm lcov ccache doxygen python
             python -m pip install breathe sphinx_rtd_theme
       - run:
           name: Generate coverage report
