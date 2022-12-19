@@ -10,3 +10,19 @@ Welcome to the BEAST Documentaion!
 This documentation will contain general pointers for the BEAST project, and how to get started with
 it. Right now, this is a placeholder created during the initial configuration of the documentation
 scripts.
+
+
+Docs
+====
+
+.. doxygenclass:: beast::Program
+   :members:
+
+.. doxygenclass:: beast::VirtualMachine
+   :members:
+
+.. doxygenclass:: beast::CpuVirtualMachine
+   :members:
+
+.. doxygenclass:: beast::VmSession
+   :members:
