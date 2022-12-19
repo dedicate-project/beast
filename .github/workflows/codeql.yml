@@ -31,9 +31,11 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: ${{matrix.language}}
-    - name: Install ccache
+    - name: Install dependencies
       run: sudo apt-get install -y clang-tidy lcov ccache
-    - run: |
+    - name: Build
+      run: |
+        git submodule update
         mkdir build
         cd build
         cmake ..
