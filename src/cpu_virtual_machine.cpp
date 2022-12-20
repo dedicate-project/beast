@@ -238,6 +238,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t string_table_index = session.getData4();
     const int16_t string_length = session.getData2();
     std::vector<char> buffer(string_length);
+
+    #pragma unroll
     for (unsigned int idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
@@ -483,7 +485,9 @@ void CpuVirtualMachine::message(MessageSeverity severity, const std::string& mes
 
   const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   std::vector<char> timestamp_buffer(100);
-  const size_t timestamp_length = std::strftime(timestamp_buffer.data(), 100, "%F %T", localtime(&time));
+
+  struct tm result{};
+  const size_t timestamp_length = std::strftime(timestamp_buffer.data(), 100, "%F %T", localtime_r(&time, &result));
   const std::string timestamp(timestamp_buffer.data(), timestamp_length);
   out_stream << "\033[1;" << color_fg << (color_bg != 0 ? ";" + std::to_string(color_bg) : "") << "m"
              << "[" << timestamp << " " << prefix << "] "
