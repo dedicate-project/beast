@@ -238,8 +238,6 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t string_table_index = session.getData4();
     const int16_t string_length = session.getData2();
     std::vector<char> buffer(string_length);
-
-    #pragma unroll
     for (unsigned int idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
