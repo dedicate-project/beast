@@ -47,7 +47,7 @@ int8_t Program::getData1(int32_t offset) {
   return buffer;
 }
 
-int32_t Program::getPointer() const {
+uint32_t Program::getPointer() const {
   return pointer_;
 }
 
@@ -73,7 +73,7 @@ void Program::noop() {
 void Program::declareVariable(int32_t variable_index, VariableType variable_type) {
   appendCode1(OpCode::DeclareVariable);
   appendData4(variable_index);
-  appendData1(static_cast<unsigned char>(variable_type));
+  appendData1(static_cast<int8_t>(variable_type));
 }
 
 void Program::setVariable(int32_t variable_index, int32_t content, bool follow_links) {
@@ -288,7 +288,7 @@ void Program::setStringTableEntry(int32_t string_table_index, std::string string
 
   appendCode1(OpCode::SetStringTableEntry);
   appendData4(string_table_index);
-  appendData2(string.size());
+  appendData2(static_cast<int32_t>(string.size()));
   std::memcpy(&data_[pointer_], string.data(), string.size());
   pointer_ += string.size();
 }
@@ -372,7 +372,7 @@ void Program::loadStringItemLengthIntoVariable(
   appendFlag1(follow_links);
 }
 
-bool Program::canFit(int32_t bytes) {
+bool Program::canFit(uint32_t bytes) {
   if (grows_dynamically_) {
     ensureSize(pointer_ + bytes);
   }
@@ -408,7 +408,7 @@ void Program::appendCode1(OpCode opcode) {
   appendData1(static_cast<int8_t>(opcode));
 }
 
-void Program::ensureSize(int32_t size) {
+void Program::ensureSize(uint32_t size) {
   if (data_.size() < size) {
     data_.resize(size);
   }

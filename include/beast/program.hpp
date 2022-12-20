@@ -29,7 +29,7 @@ class Program {
 
   int8_t getData1(int32_t offset);
 
-  int32_t getPointer() const;
+  uint32_t getPointer() const;
 
   void insertProgram(Program& other);
 
@@ -146,7 +146,7 @@ class Program {
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
 
  private:
-  bool canFit(int32_t bytes);
+  bool canFit(uint32_t bytes);
 
   void appendData4(int32_t data);
 
@@ -158,7 +158,7 @@ class Program {
 
   void appendCode1(OpCode opcode);
 
-  void ensureSize(int32_t size);
+  void ensureSize(uint32_t size);
 
   std::vector<unsigned char> data_;
 
