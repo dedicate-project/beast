@@ -281,7 +281,7 @@ void Program::printVariable(int32_t variable_index, bool follow_links, bool as_c
   appendFlag1(as_char);
 }
 
-void Program::setStringTableEntry(int32_t string_table_index, std::string string) {
+void Program::setStringTableEntry(int32_t string_table_index, const std::string& string) {
   if (!canFit(3 + string.size())) {
     throw std::runtime_error("Unable to fit instruction into program.");
   }
@@ -289,8 +289,9 @@ void Program::setStringTableEntry(int32_t string_table_index, std::string string
   appendCode1(OpCode::SetStringTableEntry);
   appendData4(string_table_index);
   appendData2(static_cast<int16_t>(string.size()));
-  std::memcpy(&data_[pointer_], string.data(), string.size());
-  pointer_ += string.size();
+  for (char character : string) {
+    appendData1(character);
+  }
 }
 
 void Program::printStringFromStringTable(int32_t string_table_index) {

@@ -115,7 +115,7 @@ class Program {
 
   void printVariable(int32_t variable_index, bool follow_links, bool as_char);
 
-  void setStringTableEntry(int32_t string_table_index, std::string string);
+  void setStringTableEntry(int32_t string_table_index, const std::string& string);
 
   void printStringFromStringTable(int32_t string_table_index);
 
