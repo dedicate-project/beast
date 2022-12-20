@@ -169,7 +169,8 @@ void VmSession::appendVariableToPrintBuffer(
   variable_index = getRealVariableIndex(variable_index, follow_links);
   if (variables_[variable_index].first.type == Program::VariableType::Int32) {
     if (as_char) {
-      const auto val = static_cast<char>(static_cast<uint32_t>(getVariableValueInternal(variable_index, false)) & 0xff);
+      const uint32_t flag = 0xff;
+      const auto val = static_cast<char>(static_cast<uint32_t>(getVariableValueInternal(variable_index, false)) & flag);
       appendToPrintBuffer(std::string(&val, 1));
     } else {
       appendToPrintBuffer(std::to_string(getVariableValueInternal(variable_index, false)));
