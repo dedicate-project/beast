@@ -853,3 +853,24 @@ TEST_CASE("string_table_item_length_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(0, true) == entry1.size());
   REQUIRE(session.getVariableValue(1, true) == entry2.size());
 }
+
+TEST_CASE("string_table_item_can_be_loaded_into_variables", "programs") {
+  const std::string entry = "Entry";
+
+  beast::Program prg;
+  for (uint32_t idx = 0; idx < entry.size(); ++idx) {
+    prg.declareVariable(idx, beast::Program::VariableType::Int32);
+    prg.setVariable(idx, 0, true);
+  }
+  prg.setStringTableEntry(0, entry);
+  prg.loadStringItemIntoVariables(0, 0, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  for (uint32_t idx = 0; idx < entry.size(); ++idx) {
+    const int32_t value = session.getVariableValue(idx, true);
+    REQUIRE(static_cast<int32_t>(entry.at(idx)) == value);
+  }
+}

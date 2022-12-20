@@ -145,6 +145,8 @@ class Program {
 
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
 
+  void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
+
  private:
   bool canFit(uint32_t bytes);
 

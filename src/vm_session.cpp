@@ -434,4 +434,23 @@ void VmSession::loadStringItemLengthIntoVariable(
       variable_index, follow_links, static_cast<int32_t>(string_table_[string_table_index].size()));
 }
 
+void VmSession::loadStringItemIntoVariables(
+    int32_t string_table_index, int32_t start_variable_index, bool follow_links) {
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  const auto iterator = string_table_.find(string_table_index);
+  if (iterator == string_table_.end()) {
+    throw std::runtime_error("String table index not defined.");
+  }
+
+  const size_t size = iterator->second.size();
+  for (uint32_t idx = 0; idx < size; ++idx) {
+    setVariableValueInternal(
+        start_variable_index + static_cast<int32_t>(idx), follow_links,
+        static_cast<int32_t>(iterator->second.at(idx)));
+  }
+}
+
 }  // namespace beast

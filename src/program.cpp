@@ -373,6 +373,14 @@ void Program::loadStringItemLengthIntoVariable(
   appendFlag1(follow_links);
 }
 
+void Program::loadStringItemIntoVariables(
+    int32_t string_table_index, int32_t start_variable_index, bool follow_links) {
+  appendCode1(OpCode::LoadStringItemIntoVariables);
+  appendData4(string_table_index);
+  appendData4(start_variable_index);
+  appendFlag1(follow_links);
+}
+
 bool Program::canFit(uint32_t bytes) {
   if (grows_dynamically_) {
     ensureSize(pointer_ + bytes);
