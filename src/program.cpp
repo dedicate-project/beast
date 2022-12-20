@@ -288,7 +288,7 @@ void Program::setStringTableEntry(int32_t string_table_index, std::string string
 
   appendCode1(OpCode::SetStringTableEntry);
   appendData4(string_table_index);
-  appendData2(static_cast<int32_t>(string.size()));
+  appendData2(static_cast<int16_t>(string.size()));
   std::memcpy(&data_[pointer_], string.data(), string.size());
   pointer_ += string.size();
 }
