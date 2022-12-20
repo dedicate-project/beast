@@ -324,7 +324,7 @@ void VmSession::absoluteJumpToAddressIfVariableEq0(
 }
 
 void VmSession::loadMemorySizeIntoVariable(int32_t variable, bool follow_links) {
-  setVariableValueInternal(variable, follow_links, variable_count_);
+  setVariableValueInternal(variable, follow_links, static_cast<int32_t>(variable_count_));
 }
 
 void VmSession::checkIfVariableIsInput(
@@ -388,12 +388,12 @@ void VmSession::checkIfInputWasSet(
 }
 
 void VmSession::loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links) {
-  setVariableValueInternal(variable_index, follow_links, string_table_count_);
+  setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(string_table_count_));
 }
 
 void VmSession::loadStringTableItemLengthLimitIntoVariable(
     int32_t variable_index, bool follow_links) {
-  setVariableValueInternal(variable_index, follow_links, max_string_size_);
+  setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(max_string_size_));
 }
 
 void VmSession::loadRandomValueIntoVariable(int32_t variable_index, bool follow_links) {
@@ -402,8 +402,8 @@ void VmSession::loadRandomValueIntoVariable(int32_t variable_index, bool follow_
   // using `random_device` to seed `rng` right after, this warning is discarded explicitly.
   // NOLINTNEXTLINE
   std::mt19937 rng;
-  std::random_device rd;
-  rng.seed(rd());
+  std::random_device random_device;
+  rng.seed(random_device());
   std::uniform_int_distribution<int32_t> distribution;
   setVariableValueInternal(variable_index, follow_links, distribution(rng));
 }
@@ -430,7 +430,8 @@ void VmSession::loadStringItemLengthIntoVariable(
     throw std::runtime_error("String table index out of bounds.");
   }
 
-  setVariableValueInternal(variable_index, follow_links, string_table_[string_table_index].size());
+  setVariableValueInternal(
+      variable_index, follow_links, static_cast<int32_t>(string_table_[string_table_index].size()));
 }
 
 }  // namespace beast
