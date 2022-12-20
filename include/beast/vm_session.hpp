@@ -40,7 +40,7 @@ class VmSession {
 
   void setVariableValue(int32_t variable_index, bool follow_links, int32_t value);
 
-  bool isAtEnd();
+  bool isAtEnd() const;
 
   void registerVariable(int32_t variable_index, Program::VariableType variable_type);
 
@@ -52,7 +52,7 @@ class VmSession {
 
   void setStringTableEntry(int32_t string_table_index, const std::string& string_content);
 
-  const std::string& getStringTableEntry(int32_t string_table_index);
+  const std::string& getStringTableEntry(int32_t string_table_index) const;
 
   void appendToPrintBuffer(const std::string& string);
 

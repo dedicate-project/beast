@@ -21,7 +21,11 @@ void VmSession::setVariableBehavior(int32_t variable_index, VariableIoBehavior b
 
 VmSession::VariableIoBehavior VmSession::getVariableBehavior(
     int32_t variable_index, bool follow_links) {
-  return variables_[getRealVariableIndex(variable_index, follow_links)].first.behavior;
+  const auto iterator = variables_.find(getRealVariableIndex(variable_index, follow_links));
+  if (iterator == variables_.end()) {
+    throw std::runtime_error("Variable index not declared");
+  }
+  return iterator->second.first.behavior;
 }
 
 int32_t VmSession::getData4() {
@@ -74,7 +78,7 @@ void VmSession::setVariableValueInternal(int32_t variable_index, bool follow_lin
   variable.second = value;
 }
 
-bool VmSession::isAtEnd() {
+bool VmSession::isAtEnd() const {
   return was_terminated_ || pointer_ >= program_.getSize();
 }
 
@@ -103,13 +107,15 @@ void VmSession::registerVariable(int32_t variable_index, Program::VariableType v
 
 int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_links) {
   std::set<int32_t> visited_indices;
-  while (variables_.find(variable_index) != variables_.end()) {
-    if (variables_[variable_index].first.type != Program::VariableType::Link || !follow_links) {
+  std::map<int32_t, std::pair<VariableDescriptor, int32_t>>::iterator iterator;
+
+  while ((iterator = variables_.find(variable_index)) != variables_.end()) {
+    if (iterator->second.first.type != Program::VariableType::Link || !follow_links) {
       // This is a non-link variable, return it.
       return variable_index;
     }
 
-    if (variables_[variable_index].first.type == Program::VariableType::Link) {
+    if (iterator->second.first.type == Program::VariableType::Link) {
       if (visited_indices.find(variable_index) != visited_indices.end()) {
         throw std::runtime_error("Circular variable index link.");
       }
@@ -152,12 +158,13 @@ void VmSession::setStringTableEntry(int32_t string_table_index, const std::strin
   string_table_[string_table_index] = string_content;
 }
 
-const std::string& VmSession::getStringTableEntry(int32_t string_table_index) {
-  if (string_table_.find(string_table_index) == string_table_.end()) {
+const std::string& VmSession::getStringTableEntry(int32_t string_table_index) const {
+  const auto iterator = string_table_.find(string_table_index);
+  if (iterator == string_table_.end()) {
     throw std::runtime_error("String table index out of bounds.");
   }
 
-  return string_table_[string_table_index];
+  return iterator->second;
 }
 
 void VmSession::appendToPrintBuffer(const std::string& string) {
