@@ -26,7 +26,7 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.declareVariable(input_changed_variable, beast::Program::VariableType::Int32);
   prg.setVariable(input_changed_variable, 0, true);
 
-  const int32_t loop_start_address = prg.getPointer();
+  const auto loop_start_address = static_cast<int32_t>(prg.getPointer());
   prg.checkIfInputWasSet(input_variable, true, input_changed_variable, true);
   prg.absoluteJumpToAddressIfVariableEqualsZero(input_changed_variable, true, loop_start_address);
   prg.subtractConstantFromVariable(count_variable, 1, true);
@@ -37,11 +37,11 @@ int main(int /*argc*/, char** /*argv*/) {
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setVariableBehavior(input_variable, beast::VmSession::VariableIoBehavior::Input);
 
-  beast::CpuVirtualMachine vm;
+  beast::CpuVirtualMachine virtual_machine;
 
   using namespace std::chrono_literals;
   auto last_timepoint = std::chrono::high_resolution_clock::now();
-  while (vm.step(session)) {
+  while (virtual_machine.step(session)) {
     const auto now = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double, std::milli> elapsed = now - last_timepoint;
     if (elapsed.count() > 1000) {  // 1s has passed
