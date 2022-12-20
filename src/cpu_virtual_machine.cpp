@@ -423,6 +423,22 @@ bool CpuVirtualMachine::step(VmSession& session) {
     // Todo: Implement
   } break;*/
 
+  /*case OpCode::VariableBitShiftVariableLeft: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::VariableBitShiftVariableRight: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::VariableRotateVariableLeft: {
+    // Todo: Implement
+  } break;*/
+
+  /*case OpCode::VariableRotateVariableRight: {
+    // Todo: Implement
+  } break;*/
+
   default: {
     throw std::runtime_error("Undefined instruction reached.");
   }

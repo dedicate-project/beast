@@ -66,7 +66,11 @@ enum class OpCode : int8_t {
   PrintVariableStringFromStringTable         = 0x3b,
   LoadVariableStringItemLengthIntoVariable   = 0x3c,
   LoadVariableStringItemIntoVariables        = 0x3d,
-  TerminateWithVariableReturnCode            = 0x3e
+  TerminateWithVariableReturnCode            = 0x3e,
+  VariableBitShiftVariableLeft               = 0x3f,
+  VariableBitShiftVariableRight              = 0x40,
+  VariableRotateVariableLeft                 = 0x41,
+  VariableRotateVariableRight                = 0x42
 };
 
 }  // namespace beast
