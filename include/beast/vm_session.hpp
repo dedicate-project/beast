@@ -11,9 +11,9 @@ namespace beast {
 class VmSession {
  public:
   enum class VariableIoBehavior {
-    Store = 0,  // Variable is used for in-memory storage only, no I/O behavior is expected
-    Input = 1,  // Variable is expected to receive input from outside
-    Output = 2  // Variable is expected to be read from outside
+    Store = 0,  ///< Variable is used for in-memory storage only, no I/O behavior is expected
+    Input = 1,  ///< Variable is expected to receive input from outside
+    Output = 2  ///< Variable is expected to be read from outside
   };
 
   typedef struct VariableDescriptor {
