@@ -1,28 +1,35 @@
 Welcome to the BEAST Documentaion!
 ==================================
 
+BEAST (Binary Evolution And Sentience Toolkit) is an open source project `hosted on
+GitHub <https://github.com/dedicate-project/beast>`_. This documentation has a three-fold intention:
+
+1. Give an overview of what the project is about and motivate its ideas and architecture
+
+2. Expose the `public API <api.rst>`_ that developers can use to incorporate BEAST into their own ecosystem and applications. This includes a list of the `available operators <operators.rst>`_.
+
+3. Explain, by examples, how to achieve specific results with BEAST, and give some representative use-cases
+
+
+.. note:: This documentation is currently work in progress and not complete at any scale. It will be extended as time allows it.
+
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Content
 
-:ref:`genindex`
+   api.rst
+   operators.rst
 
-This documentation will contain general pointers for the BEAST project, and how to get started with
-it. Right now, this is a placeholder created during the initial configuration of the documentation
-scripts.
+Project Synopsis
+----------------
 
+BEAST (Binary Evolution And Sentience Toolkit) is an open source project that defines and implements a virtual machine with a custom instruction set. The virtual machine operates on a byte level and supports all common low-level machine operations, but functions within an entirely virtual environment. This allows users to experiment with code transformations and custom low-level operators without the need for physical hardware.
 
-Docs
-====
+One of the main goals of the BEAST project is to provide a platform for researchers and developers to explore the intersection of evolution and computation. The virtual machine's custom instruction set allows users to define their own low-level operators, enabling them to conduct experiments on how these operators impact the evolution and optimization of binary code.
 
-.. doxygenclass:: beast::Program
-   :members:
+In addition to its use as a research platform, the BEAST virtual machine also has practical applications in the field of computer science education. By providing a virtual environment for students to learn about low-level machine operations and experiment with code transformations, the BEAST project aims to give students a deeper understanding of how computers work at a fundamental level.
 
-.. doxygenclass:: beast::VirtualMachine
-   :members:
+The BEAST virtual machine is implemented in a high-level programming language, making it easily accessible to a wide range of users. The project also includes extensive documentation and examples to help users get started with the virtual machine and begin exploring its capabilities.
 
-.. doxygenclass:: beast::CpuVirtualMachine
-   :members:
-
-.. doxygenclass:: beast::VmSession
-   :members:
+Overall, the BEAST project provides a powerful and flexible platform for researchers and educators to explore the intersection of evolution and computation, and to gain a deeper understanding of low-level machine operations. By providing a virtual environment for experimentation and education, the BEAST project aims to advance the field of computer science and inspire the next generation of developers and researchers.
