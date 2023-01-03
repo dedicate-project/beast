@@ -78,6 +78,16 @@ int main(int /*argc*/, char** /*argv*/) {
 }
 ```
 
+The program that is defined here stores the string "Hello World!" at string table index 0, and then
+prints the string stored at string table index 0. The program is then executed in the CPU VM, the
+result being that the following output appears on screen:
+```bash
+Hello World!
+```
+
+This could have been achieved in various ways (for exampe through printing individual variable
+values), but this example shows the very bare basics of how to achieve a hello world example.
+
 
 ## Building
 
