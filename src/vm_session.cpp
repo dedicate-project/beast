@@ -511,8 +511,10 @@ void VmSession::checkIfStackIsEmpty(int32_t /*stack_variable_index*/, bool /*sta
   // TODO(fairlight1337): Implement this method.
 }
 
-void VmSession::swapVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const int32_t temp = getVariableValueInternal(variable_index_a, follow_links_a);
+  setVariableValueInternal(variable_index_a, follow_links_a, getVariableValueInternal(variable_index_b, follow_links_b));
+  setVariableValueInternal(variable_index_b, follow_links_b, temp);
 }
 
 void VmSession::setVariableStringTableEntry(int32_t /*variable_index*/, bool /*follow_links*/, const std::string& /*string*/) {

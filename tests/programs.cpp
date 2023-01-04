@@ -946,3 +946,24 @@ TEST_CASE("variables_can_be_bit_shifted_right_by_negative_amount", "programs") {
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
+
+TEST_CASE("variables_can_be_swapped", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_a = 15;
+  const int32_t variable_value_b = 189;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.swapVariables(variable_index_a, true, variable_index_b, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index_a, true) == variable_value_b);
+  REQUIRE(session.getVariableValue(variable_index_b, true) == variable_value_a);
+}
