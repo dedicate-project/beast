@@ -305,9 +305,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
   case OpCode::BitShiftVariableRight: {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
-    const int8_t places = session.getData1();
+    const auto places = static_cast<int8_t>(-session.getData1());
     debug("bit_shift_variable_right(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
-    session.bitShiftVariable(variable_index, follow_links, -places);
+    session.bitShiftVariable(variable_index, follow_links, places);
   } break;
 
   case OpCode::BitWiseInvertVariable: {
