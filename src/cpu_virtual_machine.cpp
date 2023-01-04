@@ -310,21 +310,43 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.bitShiftVariable(variable_index, follow_links, -places);
   } break;
 
-  /*case OpCode::BitWiseInvertVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::BitWiseInvertVariable: {
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("bit_wise_invert_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.bitWiseInvertVariable(variable_index, follow_links);
+  } break;
 
-  /*case OpCode::BitWiseAndTwoVariables: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::BitWiseAndTwoVariables: {
+    const int32_t variable_index_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_index_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    debug("bit_wise_and_two_variables(" + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.bitWiseAndTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
+  } break;
 
-  /*case OpCode::BitWiseOrTwoVariables: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::BitWiseOrTwoVariables: {
+    const int32_t variable_index_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_index_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    debug("bit_wise_or_two_variables(" + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.bitWiseOrTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
+  } break;
 
-  /*case OpCode::BitWiseXorTwoVariables: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::BitWiseXorTwoVariables: {
+    const int32_t variable_index_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_index_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    debug("bit_wise_xor_two_variables(" + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.bitWiseXorTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
+  } break;
 
   case OpCode::LoadRandomValueIntoVariable: {
     const int32_t variable = session.getData4();
