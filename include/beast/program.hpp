@@ -147,6 +147,56 @@ class Program {
 
   void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
 
+  void bitShiftVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
+
+  void bitShiftVariableRight(int32_t variable_index, bool follow_links, int8_t places);
+
+  void bitWiseInvertVariable(int32_t variable_index, bool follow_links);
+
+  void bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t modulo_constant);
+
+  void moduloVariableByVariable(int32_t variable_index, bool follow_links, int32_t modulo_variable_index, bool modulo_follow_links);
+
+  void rotateVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
+
+  void rotateVariableRight(int32_t variable_index, bool follow_links, int8_t places);
+
+  void pushVariableOnStack(int32_t stack_variable_index, bool follow_links_stack, int32_t variable_index, bool follow_links);
+
+  void pushConstantOnStack(int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
+
+  void popVariableFromStack(int32_t stack_variable_index, bool follow_links_stack, int32_t variable_index, bool follow_links);
+
+  void popTopItemFromStack(int32_t stack_variable_index, bool follow_links_stack);
+
+  void checkIfStackIsEmpty(int32_t stack_variable_index, bool follow_links_stack, int32_t variable_index, bool follow_links);
+
+  void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string);
+
+  void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
+
+  void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool follow_links_string_item, int32_t variable_index, bool follow_links);
+
+  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool follow_links_string_item, int32_t variable_index, bool follow_links);
+
+  void terminateWithVariableReturnCode(int32_t variable_index, bool follow_links);
+
+  void variableBitShiftVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+
+  void variableBitShiftVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+
+  void variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+
+  void variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+
  private:
   bool canFit(uint32_t bytes);
 
