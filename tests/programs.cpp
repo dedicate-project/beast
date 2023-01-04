@@ -874,3 +874,75 @@ TEST_CASE("string_table_item_can_be_loaded_into_variables", "programs") {
     REQUIRE(static_cast<int32_t>(entry.at(idx)) == value);
   }
 }
+
+TEST_CASE("variables_can_be_bit_shifted_left", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 2;
+  const int32_t shifted_value = 16;
+  const int8_t shift_amount = 3;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.bitShiftVariableLeft(variable_index, true, shift_amount);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
+}
+
+TEST_CASE("variables_can_be_bit_shifted_left_by_negative_amount", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 16;
+  const int32_t shifted_value = 2;
+  const int8_t shift_amount = -3;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.bitShiftVariableLeft(variable_index, true, shift_amount);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
+}
+
+TEST_CASE("variables_can_be_bit_shifted_right", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 16;
+  const int32_t shifted_value = 2;
+  const int8_t shift_amount = 3;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.bitShiftVariableRight(variable_index, true, shift_amount);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
+}
+
+TEST_CASE("variables_can_be_bit_shifted_right_by_negative_amount", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 2;
+  const int32_t shifted_value = 16;
+  const int8_t shift_amount = -3;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.bitShiftVariableRight(variable_index, true, shift_amount);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
+}

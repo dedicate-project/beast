@@ -453,4 +453,10 @@ void VmSession::loadStringItemIntoVariables(
   }
 }
 
+void VmSession::bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places) {
+  const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
+  const auto shifted_value = places > 0 ? value << static_cast<uint32_t>(places) : value >> static_cast<uint32_t>(-places);
+  setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(shifted_value));
+}
+
 }  // namespace beast

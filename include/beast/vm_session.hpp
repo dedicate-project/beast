@@ -132,6 +132,8 @@ class VmSession {
 
   void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
 
+  void bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places);
+
  private:
   int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
 
