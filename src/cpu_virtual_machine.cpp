@@ -355,21 +355,42 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.loadRandomValueIntoVariable(variable, follow_links);
   } break;
 
-  /*case OpCode::ModuloVariableByConstant: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::ModuloVariableByConstant: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t modulo_constant = session.getData4();
+    debug("modulo_variable_by_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(modulo_constant) + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.moduloVariableByConstant(variable, follow_links, modulo_constant);
+  } break;
 
-  /*case OpCode::ModuloVariableByVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::ModuloVariableByVariable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t modulo_variable = session.getData4();
+    const bool modulo_follow_links = session.getData1() != 0x0;
+    debug("modulo_variable_by_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(modulo_variable) + ", " + (modulo_follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.moduloVariableByVariable(variable, follow_links, modulo_variable, modulo_follow_links);
+  } break;
 
-  /*case OpCode::RotateVariableLeft: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::RotateVariableLeft: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int8_t places = session.getData1();
+    debug("rotate_variable_left(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.rotateVariable(variable, follow_links, places);
+  } break;
 
-  /*case OpCode::RotateVariableRight: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::RotateVariableRight: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const auto places = static_cast<int8_t>(-session.getData1());
+    debug("rotate_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.rotateVariable(variable, follow_links, places);
+  } break;
 
   case OpCode::UnconditionalJumpToAbsoluteAddress: {
     const int32_t addr = session.getData4();
@@ -413,65 +434,152 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.loadStringTableItemLengthLimitIntoVariable(variable, follow_links);
   } break;
 
-  /*case OpCode::PushVariableOnStack: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::PushVariableOnStack: {
+    const int32_t stack_variable = session.getData4();
+    const bool stack_follow_links = session.getData1() != 0x0;
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("push_variable_on_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.pushVariableOnStack(stack_variable, stack_follow_links, variable, follow_links);
+  } break;
 
-  /*case OpCode::PushConstantOnStack: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::PushConstantOnStack: {
+    const int32_t stack_variable = session.getData4();
+    const bool stack_follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    debug("push_constant_on_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(constant) + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.pushConstantOnStack(stack_variable, stack_follow_links, constant);
+  } break;
 
-  /*case OpCode::PopVariableFromStack: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::PopVariableFromStack: {
+    const int32_t stack_variable = session.getData4();
+    const bool stack_follow_links = session.getData1() != 0x0;
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("pop_variable_from_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.popVariableFromStack(stack_variable, stack_follow_links, variable, follow_links);
+  } break;
 
-  /*case OpCode::PopFromStack: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::PopFromStack: {
+    const int32_t stack_variable = session.getData4();
+    const bool stack_follow_links = session.getData1() != 0x0;
+    debug("pop_from_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.popFromStack(stack_variable, stack_follow_links);
+  } break;
 
-  /*case OpCode::CheckIfStackIsEmpty: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::CheckIfStackIsEmpty: {
+    const int32_t stack_variable = session.getData4();
+    const bool stack_follow_links = session.getData1() != 0x0;
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("check_if_stack_is_empty(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.checkIfStackIsEmpty(stack_variable, stack_follow_links, variable, follow_links);
+  } break;
 
-  /*case OpCode::SwapVariables: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::SwapVariables: {
+    const int32_t variable_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    debug("swap_variables(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.swapVariables(variable_a, follow_links_a, variable_b, follow_links_b);
+  } break;
 
-  /*case OpCode::SetVariableStringTableEntry: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::SetVariableStringTableEntry: {
+    const int32_t string_table_variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int16_t string_length = session.getData2();
+    std::vector<char> buffer(string_length);
+    for (unsigned int idx = 0; idx < string_length; ++idx) {
+      buffer[idx] = session.getData1();
+    }
+    const std::string string_content = std::string(buffer.data(), string_length);
+    debug("set_variable_string_table_entry(" + std::to_string(string_table_variable_index) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(string_length) + ", '" + string_content + "')");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.setVariableStringTableEntry(string_table_variable_index, follow_links, string_content);
+  } break;
 
-  /*case OpCode::PrintVariableStringFromStringTable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::PrintVariableStringFromStringTable: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("print_variable_string_from_string_table(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.printVariableStringFromStringTable(variable, follow_links);
+  } break;
 
-  /*case OpCode::LoadVariableStringItemLengthIntoVariable: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadVariableStringItemLengthIntoVariable: {
+    const int32_t string_item_variable = session.getData4();
+    const bool string_item_follow_links = session.getData1() != 0x0;
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_variable_string_item_length_into_variable(" + std::to_string(string_item_variable) + ", " + (string_item_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.loadVariableStringItemLengthIntoVariable(string_item_variable, string_item_follow_links, variable, follow_links);
+  } break;
 
-  /*case OpCode::LoadVariableStringItemIntoVariables: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::LoadVariableStringItemIntoVariables: {
+    const int32_t string_item_variable = session.getData4();
+    const bool string_item_follow_links = session.getData1() != 0x0;
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("load_variable_string_item_into_variable(" + std::to_string(string_item_variable) + ", " + (string_item_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.loadVariableStringItemIntoVariables(string_item_variable, string_item_follow_links, variable, follow_links);
+  } break;
 
-  /*case OpCode::TerminateWithVariableReturnCode: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::TerminateWithVariableReturnCode: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("terminate_with_variable_return_code(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.terminateWithVariableReturnCode(variable, follow_links);
+  } break;
 
-  /*case OpCode::VariableBitShiftVariableLeft: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::VariableBitShiftVariableLeft: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t places_variable = session.getData4();
+    const bool places_follow_links = session.getData1() != 0x0;
+    debug("variable_bit_shift_variable_left(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.variableBitShiftVariableLeft(variable, follow_links, places_variable, places_follow_links);
+  } break;
 
-  /*case OpCode::VariableBitShiftVariableRight: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::VariableBitShiftVariableRight: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t places_variable = session.getData4();
+    const bool places_follow_links = session.getData1() != 0x0;
+    debug("variable_bit_shift_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.variableBitShiftVariableRight(variable, follow_links, places_variable, places_follow_links);
+  } break;
 
-  /*case OpCode::VariableRotateVariableLeft: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::VariableRotateVariableLeft: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t places_variable = session.getData4();
+    const bool places_follow_links = session.getData1() != 0x0;
+    debug("variable_rotate_variable_left(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.variableRotateVariableLeft(variable, follow_links, places_variable, places_follow_links);
+  } break;
 
-  /*case OpCode::VariableRotateVariableRight: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::VariableRotateVariableRight: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t places_variable = session.getData4();
+    const bool places_follow_links = session.getData1() != 0x0;
+    debug("variable_rotate_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
+    // TODO(fairlight1337): Implement the following session call method.
+    // session.variableRotateVariableRight(variable, follow_links, places_variable, places_follow_links);
+  } break;
 
   default: {
     throw std::runtime_error("Undefined instruction reached.");
