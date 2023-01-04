@@ -147,6 +147,8 @@ class Program {
 
   void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
 
+  void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
+
   void bitShiftVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
 
   void bitShiftVariableRight(int32_t variable_index, bool follow_links, int8_t places);

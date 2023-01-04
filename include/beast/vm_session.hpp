@@ -132,7 +132,53 @@ class VmSession {
 
   void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
 
+  void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
+
   void bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places);
+
+  void bitWiseInvertVariable(int32_t variable_index, bool follow_links);
+
+  void bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t constant);
+
+  void moduloVariableByVariable(int32_t variable_index, bool follow_links, int32_t modulo_variable_index, bool modulo_follow_links);
+
+  void rotateVariable(int32_t variable_index, bool follow_links, int8_t places);
+
+  void pushVariableOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links);
+
+  void pushConstantOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t constant);
+
+  void popVariableFromStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links);
+
+  void popFromStack(int32_t stack_variable_index, bool stack_follow_links);
+
+  void checkIfStackIsEmpty(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links);
+
+  void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+
+  void setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string);
+
+  void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
+
+  void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links);
+
+  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links);
+
+  void terminateWithVariableReturnCode(int32_t variable_index, bool follow_links);
+
+  void variableBitShiftVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+
+  void variableBitShiftVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+
+  void variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+
+  void variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
 
  private:
   int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);

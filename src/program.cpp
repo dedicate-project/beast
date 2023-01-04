@@ -381,6 +381,14 @@ void Program::loadStringItemIntoVariables(
   appendFlag1(follow_links);
 }
 
+void Program::performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links) {
+  appendCode1(OpCode::PerformSystemCall);
+  appendData1(major_code);
+  appendData1(minor_code);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+}
+
 void Program::bitShiftVariableLeft(int32_t variable_index, bool follow_links, int8_t places) {
   appendCode1(OpCode::BitShiftVariableLeft);
   appendData4(variable_index);

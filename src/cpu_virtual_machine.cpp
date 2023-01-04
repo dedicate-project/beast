@@ -290,9 +290,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.loadStringItemIntoVariables(string_table_index, start_variable_index, follow_links);
   } break;
 
-  /*case OpCode::PerformSystemCall: {
-    // Todo: Implement
-  } break;*/
+  case OpCode::PerformSystemCall: {
+    const int8_t major_code = session.getData1();
+    const int8_t minor_code = session.getData1();
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    debug("perform_system_call(" + std::to_string(major_code) + ", " + std::to_string(minor_code) + ", " + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+    session.performSystemCall(major_code, minor_code, variable_index, follow_links);
+  } break;
 
   case OpCode::BitShiftVariableLeft: {
     const int32_t variable_index = session.getData4();
@@ -314,8 +319,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("bit_wise_invert_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.bitWiseInvertVariable(variable_index, follow_links);
+    session.bitWiseInvertVariable(variable_index, follow_links);
   } break;
 
   case OpCode::BitWiseAndTwoVariables: {
@@ -324,8 +328,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("bit_wise_and_two_variables(" + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.bitWiseAndTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
+    session.bitWiseAndTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
   } break;
 
   case OpCode::BitWiseOrTwoVariables: {
@@ -334,8 +337,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("bit_wise_or_two_variables(" + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.bitWiseOrTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
+    session.bitWiseOrTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
   } break;
 
   case OpCode::BitWiseXorTwoVariables: {
@@ -344,8 +346,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("bit_wise_xor_two_variables(" + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.bitWiseXorTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
+    session.bitWiseXorTwoVariables(variable_index_a, follow_links_a, variable_index_b, follow_links_b);
   } break;
 
   case OpCode::LoadRandomValueIntoVariable: {
@@ -360,8 +361,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int32_t modulo_constant = session.getData4();
     debug("modulo_variable_by_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(modulo_constant) + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.moduloVariableByConstant(variable, follow_links, modulo_constant);
+    session.moduloVariableByConstant(variable, follow_links, modulo_constant);
   } break;
 
   case OpCode::ModuloVariableByVariable: {
@@ -370,8 +370,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t modulo_variable = session.getData4();
     const bool modulo_follow_links = session.getData1() != 0x0;
     debug("modulo_variable_by_variable(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(modulo_variable) + ", " + (modulo_follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.moduloVariableByVariable(variable, follow_links, modulo_variable, modulo_follow_links);
+    session.moduloVariableByVariable(variable, follow_links, modulo_variable, modulo_follow_links);
   } break;
 
   case OpCode::RotateVariableLeft: {
@@ -379,8 +378,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int8_t places = session.getData1();
     debug("rotate_variable_left(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.rotateVariable(variable, follow_links, places);
+    session.rotateVariable(variable, follow_links, places);
   } break;
 
   case OpCode::RotateVariableRight: {
@@ -388,8 +386,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const auto places = static_cast<int8_t>(-session.getData1());
     debug("rotate_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.rotateVariable(variable, follow_links, places);
+    session.rotateVariable(variable, follow_links, places);
   } break;
 
   case OpCode::UnconditionalJumpToAbsoluteAddress: {
@@ -440,8 +437,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("push_variable_on_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.pushVariableOnStack(stack_variable, stack_follow_links, variable, follow_links);
+    session.pushVariableOnStack(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
   case OpCode::PushConstantOnStack: {
@@ -449,8 +445,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool stack_follow_links = session.getData1() != 0x0;
     const int32_t constant = session.getData4();
     debug("push_constant_on_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(constant) + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.pushConstantOnStack(stack_variable, stack_follow_links, constant);
+    session.pushConstantOnStack(stack_variable, stack_follow_links, constant);
   } break;
 
   case OpCode::PopVariableFromStack: {
@@ -459,16 +454,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("pop_variable_from_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.popVariableFromStack(stack_variable, stack_follow_links, variable, follow_links);
+    session.popVariableFromStack(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
   case OpCode::PopFromStack: {
     const int32_t stack_variable = session.getData4();
     const bool stack_follow_links = session.getData1() != 0x0;
     debug("pop_from_stack(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.popFromStack(stack_variable, stack_follow_links);
+    session.popFromStack(stack_variable, stack_follow_links);
   } break;
 
   case OpCode::CheckIfStackIsEmpty: {
@@ -477,8 +470,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("check_if_stack_is_empty(" + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.checkIfStackIsEmpty(stack_variable, stack_follow_links, variable, follow_links);
+    session.checkIfStackIsEmpty(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
   case OpCode::SwapVariables: {
@@ -487,8 +479,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("swap_variables(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.swapVariables(variable_a, follow_links_a, variable_b, follow_links_b);
+    session.swapVariables(variable_a, follow_links_a, variable_b, follow_links_b);
   } break;
 
   case OpCode::SetVariableStringTableEntry: {
@@ -501,16 +492,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     }
     const std::string string_content = std::string(buffer.data(), string_length);
     debug("set_variable_string_table_entry(" + std::to_string(string_table_variable_index) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(string_length) + ", '" + string_content + "')");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.setVariableStringTableEntry(string_table_variable_index, follow_links, string_content);
+    session.setVariableStringTableEntry(string_table_variable_index, follow_links, string_content);
   } break;
 
   case OpCode::PrintVariableStringFromStringTable: {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("print_variable_string_from_string_table(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.printVariableStringFromStringTable(variable, follow_links);
+    session.printVariableStringFromStringTable(variable, follow_links);
   } break;
 
   case OpCode::LoadVariableStringItemLengthIntoVariable: {
@@ -519,8 +508,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_variable_string_item_length_into_variable(" + std::to_string(string_item_variable) + ", " + (string_item_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.loadVariableStringItemLengthIntoVariable(string_item_variable, string_item_follow_links, variable, follow_links);
+    session.loadVariableStringItemLengthIntoVariable(string_item_variable, string_item_follow_links, variable, follow_links);
   } break;
 
   case OpCode::LoadVariableStringItemIntoVariables: {
@@ -529,16 +517,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_variable_string_item_into_variable(" + std::to_string(string_item_variable) + ", " + (string_item_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.loadVariableStringItemIntoVariables(string_item_variable, string_item_follow_links, variable, follow_links);
+    session.loadVariableStringItemIntoVariables(string_item_variable, string_item_follow_links, variable, follow_links);
   } break;
 
   case OpCode::TerminateWithVariableReturnCode: {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("terminate_with_variable_return_code(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.terminateWithVariableReturnCode(variable, follow_links);
+    session.terminateWithVariableReturnCode(variable, follow_links);
   } break;
 
   case OpCode::VariableBitShiftVariableLeft: {
@@ -547,8 +533,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_bit_shift_variable_left(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.variableBitShiftVariableLeft(variable, follow_links, places_variable, places_follow_links);
+    session.variableBitShiftVariableLeft(variable, follow_links, places_variable, places_follow_links);
   } break;
 
   case OpCode::VariableBitShiftVariableRight: {
@@ -557,8 +542,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_bit_shift_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.variableBitShiftVariableRight(variable, follow_links, places_variable, places_follow_links);
+    session.variableBitShiftVariableRight(variable, follow_links, places_variable, places_follow_links);
   } break;
 
   case OpCode::VariableRotateVariableLeft: {
@@ -567,8 +551,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_rotate_variable_left(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.variableRotateVariableLeft(variable, follow_links, places_variable, places_follow_links);
+    session.variableRotateVariableLeft(variable, follow_links, places_variable, places_follow_links);
   } break;
 
   case OpCode::VariableRotateVariableRight: {
@@ -577,8 +560,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_rotate_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
-    // TODO(fairlight1337): Implement the following session call method.
-    // session.variableRotateVariableRight(variable, follow_links, places_variable, places_follow_links);
+    session.variableRotateVariableRight(variable, follow_links, places_variable, places_follow_links);
   } break;
 
   default: {

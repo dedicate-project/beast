@@ -453,10 +453,102 @@ void VmSession::loadStringItemIntoVariables(
   }
 }
 
+void VmSession::performSystemCall(int8_t /*major_code*/, int8_t /*minor_code*/, int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
 void VmSession::bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places) {
   const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
   const auto shifted_value = places > 0 ? value << static_cast<uint32_t>(places) : value >> static_cast<uint32_t>(-places);
   setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(shifted_value));
+}
+
+void VmSession::bitWiseInvertVariable(int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::bitWiseAndTwoVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::bitWiseOrTwoVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::bitWiseXorTwoVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::moduloVariableByConstant(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*constant*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::moduloVariableByVariable(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*modulo_variable_index*/, bool /*modulo_follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::rotateVariable(int32_t /*variable_index*/, bool /*follow_links*/, int8_t /*places*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::pushVariableOnStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::pushConstantOnStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*constant*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::popVariableFromStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::popFromStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::checkIfStackIsEmpty(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::swapVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::setVariableStringTableEntry(int32_t /*variable_index*/, bool /*follow_links*/, const std::string& /*string*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::printVariableStringFromStringTable(int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::loadVariableStringItemLengthIntoVariable(int32_t /*string_item_variable_index*/, bool /*string_item_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::loadVariableStringItemIntoVariables(int32_t /*string_item_variable_index*/, bool /*string_item_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::terminateWithVariableReturnCode(int32_t /*variable_index*/, bool /*follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::variableBitShiftVariableLeft(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::variableBitShiftVariableRight(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::variableRotateVariableLeft(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::variableRotateVariableRight(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
+  // TODO(fairlight1337): Implement this method.
 }
 
 }  // namespace beast
