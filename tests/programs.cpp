@@ -967,3 +967,89 @@ TEST_CASE("variables_can_be_swapped", "programs") {
   REQUIRE(session.getVariableValue(variable_index_a, true) == variable_value_b);
   REQUIRE(session.getVariableValue(variable_index_b, true) == variable_value_a);
 }
+
+TEST_CASE("variables_can_be_bit_wise_inverted", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 958208765;
+  const int32_t inverted_value = -958208766;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.bitWiseInvertVariable(variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == inverted_value);
+}
+
+TEST_CASE("variables_can_be_bit_wise_anded", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_a = 52766103;
+  const int32_t variable_value_b = 99021920;
+  const auto expected_result =
+      static_cast<int32_t>(
+          static_cast<uint32_t>(variable_value_a) & static_cast<uint32_t>(variable_value_b));
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.bitWiseAndTwoVariables(variable_index_a, true, variable_index_b, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
+}
+
+TEST_CASE("variables_can_be_bit_wise_ored", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_a = 52766103;
+  const int32_t variable_value_b = 99021920;
+  const auto expected_result =
+      static_cast<int32_t>(
+          static_cast<uint32_t>(variable_value_a) | static_cast<uint32_t>(variable_value_b));
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.bitWiseOrTwoVariables(variable_index_a, true, variable_index_b, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
+}
+
+TEST_CASE("variables_can_be_bit_wise_xored", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_a = 52766103;
+  const int32_t variable_value_b = 99021920;
+  const auto expected_result =
+      static_cast<int32_t>(
+          static_cast<uint32_t>(variable_value_a) ^ static_cast<uint32_t>(variable_value_b));
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.bitWiseXorTwoVariables(variable_index_a, true, variable_index_b, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
+}

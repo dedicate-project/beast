@@ -398,8 +398,8 @@ void VmSession::loadStringTableItemLengthLimitIntoVariable(
 
 void VmSession::loadRandomValueIntoVariable(int32_t variable_index, bool follow_links) {
   // NOTE(fairlight1337): The initialization of the `rng` variable is not linted here to prevent
-  // clang-tidy from complain about seeding with a value from the default constructor. Since we're
-  // using `random_device` to seed `rng` right after, this warning is discarded explicitly.
+  // clang-tidy from complaining about seeding with a value from the default constructor. Since
+  // we're using `random_device` to seed `rng` right after, this warning is discarded explicitly.
   // NOLINTNEXTLINE
   std::mt19937 rng;
   std::random_device random_device;
@@ -463,20 +463,31 @@ void VmSession::bitShiftVariable(int32_t variable_index, bool follow_links, int8
   setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(shifted_value));
 }
 
-void VmSession::bitWiseInvertVariable(int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::bitWiseInvertVariable(int32_t variable_index, bool follow_links) {
+  const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
+  const auto inverted_value = ~value;
+  setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(inverted_value));
 }
 
-void VmSession::bitWiseAndTwoVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const auto value_a = static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
+  const auto value_b = static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
+  const uint32_t result = value_a & value_b;
+  setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
-void VmSession::bitWiseOrTwoVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const auto value_a = static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
+  const auto value_b = static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
+  const uint32_t result = value_a | value_b;
+  setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
-void VmSession::bitWiseXorTwoVariables(int32_t /*variable_index_a*/, bool /*follow_links_a*/, int32_t /*variable_index_b*/, bool /*follow_links_b*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const auto value_a = static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
+  const auto value_b = static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
+  const uint32_t result = value_a ^ value_b;
+  setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
 void VmSession::moduloVariableByConstant(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*constant*/) {
