@@ -162,7 +162,7 @@ class VmSession {
 
   void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
-  void setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string);
+  void setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string_content);
 
   void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
 

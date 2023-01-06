@@ -1053,3 +1053,28 @@ TEST_CASE("variables_can_be_bit_wise_xored", "programs") {
 
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
+
+TEST_CASE("string_table_item_can_be_set_at_variable_index", "programs") {
+  const std::string entry = "Entry";
+
+  beast::Program prg;
+  for (uint32_t idx = 0; idx < entry.size(); ++idx) {
+    prg.declareVariable(idx + 1, beast::Program::VariableType::Int32);
+    prg.setVariable(idx + 1, 0, true);
+  }
+
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+
+  prg.setVariableStringTableEntry(0, true, entry);
+  prg.loadStringItemIntoVariables(0, 1, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  for (uint32_t idx = 0; idx < entry.size(); ++idx) {
+    const int32_t value = session.getVariableValue(idx + 1, true);
+    REQUIRE(static_cast<int32_t>(entry.at(idx)) == value);
+  }
+}

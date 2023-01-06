@@ -528,8 +528,17 @@ void VmSession::swapVariables(int32_t variable_index_a, bool follow_links_a, int
   setVariableValueInternal(variable_index_b, follow_links_b, temp);
 }
 
-void VmSession::setVariableStringTableEntry(int32_t /*variable_index*/, bool /*follow_links*/, const std::string& /*string*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string_content) {
+  const int32_t string_table_index = getVariableValueInternal(variable_index, follow_links);
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  if (string_content.size() > max_string_size_) {
+    throw std::runtime_error("String too long.");
+  }
+
+  string_table_[string_table_index] = string_content;
 }
 
 void VmSession::printVariableStringFromStringTable(int32_t /*variable_index*/, bool /*follow_links*/) {
