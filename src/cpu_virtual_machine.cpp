@@ -231,6 +231,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const bool as_char = session.getData1() != 0x0;
     debug("print_variable(" + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ", " + (as_char ? "true" : "false") + ")");
+    // TODO(fairlight1337): Move this session specific call behind an appropriate API facade.
     session.appendVariableToPrintBuffer(variable_index, follow_links, as_char);
   } break;
 
@@ -249,6 +250,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
   case OpCode::PrintStringFromStringTable: {
     const int32_t string_table_index = session.getData4();
     debug("print_string_from_string_table(" + std::to_string(string_table_index) + ")");
+    // TODO(fairlight1337): Move this session specific call behinde an appropriate API facade.
     session.appendToPrintBuffer(session.getStringTableEntry(string_table_index));
   } break;
 
