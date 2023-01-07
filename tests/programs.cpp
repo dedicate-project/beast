@@ -1117,3 +1117,21 @@ TEST_CASE("variables_can_be_moduloed_by_variable", "programs") {
 
   REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
 }
+
+TEST_CASE("print_variable_index_from_string_table", "programs") {
+  const int32_t variable_index = 3;
+  const int32_t string_table_index = 22;
+  const std::string output = "Output";
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, string_table_index, true);
+  prg.setStringTableEntry(string_table_index, output);
+  prg.printVariableStringFromStringTable(variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getPrintBuffer() == output);
+}

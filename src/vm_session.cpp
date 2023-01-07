@@ -546,8 +546,13 @@ void VmSession::setVariableStringTableEntry(int32_t variable_index, bool follow_
   string_table_[string_table_index] = string_content;
 }
 
-void VmSession::printVariableStringFromStringTable(int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::printVariableStringFromStringTable(int32_t variable_index, bool follow_links) {
+  const int32_t string_table_index = getVariableValueInternal(variable_index, follow_links);
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  appendToPrintBuffer(getStringTableEntry(string_table_index));
 }
 
 void VmSession::loadVariableStringItemLengthIntoVariable(int32_t /*string_item_variable_index*/, bool /*string_item_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
