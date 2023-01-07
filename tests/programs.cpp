@@ -1078,3 +1078,42 @@ TEST_CASE("string_table_item_can_be_set_at_variable_index", "programs") {
     REQUIRE(static_cast<int32_t>(entry.at(idx)) == value);
   }
 }
+
+TEST_CASE("variables_can_be_moduloed_by_constant", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t variable_value = 59964;
+  const int32_t modulo_constant = 27;
+  const int32_t expected_result = 24;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.moduloVariableByConstant(variable_index, true, modulo_constant);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
+}
+
+TEST_CASE("variables_can_be_moduloed_by_variable", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t variable_value = 59964;
+  const int32_t modulo_variable_index = 1;
+  const int32_t modulo_variable_value = 28;
+  const int32_t expected_result = 16;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.declareVariable(modulo_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(modulo_variable_index, modulo_variable_value, true);
+  prg.moduloVariableByVariable(variable_index, true, modulo_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
+}

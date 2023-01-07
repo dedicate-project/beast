@@ -490,12 +490,17 @@ void VmSession::bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_lin
   setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
-void VmSession::moduloVariableByConstant(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*constant*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t constant) {
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  const int32_t result = value % constant;
+  setVariableValueInternal(variable_index, follow_links, result);
 }
 
-void VmSession::moduloVariableByVariable(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*modulo_variable_index*/, bool /*modulo_follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::moduloVariableByVariable(int32_t variable_index, bool follow_links, int32_t modulo_variable_index, bool modulo_follow_links) {
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  const int32_t modulo_value = getVariableValueInternal(modulo_variable_index, modulo_follow_links);
+  const int32_t result = value % modulo_value;
+  setVariableValueInternal(variable_index, follow_links, result);
 }
 
 void VmSession::rotateVariable(int32_t /*variable_index*/, bool /*follow_links*/, int8_t /*places*/) {
