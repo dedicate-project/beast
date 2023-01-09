@@ -1,8 +1,13 @@
 #include <beast/cpu_virtual_machine.hpp>
 
 #include <chrono>
+#ifndef _MSC_VER
 #include <ctime>
+#endif
 #include <iostream>
+#ifdef _MSC_VER
+#include <time.h>
+#endif
 
 #include <beast/opcodes.hpp>
 
