@@ -592,7 +592,7 @@ void VmSession::variableRotateVariableLeft(int32_t variable_index, bool follow_l
 
 void VmSession::variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
   const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
-  rotateVariable(variable_index, follow_links, -places);
+  rotateVariable(variable_index, follow_links, static_cast<int8_t>(-places));
 }
 
 }  // namespace beast
