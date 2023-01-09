@@ -13,7 +13,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
-add_compile_options(-Werror -pedantic)
+if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+  add_compile_options(-Werror -pedantic)
+endif()
 
 add_subdirectory("docs")
 
