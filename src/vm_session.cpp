@@ -503,8 +503,18 @@ void VmSession::moduloVariableByVariable(int32_t variable_index, bool follow_lin
   setVariableValueInternal(variable_index, follow_links, result);
 }
 
-void VmSession::rotateVariable(int32_t /*variable_index*/, bool /*follow_links*/, int8_t /*places*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::rotateVariable(int32_t variable_index, bool follow_links, int8_t places) {
+  const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
+  const uint8_t abs_places = std::abs(places);
+  if (places < 0) { 
+   // Rotate right
+    const uint32_t result = (value >> abs_places) | (value << static_cast<uint32_t>(32 - abs_places));
+    setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(result));
+  } else {
+    // Rotate left
+    const uint32_t result = (value << abs_places) | (value >> static_cast<uint32_t>(32 - abs_places));
+    setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(result));
+  }
 }
 
 void VmSession::pushVariableOnStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
@@ -575,12 +585,14 @@ void VmSession::variableBitShiftVariableRight(int32_t /*variable_index*/, bool /
   // TODO(fairlight1337): Implement this method.
 }
 
-void VmSession::variableRotateVariableLeft(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
+  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+  rotateVariable(variable_index, follow_links, places);
 }
 
-void VmSession::variableRotateVariableRight(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
+  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+  rotateVariable(variable_index, follow_links, -places);
 }
 
 }  // namespace beast

@@ -1135,3 +1135,81 @@ TEST_CASE("print_variable_index_from_string_table", "programs") {
 
   REQUIRE(session.getPrintBuffer() == output);
 }
+
+TEST_CASE("variables_can_be_rotated_left", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 0x00499602;
+  const int32_t rotated_value = 0x96020049;
+  const int8_t rotate_amount = 16;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.rotateVariableLeft(variable_index, true, rotate_amount);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
+}
+
+TEST_CASE("variables_can_be_rotated_right", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 0x00499602;
+  const int32_t rotated_value = 0x02004996;
+  const int8_t rotate_amount = 8;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.rotateVariableRight(variable_index, true, rotate_amount);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
+}
+
+TEST_CASE("variables_can_be_rotated_left_by_variable_places", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 0x00499602;
+  const int32_t rotated_value = 0x96020049;
+  const int8_t rotate_amount = 16;
+  const int32_t places_variable_index = 1;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.declareVariable(places_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(places_variable_index, rotate_amount, true);
+  prg.variableRotateVariableLeft(variable_index, true, places_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
+}
+
+TEST_CASE("variables_can_be_rotated_right_by_variable_places", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 0x00499602;
+  const int32_t rotated_value = 0x02004996;
+  const int8_t rotate_amount = 8;
+  const int32_t places_variable_index = 1;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.declareVariable(places_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(places_variable_index, rotate_amount, true);
+  prg.variableRotateVariableRight(variable_index, true, places_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
+}
