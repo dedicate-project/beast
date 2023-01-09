@@ -1,7 +1,8 @@
 # BEAST - Binary Evolution And Sentience Toolkit
 
-[![CircleCI badge](https://circleci.com/gh/dedicate-project/beast.svg?style=shield)](https://circleci.com/gh/dedicate-project/beast)
+[![CircleCI](https://circleci.com/gh/dedicate-project/beast.svg?style=shield)](https://circleci.com/gh/dedicate-project/beast)
 [![CodeQL](https://github.com/dedicate-project/beast/actions/workflows/codeql.yml/badge.svg)](https://github.com/dedicate-project/beast/actions/workflows/codeql.yml)
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/0a51i8ax0vg92p6k?svg=true)](https://ci.appveyor.com/project/fairlight1337/beast)
 [![Documentation Status](https://readthedocs.org/projects/beast-project/badge/?version=latest)](https://beast-project.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
