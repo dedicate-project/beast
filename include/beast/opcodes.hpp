@@ -76,7 +76,11 @@ enum class OpCode : int8_t {
   CompareIfVariableEqConstant                = 0x45,
   CompareIfVariableGtVariable                = 0x46,
   CompareIfVariableLtVariable                = 0x47,
-  CompareIfVariableEqVariable                = 0x48
+  CompareIfVariableEqVariable                = 0x48,
+  GetMaxOfVariableAndConstant                = 0x49,
+  GetMinOfVariableAndConstant                = 0x4a,
+  GetMaxOfVariableAndVariable                = 0x4b,
+  GetMinOfVariableAndVariable                = 0x4c
 };
 
 }  // namespace beast
