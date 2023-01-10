@@ -1334,3 +1334,31 @@ TEST_CASE("variables_can_be_variably_bit_shifted_right", "programs") {
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
+
+TEST_CASE("checking_if_stack_is_empty_works", "programs") {
+  const int32_t stack_variable_index_1 = 2;
+  const int32_t stack_variable_index_2 = 3;
+  const int32_t stack_size_1 = 0;
+  const int32_t stack_size_2 = 5;
+  const int32_t target_variable_index_1 = 10;
+  const int32_t target_variable_index_2 = 11;
+
+  beast::Program prg;
+  prg.declareVariable(stack_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(stack_variable_index_1, stack_size_1, true);
+  prg.declareVariable(stack_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(stack_variable_index_2, stack_size_2, true);
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+  prg.checkIfStackIsEmpty(stack_variable_index_1, true, target_variable_index_1, true);
+  prg.checkIfStackIsEmpty(stack_variable_index_2, true, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
+}

@@ -533,8 +533,9 @@ void VmSession::popFromStack(int32_t /*stack_variable_index*/, bool /*stack_foll
   // TODO(fairlight1337): Implement this method.
 }
 
-void VmSession::checkIfStackIsEmpty(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::checkIfStackIsEmpty(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
+  const int32_t value = getVariableValueInternal(stack_variable_index, stack_follow_links);
+  setVariableValueInternal(variable_index, follow_links, value == 0x0 ? 0x1 : 0x0);
 }
 
 void VmSession::swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
