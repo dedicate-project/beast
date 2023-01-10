@@ -9,6 +9,18 @@
 #include <time.h>
 #endif
 
+#ifdef _MSC_VER
+struct tm* gmtime_r(time_t* _clock, struct tm* _result) {
+    _gmtime64_s(_result, _clock);
+    return _result;
+}
+
+struct tm* localtime_r(time_t* _clock, struct tm* _result) {
+    _localtime64_s(_result, _clock);
+    return _result;
+}
+#endif
+
 #include <beast/opcodes.hpp>
 
 namespace beast {
