@@ -70,7 +70,13 @@ enum class OpCode : int8_t {
   VariableBitShiftVariableLeft               = 0x3f,
   VariableBitShiftVariableRight              = 0x40,
   VariableRotateVariableLeft                 = 0x41,
-  VariableRotateVariableRight                = 0x42
+  VariableRotateVariableRight                = 0x42,
+  CompareIfVariableGtConstant                = 0x43,
+  CompareIfVariableLtConstant                = 0x44,
+  CompareIfVariableEqConstant                = 0x45,
+  CompareIfVariableGtVariable                = 0x46,
+  CompareIfVariableLtVariable                = 0x47,
+  CompareIfVariableEqVariable                = 0x48
 };
 
 }  // namespace beast
