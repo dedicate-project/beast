@@ -10,6 +10,9 @@
 #endif
 
 #ifdef _MSC_VER
+/* These two functions are implemented here for compatibility with time.h on MSVC builds. The reason
+   is that localtime_r is not implemented for MSVC and would break the build. This implementation
+   should be threadsafe and complement in time.h what is missing relative to ctime. */
 struct tm* gmtime_r(const time_t* _clock, struct tm* _result) {
     _gmtime64_s(_result, _clock);
     return _result;
