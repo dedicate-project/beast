@@ -168,7 +168,7 @@ class VmSession {
 
   void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links);
 
-  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links);
+  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool string_item_follow_links, int32_t start_variable_index, bool follow_links);
 
   void terminateWithVariableReturnCode(int32_t variable_index, bool follow_links);
 

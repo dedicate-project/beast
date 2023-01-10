@@ -565,24 +565,49 @@ void VmSession::printVariableStringFromStringTable(int32_t variable_index, bool 
   appendToPrintBuffer(getStringTableEntry(string_table_index));
 }
 
-void VmSession::loadVariableStringItemLengthIntoVariable(int32_t /*string_item_variable_index*/, bool /*string_item_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links) {
+  const int32_t string_table_index = getVariableValueInternal(string_item_variable_index, string_item_follow_links);
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  setVariableValueInternal(
+      variable_index, follow_links, static_cast<int32_t>(string_table_[string_table_index].size()));
 }
 
-void VmSession::loadVariableStringItemIntoVariables(int32_t /*string_item_variable_index*/, bool /*string_item_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool string_item_follow_links, int32_t start_variable_index, bool follow_links) {
+  const int32_t string_table_index = getVariableValueInternal(string_item_variable_index, string_item_follow_links);
+  if (string_table_index < 0 || string_table_index >= string_table_count_) {
+    throw std::runtime_error("String table index out of bounds.");
+  }
+
+  const auto iterator = string_table_.find(string_table_index);
+  if (iterator == string_table_.end()) {
+    throw std::runtime_error("String table index not defined.");
+  }
+
+  const size_t size = iterator->second.size();
+  for (uint32_t idx = 0; idx < size; ++idx) {
+    setVariableValueInternal(
+        start_variable_index + static_cast<int32_t>(idx), follow_links,
+        static_cast<int32_t>(iterator->second.at(idx)));
+  }
 }
 
-void VmSession::terminateWithVariableReturnCode(int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::terminateWithVariableReturnCode(int32_t variable_index, bool follow_links) {
+  const auto return_code = static_cast<int8_t>(getVariableValueInternal(variable_index, follow_links));
+  return_code_ = return_code;
+  was_terminated_ = true;
 }
 
-void VmSession::variableBitShiftVariableLeft(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::variableBitShiftVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
+  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+  bitShiftVariable(variable_index, follow_links, places);
 }
 
-void VmSession::variableBitShiftVariableRight(int32_t /*variable_index*/, bool /*follow_links*/, int32_t /*places_variable_index*/, bool /*places_follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::variableBitShiftVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
+  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+  bitShiftVariable(variable_index, follow_links, static_cast<int8_t>(-places));
 }
 
 void VmSession::variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {

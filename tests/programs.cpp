@@ -1213,3 +1213,124 @@ TEST_CASE("variables_can_be_rotated_right_by_variable_places", "programs") {
 
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
+
+TEST_CASE("variable_string_table_item_length_can_be_determined", "programs") {
+  const std::string entry1 = "Entry";
+  const std::string entry2 = "Another entry";
+  const int32_t string_table_index_variable_index_1 = 22;
+  const int32_t string_table_index_variable_index_2 = 34;
+  const int32_t string_table_index_1 = 12;
+  const int32_t string_table_index_2 = 19;
+  const int32_t storage_variable_index_1 = 4;
+  const int32_t storage_variable_index_2 = 9;
+
+  beast::Program prg;
+  prg.declareVariable(storage_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(storage_variable_index_1, 0, true);
+  prg.declareVariable(storage_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(storage_variable_index_2, 0, true);
+  prg.declareVariable(string_table_index_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(string_table_index_variable_index_1, string_table_index_1, true);
+  prg.declareVariable(string_table_index_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(string_table_index_variable_index_2, string_table_index_2, true);
+  prg.setStringTableEntry(string_table_index_1, entry1);
+  prg.setStringTableEntry(string_table_index_2, entry2);
+
+  prg.loadVariableStringItemLengthIntoVariable(string_table_index_variable_index_1, true, storage_variable_index_1, true);
+  prg.loadVariableStringItemLengthIntoVariable(string_table_index_variable_index_2, true, storage_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(storage_variable_index_1, true) == entry1.size());
+  REQUIRE(session.getVariableValue(storage_variable_index_2, true) == entry2.size());
+}
+
+TEST_CASE("variable_string_table_item_can_be_loaded_into_variables", "programs") {
+  const std::string entry = "Entry";
+  const int32_t string_table_variable_index = 21;
+  const int32_t string_table_index = 12;
+  const int32_t start_variable_index = 5;
+
+  beast::Program prg;
+  prg.declareVariable(string_table_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(string_table_variable_index, string_table_index, true);
+  for (uint32_t idx = 0; idx < entry.size(); ++idx) {
+    prg.declareVariable(start_variable_index + idx, beast::Program::VariableType::Int32);
+    prg.setVariable(start_variable_index + idx, 0, true);
+  }
+  prg.setStringTableEntry(string_table_index, entry);
+  prg.loadVariableStringItemIntoVariables(string_table_variable_index, true, start_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  for (uint32_t idx = 0; idx < entry.size(); ++idx) {
+    const int32_t value = session.getVariableValue(start_variable_index + idx, true);
+    REQUIRE(static_cast<int32_t>(entry.at(idx)) == value);
+  }
+}
+
+TEST_CASE("termination_prevents_further_execution_and_sets_variable_return_code", "programs") {
+  const int32_t return_code_variable_index = 14;
+  const int8_t return_code = 52;
+
+  beast::Program prg;
+  prg.declareVariable(return_code_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(return_code_variable_index, return_code, true);
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.setVariable(0, 0, true);
+  prg.terminateWithVariableReturnCode(return_code_variable_index, true);
+  prg.setVariable(0, 1, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(0, true) == 0);
+  REQUIRE(session.getReturnCode() == return_code);
+}
+
+TEST_CASE("variables_can_be_variably_bit_shifted_left", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 2;
+  const int32_t shifted_value = 16;
+  const int8_t shift_amount = 3;
+  const int32_t amount_variable_index = 3;
+
+  beast::Program prg;
+  prg.declareVariable(amount_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(amount_variable_index, shift_amount, true);
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.variableBitShiftVariableLeft(variable_index, true, amount_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
+}
+
+TEST_CASE("variables_can_be_variably_bit_shifted_right", "programs") {
+  const int32_t variable_index = 0;
+  const int32_t nominal_value = 16;
+  const int32_t shifted_value = 2;
+  const int8_t shift_amount = 3;
+  const int32_t amount_variable_index = 3;
+
+  beast::Program prg;
+  prg.declareVariable(amount_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(amount_variable_index, shift_amount, true);
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, nominal_value, true);
+  prg.variableBitShiftVariableRight(variable_index, true, amount_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
+}
