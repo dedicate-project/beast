@@ -487,9 +487,33 @@ class VmSession {
 
   /**
    * @fn VmSession::performSystemCall
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs actions interacting with the external system
    *
-   * TODO(fairlight1337): Document this part.
+   * System calls are everything categorized as interacting with the external system, i.e. not
+   * inside the running program but on VM host level. These functions are rather limited at the
+   * moment and don't allow access to sensitive information outside, nor are they allowed to alter
+   * any states outside of the program. In their current state, system calls are limited to
+   * acquiring environment information such as details about the current date and time. The major
+   * and minor code identify the concrete action that will take place, and the result of that
+   * selected action will be stored in the variable referenced during the call.
+   *
+   * Here is a list of currently implemented system calls:
+   * <table>
+   *   <tr><td><b>Major Code</b></td><td><b>Minor Code</b></td><td><b>Description</b></td></tr>
+   *   <tr><td>0</td><td>0</td><td>Get UTC timezone</td></tr>
+   *   <tr><td>0</td><td>1</td><td>Get current UTC time (minutes part)</td></tr>
+   *   <tr><td>0</td><td>2</td><td>Get current UTC time (hours part)</td></tr>
+   *   <tr><td>0</td><td>3</td><td>Get current UTC date (day part)</td></tr>
+   *   <tr><td>0</td><td>4</td><td>Get current UTC date (month part)</td></tr>
+   *   <tr><td>0</td><td>5</td><td>Get current UTC date (year part)</td></tr>
+   *   <tr><td>0</td><td>6</td><td>Get current UTC date (week part)</td></tr>
+   *   <tr><td>0</td><td>7</td><td>Get current UTC date (day of week part)</td></tr>
+   * </table>
+   *
+   * @param major_code The major code for the system call (see table)
+   * @param minor_code The minor code for the system call (see table)
+   * @param variable_index The variable to store the call's result in
+   * @param follow_links Whether to resolve the variable's links
    */
   void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
 
