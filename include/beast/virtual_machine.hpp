@@ -1,6 +1,7 @@
 #ifndef BEAST_VIRTUAL_MACHINE_HPP_
 #define BEAST_VIRTUAL_MACHINE_HPP_
 
+// Internal
 #include <beast/vm_session.hpp>
 
 namespace beast {
@@ -48,12 +49,52 @@ class VirtualMachine {
     Panic = 4    ///< Messages that denote an immediate program abort due to fatal conditions.
   };
 
+  /**
+   * @fn VirtualMachine::message
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
   virtual void message(MessageSeverity severity, const std::string& message) = 0;
 
+  /**
+   * @fn VirtualMachine::debug
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
   void debug(const std::string& message);
+
+  /**
+   * @fn VirtualMachine::info
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
   void info(const std::string& message);
+
+  /**
+   * @fn VirtualMachine::warning
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
   void warning(const std::string& message);
+
+  /**
+   * @fn VirtualMachine::error
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
   void error(const std::string& message);
+
+  /**
+   * @fn VirtualMachine::panic
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
   void panic(const std::string& message);
 };
 

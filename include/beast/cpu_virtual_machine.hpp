@@ -1,6 +1,7 @@
 #ifndef BEAST_CPU_VIRTUAL_MACHINE_HPP_
 #define BEAST_CPU_VIRTUAL_MACHINE_HPP_
 
+// Internal
 #include <beast/virtual_machine.hpp>
 
 namespace beast {
