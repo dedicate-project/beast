@@ -23,6 +23,7 @@ The BEAST virtual machine is implemented in a high-level programming language, m
 
 Overall, the BEAST project provides a powerful and flexible platform for researchers and educators to explore the intersection of evolution and computation, and to gain a deeper understanding of low-level machine operations. By providing a virtual environment for experimentation and education, the BEAST project aims to advance the field of computer science and inspire the next generation of developers and researchers.
 
+You can find the project's documentation [here](https://beast-project.readthedocs.io/en/latest/). The API documentation can be found [here](https://beast-project.readthedocs.io/en/latest/api.html).
 
 ## Architecture
 
