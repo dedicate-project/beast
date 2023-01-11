@@ -584,6 +584,111 @@ bool CpuVirtualMachine::step(VmSession& session) {
     debug("variable_rotate_variable_right(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false") + ")");
     session.variableRotateVariableRight(variable, follow_links, places_variable, places_follow_links);
   } break;
+  
+  case OpCode::CompareIfVariableGtConstant: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("compare_if_variable_gt_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.compareIfVariableGtConstant(variable, follow_links, constant, target_variable, target_follow_links);
+  } break;
+  
+  case OpCode::CompareIfVariableLtConstant: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("compare_if_variable_lt_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.compareIfVariableLtConstant(variable, follow_links, constant, target_variable, target_follow_links);
+  } break;
+  
+  case OpCode::CompareIfVariableEqConstant: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("compare_if_variable_eq_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.compareIfVariableEqConstant(variable, follow_links, constant, target_variable, target_follow_links);
+  } break;
+  
+  case OpCode::CompareIfVariableGtVariable: {
+    const int32_t variable_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("compare_if_variable_gt_variable(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.compareIfVariableGtVariable(variable_a, follow_links_a, variable_b, follow_links_b, target_variable, target_follow_links);
+  } break;
+  
+  case OpCode::CompareIfVariableLtVariable: {
+    const int32_t variable_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("compare_if_variable_lt_variable(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.compareIfVariableLtVariable(variable_a, follow_links_a, variable_b, follow_links_b, target_variable, target_follow_links);
+  } break;
+  
+  case OpCode::CompareIfVariableEqVariable: {
+    const int32_t variable_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("compare_if_variable_eq_variable(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.compareIfVariableEqVariable(variable_a, follow_links_a, variable_b, follow_links_b, target_variable, target_follow_links);
+  } break;
+
+  case OpCode::GetMaxOfVariableAndConstant: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("get_max_of_variable_and_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.getMaxOfVariableAndConstant(variable, follow_links, constant, target_variable, target_follow_links);
+  } break;
+
+  case OpCode::GetMinOfVariableAndConstant: {
+    const int32_t variable = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    const int32_t constant = session.getData4();
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("get_min_of_variable_and_constant(" + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.getMinOfVariableAndConstant(variable, follow_links, constant, target_variable, target_follow_links);
+  } break;
+
+  case OpCode::GetMaxOfVariableAndVariable: {
+    const int32_t variable_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("get_max_of_variable_and_variable(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.getMaxOfVariableAndVariable(variable_a, follow_links_a, variable_b, follow_links_b, target_variable, target_follow_links);
+  } break;
+
+  case OpCode::GetMinOfVariableAndVariable: {
+    const int32_t variable_a = session.getData4();
+    const bool follow_links_a = session.getData1() != 0x0;
+    const int32_t variable_b = session.getData4();
+    const bool follow_links_b = session.getData1() != 0x0;
+    const int32_t target_variable = session.getData4();
+    const bool target_follow_links = session.getData1() != 0x0;
+    debug("get_min_of_variable_and_variable(" + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", " + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", " + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+    session.getMinOfVariableAndVariable(variable_a, follow_links_a, variable_b, follow_links_b, target_variable, target_follow_links);
+  } break;
 
   default: {
     throw std::runtime_error("Undefined instruction reached.");

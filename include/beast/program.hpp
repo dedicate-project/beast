@@ -727,6 +727,86 @@ class Program {
    */
   void variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
 
+  /**
+   * @fn Program::compareIfVariableGtConstant
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::compareIfVariableLtConstant
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::compareIfVariableEqConstant
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::compareIfVariableGtVariable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::compareIfVariableLtVariable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::compareIfVariableEqVariable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::getMaxOfVariableAndConstant
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::getMinOfVariableAndConstant
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::getMaxOfVariableAndVariable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn Program::getMinOfVariableAndVariable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+
  private:
   /**
    * @fn Program::canFit

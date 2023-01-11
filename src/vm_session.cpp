@@ -621,4 +621,44 @@ void VmSession::variableRotateVariableRight(int32_t variable_index, bool follow_
   rotateVariable(variable_index, follow_links, static_cast<int8_t>(-places));
 }
 
+void VmSession::compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+  
+void VmSession::compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+  
+void VmSession::compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+  
+void VmSession::compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+  
+void VmSession::compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+
+void VmSession::getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  // TODO(fairlight1337): Implement this method.
+}
+
 }  // namespace beast

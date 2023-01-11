@@ -578,6 +578,101 @@ void Program::variableRotateVariableRight(int32_t variable_index, bool follow_li
   appendFlag1(follow_links_places);
 }
 
+void Program::compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::CompareIfVariableGtConstant);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+  appendData4(constant);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::CompareIfVariableLtConstant);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+  appendData4(constant);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::CompareIfVariableEqConstant);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+  appendData4(constant);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::CompareIfVariableGtVariable);
+  appendData4(variable_index_a);
+  appendFlag1(follow_links_a);
+  appendData4(variable_index_b);
+  appendFlag1(follow_links_b);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::CompareIfVariableLtVariable);
+  appendData4(variable_index_a);
+  appendFlag1(follow_links_a);
+  appendData4(variable_index_b);
+  appendFlag1(follow_links_b);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::CompareIfVariableEqVariable);
+  appendData4(variable_index_a);
+  appendFlag1(follow_links_a);
+  appendData4(variable_index_b);
+  appendFlag1(follow_links_b);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::GetMaxOfVariableAndConstant);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+  appendData4(constant);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::GetMinOfVariableAndConstant);
+  appendData4(variable_index);
+  appendFlag1(follow_links);
+  appendData4(constant);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::GetMaxOfVariableAndVariable);
+  appendData4(variable_index_a);
+  appendFlag1(follow_links_a);
+  appendData4(variable_index_b);
+  appendFlag1(follow_links_b);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
+void Program::getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+  appendCode1(OpCode::GetMinOfVariableAndVariable);
+  appendData4(variable_index_a);
+  appendFlag1(follow_links_a);
+  appendData4(variable_index_b);
+  appendFlag1(follow_links_b);
+  appendData4(target_variable_index);
+  appendFlag1(target_follow_links);
+}
+
 bool Program::canFit(uint32_t bytes) {
   if (grows_dynamically_) {
     ensureSize(pointer_ + bytes);
