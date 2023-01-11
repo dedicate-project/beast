@@ -497,18 +497,16 @@ class VmSession {
    * and minor code identify the concrete action that will take place, and the result of that
    * selected action will be stored in the variable referenced during the call.
    *
-   * Here is a list of currently implemented system calls:
-   * <table>
-   *   <tr><td><b>Major Code</b></td><td><b>Minor Code</b></td><td><b>Description</b></td></tr>
-   *   <tr><td>0</td><td>0</td><td>Get UTC timezone</td></tr>
-   *   <tr><td>0</td><td>1</td><td>Get current UTC time (minutes part)</td></tr>
-   *   <tr><td>0</td><td>2</td><td>Get current UTC time (hours part)</td></tr>
-   *   <tr><td>0</td><td>3</td><td>Get current UTC date (day part)</td></tr>
-   *   <tr><td>0</td><td>4</td><td>Get current UTC date (month part)</td></tr>
-   *   <tr><td>0</td><td>5</td><td>Get current UTC date (year part)</td></tr>
-   *   <tr><td>0</td><td>6</td><td>Get current UTC date (week part)</td></tr>
-   *   <tr><td>0</td><td>7</td><td>Get current UTC date (day of week part)</td></tr>
-   * </table>
+   * Here is a list of currently implemented system calls (major code, minor code, description):
+   * * 0, 0: Get UTC timezone
+   * * 0, 1: Get current UTC time (seconds part)
+   * * 0, 2: Get current UTC time (minutes part)
+   * * 0, 3: Get current UTC time (hours part)
+   * * 0, 4: Get current UTC date (day part)
+   * * 0, 5: Get current UTC date (month part)
+   * * 0, 6: Get current UTC date (year part)
+   * * 0, 7: Get current UTC date (week part)
+   * * 0, 8: Get current UTC date (day of week part)
    *
    * @param major_code The major code for the system call (see table)
    * @param minor_code The minor code for the system call (see table)
