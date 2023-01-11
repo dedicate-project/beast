@@ -506,7 +506,7 @@ void VmSession::moduloVariableByVariable(int32_t variable_index, bool follow_lin
 void VmSession::rotateVariable(int32_t variable_index, bool follow_links, int8_t places) {
   const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
   const uint8_t abs_places = std::abs(places);
-  if (places < 0) { 
+  if (places < 0) {
    // Rotate right
     const uint32_t result = (value >> abs_places) | (value << static_cast<uint32_t>(32 - abs_places));
     setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(result));
@@ -517,20 +517,35 @@ void VmSession::rotateVariable(int32_t variable_index, bool follow_links, int8_t
   }
 }
 
-void VmSession::pushVariableOnStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::pushVariableOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
+  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+  const int32_t new_value = getVariableValueInternal(variable_index, follow_links);
+  setVariableValueInternal(stack_variable_index + 1 + current_stack_size, stack_follow_links, new_value);
+  setVariableValueInternal(stack_variable_index, stack_follow_links, current_stack_size + 1);
 }
 
-void VmSession::pushConstantOnStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*constant*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::pushConstantOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t constant) {
+  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+  setVariableValueInternal(stack_variable_index + 1 + current_stack_size, stack_follow_links, constant);
+  setVariableValueInternal(stack_variable_index, stack_follow_links, current_stack_size + 1);
 }
 
-void VmSession::popVariableFromStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/, int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::popVariableFromStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
+  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+  if (current_stack_size == 0) {
+    throw std::runtime_error("Cannot pop value from stack, stack empty.");
+  }
+  const int32_t last_value = getVariableValueInternal(stack_variable_index + 1 + current_stack_size - 1, stack_follow_links);
+  setVariableValueInternal(stack_variable_index, true, current_stack_size - 1);
+  setVariableValueInternal(variable_index, follow_links, last_value);
 }
 
-void VmSession::popFromStack(int32_t /*stack_variable_index*/, bool /*stack_follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::popFromStack(int32_t stack_variable_index, bool stack_follow_links) {
+  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+  if (current_stack_size == 0) {
+    throw std::runtime_error("Cannot pop value from stack, stack empty.");
+  }
+  setVariableValueInternal(stack_variable_index, true, current_stack_size - 1);
 }
 
 void VmSession::checkIfStackIsEmpty(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
@@ -625,7 +640,7 @@ void VmSession::compareIfVariableGtConstant(int32_t variable_index, bool follow_
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   setVariableValueInternal(target_variable_index, target_follow_links, value > constant ? 0x1 : 0x0);
 }
-  
+
 void VmSession::compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   setVariableValueInternal(target_variable_index, target_follow_links, value < constant ? 0x1 : 0x0);
@@ -635,19 +650,19 @@ void VmSession::compareIfVariableEqConstant(int32_t variable_index, bool follow_
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   setVariableValueInternal(target_variable_index, target_follow_links, value == constant ? 0x1 : 0x0);
 }
-  
+
 void VmSession::compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
   setVariableValueInternal(target_variable_index, target_follow_links, value_a > value_b ? 0x1 : 0x0);
 }
-  
+
 void VmSession::compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
   setVariableValueInternal(target_variable_index, target_follow_links, value_a < value_b ? 0x1 : 0x0);
 }
-  
+
 void VmSession::compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
