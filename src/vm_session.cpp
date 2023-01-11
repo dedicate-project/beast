@@ -1,5 +1,8 @@
 #include <beast/vm_session.hpp>
 
+// Standard
+#include <chrono>
+#include <ctime>
 #include <random>
 #include <set>
 #include <stdexcept>
@@ -453,8 +456,84 @@ void VmSession::loadStringItemIntoVariables(
   }
 }
 
-void VmSession::performSystemCall(int8_t /*major_code*/, int8_t /*minor_code*/, int32_t /*variable_index*/, bool /*follow_links*/) {
-  // TODO(fairlight1337): Implement this method.
+void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links) {
+  if (major_code == 0) {  // Time and date related functions
+    // Get the current UTC time
+    const auto now_utc = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    const std::tm utc_tm = *std::gmtime(&now_utc);
+
+    // Get the current local time
+    const auto now_local = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    const std::tm local_tm = *std::localtime(&now_local);
+
+    const int32_t offset_minutes =
+        (local_tm.tm_hour - utc_tm.tm_hour) * 60 + (local_tm.tm_min - utc_tm.tm_min);
+
+    switch (minor_code) {
+    case 0: {  // UTC Timezone (hours)
+      // Calculate the timezone offset in minutes
+      const int32_t utc_offset_hours = std::floor(static_cast<double>(offset_minutes) / 60.0);
+      setVariableValueInternal(variable_index, follow_links, utc_offset_hours);
+    } break;
+
+    case 1: {  // UTC Timezone (minutes)
+      // Calculate the timezone offset in minutes
+      const int32_t utc_offset_minutes = offset_minutes % 60;
+      setVariableValueInternal(variable_index, follow_links, utc_offset_minutes);
+    } break;
+
+    case 2: {  // Seconds
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_sec));
+    } break;
+
+    case 3: {  // Minutes
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_min));
+    } break;
+
+    case 4: {  // Hours
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_hour));
+    } break;
+
+    case 5: {  // Day
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_mday));
+    } break;
+
+    case 6: {  // Month
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_mon));
+    } break;
+
+    case 7: {  // Year
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_year));
+    } break;
+
+    case 8: {  // Week
+      const int32_t current_year = utc_tm.tm_year + 1900;
+      const int32_t current_day = utc_tm.tm_mday;
+
+      // Calculate the first day of the current year
+      std::tm first_day_of_year{};
+      first_day_of_year.tm_year = current_year - 1900;
+      first_day_of_year.tm_mon = 0;  // January
+      first_day_of_year.tm_mday = 1;
+
+      const std::time_t first_day_time = std::mktime(&first_day_of_year);
+      const std::tm first_day_tm = *std::gmtime(&first_day_time);
+      const int32_t first_day_weekday = first_day_tm.tm_wday;
+
+      const int32_t current_week = (current_day - 1 + first_day_weekday) / 7 + 1;
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(current_week));
+    } break;
+
+    case 9: {  // Day of Week
+      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_wday));
+    } break;
+
+    default:
+      throw std::runtime_error("Unknown major/minor code combination for system call: " + std::to_string(major_code) + ", " + std::to_string(minor_code));
+    }
+  } else {
+    throw std::runtime_error("Unknown major code for system call: " + std::to_string(major_code));
+  }
 }
 
 void VmSession::bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places) {

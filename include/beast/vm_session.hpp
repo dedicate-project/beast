@@ -498,15 +498,16 @@ class VmSession {
    * selected action will be stored in the variable referenced during the call.
    *
    * Here is a list of currently implemented system calls (major code, minor code, description):
-   * * 0, 0: Get UTC timezone
-   * * 0, 1: Get current UTC time (seconds part)
-   * * 0, 2: Get current UTC time (minutes part)
-   * * 0, 3: Get current UTC time (hours part)
-   * * 0, 4: Get current UTC date (day part)
-   * * 0, 5: Get current UTC date (month part)
-   * * 0, 6: Get current UTC date (year part)
-   * * 0, 7: Get current UTC date (week part)
-   * * 0, 8: Get current UTC date (day of week part)
+   * * 0, 0: Get UTC timezone (hours)
+   * * 0, 1: Get UTC timezone (minutes)
+   * * 0, 2: Get current UTC time (seconds part)
+   * * 0, 3: Get current UTC time (minutes part)
+   * * 0, 4: Get current UTC time (hours part)
+   * * 0, 5: Get current UTC date (day part)
+   * * 0, 6: Get current UTC date (month part)
+   * * 0, 7: Get current UTC date (year part)
+   * * 0, 8: Get current UTC date (week part)
+   * * 0, 9: Get current UTC date (day of week part)
    *
    * @param major_code The major code for the system call (see table)
    * @param minor_code The minor code for the system call (see table)
