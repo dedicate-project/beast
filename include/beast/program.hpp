@@ -777,33 +777,73 @@ class Program {
 
   /**
    * @fn Program::getMaxOfVariableAndConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compare a variable to a constant and store the larger value
    *
-   * TODO(fairlight1337): Document this part.
+   * This operator compares the value stored in a variable against a constant. The larger value is
+   * stored in the target variable.
+   *
+   * Identifier by OpCode::GetMaxOfVariableAndConstant. Represented by 15 bytes.
+   *
+   * @param variable_index The index of the variable used for the comparison.
+   * @param follow_links Whether to follow variable links for the comparison variable.
+   * @param constant The constant to compare the variable against.
+   * @param target_variable_index The index of the variable to store the result in.
+   * @param target_follow_links whether to follow variable links for the target variable.
+   * @sa getMinOfVariableAndConstant(), getMaxOfVariableAndVariable(), getMinOfVariableAndVariable()
    */
   void getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMinOfVariableAndConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compare a variable to a constant and store the smaller value
    *
-   * TODO(fairlight1337): Document this part.
+   * This operator compares the value stored in a variable against a constant. The smaller value is
+   * stored in the target variable.
+   *
+   * Identifier by OpCode::GetMinOfVariableAndConstant. Represented by 15 bytes.
+   *
+   * @param variable_index The index of the variable used for the comparison.
+   * @param follow_links Whether to follow variable links for the comparison variable.
+   * @param constant The constant to compare the variable against.
+   * @param target_variable_index The index of the variable to store the result in.
+   * @param target_follow_links whether to follow variable links for the target variable.
+   * @sa getMaxOfVariableAndConstant(), getMaxOfVariableAndVariable(), getMinOfVariableAndVariable()
    */
   void getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMaxOfVariableAndVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compare a variable to another variable and store the larger value
    *
-   * TODO(fairlight1337): Document this part.
+   * This operator compares the value stored in one variable against the value stored in another
+   * variable. The larger value is stored in the target variable.
+   *
+   * Identifier by OpCode::GetMaxOfVariableAndVariable. Represented by 16 bytes.
+   *
+   * @param variable_index_a The index of the variable used for the comparison.
+   * @param follow_links_a Whether to follow variable links for the comparison variable.
+   * @param constant The constant to compare the variable against.
+   * @param target_variable_index The index of the variable to store the result in.
+   * @param target_follow_links whether to follow variable links for the target variable.
+   * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMinOfVariableAndVariable()
    */
   void getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMinOfVariableAndVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compare a variable to another variable and store the smaller value
    *
-   * TODO(fairlight1337): Document this part.
+   * This operator compares the value stored in one variable against the value stored in another
+   * variable. The smaller value is stored in the target variable.
+   *
+   * Identifier by OpCode::GetMinOfVariableAndVariable. Represented by 16 bytes.
+   *
+   * @param variable_index_a The index of the variable used for the comparison.
+   * @param follow_links_a Whether to follow variable links for the comparison variable.
+   * @param constant The constant to compare the variable against.
+   * @param target_variable_index The index of the variable to store the result in.
+   * @param target_follow_links whether to follow variable links for the target variable.
+   * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMaxOfVariableAndVariable()
    */
   void getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
 

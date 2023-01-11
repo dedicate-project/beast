@@ -1362,3 +1362,183 @@ TEST_CASE("checking_if_stack_is_empty_works", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
 }
+
+TEST_CASE("variable_can_be_compared_for_gt_against_constant", "programs") {
+  const int32_t variable_index = 2;
+  const int32_t variable_value = 6;
+  const int32_t comparison_value_1 = 3;
+  const int32_t comparison_value_2 = 12;
+  const int32_t target_variable_index_1 = 10;
+  const int32_t target_variable_index_2 = 11;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+  prg.compareIfVariableGtConstant(variable_index, true, comparison_value_1, target_variable_index_1, true);
+  prg.compareIfVariableGtConstant(variable_index, true, comparison_value_2, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
+}
+
+TEST_CASE("variable_can_be_compared_for_lt_against_constant", "programs") {
+  const int32_t variable_index = 2;
+  const int32_t variable_value = 6;
+  const int32_t comparison_value_1 = 3;
+  const int32_t comparison_value_2 = 12;
+  const int32_t target_variable_index_1 = 10;
+  const int32_t target_variable_index_2 = 11;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+  prg.compareIfVariableLtConstant(variable_index, true, comparison_value_1, target_variable_index_1, true);
+  prg.compareIfVariableLtConstant(variable_index, true, comparison_value_2, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x0);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
+}
+
+TEST_CASE("variable_can_be_compared_for_eq_against_constant", "programs") {
+  const int32_t variable_index = 2;
+  const int32_t variable_value = 6;
+  const int32_t comparison_value_1 = 2;
+  const int32_t comparison_value_2 = 6;
+  const int32_t target_variable_index_1 = 10;
+  const int32_t target_variable_index_2 = 11;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+  prg.compareIfVariableEqConstant(variable_index, true, comparison_value_1, target_variable_index_1, true);
+  prg.compareIfVariableEqConstant(variable_index, true, comparison_value_2, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x0);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
+}
+
+TEST_CASE("variable_can_be_compared_for_gt_against_variable", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_value_a = 6;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_b = 3;
+  const int32_t variable_index_c = 2;
+  const int32_t variable_value_c = 12;
+  const int32_t target_variable_index_1 = 4;
+  const int32_t target_variable_index_2 = 5;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.declareVariable(variable_index_c, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_c, variable_value_c, true);
+
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+
+  prg.compareIfVariableGtVariable(variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
+  prg.compareIfVariableGtVariable(variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
+}
+
+TEST_CASE("variable_can_be_compared_for_lt_against_variable", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_value_a = 6;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_b = 3;
+  const int32_t variable_index_c = 2;
+  const int32_t variable_value_c = 12;
+  const int32_t target_variable_index_1 = 4;
+  const int32_t target_variable_index_2 = 5;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.declareVariable(variable_index_c, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_c, variable_value_c, true);
+
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+
+  prg.compareIfVariableLtVariable(variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
+  prg.compareIfVariableLtVariable(variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x0);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
+}
+
+TEST_CASE("variable_can_be_compared_for_eq_against_variable", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_value_a = 6;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_b = 6;
+  const int32_t variable_index_c = 2;
+  const int32_t variable_value_c = 12;
+  const int32_t target_variable_index_1 = 4;
+  const int32_t target_variable_index_2 = 5;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.declareVariable(variable_index_c, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_c, variable_value_c, true);
+
+  prg.declareVariable(target_variable_index_1, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_1, 0, true);
+  prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index_2, 0, true);
+
+  prg.compareIfVariableEqVariable(variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
+  prg.compareIfVariableEqVariable(variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
+  REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
+}

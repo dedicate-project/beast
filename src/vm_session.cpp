@@ -622,43 +622,58 @@ void VmSession::variableRotateVariableRight(int32_t variable_index, bool follow_
 }
 
 void VmSession::compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  setVariableValueInternal(target_variable_index, target_follow_links, value > constant ? 0x1 : 0x0);
 }
   
 void VmSession::compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  setVariableValueInternal(target_variable_index, target_follow_links, value < constant ? 0x1 : 0x0);
 }
 
 void VmSession::compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  setVariableValueInternal(target_variable_index, target_follow_links, value == constant ? 0x1 : 0x0);
 }
   
 void VmSession::compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
+  const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
+  setVariableValueInternal(target_variable_index, target_follow_links, value_a > value_b ? 0x1 : 0x0);
 }
   
 void VmSession::compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
+  const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
+  setVariableValueInternal(target_variable_index, target_follow_links, value_a < value_b ? 0x1 : 0x0);
 }
   
 void VmSession::compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
+  const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
+  setVariableValueInternal(target_variable_index, target_follow_links, value_a == value_b ? 0x1 : 0x0);
 }
 
 void VmSession::getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  setVariableValueInternal(target_variable_index, target_follow_links, value > constant ? value : constant);
 }
 
 void VmSession::getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value = getVariableValueInternal(variable_index, follow_links);
+  setVariableValueInternal(target_variable_index, target_follow_links, value < constant ? value : constant);
 }
 
 void VmSession::getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
+  const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
+  setVariableValueInternal(target_variable_index, target_follow_links, value_a > value_b ? value_a : value_b);
 }
 
 void VmSession::getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
-  // TODO(fairlight1337): Implement this method.
+  const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
+  const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
+  setVariableValueInternal(target_variable_index, target_follow_links, value_a < value_b ? value_a : value_b);
 }
 
 }  // namespace beast
