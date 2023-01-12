@@ -53,7 +53,8 @@ int8_t VmSession::getData1() {
 }
 
 int32_t VmSession::getVariableValue(int32_t variable_index, bool follow_links) {
-  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  std::pair<VariableDescriptor, int32_t>& variable =
+      variables_[getRealVariableIndex(variable_index, follow_links)];
   if (variable.first.behavior == VariableIoBehavior::Output) {
     variable.first.changed_since_last_interaction = false;
   }
@@ -61,7 +62,8 @@ int32_t VmSession::getVariableValue(int32_t variable_index, bool follow_links) {
 }
 
 int32_t VmSession::getVariableValueInternal(int32_t variable_index, bool follow_links) {
-  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  std::pair<VariableDescriptor, int32_t>& variable =
+      variables_[getRealVariableIndex(variable_index, follow_links)];
   if (variable.first.behavior == VariableIoBehavior::Input) {
     variable.first.changed_since_last_interaction = false;
   }
@@ -69,7 +71,8 @@ int32_t VmSession::getVariableValueInternal(int32_t variable_index, bool follow_
 }
 
 void VmSession::setVariableValue(int32_t variable_index, bool follow_links, int32_t value) {
-  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  std::pair<VariableDescriptor, int32_t>& variable =
+      variables_[getRealVariableIndex(variable_index, follow_links)];
   if (variable.first.behavior == VariableIoBehavior::Input) {
     variable.first.changed_since_last_interaction = true;
   }
@@ -77,7 +80,8 @@ void VmSession::setVariableValue(int32_t variable_index, bool follow_links, int3
 }
 
 void VmSession::setVariableValueInternal(int32_t variable_index, bool follow_links, int32_t value) {
-  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  std::pair<VariableDescriptor, int32_t>& variable =
+      variables_[getRealVariableIndex(variable_index, follow_links)];
   if (variable.first.behavior == VariableIoBehavior::Output) {
     variable.first.changed_since_last_interaction = true;
   }
@@ -183,16 +187,21 @@ void VmSession::appendVariableToPrintBuffer(
   if (variables_[variable_index].first.type == Program::VariableType::Int32) {
     if (as_char) {
       const uint32_t flag = 0xff;
-      const auto val = static_cast<char>(static_cast<uint32_t>(getVariableValueInternal(variable_index, false)) & flag);
+      const auto val =
+          static_cast<char>(
+              static_cast<uint32_t>(getVariableValueInternal(variable_index, false)) & flag);
       appendToPrintBuffer(std::string(&val, 1));
     } else {
       appendToPrintBuffer(std::to_string(getVariableValueInternal(variable_index, false)));
     }
   } else if (variables_[variable_index].first.type == Program::VariableType::Link) {
-    appendToPrintBuffer("L{" + std::to_string(getVariableValueInternal(variable_index, false)) + "}");
+    appendToPrintBuffer(
+        "L{" + std::to_string(getVariableValueInternal(variable_index, false)) + "}");
   } else {
     throw std::runtime_error("Cannot print unsupported variable type (" +
-                             std::to_string(static_cast<int32_t>(variables_[variable_index].first.type)) + ").");
+                             std::to_string(
+                                 static_cast<int32_t>(variables_[variable_index].first.type))
+                             + ").");
   }
 }
 
@@ -214,7 +223,9 @@ int8_t VmSession::getReturnCode() const {
 }
 
 void VmSession::addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links) {
-  setVariableValueInternal(variable_index, follow_links, getVariableValueInternal(variable_index, follow_links) + constant);
+  setVariableValueInternal(
+      variable_index, follow_links,
+      getVariableValueInternal(variable_index, follow_links) + constant);
 }
 
 void VmSession::addVariableToVariable(
@@ -226,8 +237,11 @@ void VmSession::addVariableToVariable(
       getVariableValueInternal(source_variable, follow_source_links));
 }
 
-void VmSession::subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links) {
-  setVariableValueInternal(variable_index, follow_links, getVariableValueInternal(variable_index, follow_links) - constant);
+void VmSession::subtractConstantFromVariable(
+    int32_t variable_index, int32_t constant, bool follow_links) {
+  setVariableValueInternal(
+      variable_index, follow_links,
+      getVariableValueInternal(variable_index, follow_links) - constant);
 }
 
 void VmSession::subtractVariableFromVariable(
@@ -338,7 +352,8 @@ void VmSession::checkIfVariableIsInput(
     int32_t destination_variable, bool follow_destination_links) {
   setVariableValueInternal(
       destination_variable, follow_destination_links,
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Input ? 0x1 : 0x0);
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior
+      == VmSession::VariableIoBehavior::Input ? 0x1 : 0x0);
 }
 
 void VmSession::checkIfVariableIsOutput(
@@ -346,7 +361,8 @@ void VmSession::checkIfVariableIsOutput(
     int32_t destination_variable, bool follow_destination_links) {
   setVariableValueInternal(
       destination_variable, follow_destination_links,
-      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior == VmSession::VariableIoBehavior::Output ? 0x1 : 0x0);
+      variables_[getRealVariableIndex(source_variable, follow_source_links)].first.behavior
+      == VmSession::VariableIoBehavior::Output ? 0x1 : 0x0);
 }
 
 void VmSession::copyVariable(
@@ -384,12 +400,15 @@ void VmSession::loadCurrentAddressIntoVariable(int32_t variable, bool follow_lin
 void VmSession::checkIfInputWasSet(
     int32_t variable_index, bool follow_links,
     int32_t destination_variable, bool follow_destination_links) {
-  std::pair<VariableDescriptor, int32_t>& variable = variables_[getRealVariableIndex(variable_index, follow_links)];
+  std::pair<VariableDescriptor, int32_t>& variable =
+      variables_[getRealVariableIndex(variable_index, follow_links)];
   if (variable.first.behavior != VariableIoBehavior::Input) {
     throw std::runtime_error("Variable is not an input.");
   }
 
-  setVariableValueInternal(destination_variable, follow_destination_links, variable.first.changed_since_last_interaction ? 0x1 : 0x0);
+  setVariableValueInternal(
+      destination_variable, follow_destination_links,
+      variable.first.changed_since_last_interaction ? 0x1 : 0x0);
   variable.first.changed_since_last_interaction = false;
 }
 
@@ -418,7 +437,8 @@ void VmSession::unconditionalJumpToAbsoluteAddress(int32_t addr) {
   pointer_ = addr;
 }
 
-void VmSession::unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links) {
+void VmSession::unconditionalJumpToAbsoluteVariableAddress(
+    int32_t variable_index, bool follow_links) {
   pointer_ = getVariableValueInternal(variable_index, follow_links);
 }
 
@@ -426,7 +446,8 @@ void VmSession::unconditionalJumpToRelativeAddress(int32_t addr) {
   pointer_ += addr;
 }
 
-void VmSession::unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links) {
+void VmSession::unconditionalJumpToRelativeVariableAddress(
+    int32_t variable_index, bool follow_links) {
   pointer_ += getVariableValueInternal(variable_index, follow_links);
 }
 
@@ -459,7 +480,8 @@ void VmSession::loadStringItemIntoVariables(
   }
 }
 
-void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links) {
+void VmSession::performSystemCall(
+    int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links) {
   if (major_code == 0) {  // Time and date related functions
     // Get the current UTC time
     const auto now_utc = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -535,7 +557,8 @@ void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t 
     } break;
 
     default:
-      throw std::runtime_error("Unknown major/minor code combination for system call: " + std::to_string(major_code) + ", " + std::to_string(minor_code));
+      throw std::runtime_error("Unknown major/minor code combination for system call: "
+                               + std::to_string(major_code) + ", " + std::to_string(minor_code));
     }
   } else {
     throw std::runtime_error("Unknown major code for system call: " + std::to_string(major_code));
@@ -544,7 +567,8 @@ void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t 
 
 void VmSession::bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places) {
   const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
-  const auto shifted_value = places > 0 ? value << static_cast<uint32_t>(places) : value >> static_cast<uint32_t>(-places);
+  const auto shifted_value =
+      places > 0 ? value << static_cast<uint32_t>(places) : value >> static_cast<uint32_t>(-places);
   setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(shifted_value));
 }
 
@@ -554,34 +578,46 @@ void VmSession::bitWiseInvertVariable(int32_t variable_index, bool follow_links)
   setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(inverted_value));
 }
 
-void VmSession::bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
-  const auto value_a = static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
-  const auto value_b = static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
+void VmSession::bitWiseAndTwoVariables(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const auto value_a =
+      static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
+  const auto value_b =
+      static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
   const uint32_t result = value_a & value_b;
   setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
-void VmSession::bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
-  const auto value_a = static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
-  const auto value_b = static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
+void VmSession::bitWiseOrTwoVariables(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const auto value_a =
+      static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
+  const auto value_b =
+      static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
   const uint32_t result = value_a | value_b;
   setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
-void VmSession::bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
-  const auto value_a = static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
-  const auto value_b = static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
+void VmSession::bitWiseXorTwoVariables(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+  const auto value_a =
+      static_cast<uint32_t>(getVariableValueInternal(variable_index_a, follow_links_a));
+  const auto value_b =
+      static_cast<uint32_t>(getVariableValueInternal(variable_index_b, follow_links_b));
   const uint32_t result = value_a ^ value_b;
   setVariableValueInternal(variable_index_b, follow_links_b, static_cast<int32_t>(result));
 }
 
-void VmSession::moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t constant) {
+void VmSession::moduloVariableByConstant(
+    int32_t variable_index, bool follow_links, int32_t constant) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   const int32_t result = value % constant;
   setVariableValueInternal(variable_index, follow_links, result);
 }
 
-void VmSession::moduloVariableByVariable(int32_t variable_index, bool follow_links, int32_t modulo_variable_index, bool modulo_follow_links) {
+void VmSession::moduloVariableByVariable(
+    int32_t variable_index, bool follow_links,
+    int32_t modulo_variable_index, bool modulo_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   const int32_t modulo_value = getVariableValueInternal(modulo_variable_index, modulo_follow_links);
   const int32_t result = value % modulo_value;
@@ -593,58 +629,78 @@ void VmSession::rotateVariable(int32_t variable_index, bool follow_links, int8_t
   const uint8_t abs_places = std::abs(places);
   if (places < 0) {
    // Rotate right
-    const uint32_t result = (value >> abs_places) | (value << static_cast<uint32_t>(32 - abs_places));
+    const uint32_t result =
+        (value >> abs_places) | (value << static_cast<uint32_t>(32 - abs_places));
     setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(result));
   } else {
     // Rotate left
-    const uint32_t result = (value << abs_places) | (value >> static_cast<uint32_t>(32 - abs_places));
+    const uint32_t result =
+        (value << abs_places) | (value >> static_cast<uint32_t>(32 - abs_places));
     setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(result));
   }
 }
 
-void VmSession::pushVariableOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
-  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+void VmSession::pushVariableOnStack(
+    int32_t stack_variable_index, bool stack_follow_links,
+    int32_t variable_index, bool follow_links) {
+  const int32_t current_stack_size =
+      getVariableValueInternal(stack_variable_index, stack_follow_links);
   const int32_t new_value = getVariableValueInternal(variable_index, follow_links);
-  setVariableValueInternal(stack_variable_index + 1 + current_stack_size, stack_follow_links, new_value);
+  setVariableValueInternal(
+    stack_variable_index + 1 + current_stack_size, stack_follow_links, new_value);
   setVariableValueInternal(stack_variable_index, stack_follow_links, current_stack_size + 1);
 }
 
-void VmSession::pushConstantOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t constant) {
-  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
-  setVariableValueInternal(stack_variable_index + 1 + current_stack_size, stack_follow_links, constant);
+void VmSession::pushConstantOnStack(
+    int32_t stack_variable_index, bool stack_follow_links, int32_t constant) {
+  const int32_t current_stack_size =
+      getVariableValueInternal(stack_variable_index, stack_follow_links);
+  setVariableValueInternal(
+      stack_variable_index + 1 + current_stack_size, stack_follow_links, constant);
   setVariableValueInternal(stack_variable_index, stack_follow_links, current_stack_size + 1);
 }
 
-void VmSession::popVariableFromStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
-  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+void VmSession::popVariableFromStack(
+    int32_t stack_variable_index, bool stack_follow_links,
+    int32_t variable_index, bool follow_links) {
+  const int32_t current_stack_size =
+      getVariableValueInternal(stack_variable_index, stack_follow_links);
   if (current_stack_size == 0) {
     throw std::runtime_error("Cannot pop value from stack, stack empty.");
   }
-  const int32_t last_value = getVariableValueInternal(stack_variable_index + 1 + current_stack_size - 1, stack_follow_links);
+  const int32_t last_value =
+      getVariableValueInternal(
+          stack_variable_index + 1 + current_stack_size - 1, stack_follow_links);
   setVariableValueInternal(stack_variable_index, true, current_stack_size - 1);
   setVariableValueInternal(variable_index, follow_links, last_value);
 }
 
 void VmSession::popFromStack(int32_t stack_variable_index, bool stack_follow_links) {
-  const int32_t current_stack_size = getVariableValueInternal(stack_variable_index, stack_follow_links);
+  const int32_t current_stack_size =
+      getVariableValueInternal(stack_variable_index, stack_follow_links);
   if (current_stack_size == 0) {
     throw std::runtime_error("Cannot pop value from stack, stack empty.");
   }
   setVariableValueInternal(stack_variable_index, true, current_stack_size - 1);
 }
 
-void VmSession::checkIfStackIsEmpty(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links) {
+void VmSession::checkIfStackIsEmpty(
+    int32_t stack_variable_index, bool stack_follow_links,
+    int32_t variable_index, bool follow_links) {
   const int32_t value = getVariableValueInternal(stack_variable_index, stack_follow_links);
   setVariableValueInternal(variable_index, follow_links, value == 0x0 ? 0x1 : 0x0);
 }
 
-void VmSession::swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
+void VmSession::swapVariables(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b) {
   const int32_t temp = getVariableValueInternal(variable_index_a, follow_links_a);
-  setVariableValueInternal(variable_index_a, follow_links_a, getVariableValueInternal(variable_index_b, follow_links_b));
+  setVariableValueInternal(
+      variable_index_a, follow_links_a, getVariableValueInternal(variable_index_b, follow_links_b));
   setVariableValueInternal(variable_index_b, follow_links_b, temp);
 }
 
-void VmSession::setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string_content) {
+void VmSession::setVariableStringTableEntry(
+    int32_t variable_index, bool follow_links, const std::string& string_content) {
   const int32_t string_table_index = getVariableValueInternal(variable_index, follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
     throw std::runtime_error("String table index out of bounds.");
@@ -666,8 +722,11 @@ void VmSession::printVariableStringFromStringTable(int32_t variable_index, bool 
   appendToPrintBuffer(getStringTableEntry(string_table_index));
 }
 
-void VmSession::loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links) {
-  const int32_t string_table_index = getVariableValueInternal(string_item_variable_index, string_item_follow_links);
+void VmSession::loadVariableStringItemLengthIntoVariable(
+    int32_t string_item_variable_index, bool string_item_follow_links,
+    int32_t variable_index, bool follow_links) {
+  const int32_t string_table_index =
+      getVariableValueInternal(string_item_variable_index, string_item_follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
     throw std::runtime_error("String table index out of bounds.");
   }
@@ -676,8 +735,11 @@ void VmSession::loadVariableStringItemLengthIntoVariable(int32_t string_item_var
       variable_index, follow_links, static_cast<int32_t>(string_table_[string_table_index].size()));
 }
 
-void VmSession::loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool string_item_follow_links, int32_t start_variable_index, bool follow_links) {
-  const int32_t string_table_index = getVariableValueInternal(string_item_variable_index, string_item_follow_links);
+void VmSession::loadVariableStringItemIntoVariables(
+    int32_t string_item_variable_index, bool string_item_follow_links,
+    int32_t start_variable_index, bool follow_links) {
+  const int32_t string_table_index =
+      getVariableValueInternal(string_item_variable_index, string_item_follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
     throw std::runtime_error("String table index out of bounds.");
   }
@@ -696,84 +758,127 @@ void VmSession::loadVariableStringItemIntoVariables(int32_t string_item_variable
 }
 
 void VmSession::terminateWithVariableReturnCode(int32_t variable_index, bool follow_links) {
-  const auto return_code = static_cast<int8_t>(getVariableValueInternal(variable_index, follow_links));
+  const auto return_code =
+      static_cast<int8_t>(getVariableValueInternal(variable_index, follow_links));
   return_code_ = return_code;
   was_terminated_ = true;
 }
 
-void VmSession::variableBitShiftVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
-  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+void VmSession::variableBitShiftVariableLeft(
+    int32_t variable_index, bool follow_links,
+    int32_t places_variable_index, bool places_follow_links) {
+  const auto places =
+      static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
   bitShiftVariable(variable_index, follow_links, places);
 }
 
-void VmSession::variableBitShiftVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
-  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+void VmSession::variableBitShiftVariableRight(
+    int32_t variable_index, bool follow_links,
+    int32_t places_variable_index, bool places_follow_links) {
+  const auto places =
+      static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
   bitShiftVariable(variable_index, follow_links, static_cast<int8_t>(-places));
 }
 
-void VmSession::variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
-  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+void VmSession::variableRotateVariableLeft(
+    int32_t variable_index, bool follow_links,
+    int32_t places_variable_index, bool places_follow_links) {
+  const auto places =
+      static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
   rotateVariable(variable_index, follow_links, places);
 }
 
-void VmSession::variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links) {
-  const auto places = static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
+void VmSession::variableRotateVariableRight(
+    int32_t variable_index, bool follow_links,
+    int32_t places_variable_index, bool places_follow_links) {
+  const auto places =
+      static_cast<int8_t>(getVariableValueInternal(places_variable_index, places_follow_links));
   rotateVariable(variable_index, follow_links, static_cast<int8_t>(-places));
 }
 
-void VmSession::compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::compareIfVariableGtConstant(
+    int32_t variable_index, bool follow_links, int32_t constant,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
-  setVariableValueInternal(target_variable_index, target_follow_links, value > constant ? 0x1 : 0x0);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value > constant ? 0x1 : 0x0);
 }
 
-void VmSession::compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::compareIfVariableLtConstant(
+    int32_t variable_index, bool follow_links, int32_t constant,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
-  setVariableValueInternal(target_variable_index, target_follow_links, value < constant ? 0x1 : 0x0);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value < constant ? 0x1 : 0x0);
 }
 
-void VmSession::compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::compareIfVariableEqConstant(
+    int32_t variable_index, bool follow_links, int32_t constant,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
-  setVariableValueInternal(target_variable_index, target_follow_links, value == constant ? 0x1 : 0x0);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value == constant ? 0x1 : 0x0);
 }
 
-void VmSession::compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::compareIfVariableGtVariable(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
-  setVariableValueInternal(target_variable_index, target_follow_links, value_a > value_b ? 0x1 : 0x0);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value_a > value_b ? 0x1 : 0x0);
 }
 
-void VmSession::compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::compareIfVariableLtVariable(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
-  setVariableValueInternal(target_variable_index, target_follow_links, value_a < value_b ? 0x1 : 0x0);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value_a < value_b ? 0x1 : 0x0);
 }
 
-void VmSession::compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::compareIfVariableEqVariable(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
-  setVariableValueInternal(target_variable_index, target_follow_links, value_a == value_b ? 0x1 : 0x0);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value_a == value_b ? 0x1 : 0x0);
 }
 
-void VmSession::getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::getMaxOfVariableAndConstant(
+    int32_t variable_index, bool follow_links, int32_t constant,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
-  setVariableValueInternal(target_variable_index, target_follow_links, value > constant ? value : constant);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value > constant ? value : constant);
 }
 
-void VmSession::getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::getMinOfVariableAndConstant(
+    int32_t variable_index, bool follow_links, int32_t constant,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
-  setVariableValueInternal(target_variable_index, target_follow_links, value < constant ? value : constant);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value < constant ? value : constant);
 }
 
-void VmSession::getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::getMaxOfVariableAndVariable(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
-  setVariableValueInternal(target_variable_index, target_follow_links, value_a > value_b ? value_a : value_b);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value_a > value_b ? value_a : value_b);
 }
 
-void VmSession::getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links) {
+void VmSession::getMinOfVariableAndVariable(
+    int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+    int32_t target_variable_index, bool target_follow_links) {
   const int32_t value_a = getVariableValueInternal(variable_index_a, follow_links_a);
   const int32_t value_b = getVariableValueInternal(variable_index_b, follow_links_b);
-  setVariableValueInternal(target_variable_index, target_follow_links, value_a < value_b ? value_a : value_b);
+  setVariableValueInternal(
+      target_variable_index, target_follow_links, value_a < value_b ? value_a : value_b);
 }
 
 }  // namespace beast

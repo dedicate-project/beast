@@ -235,7 +235,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void addVariableToVariable(int32_t source_variable, int32_t destination_variable, bool follow_source_links, bool follow_destination_links);
+  void addVariableToVariable(
+      int32_t source_variable, int32_t destination_variable,
+      bool follow_source_links, bool follow_destination_links);
 
   /**
    * @fn VmSession::subtractConstantFromVariable
@@ -251,7 +253,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void subtractVariableFromVariable(int32_t source_variable, int32_t destination_variable, bool follow_source_links, bool follow_destination_links);
+  void subtractVariableFromVariable(
+      int32_t source_variable, int32_t destination_variable,
+      bool follow_source_links, bool follow_destination_links);
 
   /**
    * @fn VmSession::relativeJumpToVariableAddressIfVariableGt0
@@ -259,7 +263,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void relativeJumpToVariableAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+  void relativeJumpToVariableAddressIfVariableGt0(
+      int32_t condition_variable, bool follow_condition_links,
+      int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::relativeJumpToVariableAddressIfVariableLt0
@@ -267,7 +273,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void relativeJumpToVariableAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+  void relativeJumpToVariableAddressIfVariableLt0(
+      int32_t condition_variable, bool follow_condition_links,
+      int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::relativeJumpToVariableAddressIfVariableEq0
@@ -275,7 +283,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void relativeJumpToVariableAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+  void relativeJumpToVariableAddressIfVariableEq0(
+      int32_t condition_variable, bool follow_condition_links,
+      int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableGt0
@@ -283,7 +293,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void absoluteJumpToVariableAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+  void absoluteJumpToVariableAddressIfVariableGt0(
+      int32_t condition_variable, bool follow_condition_links,
+      int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableLt0
@@ -291,7 +303,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void absoluteJumpToVariableAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+  void absoluteJumpToVariableAddressIfVariableLt0(
+      int32_t condition_variable, bool follow_condition_links,
+      int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableEq0
@@ -299,7 +313,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void absoluteJumpToVariableAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr_variable, bool follow_addr_links);
+  void absoluteJumpToVariableAddressIfVariableEq0(
+      int32_t condition_variable, bool follow_condition_links,
+      int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::relativeJumpToAddressIfVariableGt0
@@ -307,7 +323,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void relativeJumpToAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void relativeJumpToAddressIfVariableGt0(
+      int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::relativeJumpToAddressIfVariableLt0
@@ -315,7 +332,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void relativeJumpToAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void relativeJumpToAddressIfVariableLt0(
+      int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::relativeJumpToAddressIfVariableEq0
@@ -323,7 +341,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void relativeJumpToAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void relativeJumpToAddressIfVariableEq0(
+      int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::absoluteJumpToAddressIfVariableGt0
@@ -331,7 +350,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void absoluteJumpToAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void absoluteJumpToAddressIfVariableGt0(
+      int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::absoluteJumpToAddressIfVariableLt0
@@ -339,7 +359,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void absoluteJumpToAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void absoluteJumpToAddressIfVariableLt0(
+      int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::absoluteJumpToAddressIfVariableEq0
@@ -347,7 +368,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void absoluteJumpToAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void absoluteJumpToAddressIfVariableEq0(
+      int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::loadMemorySizeIntoVariable
@@ -363,7 +385,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void checkIfVariableIsInput(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
+  void checkIfVariableIsInput(
+      int32_t source_variable, bool follow_source_links,
+      int32_t destination_variable, bool follow_destination_links);
 
   /**
    * @fn VmSession::checkIfVariableIsOutput
@@ -371,7 +395,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void checkIfVariableIsOutput(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
+  void checkIfVariableIsOutput(
+      int32_t source_variable, bool follow_source_links,
+      int32_t destination_variable, bool follow_destination_links);
 
   /**
    * @fn VmSession::copyVariable
@@ -379,7 +405,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void copyVariable(int32_t source_variable, bool follow_source_links, int32_t destination_variable, bool follow_destination_links);
+  void copyVariable(
+      int32_t source_variable, bool follow_source_links,
+      int32_t destination_variable, bool follow_destination_links);
 
   /**
    * @fn VmSession::loadInputCountIntoVariable
@@ -411,7 +439,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void checkIfInputWasSet(int32_t variable_index, bool follow_links, int32_t destination_variable, bool follow_destination_links);
+  void checkIfInputWasSet(
+      int32_t variable_index, bool follow_links,
+      int32_t destination_variable, bool follow_destination_links);
 
   /**
    * @fn VmSession::loadStringTableLimitIntoVariable
@@ -475,7 +505,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index, bool follow_links);
+  void loadStringItemLengthIntoVariable(
+      int32_t string_table_index, int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadStringItemIntoVariables
@@ -483,7 +514,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
+  void loadStringItemIntoVariables(
+      int32_t string_table_index, int32_t start_variable_index, bool follow_links);
 
   /**
    * @fn VmSession::performSystemCall
@@ -514,7 +546,8 @@ class VmSession {
    * @param variable_index The variable to store the call's result in
    * @param follow_links Whether to resolve the variable's links
    */
-  void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
+  void performSystemCall(
+      int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::bitShiftVariable
@@ -538,7 +571,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseAndTwoVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::bitWiseOrTwoVariables
@@ -546,7 +580,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseOrTwoVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::bitWiseXorTwoVariables
@@ -554,7 +589,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseXorTwoVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::moduloVariableByConstant
@@ -570,7 +606,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void moduloVariableByVariable(int32_t variable_index, bool follow_links, int32_t modulo_variable_index, bool modulo_follow_links);
+  void moduloVariableByVariable(
+      int32_t variable_index, bool follow_links,
+      int32_t modulo_variable_index, bool modulo_follow_links);
 
   /**
    * @fn VmSession::rotateVariable
@@ -586,7 +624,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void pushVariableOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links);
+  void pushVariableOnStack(
+      int32_t stack_variable_index, bool stack_follow_links,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::pushConstantOnStack
@@ -602,7 +642,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void popVariableFromStack(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links);
+  void popVariableFromStack(
+      int32_t stack_variable_index, bool stack_follow_links,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::popFromStack
@@ -618,7 +660,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void checkIfStackIsEmpty(int32_t stack_variable_index, bool stack_follow_links, int32_t variable_index, bool follow_links);
+  void checkIfStackIsEmpty(
+      int32_t stack_variable_index, bool stack_follow_links,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::swapVariables
@@ -626,7 +670,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void swapVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::setVariableStringTableEntry
@@ -634,7 +679,8 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string_content);
+  void setVariableStringTableEntry(
+      int32_t variable_index, bool follow_links, const std::string& string_content);
 
   /**
    * @fn VmSession::printVariableStringFromStringTable
@@ -650,7 +696,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool string_item_follow_links, int32_t variable_index, bool follow_links);
+  void loadVariableStringItemLengthIntoVariable(
+      int32_t string_item_variable_index, bool string_item_follow_links,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadVariableStringItemIntoVariables
@@ -658,7 +706,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool string_item_follow_links, int32_t start_variable_index, bool follow_links);
+  void loadVariableStringItemIntoVariables(
+      int32_t string_item_variable_index, bool string_item_follow_links,
+      int32_t start_variable_index, bool follow_links);
 
   /**
    * @fn VmSession::terminateWithVariableReturnCode
@@ -674,7 +724,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableBitShiftVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+  void variableBitShiftVariableLeft(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::variableBitShiftVariableRight
@@ -682,7 +734,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableBitShiftVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+  void variableBitShiftVariableRight(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::variableRotateVariableLeft
@@ -690,7 +744,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+  void variableRotateVariableLeft(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::variableRotateVariableRight
@@ -698,7 +754,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool places_follow_links);
+  void variableRotateVariableRight(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool places_follow_links);
   
   /**
    * @fn VmSession::compareIfVariableGtConstant
@@ -706,7 +764,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
   
   /**
    * @fn VmSession::compareIfVariableLtConstant
@@ -714,7 +774,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableEqConstant
@@ -722,31 +784,39 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
-  
+  void compareIfVariableEqConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
+
   /**
    * @fn VmSession::compareIfVariableGtVariable
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
-  
+  void compareIfVariableGtVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
+
   /**
    * @fn VmSession::compareIfVariableLtVariable
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
-  
+  void compareIfVariableLtVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
+
   /**
    * @fn VmSession::compareIfVariableEqVariable
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMaxOfVariableAndConstant
@@ -754,7 +824,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMinOfVariableAndConstant
@@ -762,7 +834,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMaxOfVariableAndVariable
@@ -770,7 +844,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMinOfVariableAndVariable
@@ -778,7 +854,9 @@ class VmSession {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
  private:
   /**

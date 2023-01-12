@@ -451,7 +451,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index, bool follow_links);
+  void loadStringItemLengthIntoVariable(
+      int32_t string_table_index, int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::checkIfInputWasSet
@@ -517,7 +518,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index, bool follow_links);
+  void loadStringItemIntoVariables(
+      int32_t string_table_index, int32_t start_variable_index, bool follow_links);
 
   /**
    * @fn Program::performSystemCall
@@ -525,7 +527,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
+  void performSystemCall(
+      int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::bitShiftVariableLeft
@@ -557,7 +560,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseAndTwoVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::bitWiseOrTwoVariables
@@ -565,7 +569,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseOrTwoVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::bitWiseXorTwoVariables
@@ -573,7 +578,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseXorTwoVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::moduloVariableByConstant
@@ -581,7 +587,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t modulo_constant);
+  void moduloVariableByConstant(
+      int32_t variable_index, bool follow_links, int32_t modulo_constant);
 
   /**
    * @fn Program::moduloVariableByVariable
@@ -589,7 +596,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void moduloVariableByVariable(int32_t variable_index, bool follow_links, int32_t modulo_variable_index, bool modulo_follow_links);
+  void moduloVariableByVariable(
+      int32_t variable_index, bool follow_links,
+      int32_t modulo_variable_index, bool modulo_follow_links);
 
   /**
    * @fn Program::rotateVariableLeft
@@ -613,7 +622,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void pushVariableOnStack(int32_t stack_variable_index, bool follow_links_stack, int32_t variable_index, bool follow_links);
+  void pushVariableOnStack(
+      int32_t stack_variable_index, bool follow_links_stack,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::pushConstantOnStack
@@ -621,7 +632,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void pushConstantOnStack(int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
+  void pushConstantOnStack(
+      int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
 
   /**
    * @fn Program::popVariableFromStack
@@ -629,7 +641,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void popVariableFromStack(int32_t stack_variable_index, bool follow_links_stack, int32_t variable_index, bool follow_links);
+  void popVariableFromStack(
+      int32_t stack_variable_index, bool follow_links_stack,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::popTopItemFromStack
@@ -645,7 +659,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void checkIfStackIsEmpty(int32_t stack_variable_index, bool follow_links_stack, int32_t variable_index, bool follow_links);
+  void checkIfStackIsEmpty(
+      int32_t stack_variable_index, bool follow_links_stack,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::swapVariables
@@ -653,7 +669,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void swapVariables(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::setVariableStringTableEntry
@@ -661,7 +678,8 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void setVariableStringTableEntry(int32_t variable_index, bool follow_links, const std::string& string);
+  void setVariableStringTableEntry(
+      int32_t variable_index, bool follow_links, const std::string& string);
 
   /**
    * @fn Program::printVariableStringFromStringTable
@@ -677,7 +695,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index, bool follow_links_string_item, int32_t variable_index, bool follow_links);
+  void loadVariableStringItemLengthIntoVariable(
+      int32_t string_item_variable_index, bool follow_links_string_item,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::loadVariableStringItemIntoVariables
@@ -685,7 +705,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index, bool follow_links_string_item, int32_t variable_index, bool follow_links);
+  void loadVariableStringItemIntoVariables(
+      int32_t string_item_variable_index, bool follow_links_string_item,
+      int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::terminateWithVariableReturnCode
@@ -701,7 +723,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableBitShiftVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+  void variableBitShiftVariableLeft(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::variableBitShiftVariableRight
@@ -709,7 +733,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableBitShiftVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+  void variableBitShiftVariableRight(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::variableRotateVariableLeft
@@ -717,7 +743,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableRotateVariableLeft(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+  void variableRotateVariableLeft(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::variableRotateVariableRight
@@ -725,7 +753,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void variableRotateVariableRight(int32_t variable_index, bool follow_links, int32_t places_variable_index, bool follow_links_places);
+  void variableRotateVariableRight(
+      int32_t variable_index, bool follow_links,
+      int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::compareIfVariableGtConstant
@@ -733,7 +763,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableLtConstant
@@ -741,7 +773,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableEqConstant
@@ -749,7 +783,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableGtVariable
@@ -757,7 +793,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableLtVariable
@@ -765,7 +803,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableEqVariable
@@ -773,7 +813,9 @@ class Program {
    *
    * TODO(fairlight1337): Document this part.
    */
-  void compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMaxOfVariableAndConstant
@@ -791,7 +833,9 @@ class Program {
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMinOfVariableAndConstant(), getMaxOfVariableAndVariable(), getMinOfVariableAndVariable()
    */
-  void getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMinOfVariableAndConstant
@@ -809,7 +853,9 @@ class Program {
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMaxOfVariableAndVariable(), getMinOfVariableAndVariable()
    */
-  void getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant, int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndConstant(
+      int32_t variable_index, bool follow_links, int32_t constant,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMaxOfVariableAndVariable
@@ -827,7 +873,9 @@ class Program {
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMinOfVariableAndVariable()
    */
-  void getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMinOfVariableAndVariable
@@ -845,7 +893,9 @@ class Program {
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMaxOfVariableAndVariable()
    */
-  void getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b, int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndVariable(
+      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
+      int32_t target_variable_index, bool target_follow_links);
 
  private:
   /**
