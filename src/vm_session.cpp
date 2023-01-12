@@ -463,12 +463,12 @@ void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t 
   if (major_code == 0) {  // Time and date related functions
     // Get the current UTC time
     const auto now_utc = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    struct tm utc_tm{};
+    std::tm utc_tm{};
     gmtime_r(&now_utc, &utc_tm);
 
     // Get the current local time
     const auto now_local = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    struct tm local_tm{};
+    std::tm local_tm{};
     localtime_r(&now_local, &local_tm);
 
     const int32_t offset_minutes =
@@ -522,7 +522,8 @@ void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t 
       first_day_of_year.tm_mday = 1;
 
       const std::time_t first_day_time = std::mktime(&first_day_of_year);
-      const std::tm first_day_tm = *std::gmtime(&first_day_time);
+      std::tm first_day_tm{};
+      gmtime_r(&first_day_time, &first_day_tm);
       const int32_t first_day_weekday = first_day_tm.tm_wday;
 
       const int32_t current_week = (current_day - 1 + first_day_weekday) / 7 + 1;
