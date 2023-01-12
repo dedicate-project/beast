@@ -647,12 +647,12 @@ class VmSession {
       int32_t variable_index, bool follow_links);
 
   /**
-   * @fn VmSession::popFromStack
+   * @fn VmSession::popTopItemFromStack
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
    */
-  void popFromStack(int32_t stack_variable_index, bool stack_follow_links);
+  void popTopItemFromStack(int32_t stack_variable_index, bool stack_follow_links);
 
   /**
    * @fn VmSession::checkIfStackIsEmpty

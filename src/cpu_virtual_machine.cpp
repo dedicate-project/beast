@@ -547,12 +547,12 @@ bool CpuVirtualMachine::step(VmSession& session) {
     session.popVariableFromStack(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
-  case OpCode::PopFromStack: {
+  case OpCode::PopTopItemFromStack: {
     const int32_t stack_variable = session.getData4();
     const bool stack_follow_links = session.getData1() != 0x0;
-    debug("pop_from_stack("
+    debug("pop_top_item_from_stack("
           + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ")");
-    session.popFromStack(stack_variable, stack_follow_links);
+    session.popTopItemFromStack(stack_variable, stack_follow_links);
   } break;
 
   case OpCode::CheckIfStackIsEmpty: {

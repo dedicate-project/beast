@@ -675,7 +675,7 @@ void VmSession::popVariableFromStack(
   setVariableValueInternal(variable_index, follow_links, last_value);
 }
 
-void VmSession::popFromStack(int32_t stack_variable_index, bool stack_follow_links) {
+void VmSession::popTopItemFromStack(int32_t stack_variable_index, bool stack_follow_links) {
   const int32_t current_stack_size =
       getVariableValueInternal(stack_variable_index, stack_follow_links);
   if (current_stack_size == 0) {

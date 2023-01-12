@@ -502,7 +502,7 @@ void Program::popVariableFromStack(
 }
 
 void Program::popTopItemFromStack(int32_t stack_variable_index, bool follow_links_stack) {
-  appendCode1(OpCode::PopFromStack);
+  appendCode1(OpCode::PopTopItemFromStack);
   appendData4(stack_variable_index);
   appendFlag1(follow_links_stack);
 }
