@@ -77,7 +77,7 @@ TEST_CASE("inserting_a_too_large_program_throws", "program") {
   REQUIRE(threw == true);
 }
 
-TEST_CASE("inserted_programs_work_as_intended", "programs") {
+TEST_CASE("inserted_programs_work_as_intended", "program") {
   const int32_t index = 3;
   const int32_t value1 = 73;
   const int32_t value2 = 62;

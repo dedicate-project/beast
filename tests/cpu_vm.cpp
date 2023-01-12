@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("stepping_outside_of_bounds_is_rejected_by_vm", "programs") {
+TEST_CASE("stepping_outside_of_bounds_is_rejected_by_vm", "cpu_vm") {
   beast::Program prg(2);
   prg.noop();
   prg.noop();

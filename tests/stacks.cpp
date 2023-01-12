@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("checking_if_stack_is_empty_works", "programs") {
+TEST_CASE("checking_if_stack_is_empty_works", "stacks") {
   const int32_t stack_variable_index_1 = 2;
   const int32_t stack_variable_index_2 = 3;
   const int32_t stack_size_1 = 0;
@@ -32,7 +32,7 @@ TEST_CASE("checking_if_stack_is_empty_works", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
 }
 
-TEST_CASE("stacks_can_push_and_pop_constant_values", "programs") {
+TEST_CASE("stacks_can_push_and_pop_constant_values", "stacks") {
   const int32_t stack_variable_index = 10;
   const int32_t constant_1 = 4;
   const int32_t constant_2 = 128;
@@ -83,7 +83,7 @@ TEST_CASE("stacks_can_push_and_pop_constant_values", "programs") {
   REQUIRE(session.getVariableValue(variable_index_empty_check, true) == 0x1);
 }
 
-TEST_CASE("stacks_can_push_and_pop_variable_values", "programs") {
+TEST_CASE("stacks_can_push_and_pop_variable_values", "stacks") {
   const int32_t stack_variable_index = 10;
   const int32_t input_variable_index_1 = 50;
   const int32_t input_variable_value_1 = -1;

@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("terminate_loop_while_variable_gt_0_with_variable_jump_address", "programs") {
+TEST_CASE("terminate_loop_while_variable_gt_0_with_variable_jump_address", "jumps") {
   beast::Program prg(150);
   // Counting variable
   prg.declareVariable(0, beast::Program::VariableType::Int32);
@@ -34,7 +34,7 @@ TEST_CASE("terminate_loop_while_variable_gt_0_with_variable_jump_address", "prog
   REQUIRE(session.getVariableValue(1, true) == 6);
 }
 
-TEST_CASE("terminate_loop_while_variable_lt_0_with_variable_jump_address", "programs") {
+TEST_CASE("terminate_loop_while_variable_lt_0_with_variable_jump_address", "jumps") {
   beast::Program prg(150);
   // Counting variable
   prg.declareVariable(0, beast::Program::VariableType::Int32);
@@ -64,7 +64,7 @@ TEST_CASE("terminate_loop_while_variable_lt_0_with_variable_jump_address", "prog
   REQUIRE(session.getVariableValue(1, true) == 8);
 }
 
-TEST_CASE("terminate_loop_while_variable_eq_0_with_variable_jump_address", "programs") {
+TEST_CASE("terminate_loop_while_variable_eq_0_with_variable_jump_address", "jumps") {
   beast::Program prg(150);
   // Counting variable
   prg.declareVariable(0, beast::Program::VariableType::Int32);
@@ -94,7 +94,7 @@ TEST_CASE("terminate_loop_while_variable_eq_0_with_variable_jump_address", "prog
   REQUIRE(session.getVariableValue(1, true) == 4);
 }
 
-TEST_CASE("terminate_loop_while_variable_gt_0_with_fixed_jump_address", "programs") {
+TEST_CASE("terminate_loop_while_variable_gt_0_with_fixed_jump_address", "jumps") {
   beast::Program prg(150);
   // Counting variable
   prg.declareVariable(0, beast::Program::VariableType::Int32);
@@ -121,7 +121,7 @@ TEST_CASE("terminate_loop_while_variable_gt_0_with_fixed_jump_address", "program
   REQUIRE(session.getVariableValue(1, true) == 6);
 }
 
-TEST_CASE("terminate_loop_while_variable_lt_0_with_fixed_jump_address", "programs") {
+TEST_CASE("terminate_loop_while_variable_lt_0_with_fixed_jump_address", "jumps") {
   beast::Program prg(150);
   // Counting variable
   prg.declareVariable(0, beast::Program::VariableType::Int32);
@@ -148,7 +148,7 @@ TEST_CASE("terminate_loop_while_variable_lt_0_with_fixed_jump_address", "program
   REQUIRE(session.getVariableValue(1, true) == 8);
 }
 
-TEST_CASE("terminate_loop_while_variable_eq_0_with_fixed_jump_address", "programs") {
+TEST_CASE("terminate_loop_while_variable_eq_0_with_fixed_jump_address", "jumps") {
   beast::Program prg(150);
   // Counting variable
   prg.declareVariable(0, beast::Program::VariableType::Int32);
@@ -175,7 +175,7 @@ TEST_CASE("terminate_loop_while_variable_eq_0_with_fixed_jump_address", "program
   REQUIRE(session.getVariableValue(1, true) == 4);
 }
 
-TEST_CASE("unconditional_jump_to_absolute_address_works", "programs") {
+TEST_CASE("unconditional_jump_to_absolute_address_works", "jumps") {
   beast::Program prg;
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);
@@ -190,7 +190,7 @@ TEST_CASE("unconditional_jump_to_absolute_address_works", "programs") {
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
 
-TEST_CASE("unconditional_jump_to_absolute_variable_address_works", "programs") {
+TEST_CASE("unconditional_jump_to_absolute_variable_address_works", "jumps") {
   beast::Program prg;
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);
@@ -206,7 +206,7 @@ TEST_CASE("unconditional_jump_to_absolute_variable_address_works", "programs") {
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
 
-TEST_CASE("unconditional_jump_to_relative_address_works", "programs") {
+TEST_CASE("unconditional_jump_to_relative_address_works", "jumps") {
   beast::Program prg;
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);
@@ -220,7 +220,7 @@ TEST_CASE("unconditional_jump_to_relative_address_works", "programs") {
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
 
-TEST_CASE("unconditional_jump_to_relative_variable_address_works", "programs") {
+TEST_CASE("unconditional_jump_to_relative_variable_address_works", "jumps") {
   beast::Program prg;
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);

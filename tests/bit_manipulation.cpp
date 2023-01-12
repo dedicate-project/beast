@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("variables_can_be_variably_bit_shifted_left", "programs") {
+TEST_CASE("variables_can_be_variably_bit_shifted_left", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 2;
   const int32_t shifted_value = 16;
@@ -25,7 +25,7 @@ TEST_CASE("variables_can_be_variably_bit_shifted_left", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
 
-TEST_CASE("variables_can_be_variably_bit_shifted_right", "programs") {
+TEST_CASE("variables_can_be_variably_bit_shifted_right", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 16;
   const int32_t shifted_value = 2;
@@ -47,7 +47,7 @@ TEST_CASE("variables_can_be_variably_bit_shifted_right", "programs") {
 }
 
 
-TEST_CASE("variables_can_be_rotated_left", "programs") {
+TEST_CASE("variables_can_be_rotated_left", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 0x00499602;
   const int32_t rotated_value = 0x96020049;
@@ -65,7 +65,7 @@ TEST_CASE("variables_can_be_rotated_left", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
 
-TEST_CASE("variables_can_be_rotated_right", "programs") {
+TEST_CASE("variables_can_be_rotated_right", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 0x00499602;
   const int32_t rotated_value = 0x02004996;
@@ -83,7 +83,7 @@ TEST_CASE("variables_can_be_rotated_right", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
 
-TEST_CASE("variables_can_be_rotated_left_by_variable_places", "programs") {
+TEST_CASE("variables_can_be_rotated_left_by_variable_places", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 0x00499602;
   const int32_t rotated_value = 0x96020049;
@@ -104,7 +104,7 @@ TEST_CASE("variables_can_be_rotated_left_by_variable_places", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
 
-TEST_CASE("variables_can_be_rotated_right_by_variable_places", "programs") {
+TEST_CASE("variables_can_be_rotated_right_by_variable_places", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 0x00499602;
   const int32_t rotated_value = 0x02004996;
@@ -125,7 +125,7 @@ TEST_CASE("variables_can_be_rotated_right_by_variable_places", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
 
-TEST_CASE("variables_can_be_bit_wise_inverted", "programs") {
+TEST_CASE("variables_can_be_bit_wise_inverted", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 958208765;
   const int32_t inverted_value = -958208766;
@@ -142,7 +142,7 @@ TEST_CASE("variables_can_be_bit_wise_inverted", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == inverted_value);
 }
 
-TEST_CASE("variables_can_be_bit_wise_anded", "programs") {
+TEST_CASE("variables_can_be_bit_wise_anded", "bit_manipulation") {
   const int32_t variable_index_a = 0;
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 52766103;
@@ -165,7 +165,7 @@ TEST_CASE("variables_can_be_bit_wise_anded", "programs") {
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
 
-TEST_CASE("variables_can_be_bit_wise_ored", "programs") {
+TEST_CASE("variables_can_be_bit_wise_ored", "bit_manipulation") {
   const int32_t variable_index_a = 0;
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 52766103;
@@ -188,7 +188,7 @@ TEST_CASE("variables_can_be_bit_wise_ored", "programs") {
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
 
-TEST_CASE("variables_can_be_bit_wise_xored", "programs") {
+TEST_CASE("variables_can_be_bit_wise_xored", "bit_manipulation") {
   const int32_t variable_index_a = 0;
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 52766103;
@@ -211,7 +211,7 @@ TEST_CASE("variables_can_be_bit_wise_xored", "programs") {
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
 
-TEST_CASE("variables_can_be_bit_shifted_left", "programs") {
+TEST_CASE("variables_can_be_bit_shifted_left", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 2;
   const int32_t shifted_value = 16;
@@ -229,7 +229,7 @@ TEST_CASE("variables_can_be_bit_shifted_left", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
 
-TEST_CASE("variables_can_be_bit_shifted_left_by_negative_amount", "programs") {
+TEST_CASE("variables_can_be_bit_shifted_left_by_negative_amount", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 16;
   const int32_t shifted_value = 2;
@@ -247,7 +247,7 @@ TEST_CASE("variables_can_be_bit_shifted_left_by_negative_amount", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
 
-TEST_CASE("variables_can_be_bit_shifted_right", "programs") {
+TEST_CASE("variables_can_be_bit_shifted_right", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 16;
   const int32_t shifted_value = 2;
@@ -265,7 +265,7 @@ TEST_CASE("variables_can_be_bit_shifted_right", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
 
-TEST_CASE("variables_can_be_bit_shifted_right_by_negative_amount", "programs") {
+TEST_CASE("variables_can_be_bit_shifted_right_by_negative_amount", "bit_manipulation") {
   const int32_t variable_index = 0;
   const int32_t nominal_value = 2;
   const int32_t shifted_value = 16;

@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("add_constant_to_variable", "programs") {
+TEST_CASE("add_constant_to_variable", "math") {
   const int32_t index = 3;
   const int32_t value = 73;
   const int32_t added_constant = 2;
@@ -21,7 +21,7 @@ TEST_CASE("add_constant_to_variable", "programs") {
   REQUIRE(session.getVariableValue(index, true) == value + added_constant);
 }
 
-TEST_CASE("add_variable_to_variable", "programs") {
+TEST_CASE("add_variable_to_variable", "math") {
   const int32_t index_a = 3;
   const int32_t value_a = 73;
   const int32_t index_b = 5;
@@ -41,7 +41,7 @@ TEST_CASE("add_variable_to_variable", "programs") {
   REQUIRE(session.getVariableValue(index_b, true) == value_a + value_b);
 }
 
-TEST_CASE("subtract_constant_from_variable", "programs") {
+TEST_CASE("subtract_constant_from_variable", "math") {
   const int32_t index = 3;
   const int32_t value = 73;
   const int32_t subtracted_constant = 2;
@@ -58,7 +58,7 @@ TEST_CASE("subtract_constant_from_variable", "programs") {
   REQUIRE(session.getVariableValue(index, true) == value - subtracted_constant);
 }
 
-TEST_CASE("subtract_variable_from_variable", "programs") {
+TEST_CASE("subtract_variable_from_variable", "math") {
   const int32_t index_a = 3;
   const int32_t value_a = 73;
   const int32_t index_b = 5;
@@ -78,7 +78,7 @@ TEST_CASE("subtract_variable_from_variable", "programs") {
   REQUIRE(session.getVariableValue(index_b, true) == value_b - value_a);
 }
 
-TEST_CASE("variable_can_be_compared_for_gt_against_constant", "programs") {
+TEST_CASE("variable_can_be_compared_for_gt_against_constant", "math") {
   const int32_t variable_index = 2;
   const int32_t variable_value = 6;
   const int32_t comparison_value_1 = 3;
@@ -104,7 +104,7 @@ TEST_CASE("variable_can_be_compared_for_gt_against_constant", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
 }
 
-TEST_CASE("variable_can_be_compared_for_lt_against_constant", "programs") {
+TEST_CASE("variable_can_be_compared_for_lt_against_constant", "math") {
   const int32_t variable_index = 2;
   const int32_t variable_value = 6;
   const int32_t comparison_value_1 = 3;
@@ -130,7 +130,7 @@ TEST_CASE("variable_can_be_compared_for_lt_against_constant", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
 }
 
-TEST_CASE("variable_can_be_compared_for_eq_against_constant", "programs") {
+TEST_CASE("variable_can_be_compared_for_eq_against_constant", "math") {
   const int32_t variable_index = 2;
   const int32_t variable_value = 6;
   const int32_t comparison_value_1 = 2;
@@ -156,7 +156,7 @@ TEST_CASE("variable_can_be_compared_for_eq_against_constant", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
 }
 
-TEST_CASE("variable_can_be_compared_for_gt_against_variable", "programs") {
+TEST_CASE("variable_can_be_compared_for_gt_against_variable", "math") {
   const int32_t variable_index_a = 0;
   const int32_t variable_value_a = 6;
   const int32_t variable_index_b = 1;
@@ -190,7 +190,7 @@ TEST_CASE("variable_can_be_compared_for_gt_against_variable", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
 }
 
-TEST_CASE("variable_can_be_compared_for_lt_against_variable", "programs") {
+TEST_CASE("variable_can_be_compared_for_lt_against_variable", "math") {
   const int32_t variable_index_a = 0;
   const int32_t variable_value_a = 6;
   const int32_t variable_index_b = 1;
@@ -224,7 +224,7 @@ TEST_CASE("variable_can_be_compared_for_lt_against_variable", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
 }
 
-TEST_CASE("variable_can_be_compared_for_eq_against_variable", "programs") {
+TEST_CASE("variable_can_be_compared_for_eq_against_variable", "math") {
   const int32_t variable_index_a = 0;
   const int32_t variable_value_a = 6;
   const int32_t variable_index_b = 1;
@@ -258,7 +258,7 @@ TEST_CASE("variable_can_be_compared_for_eq_against_variable", "programs") {
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
 }
 
-TEST_CASE("variables_can_be_moduloed_by_constant", "programs") {
+TEST_CASE("variables_can_be_moduloed_by_constant", "math") {
   const int32_t variable_index = 0;
   const int32_t variable_value = 59964;
   const int32_t modulo_constant = 27;
@@ -276,7 +276,7 @@ TEST_CASE("variables_can_be_moduloed_by_constant", "programs") {
   REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
 }
 
-TEST_CASE("variables_can_be_moduloed_by_variable", "programs") {
+TEST_CASE("variables_can_be_moduloed_by_variable", "math") {
   const int32_t variable_index = 0;
   const int32_t variable_value = 59964;
   const int32_t modulo_variable_index = 1;

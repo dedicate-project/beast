@@ -5,7 +5,7 @@
 #include <beast/cpu_virtual_machine.hpp>
 #include <beast/opcodes.hpp>
 
-TEST_CASE("declare_variable", "instructions") {
+TEST_CASE("declare_variable", "variables") {
   const int32_t variable_index = 43;
 
   beast::Program prg(6);
@@ -16,7 +16,7 @@ TEST_CASE("declare_variable", "instructions") {
   REQUIRE(prg.getData1(5) == 0);
 }
 
-TEST_CASE("set_variable", "instructions") {
+TEST_CASE("set_variable", "variables") {
   const int32_t variable_index = 43;
   const int32_t variable_content = 77612;
   const bool follow_links = false;
@@ -30,7 +30,7 @@ TEST_CASE("set_variable", "instructions") {
   REQUIRE(prg.getData4(6) == variable_content);
 }
 
-TEST_CASE("undeclare_variable", "instructions") {
+TEST_CASE("undeclare_variable", "variables") {
   const int32_t variable_index = 43;
 
   beast::Program prg(6);
@@ -40,7 +40,7 @@ TEST_CASE("undeclare_variable", "instructions") {
   REQUIRE(prg.getData4(1) == variable_index);
 }
 
-TEST_CASE("add_constant_to_variable", "instructions") {
+TEST_CASE("add_constant_to_variable", "variables") {
   const int32_t variable_index = 22;
   const int32_t constant = -91;
   const bool follow_links = true;
@@ -54,7 +54,7 @@ TEST_CASE("add_constant_to_variable", "instructions") {
   REQUIRE(prg.getData4(6) == constant);
 }
 
-TEST_CASE("add_variable_to_variable", "instructions") {
+TEST_CASE("add_variable_to_variable", "variables") {
   const int32_t source_variable_index = 10;
   const bool follow_source_links = true;
   const int32_t destination_variable_index = 20;
@@ -70,7 +70,7 @@ TEST_CASE("add_variable_to_variable", "instructions") {
   REQUIRE(prg.getData1(10) == (follow_destination_links ? 0x1 : 0x0));
 }
 
-TEST_CASE("set_direct_variable_value", "programs") {
+TEST_CASE("set_direct_variable_value", "variables") {
   const int32_t index = 3;
   const int32_t value = 73;
 
@@ -85,7 +85,7 @@ TEST_CASE("set_direct_variable_value", "programs") {
   REQUIRE(session.getVariableValue(index, true) == value);
 }
 
-TEST_CASE("set_linked_variable_value", "programs") {
+TEST_CASE("set_linked_variable_value", "variables") {
   const int32_t var_index = 3;
   const int32_t var_value = 73;
   const int32_t link_index = 2;
@@ -105,7 +105,7 @@ TEST_CASE("set_linked_variable_value", "programs") {
   REQUIRE(session.getVariableValue(link_index, true) == var_value);
 }
 
-TEST_CASE("copying_a_variable_copies_its_value", "programs") {
+TEST_CASE("copying_a_variable_copies_its_value", "variables") {
   const int32_t source_variable_index = 3;
   const int32_t destination_variable_index = 7;
   const int32_t value = 73;
@@ -124,7 +124,7 @@ TEST_CASE("copying_a_variable_copies_its_value", "programs") {
   REQUIRE(session.getVariableValue(source_variable_index, true) == session.getVariableValue(destination_variable_index, true));
 }
 
-TEST_CASE("undeclared_variables_cannot_be_set", "programs") {
+TEST_CASE("undeclared_variables_cannot_be_set", "variables") {
   const int32_t index = 3;
   const int32_t value = 73;
 
@@ -148,7 +148,7 @@ TEST_CASE("undeclared_variables_cannot_be_set", "programs") {
   REQUIRE(threw == true);
 }
 
-TEST_CASE("variables_can_be_swapped", "programs") {
+TEST_CASE("variables_can_be_swapped", "variables") {
   const int32_t variable_index_a = 0;
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 15;

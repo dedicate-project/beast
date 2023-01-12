@@ -129,6 +129,24 @@ TEST_CASE("string_table_item_length_can_be_determined", "printing_and_string_tab
   REQUIRE(session.getVariableValue(1, true) == entry2.size());
 }
 
+TEST_CASE("getting_invalid_string_table_item_length_throws", "printing_and_string_table") {
+  beast::Program prg;
+  prg.declareVariable(0, beast::Program::VariableType::Int32);
+  prg.loadStringItemLengthIntoVariable(1, 0, true);
+
+  beast::VmSession session(std::move(prg), 1, 1, 1);
+  beast::CpuVirtualMachine vm;
+  vm.step(session);
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
 TEST_CASE("string_table_item_can_be_loaded_into_variables", "printing_and_string_table") {
   const std::string entry = "Entry";
 

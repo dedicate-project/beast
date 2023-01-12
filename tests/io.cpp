@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("inputs_can_be_determined", "programs") {
+TEST_CASE("inputs_can_be_determined", "io") {
   const int32_t input_variable_index = 42;
   const int32_t result1_variable_index = 11;
   const int32_t regular_variable_index = 25;
@@ -29,7 +29,7 @@ TEST_CASE("inputs_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
 }
 
-TEST_CASE("outputs_can_be_determined", "programs") {
+TEST_CASE("outputs_can_be_determined", "io") {
   const int32_t output_variable_index = 29;
   const int32_t result1_variable_index = 110;
   const int32_t regular_variable_index = 2;
@@ -54,7 +54,7 @@ TEST_CASE("outputs_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
 }
 
-TEST_CASE("input_count_can_be_determined", "programs") {
+TEST_CASE("input_count_can_be_determined", "io") {
   beast::Program prg(100);
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);
@@ -72,7 +72,7 @@ TEST_CASE("input_count_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(0, true) == 2);
 }
 
-TEST_CASE("output_count_can_be_determined", "programs") {
+TEST_CASE("output_count_can_be_determined", "io") {
   beast::Program prg(100);
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);
@@ -90,7 +90,7 @@ TEST_CASE("output_count_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(0, true) == 3);
 }
 
-TEST_CASE("set_input_can_be_determined", "programs") {
+TEST_CASE("set_input_can_be_determined", "io") {
   beast::Program prg(100);
   prg.declareVariable(0, beast::Program::VariableType::Int32);
   prg.setVariable(0, 0, true);
@@ -109,4 +109,27 @@ TEST_CASE("set_input_can_be_determined", "programs") {
 
   REQUIRE(session.getVariableValue(0, true) == 1);
   REQUIRE(session.getVariableValue(1, true) == 0);
+}
+
+TEST_CASE("checkig_noninput_variables_for_input_throws", "io") {
+  const int32_t variable_index = 0;
+  const int32_t target_variable_index = 1;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
+  prg.checkIfInputWasSet(variable_index, true, target_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 2, 0, 0);
+  beast::CpuVirtualMachine vm;
+  vm.step(session);
+  vm.step(session);
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
 }
