@@ -7,6 +7,9 @@
 #include <set>
 #include <stdexcept>
 
+// Internal
+#include <beast/time_functions.hpp>
+
 namespace beast {
 
 VmSession::VmSession(
@@ -460,11 +463,13 @@ void VmSession::performSystemCall(int8_t major_code, int8_t minor_code, int32_t 
   if (major_code == 0) {  // Time and date related functions
     // Get the current UTC time
     const auto now_utc = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    const std::tm utc_tm = *std::gmtime(&now_utc);
+    struct tm utc_tm{};
+    gmtime_r(&now_utc, &utc_tm);
 
     // Get the current local time
     const auto now_local = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    const std::tm local_tm = *std::localtime(&now_local);
+    struct tm local_tm{};
+    localtime_r(&now_local, &local_tm);
 
     const int32_t offset_minutes =
         (local_tm.tm_hour - utc_tm.tm_hour) * 60 + (local_tm.tm_min - utc_tm.tm_min);

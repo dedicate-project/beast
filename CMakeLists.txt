@@ -43,6 +43,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/cpu_virtual_machine.cpp
   src/program.cpp
+  src/time_functions.cpp
   src/vm_session.cpp
   src/virtual_machine.cpp)
 
