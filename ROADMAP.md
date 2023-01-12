@@ -3,7 +3,7 @@
 ## Stage 1: Bytecode Interpreter (Virtual Machine)
 - [x] Build the general pipeline for defining programs and running them
 - [ ] Fully cover the entire code base
-- [ ] Add more operators to have a solid base of operators available
+- [x] Add more operators to have a solid base of operators available
 - [ ] Write up documentation for how things work, what the architecture is, etc.
 - [x] Set up CI/CD using CircleCI, GitHub CodeQL, AppVeyor
 - [x] Set up automatic build of Doxygen and Sphinx documentation using the ReadTheDocs service
