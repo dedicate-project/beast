@@ -6,6 +6,8 @@
 [![Documentation Status](https://readthedocs.org/projects/beast-project/badge/?version=latest)](https://beast-project.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Maintenance](https://img.shields.io/maintenance/yes/2023)
+![Platforms](https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows-lightgrey)
 
 <p align="center">
  <img src="https://github.com/dedicate-project/beast/blob/main/images/beast_head_logo_small.png" />
