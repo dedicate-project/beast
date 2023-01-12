@@ -296,3 +296,89 @@ TEST_CASE("variables_can_be_moduloed_by_variable", "programs") {
 
   REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
 }
+
+TEST_CASE("max_can_be_acquired_from_variable_and_constant", "math") {
+  const int32_t variable_index = 0;
+  const int32_t variable_value = 122;
+  const int32_t constant = -500;
+  const int32_t target_variable_index = 1;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index, 0, true);
+  prg.getMaxOfVariableAndConstant(variable_index, true, constant, target_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index, true) == variable_value);
+}
+
+TEST_CASE("min_can_be_acquired_from_variable_and_constant", "math") {
+  const int32_t variable_index = 0;
+  const int32_t variable_value = 122;
+  const int32_t constant = -500;
+  const int32_t target_variable_index = 1;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, variable_value, true);
+  prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index, 0, true);
+  prg.getMinOfVariableAndConstant(variable_index, true, constant, target_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index, true) == constant);
+}
+
+TEST_CASE("max_can_be_acquired_from_variable_and_variable", "math") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_value_a = 122;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_b = 619;
+  const int32_t target_variable_index = 2;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index, 0, true);
+  prg.getMaxOfVariableAndVariable(variable_index_a, true, variable_index_b, true, target_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index, true) == variable_value_b);
+}
+
+TEST_CASE("min_can_be_acquired_from_variable_and_variable", "math") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_value_a = 122;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_b = 619;
+  const int32_t target_variable_index = 2;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(target_variable_index, 0, true);
+  prg.getMinOfVariableAndVariable(variable_index_a, true, variable_index_b, true, target_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(target_variable_index, true) == variable_value_a);
+}
