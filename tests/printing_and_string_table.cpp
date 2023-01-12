@@ -4,7 +4,7 @@
 
 #include <beast/cpu_virtual_machine.hpp>
 
-TEST_CASE("variable_string_table_item_length_can_be_determined", "programs") {
+TEST_CASE("variable_string_table_item_length_can_be_determined", "printing_and_string_table") {
   const std::string entry1 = "Entry";
   const std::string entry2 = "Another entry";
   const int32_t string_table_index_variable_index_1 = 22;
@@ -37,7 +37,7 @@ TEST_CASE("variable_string_table_item_length_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(storage_variable_index_2, true) == entry2.size());
 }
 
-TEST_CASE("variable_string_table_item_can_be_loaded_into_variables", "programs") {
+TEST_CASE("variable_string_table_item_can_be_loaded_into_variables", "printing_and_string_table") {
   const std::string entry = "Entry";
   const int32_t string_table_variable_index = 21;
   const int32_t string_table_index = 12;
@@ -63,7 +63,7 @@ TEST_CASE("variable_string_table_item_can_be_loaded_into_variables", "programs")
   }
 }
 
-TEST_CASE("print_variable_index_from_string_table", "programs") {
+TEST_CASE("print_variable_index_from_string_table", "printing_and_string_table") {
   const int32_t variable_index = 3;
   const int32_t string_table_index = 22;
   const std::string output = "Output";
@@ -81,7 +81,7 @@ TEST_CASE("print_variable_index_from_string_table", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("string_table_item_can_be_set_at_variable_index", "programs") {
+TEST_CASE("string_table_item_can_be_set_at_variable_index", "printing_and_string_table") {
   const std::string entry = "Entry";
 
   beast::Program prg;
@@ -106,7 +106,7 @@ TEST_CASE("string_table_item_can_be_set_at_variable_index", "programs") {
   }
 }
 
-TEST_CASE("string_table_item_length_can_be_determined", "programs") {
+TEST_CASE("string_table_item_length_can_be_determined", "printing_and_string_table") {
   const std::string entry1 = "Entry";
   const std::string entry2 = "Another entry";
 
@@ -129,7 +129,7 @@ TEST_CASE("string_table_item_length_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(1, true) == entry2.size());
 }
 
-TEST_CASE("string_table_item_can_be_loaded_into_variables", "programs") {
+TEST_CASE("string_table_item_can_be_loaded_into_variables", "printing_and_string_table") {
   const std::string entry = "Entry";
 
   beast::Program prg;
@@ -150,7 +150,7 @@ TEST_CASE("string_table_item_can_be_loaded_into_variables", "programs") {
   }
 }
 
-TEST_CASE("string_table_limit_can_be_determined", "programs") {
+TEST_CASE("string_table_limit_can_be_determined", "printing_and_string_table") {
   const int32_t index = 7;
   const int32_t string_table_limit = 25;
 
@@ -166,7 +166,7 @@ TEST_CASE("string_table_limit_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(index, true) == string_table_limit);
 }
 
-TEST_CASE("string_table_item_length_limit_can_be_determined", "programs") {
+TEST_CASE("string_table_item_length_limit_can_be_determined", "printing_and_string_table") {
   const int32_t index = 7;
   const int32_t string_table_item_length_limit = 17;
 
@@ -182,7 +182,7 @@ TEST_CASE("string_table_item_length_limit_can_be_determined", "programs") {
   REQUIRE(session.getVariableValue(index, true) == string_table_item_length_limit);
 }
 
-TEST_CASE("print_conditionally_if_var_gt_0_with_fixed_rel_addr", "programs") {
+TEST_CASE("print_conditionally_if_var_gt_0_with_fixed_rel_addr", "printing_and_string_table") {
   const std::string output = "Output";
   const std::string checkpoint = "Checkpoint";
 
@@ -208,7 +208,7 @@ TEST_CASE("print_conditionally_if_var_gt_0_with_fixed_rel_addr", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_conditionally_if_var_lt_0_with_fixed_rel_addr", "programs") {
+TEST_CASE("print_conditionally_if_var_lt_0_with_fixed_rel_addr", "printing_and_string_table") {
   const std::string output = "Output";
   const std::string checkpoint = "Checkpoint";
 
@@ -234,7 +234,7 @@ TEST_CASE("print_conditionally_if_var_lt_0_with_fixed_rel_addr", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_conditionally_if_var_eq_0_with_fixed_rel_addr", "programs") {
+TEST_CASE("print_conditionally_if_var_eq_0_with_fixed_rel_addr", "printing_and_string_table") {
   const std::string output = "Output";
   const std::string checkpoint = "Checkpoint";
 
@@ -260,7 +260,7 @@ TEST_CASE("print_conditionally_if_var_eq_0_with_fixed_rel_addr", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_from_string_table", "programs") {
+TEST_CASE("print_from_string_table", "printing_and_string_table") {
   const std::string output = "Output";
 
   beast::Program prg(100);
@@ -274,7 +274,7 @@ TEST_CASE("print_from_string_table", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_chars_from_variables", "programs") {
+TEST_CASE("print_chars_from_variables", "printing_and_string_table") {
   const std::string output = "Hello";
 
   beast::Program prg(150);
@@ -301,7 +301,7 @@ TEST_CASE("print_chars_from_variables", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_conditionally_if_var_not_gt_0", "programs") {
+TEST_CASE("print_conditionally_if_var_not_gt_0", "printing_and_string_table") {
   const std::string output = "Output";
   const std::string checkpoint = "Checkpoint";
 
@@ -329,7 +329,7 @@ TEST_CASE("print_conditionally_if_var_not_gt_0", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_conditionally_if_var_not_lt_0", "programs") {
+TEST_CASE("print_conditionally_if_var_not_lt_0", "printing_and_string_table") {
   const std::string output = "Output";
   const std::string checkpoint = "Checkpoint";
 
@@ -357,7 +357,7 @@ TEST_CASE("print_conditionally_if_var_not_lt_0", "programs") {
   REQUIRE(session.getPrintBuffer() == output);
 }
 
-TEST_CASE("print_conditionally_if_var_not_eq_0", "programs") {
+TEST_CASE("print_conditionally_if_var_not_eq_0", "printing_and_string_table") {
   const std::string output = "Output";
   const std::string checkpoint = "Checkpoint";
 
@@ -383,4 +383,47 @@ TEST_CASE("print_conditionally_if_var_not_eq_0", "programs") {
   while (vm.step(session)) {}
 
   REQUIRE(session.getPrintBuffer() == output);
+}
+
+TEST_CASE("set_string_table_entry_outside_bounds_throws", "printing_and_string_table") {
+  const int32_t string_table_index = 22;
+  const std::string output = "Output";
+
+  beast::Program prg;
+  prg.setStringTableEntry(string_table_index, output);
+
+  beast::VmSession session(std::move(prg), 0, 21, 10);
+  beast::CpuVirtualMachine vm;
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("set_variable_string_table_entry_outside_bounds_throws", "printing_and_string_table") {
+  const int32_t variable_index = 0;
+  const int32_t string_table_index = 22;
+  const std::string output = "Output";
+
+  beast::Program prg;
+  prg.declareVariable(variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index, string_table_index, true);
+  prg.setVariableStringTableEntry(variable_index, true, output);
+
+  beast::VmSession session(std::move(prg), 1, 21, 10);
+  beast::CpuVirtualMachine vm;
+  vm.step(session);
+  vm.step(session);
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
 }
