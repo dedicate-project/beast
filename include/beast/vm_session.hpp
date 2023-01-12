@@ -757,7 +757,7 @@ class VmSession {
   void variableRotateVariableRight(
       int32_t variable_index, bool follow_links,
       int32_t places_variable_index, bool places_follow_links);
-  
+
   /**
    * @fn VmSession::compareIfVariableGtConstant
    * @brief NEEDS DOCUMENTATION
@@ -767,7 +767,7 @@ class VmSession {
   void compareIfVariableGtConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
       int32_t target_variable_index, bool target_follow_links);
-  
+
   /**
    * @fn VmSession::compareIfVariableLtConstant
    * @brief NEEDS DOCUMENTATION
@@ -857,6 +857,22 @@ class VmSession {
   void getMinOfVariableAndVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
       int32_t target_variable_index, bool target_follow_links);
+
+  /**
+   * @fn VmSession::printVariable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void printVariable(int32_t variable_index, bool follow_links, bool as_char);
+
+  /**
+   * @fn VmSession::printStringFromStringTable
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this part.
+   */
+  void printStringFromStringTable(int32_t string_table_index);
 
  private:
   /**

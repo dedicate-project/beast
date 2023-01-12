@@ -881,4 +881,12 @@ void VmSession::getMinOfVariableAndVariable(
       target_variable_index, target_follow_links, value_a < value_b ? value_a : value_b);
 }
 
+void VmSession::printVariable(int32_t variable_index, bool follow_links, bool as_char) {
+  appendVariableToPrintBuffer(variable_index, follow_links, as_char);
+}
+
+void VmSession::printStringFromStringTable(int32_t string_table_index) {
+  appendToPrintBuffer(getStringTableEntry(string_table_index));
+}
+
 }  // namespace beast
