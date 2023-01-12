@@ -171,7 +171,7 @@ class Program {
 
   /**
    * @fn Program::declareVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Declares a variable at an index and assigns a type
    *
    * Declares a numerical variable index, alongside its designated type. A variable type can either
    * be an actual value storage (of type VariableType::Int32) or a link to another variable index
@@ -181,56 +181,59 @@ class Program {
    *
    * @param variable_index The index to declare the variable at.
    * @param variable_type The designated type of the variable.
+   * @sa undeclareVariable()
    */
   void declareVariable(int32_t variable_index, VariableType variable_type);
 
   /**
    * @fn Program::setVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the value of a variable
    *
-   * Sets the value of a variable at the given index to the value `content`.
-   *
-   * TODO(fairlight1337): Document this part.
+   * Sets the value of a variable at the given index to the value `content`. The variable index
+   * needs to be declared prior to this.
    *
    * Identified by OpCode::SetVariable. Represented by 10 bytes.
    *
    * @param variable_index The index of the variable.
-   * @param content tbd
+   * @param content The value to assign to the variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa declareVariable()
    */
   void setVariable(int32_t variable_index, int32_t content, bool follow_links);
 
   /**
    * @fn Program::undeclareVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Removes a variable declaration at the given index
    *
-   * TODO(fairlight1337): Document this part.
+   * The variable declared at the given index is undeclared. The index, type, and value are
+   * removed from the variable memory. If at that index no variable is declared, an exception
+   * is thrown.
    *
    * Identified by OpCode::UndeclareVariable. Represented by 5 bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable to undeclare.
+   * @sa declareVariable()
    */
   void undeclareVariable(int32_t variable_index);
 
   /**
    * @fn Program::addConstantToVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Adds a constant value to the value held in a variable
    *
    * Identified by OpCode::AddConstantToVariable. Represented by 8 bytes.
    *
-   * @param variable_index The index of the variable.
-   * @param constant The constant
+   * @param variable_index The index of the variable to add the constant to.
+   * @param constant The constant value to add to the variable value.
    * @param follow_links Whether to resolve variable links.
    */
   void addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
   /**
    * @fn Program::addVariableToVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Adds the value of one variable to that of another variable
    *
-   * TODO(fairlight1337): Document this part.
+   * The contents of `source_variable_index` are added to the contents of
+   * `destination_variable_index`. The result is stored in `destination_variable_index`.
    *
    * Identified by OpCode::AddVariableToVariable. Represented by 11 bytes.
    *
@@ -245,23 +248,22 @@ class Program {
 
   /**
    * @fn Program::subtractConstantFromVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Subtract a constant value from the value held in a variable
    *
    * Identified by OpCode::SubtractConstantFromVariable. Represented by 10 bytes.
    *
-   * @param variable_index The index of the variable.
-   * @param constant The constant
+   * @param variable_index The index of the variable to subtract the constant from.
+   * @param constant The constant value to subtract from the variable value.
    * @param follow_links Whether to resolve variable links.
    */
   void subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
   /**
    * @fn Program::subtractVariableFromVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Subtracts the value of one variable from that of another variable
    *
-   * TODO(fairlight1337): Document this part.
+   * The contents of `source_variable_index` are subtracted from the contents of
+   * `destination_variable_index`. The result is stored in `destination_variable_index`.
    *
    * Identified by OpCode::SubtractVariableFromVariable. Represented by 11 bytes.
    *
@@ -1355,9 +1357,16 @@ class Program {
  private:
   /**
    * @fn Program::canFit
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if a number of bytes fits into the available program space
    *
-   * TODO(fairlight1337): Document this part.
+   * Starting from the current program pointer, this method returns a boolean flag denoting whether
+   * a number of bytes can fit into the remaining available program space. For constant size programs,
+   * this is limited by the program size it was initialized with. For dynamically growing programs,
+   * the available space is expanded upon this call to fit the requested bytes.
+   *
+   * @param bytes The number of bytes to fit into the program space.
+   * 
+   * @return True when the bytes fit into the available program space, False otherwise.
    */
   bool canFit(uint32_t bytes);
 
