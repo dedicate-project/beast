@@ -69,3 +69,102 @@ TEST_CASE("add_variable_to_variable", "instructions") {
   REQUIRE(prg.getData4(6) == destination_variable_index);
   REQUIRE(prg.getData1(10) == (follow_destination_links ? 0x1 : 0x0));
 }
+
+TEST_CASE("set_direct_variable_value", "programs") {
+  const int32_t index = 3;
+  const int32_t value = 73;
+
+  beast::Program prg(100);
+  prg.declareVariable(index, beast::Program::VariableType::Int32);
+  prg.setVariable(index, value, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(index, true) == value);
+}
+
+TEST_CASE("set_linked_variable_value", "programs") {
+  const int32_t var_index = 3;
+  const int32_t var_value = 73;
+  const int32_t link_index = 2;
+
+  beast::Program prg(100);
+  // Set up the value variable
+  prg.declareVariable(var_index, beast::Program::VariableType::Int32);
+  prg.setVariable(var_index, var_value, true);
+  // Set up the link variable
+  prg.declareVariable(link_index, beast::Program::VariableType::Link);
+  prg.setVariable(link_index, var_index, false);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(link_index, true) == var_value);
+}
+
+TEST_CASE("copying_a_variable_copies_its_value", "programs") {
+  const int32_t source_variable_index = 3;
+  const int32_t destination_variable_index = 7;
+  const int32_t value = 73;
+
+  beast::Program prg(100);
+  prg.declareVariable(source_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(source_variable_index, value, true);
+  prg.declareVariable(destination_variable_index, beast::Program::VariableType::Int32);
+  prg.setVariable(destination_variable_index, 0, true);
+  prg.copyVariable(source_variable_index, true, destination_variable_index, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(source_variable_index, true) == session.getVariableValue(destination_variable_index, true));
+}
+
+TEST_CASE("undeclared_variables_cannot_be_set", "programs") {
+  const int32_t index = 3;
+  const int32_t value = 73;
+
+  beast::Program prg;
+  prg.declareVariable(index, beast::Program::VariableType::Int32);
+  prg.undeclareVariable(index);
+  prg.setVariable(index, value, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  vm.step(session);
+  vm.step(session);
+
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("variables_can_be_swapped", "programs") {
+  const int32_t variable_index_a = 0;
+  const int32_t variable_index_b = 1;
+  const int32_t variable_value_a = 15;
+  const int32_t variable_value_b = 189;
+
+  beast::Program prg;
+  prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_a, variable_value_a, true);
+  prg.declareVariable(variable_index_b, beast::Program::VariableType::Int32);
+  prg.setVariable(variable_index_b, variable_value_b, true);
+  prg.swapVariables(variable_index_a, true, variable_index_b, true);
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(variable_index_a, true) == variable_value_b);
+  REQUIRE(session.getVariableValue(variable_index_b, true) == variable_value_a);
+}

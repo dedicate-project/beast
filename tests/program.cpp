@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/program.hpp>
+#include <beast/cpu_virtual_machine.hpp>
 
 TEST_CASE("retrieving_1_byte_too_many_from_program_throws", "program") {
   beast::Program prg(0);
@@ -75,4 +75,27 @@ TEST_CASE("inserting_a_too_large_program_throws", "program") {
   }
 
   REQUIRE(threw == true);
+}
+
+TEST_CASE("inserted_programs_work_as_intended", "programs") {
+  const int32_t index = 3;
+  const int32_t value1 = 73;
+  const int32_t value2 = 62;
+
+  beast::Program prg1;
+  prg1.declareVariable(index, beast::Program::VariableType::Int32);
+  prg1.setVariable(index, value1, true);
+
+  beast::Program prg2;
+  prg2.setVariable(index, value2, true);
+
+  beast::Program prg3;
+  prg3.insertProgram(prg1);
+  prg3.insertProgram(prg2);
+
+  beast::VmSession session(std::move(prg3), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  while (vm.step(session)) {}
+
+  REQUIRE(session.getVariableValue(index, true) == value2);
 }
