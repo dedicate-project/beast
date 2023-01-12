@@ -173,7 +173,14 @@ class Program {
    * @fn Program::declareVariable
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * Declares a numerical variable index, alongside its designated type. A variable type can either
+   * be an actual value storage (of type VariableType::Int32) or a link to another variable index
+   * (of type VariableType::Link).
+   *
+   * Identified by OpCode::DeclareVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index to declare the variable at.
+   * @param variable_type The designated type of the variable.
    */
   void declareVariable(int32_t variable_index, VariableType variable_type);
 
@@ -181,7 +188,15 @@ class Program {
    * @fn Program::setVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * Sets the value of a variable at the given index to the value `content`.
+   *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::SetVariable. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param content tbd
+   * @param follow_links Whether to resolve variable links.
    */
   void setVariable(int32_t variable_index, int32_t content, bool follow_links);
 
@@ -190,6 +205,10 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::UndeclareVariable. Represented by 5 bytes.
+   *
+   * @param variable_index The index of the variable.
    */
   void undeclareVariable(int32_t variable_index);
 
@@ -198,6 +217,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AddConstantToVariable. Represented by 8 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param constant The constant
+   * @param follow_links Whether to resolve variable links.
    */
   void addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
@@ -206,6 +231,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AddVariableToVariable. Represented by 11 bytes.
+   *
+   * @param source_variable_index The index of the source variable.
+   * @param follow_source_links Whether to resolve source variable links.
+   * @param destination_variable_index The index of the destination variable.
+   * @param follow_destination_links Whether to resolve destination variable links.
    */
   void addVariableToVariable(
     int32_t source_variable_index, bool follow_source_links,
@@ -216,6 +248,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::SubtractConstantFromVariable. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param constant The constant
+   * @param follow_links Whether to resolve variable links.
    */
   void subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
@@ -224,6 +262,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::SubtractVariableFromVariable. Represented by 11 bytes.
+   *
+   * @param source_variable_index The index of the variable.
+   * @param follow_source_links Whether to resolve variable links.
+   * @param destination_variable_index The index of the variable.
+   * @param follow_destination_links Whether to resolve variable links.
    */
   void subtractVariableFromVariable(
     int32_t source_variable_index, bool follow_source_links,
@@ -234,6 +279,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RelativeJumpToVariableAddressIfVariableGt0. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param relative_jump_address_variable_index tbd
+   * @param follow_addr_links tbd
    */
   void relativeJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links,
@@ -244,6 +296,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RelativeJumpToVariableAddressIfVariableLt0. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param relative_jump_address_variable_index tbd
+   * @param follow_addr_links tbd
    */
   void relativeJumpToVariableAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links,
@@ -254,6 +313,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RelativeJumpToVariableAddressIfVariableEq0. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param relative_jump_address_variable_index tbd
+   * @param follow_addr_links tbd
    */
   void relativeJumpToVariableAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links,
@@ -264,6 +330,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableGt0. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param absolute_jump_address_variable_index tbd
+   * @param follow_addr_links tbd
    */
   void absoluteJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links,
@@ -274,6 +347,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableLt0. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param absolute_jump_address_variable_index tbd
+   * @param follow_addr_links tbd
    */
   void absoluteJumpToVariableAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links,
@@ -284,6 +364,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableEq0. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param absolute_jump_address_variable_index tbd
+   * @param follow_addr_links tbd
    */
   void absoluteJumpToVariableAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links,
@@ -294,6 +381,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RelativeJumpIfVariableGt0. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param relative_jump_address tbd
    */
   void relativeJumpToAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
@@ -303,6 +396,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RelativeJumpIfVariableLt0. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param relative_jump_address tbd
    */
   void relativeJumpToAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
@@ -312,6 +411,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RelativeJumpIfVariableEq0. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param relative_jump_address tbd
    */
   void relativeJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
@@ -321,6 +426,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AbsoluteJumpIfVariableGt0. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param absolute_jump_address tbd
    */
   void absoluteJumpToAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
@@ -330,6 +441,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AbsoluteJumpIfVariableLt0. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param absolute_jump_address tbd
    */
   void absoluteJumpToAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
@@ -339,6 +456,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::AbsoluteJumpIfVariableEq0. Represented by 10 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param absolute_jump_address tbd
    */
   void absoluteJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
@@ -348,6 +471,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadMemorySizeIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadMemorySizeIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -356,6 +484,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CheckIfVariableIsInput. Represented by 11 bytes.
+   *
+   * @param source_variable_index The index of the source variable.
+   * @param follow_source_links Whether to resolve source variable links.
+   * @param destination_variable_index The index of the destination variable.
+   * @param follow_destination_links Whether to resolve destination variable links.
    */
   void checkIfVariableIsInput(
     int32_t source_variable_index, bool follow_source_links,
@@ -366,6 +501,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CheckIfVariableIsOutput. Represented by 11 bytes.
+   *
+   * @param source_variable_index The index of the source variable.
+   * @param follow_source_links Whether to resolve source variable links.
+   * @param destination_variable_index The index of the destination variable.
+   * @param follow_destination_links Whether to resolve destination variable links.
    */
   void checkIfVariableIsOutput(
     int32_t source_variable_index, bool follow_source_links,
@@ -376,6 +518,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadInputCountIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadInputCountIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -384,6 +531,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadOutputCountIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadOutputCountIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -392,6 +544,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadCurrentAddressIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadCurrentAddressIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -400,6 +557,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PrintVariable. Represented by 7 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param as_char tbd
    */
   void printVariable(int32_t variable_index, bool follow_links, bool as_char);
 
@@ -408,6 +571,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::SetStringTableEntry. Represented by 7 + string length bytes.
+   *
+   * @param string_table_index tbd
+   * @param string tbd
    */
   void setStringTableEntry(int32_t string_table_index, const std::string& string);
 
@@ -416,6 +584,10 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PrintStringFromStringTable. Represented by 5 bytes.
+   *
+   * @param string_table_index tbd
    */
   void printStringFromStringTable(int32_t string_table_index);
 
@@ -424,6 +596,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadStringTableLimitIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -432,6 +609,10 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::Terminate. Represented by 2 bytes.
+   *
+   * @param return_code tbd
    */
   void terminate(int8_t return_code);
 
@@ -440,6 +621,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CopyVariable. Represented by 11 bytes.
+   *
+   * @param source_variable_index The index of the source variable.
+   * @param follow_source_links Whether to resolve source variable links.
+   * @param destination_variable_index The index of the destination variable.
+   * @param follow_destination_links Whether to resolve destination variable links.
    */
   void copyVariable(
       int32_t source_variable_index, bool follow_source_links,
@@ -450,6 +638,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadStringItemLengthIntoVariable. Represented by 10 bytes.
+   *
+   * @param string_table_index tbd
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadStringItemLengthIntoVariable(
       int32_t string_table_index, int32_t variable_index, bool follow_links);
@@ -459,6 +653,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CheckIfInputWasSet. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param destination_variable_index The index of the destination variable.
+   * @param follow_destination_links Whether to resolve destination variable links.
    */
   void checkIfInputWasSet(
       int32_t variable_index, bool follow_links,
@@ -469,6 +670,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadStringTableItemLengthLimitIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadStringTableItemLengthLimitIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -477,6 +683,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadRandomValueIntoVariable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
 
@@ -485,6 +696,10 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::UnconditionalJumpToAbsoluteAddress. Represented by 5 bytes.
+   *
+   * @param addr tbd
    */
   void unconditionalJumpToAbsoluteAddress(int32_t addr);
 
@@ -493,6 +708,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::UnconditionalJumpToAbsoluteVariableAddress. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links);
 
@@ -501,6 +721,10 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::UnconditionalJumpToRelativeAddress. Represented by 5 bytes.
+   *
+   * @param addr tbd
    */
   void unconditionalJumpToRelativeAddress(int32_t addr);
 
@@ -509,6 +733,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::UnconditionalJumpToRelativeVariableAddress. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
 
@@ -517,6 +746,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadStringItemIntoVariables. Represented by 10 bytes.
+   *
+   * @param string_table_index tbd
+   * @param start_variable_index The index of the start variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadStringItemIntoVariables(
       int32_t string_table_index, int32_t start_variable_index, bool follow_links);
@@ -526,6 +761,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PerformSystemCall. Represented by 8 bytes.
+   *
+   * @param major_code tbd
+   * @param minor_code tbd
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void performSystemCall(
       int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
@@ -535,6 +777,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::BitShiftVariableLeft. Represented by 7 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places tbd
    */
   void bitShiftVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
 
@@ -543,6 +791,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::BitShiftVariableRight. Represented by 7 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places tbd
    */
   void bitShiftVariableRight(int32_t variable_index, bool follow_links, int8_t places);
 
@@ -551,6 +805,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::BitWiseInvertVariable. Represented by 5 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void bitWiseInvertVariable(int32_t variable_index, bool follow_links);
 
@@ -559,6 +818,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::BitWiseAndTwoVariables. Represented by 11 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
    */
   void bitWiseAndTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
@@ -568,6 +834,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::BitWiseOrTwoVariables. Represented by 11 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
    */
   void bitWiseOrTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
@@ -577,6 +850,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::BitWiseXorTwoVariables. Represented by 11 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
    */
   void bitWiseXorTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
@@ -586,6 +866,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::ModuloVariableByConstant. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param modulo_constant tbd
    */
   void moduloVariableByConstant(
       int32_t variable_index, bool follow_links, int32_t modulo_constant);
@@ -595,6 +881,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::ModuloVariableByVariable. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param modulo_variable_index The index of the variable.
+   * @param modulo_follow_links Whether to resolve variable links.
    */
   void moduloVariableByVariable(
       int32_t variable_index, bool follow_links,
@@ -605,6 +898,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RotateVariableLeft. Represented by 7 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places tbd
    */
   void rotateVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
 
@@ -613,6 +912,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::RotateVariableRight. Represented by 7 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places tbd
    */
   void rotateVariableRight(int32_t variable_index, bool follow_links, int8_t places);
 
@@ -621,6 +926,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PushVariableOnStack. Represented by 11 bytes.
+   *
+   * @param stack_variable_index The index of the variable.
+   * @param follow_links_stack Whether to resolve variable links.
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void pushVariableOnStack(
       int32_t stack_variable_index, bool follow_links_stack,
@@ -631,6 +943,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PushConstantOnStack. Represented by 10 bytes.
+   *
+   * @param stack_variable_index The index of the variable.
+   * @param follow_links_stack Whether to resolve variable links.
+   * @param constant tbd
    */
   void pushConstantOnStack(
       int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
@@ -640,6 +958,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PopVariableFromStack. Represented by 11 bytes.
+   *
+   * @param stack_variable_index The index of the variable.
+   * @param follow_links_stack Whether to resolve variable links.
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void popVariableFromStack(
       int32_t stack_variable_index, bool follow_links_stack,
@@ -650,6 +975,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PopTopItemFromStack. Represented by 6 bytes.
+   *
+   * @param stack_variable_index The index of the variable.
+   * @param follow_links_stack Whether to resolve variable links.
    */
   void popTopItemFromStack(int32_t stack_variable_index, bool follow_links_stack);
 
@@ -658,6 +988,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CheckIfStackIsEmpty. Represented by 11 bytes.
+   *
+   * @param stack_variable_index The index of the variable.
+   * @param follow_links_stack Whether to resolve variable links.
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void checkIfStackIsEmpty(
       int32_t stack_variable_index, bool follow_links_stack,
@@ -668,6 +1005,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::SwapVariables. Represented by 11 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
    */
   void swapVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
@@ -677,6 +1021,12 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::SetVariableStringTableEntry. Represented by 8 + string length bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param string tbd
    */
   void setVariableStringTableEntry(
       int32_t variable_index, bool follow_links, const std::string& string);
@@ -686,6 +1036,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::PrintVariableStringFromStringTable. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
 
@@ -694,6 +1049,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadVariableStringItemLengthIntoVariable. Represented by 11 bytes.
+   *
+   * @param string_item_variable_index The index of the variable.
+   * @param follow_links_string_item Whether to resolve variable links.
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadVariableStringItemLengthIntoVariable(
       int32_t string_item_variable_index, bool follow_links_string_item,
@@ -704,6 +1066,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::LoadVariableStringItemIntoVariables. Represented by 11 bytes.
+   *
+   * @param string_item_variable_index The index of the variable.
+   * @param follow_links_string_item Whether to resolve variable links.
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void loadVariableStringItemIntoVariables(
       int32_t string_item_variable_index, bool follow_links_string_item,
@@ -714,6 +1083,11 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::TerminateWithVariableReturnCode. Represented by 6 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void terminateWithVariableReturnCode(int32_t variable_index, bool follow_links);
 
@@ -722,6 +1096,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::VariableBitShiftVariableLeft. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places_variable_index The index of the variable.
+   * @param follow_links_places Whether to resolve variable links.
    */
   void variableBitShiftVariableLeft(
       int32_t variable_index, bool follow_links,
@@ -732,6 +1113,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::VariableBitShiftVariableRight. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places_variable_index The index of the variable.
+   * @param follow_links_places Whether to resolve variable links.
    */
   void variableBitShiftVariableRight(
       int32_t variable_index, bool follow_links,
@@ -742,6 +1130,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::VariableRotateVariableLeft. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places_variable_index The index of the variable.
+   * @param follow_links_places Whether to resolve variable links.
    */
   void variableRotateVariableLeft(
       int32_t variable_index, bool follow_links,
@@ -752,6 +1147,13 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::VariableRotateVariableRight. Represented by 11 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param places_variable_index The index of the variable.
+   * @param follow_links_places Whether to resolve variable links.
    */
   void variableRotateVariableRight(
       int32_t variable_index, bool follow_links,
@@ -762,6 +1164,14 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CompareIfVariableGtConstant. Represented by 15 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param constant The constant
+   * @param target_variable_index The index of the variable.
+   * @param target_follow_links Whether to resolve variable links.
    */
   void compareIfVariableGtConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -772,6 +1182,14 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CompareIfVariableLtConstant. Represented by 15 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param constant The constant
+   * @param target_variable_index The index of the variable.
+   * @param target_follow_links Whether to resolve variable links.
    */
   void compareIfVariableLtConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -782,6 +1200,14 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CompareIfVariableEqConstant. Represented by 15 bytes.
+   *
+   * @param variable_index The index of the variable.
+   * @param follow_links Whether to resolve variable links.
+   * @param constant The constant
+   * @param target_variable_index The index of the variable.
+   * @param target_follow_links Whether to resolve variable links.
    */
   void compareIfVariableEqConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -792,6 +1218,15 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CompareIfVariableGtVariable. Represented by 16 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
+   * @param target_variable_index The index of the variable.
+   * @param target_follow_links Whether to resolve variable links.
    */
   void compareIfVariableGtVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -802,6 +1237,15 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CompareIfVariableLtVariable. Represented by 16 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
+   * @param target_variable_index The index of the variable.
+   * @param target_follow_links Whether to resolve variable links.
    */
   void compareIfVariableLtVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -812,6 +1256,15 @@ class Program {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this part.
+   *
+   * Identified by OpCode::CompareIfVariableEqVariable. Represented by 16 bytes.
+   *
+   * @param variable_index_a The index of the variable.
+   * @param follow_links_a Whether to resolve variable links.
+   * @param variable_index_b The index of the variable.
+   * @param follow_links_b Whether to resolve variable links.
+   * @param target_variable_index The index of the variable.
+   * @param target_follow_links Whether to resolve variable links.
    */
   void compareIfVariableEqVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -866,9 +1319,10 @@ class Program {
    *
    * Identifier by OpCode::GetMaxOfVariableAndVariable. Represented by 16 bytes.
    *
-   * @param variable_index_a The index of the variable used for the comparison.
-   * @param follow_links_a Whether to follow variable links for the comparison variable.
-   * @param constant The constant to compare the variable against.
+   * @param variable_index_a The index of the first variable used for the comparison.
+   * @param follow_links_a Whether to follow the first variable's links for the comparison variable.
+   * @param variable_index_b The index of the second variable used for the comparison.
+   * @param follow_links_b Whether to follow the second variable's links for the comparison variable.
    * @param target_variable_index The index of the variable to store the result in.
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMinOfVariableAndVariable()
@@ -886,9 +1340,10 @@ class Program {
    *
    * Identifier by OpCode::GetMinOfVariableAndVariable. Represented by 16 bytes.
    *
-   * @param variable_index_a The index of the variable used for the comparison.
-   * @param follow_links_a Whether to follow variable links for the comparison variable.
-   * @param constant The constant to compare the variable against.
+   * @param variable_index_a The index of the first variable used for the comparison.
+   * @param follow_links_a Whether to follow the first variable's links for the comparison variable.
+   * @param variable_index_b The index of the second variable used for the comparison.
+   * @param follow_links_b Whether to follow the second variable's links for the comparison variable.
    * @param target_variable_index The index of the variable to store the result in.
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMaxOfVariableAndVariable()
