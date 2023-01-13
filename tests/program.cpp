@@ -99,3 +99,21 @@ TEST_CASE("inserted_programs_work_as_intended", "program") {
 
   REQUIRE(session.getVariableValue(index, true) == value2);
 }
+
+TEST_CASE("programs_initialized_with_byte_code_have_the_right_size", "program") {
+  std::vector<unsigned char> bytecode = {0x0, 0x1, 0x2, 0x3, 0x4};
+  const uint32_t size = bytecode.size();
+  beast::Program prg(std::move(bytecode));
+
+  REQUIRE(prg.getSize() == size);
+}
+
+TEST_CASE("programs_initialized_with_byte_code_have_the_right_content", "program") {
+  std::vector<unsigned char> bytecode = {0x0, 0x1, 0x2, 0x3, 0x4};
+  const uint32_t size = bytecode.size();
+  beast::Program prg(bytecode);
+
+  for (size_t idx = 0; idx < size; ++idx) {
+    REQUIRE(prg.getData()[idx] == bytecode[idx]);
+  }
+}

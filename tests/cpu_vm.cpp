@@ -19,3 +19,19 @@ TEST_CASE("stepping_outside_of_bounds_is_rejected_by_vm", "cpu_vm") {
   REQUIRE(last_step == false);
   REQUIRE(rejected == false);
 }
+
+TEST_CASE("when_invalid_opcode_is_encoutered_vm_throws", "cpu_vm") {
+  std::vector<unsigned char> bytecode = {0xff};
+  beast::Program prg(std::move(bytecode));
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  bool threw = false;
+  try {
+    vm.step(session);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}

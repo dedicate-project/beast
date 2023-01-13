@@ -14,6 +14,10 @@ Program::Program(int32_t space)
   : data_(space, 0x00), pointer_{0}, grows_dynamically_{false} {
 }
 
+Program::Program(std::vector<unsigned char> data)
+  : data_{std::move(data)}, pointer_{0}, grows_dynamically_{false} {
+}
+
 size_t Program::getSize() const {
   return data_.size();
 }

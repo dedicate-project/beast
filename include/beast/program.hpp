@@ -66,6 +66,18 @@ class Program {
   Program(int32_t space);
 
   /**
+   * @fn Program::Program(std::vector<unsigned char>)
+   * @brief Predefined bytecode program constructor
+   *
+   * This constructor initializes the program with a predefined bytecode vector. The program is
+   * defined as constant size, with the size limit being set to the size of the passed in bytecode
+   * vector.
+   *
+   * @param data The bytecode data to initialize the program with.
+   */
+  Program(std::vector<unsigned char> data);
+
+  /**
    * @fn Program::getSize
    * @brief Return the current size of the program in bytes
    *
