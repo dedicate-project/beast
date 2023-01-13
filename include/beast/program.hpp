@@ -290,9 +290,7 @@ class Program {
 
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableGreaterThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs a relative jump to a variable address if a variable is > 0
    *
    * Identified by OpCode::RelativeJumpToVariableAddressIfVariableGt0. Represented by 11 bytes.
    *
@@ -307,9 +305,7 @@ class Program {
 
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableLessThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs a relative jump to a variable address if a variable is < 0
    *
    * Identified by OpCode::RelativeJumpToVariableAddressIfVariableLt0. Represented by 11 bytes.
    *
@@ -324,9 +320,7 @@ class Program {
 
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableEqualsZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs a relative jump to a variable address if a variable is = 0
    *
    * Identified by OpCode::RelativeJumpToVariableAddressIfVariableEq0. Represented by 11 bytes.
    *
@@ -341,9 +335,7 @@ class Program {
 
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableGreaterThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs an absolute jump to a variable address if a variable is > 0
    *
    * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableGt0. Represented by 11 bytes.
    *
@@ -358,9 +350,7 @@ class Program {
 
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableLessThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs an absolute jump to a variable address if a variable is < 0
    *
    * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableLt0. Represented by 11 bytes.
    *
@@ -375,9 +365,7 @@ class Program {
 
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableEqualsZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs an absolute jump to a variable address if a variable is = 0
    *
    * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableEq0. Represented by 11 bytes.
    *
@@ -392,9 +380,7 @@ class Program {
 
   /**
    * @fn Program::relativeJumpToAddressIfVariableGreaterThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs a relative jump to a fixed address if a variable is > 0
    *
    * Identified by OpCode::RelativeJumpIfVariableGt0. Represented by 10 bytes.
    *
@@ -407,9 +393,7 @@ class Program {
 
   /**
    * @fn Program::relativeJumpToAddressIfVariableLessThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs a relative jump to a fixed address if a variable is < 0
    *
    * Identified by OpCode::RelativeJumpIfVariableLt0. Represented by 10 bytes.
    *
@@ -422,9 +406,7 @@ class Program {
 
   /**
    * @fn Program::relativeJumpToAddressIfVariableEqualsZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs a relative jump to a fixed address if a variable is = 0
    *
    * Identified by OpCode::RelativeJumpIfVariableEq0. Represented by 10 bytes.
    *
@@ -437,9 +419,7 @@ class Program {
 
   /**
    * @fn Program::absoluteJumpToAddressIfVariableGreaterThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs an absolute jump to a fixed address if a variable is > 0
    *
    * Identified by OpCode::AbsoluteJumpIfVariableGt0. Represented by 10 bytes.
    *
@@ -452,9 +432,7 @@ class Program {
 
   /**
    * @fn Program::absoluteJumpToAddressIfVariableLessThanZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs an absolute jump to a fixed address if a variable is < 0
    *
    * Identified by OpCode::AbsoluteJumpIfVariableLt0. Represented by 10 bytes.
    *
@@ -467,9 +445,7 @@ class Program {
 
   /**
    * @fn Program::absoluteJumpToAddressIfVariableEqualsZero
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Performs an absolute jump to a fixed address if a variable is = 0
    *
    * Identified by OpCode::AbsoluteJumpIfVariableEq0. Represented by 10 bytes.
    *
@@ -482,9 +458,7 @@ class Program {
 
   /**
    * @fn Program::loadMemorySizeIntoVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Loads the maximum number of VmSession variables into a variable
    *
    * Identified by OpCode::LoadMemorySizeIntoVariable. Represented by 6 bytes.
    *
@@ -495,9 +469,11 @@ class Program {
 
   /**
    * @fn Program::checkIfVariableIsInput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Check if a variable is defined as an input
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable `source_variable_index` is defined as having the
+   * VariableIoBehavior::Input, set the value of the variable
+   * `destination_variable_index` to `0x1`, else set it to `0x0`.
    *
    * Identified by OpCode::CheckIfVariableIsInput. Represented by 11 bytes.
    *
@@ -512,9 +488,11 @@ class Program {
 
   /**
    * @fn Program::checkIfVariableIsOutput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Check if a variable is defined as an output
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable `source_variable_index` is defined as having the
+   * VariableIoBehavior::Output, set the value of the variable
+   * `destination_variable_index` to `0x1`, else set it to `0x0`.
    *
    * Identified by OpCode::CheckIfVariableIsOutput. Represented by 11 bytes.
    *
@@ -529,9 +507,7 @@ class Program {
 
   /**
    * @fn Program::loadInputCountIntoVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Load the number of registered input variables into a variable
    *
    * Identified by OpCode::LoadInputCountIntoVariable. Represented by 6 bytes.
    *
@@ -542,9 +518,7 @@ class Program {
 
   /**
    * @fn Program::loadOutputCountIntoVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Load the number of registered output variables into a variable
    *
    * Identified by OpCode::LoadOutputCountIntoVariable. Represented by 6 bytes.
    *
@@ -555,9 +529,7 @@ class Program {
 
   /**
    * @fn Program::loadCurrentAddressIntoVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Load the current program execution pointer value into a variable
    *
    * Identified by OpCode::LoadCurrentAddressIntoVariable. Represented by 6 bytes.
    *
@@ -568,9 +540,11 @@ class Program {
 
   /**
    * @fn Program::printVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Print the value of a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * The value stored in the variable `variable_index` will be printed. If
+   * `as_char` is `true`, then the variable's least significant byte will be
+   * printed as an ASCII character instead.
    *
    * Identified by OpCode::PrintVariable. Represented by 7 bytes.
    *
