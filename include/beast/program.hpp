@@ -296,8 +296,9 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param relative_jump_address_variable_index tbd
-   * @param follow_addr_links tbd
+   * @param relative_jump_address_variable_index The variable containing the absolute jump
+   *        address.
+   * @param follow_addr_links Whether to follow links in the address variable.
    */
   void relativeJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links,
@@ -311,8 +312,9 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param relative_jump_address_variable_index tbd
-   * @param follow_addr_links tbd
+   * @param relative_jump_address_variable_index The variable containing the absolute jump
+   *        address.
+   * @param follow_addr_links Whether to follow links in the address variable.
    */
   void relativeJumpToVariableAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links,
@@ -326,8 +328,9 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param relative_jump_address_variable_index tbd
-   * @param follow_addr_links tbd
+   * @param relative_jump_address_variable_index The variable containing the absolute jump
+   *        address.
+   * @param follow_addr_links Whether to follow links in the address variable.
    */
   void relativeJumpToVariableAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links,
@@ -341,8 +344,9 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param absolute_jump_address_variable_index tbd
-   * @param follow_addr_links tbd
+   * @param absolute_jump_address_variable_index The variable containing the absolute jump
+   *        address.
+   * @param follow_addr_links Whether to follow links in the address variable.
    */
   void absoluteJumpToVariableAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links,
@@ -356,8 +360,9 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param absolute_jump_address_variable_index tbd
-   * @param follow_addr_links tbd
+   * @param absolute_jump_address_variable_index The variable containing the absolute jump
+   *        address.
+   * @param follow_addr_links Whether to follow links in the address variable.
    */
   void absoluteJumpToVariableAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links,
@@ -371,8 +376,9 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param absolute_jump_address_variable_index tbd
-   * @param follow_addr_links tbd
+   * @param absolute_jump_address_variable_index The variable containing the absolute jump
+   *        address.
+   * @param follow_addr_links Whether to follow links in the address variable.
    */
   void absoluteJumpToVariableAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links,
@@ -386,7 +392,7 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param relative_jump_address tbd
+   * @param relative_jump_address The relative address to jump to.
    */
   void relativeJumpToAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
@@ -399,7 +405,7 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param relative_jump_address tbd
+   * @param relative_jump_address The relative address to jump to.
    */
   void relativeJumpToAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
@@ -412,7 +418,7 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param relative_jump_address tbd
+   * @param relative_jump_address The relative address to jump to.
    */
   void relativeJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t relative_jump_address);
@@ -425,7 +431,7 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param absolute_jump_address tbd
+   * @param absolute_jump_address The absolute address to jump to.
    */
   void absoluteJumpToAddressIfVariableGreaterThanZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
@@ -438,7 +444,7 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param absolute_jump_address tbd
+   * @param absolute_jump_address The absolute address to jump to.
    */
   void absoluteJumpToAddressIfVariableLessThanZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
@@ -451,7 +457,7 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param absolute_jump_address tbd
+   * @param absolute_jump_address The absolute address to jump to.
    */
   void absoluteJumpToAddressIfVariableEqualsZero(
     int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
@@ -550,20 +556,20 @@ class Program {
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param as_char tbd
+   * @param as_char If `true`, print least significant byte as char.
    */
   void printVariable(int32_t variable_index, bool follow_links, bool as_char);
 
   /**
    * @fn Program::setStringTableEntry
-   * @brief NEEDS DOCUMENTATION
+   * @brief Set the content of an entry in the string table
    *
-   * TODO(fairlight1337): Document this part.
+   * Sets the value that is stored for a specified entry in the string table.
    *
    * Identified by OpCode::SetStringTableEntry. Represented by 7 + string length bytes.
    *
-   * @param string_table_index tbd
-   * @param string tbd
+   * @param string_table_index The string table index to set.
+   * @param string The content to store in the string table.
    */
   void setStringTableEntry(int32_t string_table_index, const std::string& string);
 
