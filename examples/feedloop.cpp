@@ -1,11 +1,20 @@
+// Standard
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
 
-#include <beast/cpu_virtual_machine.hpp>
+// BEAST
+#include <beast/beast.hpp>
 
 int main(int /*argc*/, char** /*argv*/) {
+  /* Print BEAST library version. */
+  const auto version = beast::getVersion();
+  std::cout << "Using BEAST library version "
+            << static_cast<uint32_t>(version[0]) << "."
+            << static_cast<uint32_t>(version[1]) << "."
+            << static_cast<uint32_t>(version[2]) << "." << std::endl;
+
   /* Declare the variable indices and values to use in this program. */
   const int32_t input_variable = 0;
   const int32_t count_variable = 1;

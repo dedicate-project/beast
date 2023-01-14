@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("variable_string_table_item_length_can_be_determined", "printing_and_string_table") {
   const std::string entry1 = "Entry";

@@ -2,8 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
-#include <beast/opcodes.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("declare_variable", "variables") {
   const int32_t variable_index = 43;

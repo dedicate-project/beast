@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("terminate_loop_while_variable_gt_0_with_variable_jump_address", "jumps") {
   beast::Program prg(150);

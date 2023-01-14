@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
-project(beast LANGUAGES CXX)
+project(beast
+  LANGUAGES CXX
+  VERSION 0.0.9)
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
 
@@ -38,9 +40,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(
-  include)
+  include
+  ${CMAKE_BINARY_DIR}/include)
+
+configure_file(include/beast/version.h.in include/beast/version.h)
 
 add_library(${PROJECT_NAME}
+  src/beast.cpp
   src/cpu_virtual_machine.cpp
   src/program.cpp
   src/time_functions.cpp

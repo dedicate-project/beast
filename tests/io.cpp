@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("inputs_can_be_determined", "io") {
   const int32_t input_variable_index = 42;

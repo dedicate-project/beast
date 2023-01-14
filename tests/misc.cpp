@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("noop", "instructions") {
   beast::Program prg(1);

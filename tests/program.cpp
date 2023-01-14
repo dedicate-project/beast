@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("retrieving_1_byte_too_many_from_program_throws", "program") {
   beast::Program prg(0);

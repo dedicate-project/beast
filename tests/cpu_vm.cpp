@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("stepping_outside_of_bounds_is_rejected_by_vm", "cpu_vm") {
   beast::Program prg(2);

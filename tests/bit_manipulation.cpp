@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("variables_can_be_variably_bit_shifted_left", "bit_manipulation") {
   const int32_t variable_index = 0;

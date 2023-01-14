@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("checking_if_stack_is_empty_works", "stacks") {
   const int32_t stack_variable_index_1 = 2;

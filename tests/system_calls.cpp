@@ -2,7 +2,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <beast/cpu_virtual_machine.hpp>
+#include <beast/beast.hpp>
 
 TEST_CASE("system_calls_provide_datetime_data", "system_calls") {
   const int32_t variable_index_tz_h = 0;
