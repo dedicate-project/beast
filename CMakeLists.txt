@@ -81,6 +81,7 @@ if(BEAST_BUILD_TESTS)
     add_test(NAME test_${name} COMMAND test_${name})
   endmacro()
 
+  declare_test(beast)
   declare_test(bit_manipulation)
   declare_test(cpu_vm)
   declare_test(io)
