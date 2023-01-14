@@ -34,6 +34,17 @@ VmSession::VariableIoBehavior VmSession::getVariableBehavior(
   return iterator->second.first.behavior;
 }
 
+bool VmSession::hasOutputDataAvailable(int32_t variable_index, bool follow_links) {
+  const auto iterator = variables_.find(getRealVariableIndex(variable_index, follow_links));
+  if (iterator == variables_.end()) {
+    throw std::runtime_error("Variable index not declared");
+  }
+  if (iterator->second.first.behavior != VariableIoBehavior::Output) {
+    throw std::runtime_error("Variable behavior not declared as output");
+  }
+  return iterator->second.first.changed_since_last_interaction;
+}
+
 int32_t VmSession::getData4() {
   int32_t data = program_.getData4(pointer_);
   pointer_ += 4;

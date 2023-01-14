@@ -20,13 +20,16 @@ int main(int /*argc*/, char** /*argv*/) {
   const int32_t count_variable = 1;
   const int32_t count_start_value = 5;
   const int32_t input_changed_variable = 2;
+  const int32_t output_variable = 3;
 
   /* Declare the actual program.
 
      The main function of this program is the following:
-     1. Declare and initialize a set of variables, used for input, counting, and status.
+     1. Declare and initialize a set of variables, used for input, output, counting, and status.
      2. Check in a loop whether the input was set from outside.
-     3. For each change of the input from outside, decrease the counting variable by 1.
+     3. For each change of the input from outside, decrease the counting variable by 1. If that
+        happens, print the new value and copy it to an output variable. This gets printed from
+        outside the program.
      4. Once the counting variable reaches 0, terminate the program.
   */
   beast::Program prg;
@@ -40,11 +43,13 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.absoluteJumpToAddressIfVariableEqualsZero(input_changed_variable, true, loop_start_address);
   prg.subtractConstantFromVariable(count_variable, 1, true);
   prg.printVariable(count_variable, true, false);
+  prg.copyVariable(count_variable, true, output_variable, true);
   prg.absoluteJumpToAddressIfVariableGreaterThanZero(count_variable, true, loop_start_address);
   prg.terminate(0);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setVariableBehavior(input_variable, beast::VmSession::VariableIoBehavior::Input);
+  session.setVariableBehavior(output_variable, beast::VmSession::VariableIoBehavior::Output);
 
   beast::CpuVirtualMachine virtual_machine;
 
@@ -60,8 +65,16 @@ int main(int /*argc*/, char** /*argv*/) {
 
     std::this_thread::sleep_for(100ms);
 
-    std::cout << session.getPrintBuffer();
-    session.clearPrintBuffer();
+    const std::string& print_buffer = session.getPrintBuffer();
+    if (!print_buffer.empty()) {
+      std::cout << "From print buffer: " << session.getPrintBuffer() << std::endl;
+      session.clearPrintBuffer();
+    }
+
+    if (session.hasOutputDataAvailable(output_variable, true)) {
+      std::cout << "From output variable: " << session.getVariableValue(output_variable, true)
+                << std::endl;
+    }
   }
 
   return session.getReturnCode();

@@ -78,6 +78,19 @@ class VmSession {
   VariableIoBehavior getVariableBehavior(int32_t variable_index, bool follow_links);
 
   /**
+   * @fn hasOutputDataAvailable
+   * @brief Checks if an output variable has new data available
+   *
+   * If, since the last read attempt, data was written to the passed in variable index, `true` is
+   * returned, and `false` otherwise.
+   *
+   * @param variable_index The variable index to check for new output
+   * @param follow_links Whether to resolve the variable's links
+   * @return Returns `true` if data was written to the variable, `false` otherwise
+   */
+  bool hasOutputDataAvailable(int32_t variable_index, bool follow_links);
+
+  /**
    * @fn VmSession::getData4
    * @brief NEEDS DOCUMENTATION
    *
