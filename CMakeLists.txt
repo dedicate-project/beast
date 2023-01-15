@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.8)
 project(beast
   LANGUAGES CXX
-  VERSION 0.0.9)
+  VERSION 0.0.9
+  DESCRIPTION "Byte code generator, parser, and virtual machine for evaluating evolutionary code sequences."
+  HOMEPAGE_URL "https://github.com/dedicate-project/beast/")
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
+option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -19,7 +22,9 @@ if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
   add_compile_options(-Werror -pedantic)
 endif()
 
-add_subdirectory("docs")
+if(BEAST_BUILD_DOCS)
+  add_subdirectory("docs")
+endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
@@ -45,6 +50,7 @@ include_directories(
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
+# Main BEAST library
 add_library(${PROJECT_NAME}
   src/beast.cpp
   src/cpu_virtual_machine.cpp
@@ -53,6 +59,7 @@ add_library(${PROJECT_NAME}
   src/vm_session.cpp
   src/virtual_machine.cpp)
 
+# Examples
 add_executable(feedloop
   examples/feedloop.cpp)
 
@@ -63,6 +70,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   target_link_libraries(feedloop gcov)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
+# Testing
 if(BEAST_BUILD_TESTS)
   enable_testing()
 
@@ -94,3 +102,28 @@ if(BEAST_BUILD_TESTS)
   declare_test(system_calls)
   declare_test(variables)
 endif(BEAST_BUILD_TESTS)
+
+# Install targets
+install(TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}-targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+
+install(DIRECTORY include/
+  DESTINATION include
+  PATTERN "*.in" EXCLUDE)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/include/
+  DESTINATION include/)
+
+install(EXPORT ${PROJECT_NAME}-targets
+  FILE ${PROJECT_NAME}-targets.cmake
+  NAMESPACE ${PROJECT_NAME}::
+  DESTINATION lib/cmake/${PROJECT_NAME}
+)
+
+# CPack
+include(CPack)
+set(CPACK_GENERATOR "TGZ")
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
