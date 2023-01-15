@@ -71,7 +71,7 @@ if(BEAST_BUILD_EXAMPLES)
       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
 
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
-      target_link_libraries(example_${name} gcov)
+      target_link_libraries(example_${name} PUBLIC gcov)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
   endmacro()
 
