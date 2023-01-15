@@ -6,6 +6,7 @@ project(beast
   HOMEPAGE_URL "https://github.com/dedicate-project/beast/")
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
+option(BEAST_BUILD_EXAMPLES "Whether to build examples or not" YES)
 option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
@@ -60,11 +61,19 @@ add_library(${PROJECT_NAME}
   src/virtual_machine.cpp)
 
 # Examples
-add_executable(feedloop
-  examples/feedloop.cpp)
+if(BEAST_BUILD_EXAMPLES)
+  macro(declare_example name)
+    add_executable(example_${name} examples/${name}.cpp)
+    target_link_libraries(example_${name} PUBLIC ${PROJECT_NAME})
 
-target_link_libraries(feedloop
-  ${PROJECT_NAME})
+    set_target_properties(example_${name}
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
+  endmacro()
+
+  declare_example(adder)
+  declare_example(feedloop)
+endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   target_link_libraries(feedloop gcov)
