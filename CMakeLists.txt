@@ -69,15 +69,15 @@ if(BEAST_BUILD_EXAMPLES)
     set_target_properties(example_${name}
       PROPERTIES
       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
+
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+      target_link_libraries(example_${name} gcov)
+    endif(CMAKE_BUILD_TYPE MATCHES "Debug")
   endmacro()
 
   declare_example(adder)
   declare_example(feedloop)
 endif()
-
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  target_link_libraries(feedloop gcov)
-endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 # Testing
 if(BEAST_BUILD_TESTS)
