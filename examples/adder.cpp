@@ -67,9 +67,11 @@ int main(int /*argc*/, char** /*argv*/) {
   const auto loop_start_address = static_cast<int32_t>(prg.getPointer());
   prg.checkIfInputWasSet(trigger_calc_variable, true, calc_triggered_variable, true);
   prg.checkIfInputWasSet(trigger_quit_variable, true, quit_triggered_variable, true);
-  prg.relativeJumpToAddressIfVariableEqualsZero(quit_triggered_variable, true, quit_prg.getSize());
+  prg.relativeJumpToAddressIfVariableEqualsZero(
+      quit_triggered_variable, true, static_cast<int32_t>(quit_prg.getSize()));
   prg.insertProgram(quit_prg);
-  prg.relativeJumpToAddressIfVariableEqualsZero(calc_triggered_variable, true, add_prg.getSize());
+  prg.relativeJumpToAddressIfVariableEqualsZero(
+      calc_triggered_variable, true, static_cast<int32_t>(add_prg.getSize()));
   prg.insertProgram(add_prg);
   prg.unconditionalJumpToAbsoluteAddress(loop_start_address);
 
