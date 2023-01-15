@@ -19,6 +19,41 @@ namespace beast {
 class VirtualMachine {
  public:
   /**
+   * @enum class MessageSeverity
+   * @brief An enumeration of message severities that denote their urgency.
+   *
+   * Different message urgencies/severities help distinguish how important a log message is. These
+   * severities can be used to communicate to an end user how severely a log message is to be taken,
+   * and whether any concerning issues have taken place.
+   */
+  enum class MessageSeverity {
+    Debug = 0,   ///< Messages that are of lowest priority and only meant for debug purposes.
+    Info = 1,    ///< Messages that are of informational nature, for denoting normal program flow.
+    Warning = 2, ///< Messages that denote abnormal but tolerable program flow.
+    Error = 3,   ///< Messages that denote issues that interrupt the normal program flow.
+    Panic = 4    ///< Messages that denote an immediate program abort due to fatal conditions.
+  };
+
+  /**
+   * @fn VirtualMachine::VirtualMachine
+   * @brief Constructor for the VirtualMachine base class
+   *
+   * This is the base class constructor for all virtual machine implementations. It sets the minimum
+   * message severity to MessageSeverity::Info to prevent debug message spamming.
+   */
+  VirtualMachine();
+
+  /**
+   * @fn VirtualMachine::setMinimumMessageSeverity
+   * @brief Sets the minimum message severity for displaying messages
+   *
+   * If a message to be printed is below the minimum severity, it is silently dropped. The default
+   * severity is MessageSeverity::Info. To display all messages (including a trace of executed
+   * operators and their operands), set the severity to MessageSeverity::Debug.
+   */
+  void setMinimumMessageSeverity(MessageSeverity minimum_severity);
+
+  /**
    * @fn VirtualMachine::step
    * @brief Executes the next step a program in its current state as denoted by a VM session.
    *
@@ -33,69 +68,61 @@ class VirtualMachine {
 
  protected:
   /**
-   * @enum class MessageSeverity
-   * @brief An enumeration of message severities that denote their urgency.
-   *
-   * Different message urgencies/severities help distinguish how important a log message is. These
-   * severities can be used to communicate to an end user how severely a log message is to be taken,
-   * and whether any concerning issues have taken place.
-   *
-   */
-  enum class MessageSeverity {
-    Debug = 0,   ///< Messages that are of lowest priority and only meant for debug purposes.
-    Info = 1,    ///< Messages that are of informational nature, for denoting normal program flow.
-    Warning = 2, ///< Messages that denote abnormal but tolerable program flow.
-    Error = 3,   ///< Messages that denote issues that interrupt the normal program flow.
-    Panic = 4    ///< Messages that denote an immediate program abort due to fatal conditions.
-  };
-
-  /**
    * @fn VirtualMachine::message
-   * @brief NEEDS DOCUMENTATION
+   * @brief Implements the actual output mechanism for messages with a given severity
    *
-   * TODO(fairlight1337): Document this part.
+   * Implementations of the VirtualMachine base class of BEAST virtual machines are required to
+   * implement this function. It receives every message a BEAST program or the VirtualMachine
+   * implementation wants to print and should honor the given severity to signal to the user about a
+   * message's urgency.
    */
   virtual void message(MessageSeverity severity, const std::string& message) = 0;
 
   /**
    * @fn VirtualMachine::debug
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints a message with MessageSeverity::Debug severity
    */
   void debug(const std::string& message);
 
   /**
    * @fn VirtualMachine::info
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints a message with MessageSeverity::Info severity
    */
   void info(const std::string& message);
 
   /**
    * @fn VirtualMachine::warning
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints a message with MessageSeverity::Warning severity
    */
   void warning(const std::string& message);
 
   /**
    * @fn VirtualMachine::error
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints a message with MessageSeverity::Error severity
    */
   void error(const std::string& message);
 
   /**
    * @fn VirtualMachine::panic
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints a message with MessageSeverity::Panic severity
    */
   void panic(const std::string& message);
+
+ private:
+  /**
+   * @fn VirtualMachine::shouldDisplayMessageWithSeverity
+   * @brief Determines whether a message with a given severity should be displayed or not
+   */
+  bool shouldDisplayMessageWithSeverity(MessageSeverity severity);
+
+  /**
+   * @var VirtualMachine::minimum_severity_
+   * @brief The minimum message severity to print
+   *
+   * Only messages that are equal or above this severity are actually printed. All other messages
+   * are silently dropped.
+   */
+  MessageSeverity minimum_severity_;
 };
 
 }  // namespace beast
