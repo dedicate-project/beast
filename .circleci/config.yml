@@ -32,7 +32,7 @@ jobs:
           name: Build
           command: |
             cd build
-            make -j8
+            make
       - persist_to_workspace:
           root: .
           paths:
