@@ -44,6 +44,12 @@ class VirtualMachine {
   VirtualMachine();
 
   /**
+   * @fn VirtualMachine::~VirtualMachine
+   * @brief Virtual destructor performing no operation to ensure vtable consistency
+   */
+  virtual ~VirtualMachine() {}
+
+  /**
    * @fn VirtualMachine::setMinimumMessageSeverity
    * @brief Sets the minimum message severity for displaying messages
    *
@@ -113,7 +119,7 @@ class VirtualMachine {
    * @fn VirtualMachine::shouldDisplayMessageWithSeverity
    * @brief Determines whether a message with a given severity should be displayed or not
    */
-  bool shouldDisplayMessageWithSeverity(MessageSeverity severity);
+  bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const;
 
   /**
    * @var VirtualMachine::minimum_severity_

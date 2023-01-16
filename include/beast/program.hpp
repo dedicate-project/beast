@@ -63,7 +63,7 @@ class Program {
    *
    * @param space The constant space available in the program.
    */
-  Program(int32_t space);
+  explicit Program(int32_t space);
 
   /**
    * @fn Program::Program(std::vector<unsigned char>)
@@ -75,7 +75,7 @@ class Program {
    *
    * @param data The bytecode data to initialize the program with.
    */
-  Program(std::vector<unsigned char> data);
+  explicit Program(std::vector<unsigned char> data);
 
   /**
    * @fn Program::getSize

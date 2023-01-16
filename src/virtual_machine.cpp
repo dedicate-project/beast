@@ -40,7 +40,7 @@ void VirtualMachine::panic(const std::string& message) {
   }
 }
 
-bool VirtualMachine::shouldDisplayMessageWithSeverity(MessageSeverity severity) {
+bool VirtualMachine::shouldDisplayMessageWithSeverity(MessageSeverity severity) const {
   return static_cast<uint32_t>(severity) >= static_cast<uint32_t>(minimum_severity_);
 }
 

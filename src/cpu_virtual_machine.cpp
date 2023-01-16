@@ -288,7 +288,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     for (unsigned int idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
-    const std::string string_content = std::string(buffer.data(), string_length);
+    const auto string_content = std::string(buffer.data(), string_length);
     debug("set_string_table_entry(" + std::to_string(string_table_index)
           + ", " + std::to_string(string_length) + ", '" + string_content + "')");
     session.setStringTableEntry(string_table_index, string_content);
@@ -583,7 +583,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     for (unsigned int idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
-    const std::string string_content = std::string(buffer.data(), string_length);
+    const auto string_content = std::string(buffer.data(), string_length);
     debug("set_variable_string_table_entry("
           + std::to_string(string_table_variable_index) + ", " + (follow_links ? "true" : "false")
           + ", " + std::to_string(string_length) + ", '" + string_content + "')");

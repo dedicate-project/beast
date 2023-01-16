@@ -8,6 +8,12 @@ namespace beast {
 
 class CpuVirtualMachine : public VirtualMachine {
  public:
+  /**
+   * @fn CpuVirtualMachine::~CpuVirtualMachine
+   * @brief Virtual destructor performing no operation to ensure vtable consistency
+   */
+  virtual ~CpuVirtualMachine() {}
+
   bool step(VmSession& session) override;
 
  protected:
