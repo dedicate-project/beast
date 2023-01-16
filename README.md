@@ -5,9 +5,14 @@
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/0a51i8ax0vg92p6k?svg=true)](https://ci.appveyor.com/project/fairlight1337/beast)
 [![Documentation Status](https://readthedocs.org/projects/beast-project/badge/?version=latest)](https://beast-project.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/dedicate-project/beast/badge.svg?branch=main)](https://coveralls.io/github/dedicate-project/beast?branch=main)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Maintenance](https://img.shields.io/maintenance/yes/2023)
-![Platforms](https://img.shields.io/badge/Platforms-Linux%20%7C%20Windows-lightgrey)
+![Platforms](https://img.shields.io/badge/platforms-linux%20%7C%20windows-lightgrey)
 
 <p align="center">
  <img src="https://github.com/dedicate-project/beast/blob/main/images/beast_head_logo_small.png" />
