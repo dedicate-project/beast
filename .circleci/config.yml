@@ -68,6 +68,8 @@ jobs:
       - image: cimg/base:stable
     resource_class: small
     steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Checkout Sonar Tooling
           command: |
@@ -76,10 +78,23 @@ jobs:
       - run:
           name: Convert Database
           command: |
-            ./sonar-training-examples/cpp-scan/convert-compile-commands.py build/compile_commands.json bw-output
+            python3 ./sonar-training-examples/cpp-scan/convert-compile-commands.py build/compile_commands.json bw-output
+      - sonarcloud/scan
+  memory-check:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
       - attach_workspace:
           at: .
-      - sonarcloud/scan
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y valgrind
+      - run:
+          name: Run Valgrind on example_adder
+          command: valgrind ./build/bin/examples/example_adder
 
 workflows:
   build-and-test:
@@ -90,5 +105,8 @@ workflows:
             - build
       - sonarqube:
           context: SonarCloud
+          requires:
+            - build
+      - memory-check:
           requires:
             - build
