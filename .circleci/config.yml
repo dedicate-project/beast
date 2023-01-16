@@ -72,6 +72,8 @@ jobs:
           name: Install dependencies
           command: |
             python3 -m pip install compiledb
+            sudo apt-get update
+            sudo apt-get install -y python3-pip
       - run:
           name: Checkout Sonar Tooling
           command: |
