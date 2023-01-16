@@ -70,15 +70,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run:
-          name: Checkout Sonar Tooling
-          command: |
-            git clone https://github.com/SonarSource/sonar-training-examples.git
-            chmod +x sonar-training-examples/cpp-scan/convert-compile-commands.py
-      - run:
-          name: Convert Database
-          command: |
-            python3 ./sonar-training-examples/cpp-scan/convert-compile-commands.py build/compile_commands.json bw-output
       - sonarcloud/scan
   memory-check:
     docker:
