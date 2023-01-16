@@ -34,7 +34,6 @@ jobs:
           command: |
             cd build
             make
-      - sonarcloud/scan
       - persist_to_workspace:
           root: .
           paths:
@@ -64,12 +63,23 @@ jobs:
       - coveralls/upload:
           path_to_lcov: ./build/coverage.info
           token: COVERALLS_REPO_TOKEN
+  sonarqube:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - sonarcloud/scan
 
 workflows:
   build-and-test:
     jobs:
-      - build:
-          context: SonarCloud
+      - build
       - test:
+          requires:
+            - build
+      - sonarqube:
+          context: SonarCloud
           requires:
             - build
