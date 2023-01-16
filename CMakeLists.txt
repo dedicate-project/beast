@@ -27,11 +27,12 @@ if(BEAST_BUILD_DOCS)
   add_subdirectory("docs")
 endif()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
   include(CodeCoverage)
 
-  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
   add_compile_options(-g -O0 -lprofiler -fprofile-arcs -ftest-coverage --coverage)
 
   setup_target_for_coverage_lcov(NAME coverage
