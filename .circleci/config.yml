@@ -68,6 +68,20 @@ jobs:
       - image: cimg/base:stable
     resource_class: small
     steps:
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m pip install compiledb
+      - run:
+          name: Checkout Sonar Tooling
+          command: |
+            git checkout https://github.com/SonarSource/sonar-training-examples.git
+            chmod +x sonar-training-examples/cpp-scan/convert-compile-commands.py
+      - run:
+          name: Convert Database
+          command: |
+            compiledb make -B
+            ./sonar-training-examples/cpp-scan/convert-compile-commands.py build/compile_commands.json bw-output
       - attach_workspace:
           at: .
       - sonarcloud/scan
