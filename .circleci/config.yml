@@ -34,6 +34,7 @@ jobs:
           command: |
             cd build
             make
+      - sonarcloud/scan
       - persist_to_workspace:
           root: .
           paths:
@@ -67,9 +68,8 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - build
+      - build:
+          context: SonarCloud
       - test:
           requires:
             - build
-      - sonarcloud_build:
-          context: SonarCloud
