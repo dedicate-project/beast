@@ -77,7 +77,7 @@ jobs:
       - run:
           name: Checkout Sonar Tooling
           command: |
-            git checkout https://github.com/SonarSource/sonar-training-examples.git
+            git pull https://github.com/SonarSource/sonar-training-examples.git
             chmod +x sonar-training-examples/cpp-scan/convert-compile-commands.py
       - run:
           name: Convert Database
