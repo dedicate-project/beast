@@ -1,6 +1,45 @@
 Operators
 =========
 
+Operators are the building blocks of BEAST programs. They are uniquely identified by an opcode
+(operator code) each (see `this list
+<https://github.com/dedicate-project/beast/blob/main/include/beast/opcodes.hpp>`_) and have varying
+numbers of parameters. In this document, instructions are given for adding new operator, and an
+overview of what operators are available already.
+
+Adding a new operator
++++++++++++++++++++++
+
+To add a new operator to the BEAST library, you will need to follow these steps:
+
+1. **Add a new opcode:** Append the new opcode with the next higher hex value in an appropriate
+   category in the `enum class OpCode` in `include/beast/opcodes.hpp`.
+
+2. **Add a signature for this opcode:** Add a new function signature in `include/beast/program.hpp`
+   that corresponds to your new opcode. This will allow client programs to add the operator to a
+   program.
+
+3. **Implement the program:** Add the implementation for the new function you added in step 2 in
+   `src/program.cpp`. Follow the example of existing operators, but in general: Use
+   `appendCode1(...)` with the opcode you added in step 1, and then add any bytes you deem necessary
+   for your operator.
+
+4. **Add a VM case for your new opcode:** In `src/cpu_virtual_machine.cpp`, extend the `switch`
+   statement in the `step()` function. Add a new case for your new opcode, read all parameters (no
+   need to read the opcode, that's done automatically), print a debug statement with the operator
+   signature, and call a `VmSession` function that matches your operator.
+
+5. **Define the VmSession function:** If there is no suitable `VmSession` function, define its
+   signature in `include/beast/vm_session.hpp`. This is a function that explicitly accepts the
+   parameters for your operator. See the existing ones for how to define them.
+
+6. **Implement the VmSession function:** In `src/vm_session.cpp`, implement the actual logic that
+   should be executed if the VM encounters your operator. Again, see existing operators for how to
+   do it.
+
+Already implemented operators
++++++++++++++++++++++++++++++
+
 The BEAST byte code is using a defined set of operators that are documented `in this OpCodes header
 file <https://github.com/dedicate-project/beast/blob/main/include/beast/opcodes.hpp>`_. These
 available operator codes are organized in ... distinct categories:
@@ -209,3 +248,4 @@ variable return code, performing system calls, and loading random values into va
 .. doxygenfunction:: beast::Program::performSystemCall
 
 .. doxygenfunction:: beast::Program::loadRandomValueIntoVariable
+
