@@ -47,7 +47,7 @@ class VirtualMachine {
    * @fn VirtualMachine::~VirtualMachine
    * @brief Virtual destructor performing no operation to ensure vtable consistency
    */
-  virtual ~VirtualMachine() {}
+  virtual ~VirtualMachine() = default;
 
   /**
    * @fn VirtualMachine::setMinimumMessageSeverity

@@ -12,7 +12,7 @@ class CpuVirtualMachine : public VirtualMachine {
    * @fn CpuVirtualMachine::~CpuVirtualMachine
    * @brief Virtual destructor performing no operation to ensure vtable consistency
    */
-  virtual ~CpuVirtualMachine() {}
+  ~CpuVirtualMachine() override = default;
 
   bool step(VmSession& session) override;
 
