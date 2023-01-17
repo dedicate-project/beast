@@ -129,41 +129,51 @@ class VmSession {
 
   /**
    * @fn VmSession::getData4
-   * @brief NEEDS DOCUMENTATION
+   * @brief Return the next 4 bytes of program byte code
    *
-   * TODO(fairlight1337): Document this part.
+   * @return The next 4 bytes of program byte code
    */
   int32_t getData4();
 
   /**
    * @fn VmSession::getData2
-   * @brief NEEDS DOCUMENTATION
+   * @brief Return the next 2 bytes of program byte code
    *
-   * TODO(fairlight1337): Document this part.
+   * @return The next 2 bytes of program byte code
    */
   int16_t getData2();
 
   /**
    * @fn VmSession::getData1
-   * @brief NEEDS DOCUMENTATION
+   * @brief Return the next 1 byte of program byte code
    *
-   * TODO(fairlight1337): Document this part.
+   * @return The next 1 byte of program byte code
    */
   int8_t getData1();
 
   /**
    * @fn VmSession::getVariableValue
-   * @brief NEEDS DOCUMENTATION
+   * @brief Returns the stored value of a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * The value returned is read from the variable at `variable_index`, resolving its links if
+   * `follow_links` is set.
+   *
+   * @param variable_index The variable to return the stored value for
+   * @param follow_links Whether to resolve the variable's links
+   * @sa setVariableValue()
    */
   int32_t getVariableValue(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setVariableValue
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the value stored in a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * The new value `value` will be stored in the variable at the index `variable_index`, resolving
+   * its links if `follow_links` is set.
+   *
+   * @param variable_index The variable to store value in
+   * @param follow_links Whether to resolve the variable's links
+   * @param value The value to store in the variable
    */
   void setVariableValue(int32_t variable_index, bool follow_links, int32_t value);
 
