@@ -12,28 +12,64 @@ Adding a new operator
 
 To add a new operator to the BEAST library, you will need to follow these steps:
 
-1. **Add a new opcode:** Append the new opcode with the next higher hex value in an appropriate
-   category in the `enum class OpCode` in `include/beast/opcodes.hpp`.
+#. **Add a new opcode:** Append the new opcode with the next higher hex value in an appropriate
+   category in the `enum class OpCode` in `include/beast/opcodes.hpp`:
+   
+   .. code-block:: cpp
 
-2. **Add a signature for this opcode:** Add a new function signature in `include/beast/program.hpp`
+      enum class OpCode : int8_t {
+        ...
+        MyNewOpCode = 0xXX,   // Replace XX with the next higher hex value
+        ...
+      };
+
+#. **Add a signature for this opcode:** Add a new function signature in `include/beast/program.hpp`
    that corresponds to your new opcode. This will allow client programs to add the operator to a
-   program.
+   program:
+   
+   .. code-block:: cpp
+   
+      class Program {
+        ...
+        void myNewOpCode(int32_t param1, int32_t param2);
+        ...
+      };
 
-3. **Implement the program:** Add the implementation for the new function you added in step 2 in
+#. **Add the program implementation:** Add the implementation for the new function you added in step 2 in
    `src/program.cpp`. Follow the example of existing operators, but in general: Use
    `appendCode1(...)` with the opcode you added in step 1, and then add any bytes you deem necessary
-   for your operator.
+   for your operator:
+   
+   .. code-block:: cpp
+   
+      void Program::myNewOpCode(int32_t param1, int32_t param2) {
+        appendCode1(OpCode::MyNewOpCode);
+        appendData4(param1);
+        appendData4(param2);
+      }
 
-4. **Add a VM case for your new opcode:** In `src/cpu_virtual_machine.cpp`, extend the `switch`
+#. **Add a VM case for your new opcode:** In `src/cpu_virtual_machine.cpp`, extend the `switch`
    statement in the `step()` function. Add a new case for your new opcode, read all parameters (no
    need to read the opcode, that's done automatically), print a debug statement with the operator
-   signature, and call a `VmSession` function that matches your operator.
+   signature, and call a `VmSession` function that matches your operator:
+   
+   .. code-block:: cpp
+   
+      void CpuVirtualMachine::step() {
+        ...
+        case OpCode::MyNewOpCode: {
+          const int32_t param1 = session.getData4();
+          const int32_t param2 = session.getData4();
+          debug("my_new_op_code(" + std::to_string(param1) + ", " + std::to_string(param2) + ")";
+          session.myNewOpCode(param1, param2);
+        } break;
+        ...
 
-5. **Define the VmSession function:** If there is no suitable `VmSession` function, define its
+#. **Define the VmSession function:** If there is no suitable `VmSession` function, define its
    signature in `include/beast/vm_session.hpp`. This is a function that explicitly accepts the
    parameters for your operator. See the existing ones for how to define them.
 
-6. **Implement the VmSession function:** In `src/vm_session.cpp`, implement the actual logic that
+#. **Implement the VmSession function:** In `src/vm_session.cpp`, implement the actual logic that
    should be executed if the VM encounters your operator. Again, see existing operators for how to
    do it.
 
