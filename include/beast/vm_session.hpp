@@ -12,9 +12,15 @@ namespace beast {
 
 /**
  * @class VmSession
- * @brief NEEDS DOCUMENTATION
+ * @brief Holds the current instruction pointer, variable memory, and string table for programs
  *
- * TODO(fairlight1337): Document this part.
+ * This class holds a program definition and defines the size and content of an associated variable
+ * memory and string table. In addition to that, the current instruction pointer location for
+ * executing the associated program is held in this class. VirtualMachine class instances
+ * (specifically CpuVirtualMachine) use VmSession instances to access the next portion of an
+ * executed program, and to steer instruction pointer movement. Also, the VirtualMachine classes
+ * access the VmSession's variable memory and string table contents when executing a Program
+ * instance's code.
  */
 class VmSession {
  public:
@@ -53,9 +59,17 @@ class VmSession {
 
   /**
    * @fn VmSession::VmSession
-   * @brief NEEDS DOCUMENTATION
+   * @brief Standard constructor
    *
-   * TODO(fairlight1337): Document this part.
+   * Requires a Program instance, and the definition of variable memory and string table size. The
+   * `variable_count` parameter represents the number of allowed variables (indexed starting at 0,
+   * consecutively). The `string_table_count` and `max_string_size` parameters represent the number
+   * of string table items possible, and the maximum length per string table item, respectively.
+   *
+   * @param program The Program instance to associate to this VmSession instance
+   * @param variable_count The maximum number of variables
+   * @param string_table_count The maximum number of string table items
+   * @param max_string_size The maximum length per string table item
    */
   VmSession(
       Program program, size_t variable_count, size_t string_table_count,
@@ -63,22 +77,45 @@ class VmSession {
 
   /**
    * @fn VmSession::setVariableBehavior
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the I/O behavior for a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * A variable can have three I/O behaviors: Store only, store and input, or store and output (see
+   * VariableIoBehavior for more details). For store only variables, no specific behavior is
+   * expected. Input variables can be checked by a program via the checkIfInputWasSet operator. If
+   * from outside of the program an input variable was set via setVariableValue, this operator will
+   * yield a positive response (independent from the value that was set). For output variables, it
+   * works the other way around: When programs set such a variable, functions outside of the program
+   * can retrieve this status by using the hasOutputDataAvailable call (and retrieve the data via
+   * getVariableValue). All variables declared through setVariableBehavior can be used like any
+   * other variable by all operators.
+   *
+   * When calling this method on a variable, this `variable_index` is registered in the VmSession
+   * instance's variable memory. This means that it can't (and doesn't have to) be declared again by
+   * a Program instance and can be used as if it was declared already. It can be undeclared like any
+   * other previously declared variable.
+   *
+   * @param variable_index The variable to set the behavior for
+   * @param behavior The I/O behavior to set for the variable
+   * @sa getVariableBehavior()
    */
   void setVariableBehavior(int32_t variable_index, VariableIoBehavior behavior);
 
   /**
    * @fn VmSession::getVariableBehavior
-   * @brief NEEDS DOCUMENTATION
+   * @brief Returns the I/O behavior currently set for a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * Returns which variable behavior is currently defined for the variable at index `variable_index`
+   * (potentially resolving its links of `follow_links` is set). For details on the exact I/O
+   * behaviors, see setVariableBehavior.
+   *
+   * @param variable_index The variable to return the I/O behavior for
+   * @param follow_links Whether to resolve the variable's links
+   * @sa setVariableBehavior()
    */
   VariableIoBehavior getVariableBehavior(int32_t variable_index, bool follow_links);
 
   /**
-   * @fn hasOutputDataAvailable
+   * @fn VmSession::hasOutputDataAvailable
    * @brief Checks if an output variable has new data available
    *
    * If, since the last read attempt, data was written to the passed in variable index, `true` is
