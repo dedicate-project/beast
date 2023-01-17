@@ -575,48 +575,43 @@ class Program {
 
   /**
    * @fn Program::printStringFromStringTable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints a string from the string table
    *
    * Identified by OpCode::PrintStringFromStringTable. Represented by 5 bytes.
    *
-   * @param string_table_index tbd
+   * @param string_table_index The string stored at this index will be printed.
    */
   void printStringFromStringTable(int32_t string_table_index);
 
   /**
    * @fn Program::loadStringTableLimitIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the maximum number of items in the string table into a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * This is equivalent to the number of possible string items an associated VmSession provides.
    *
    * Identified by OpCode::LoadStringTableLimitIntoVariable. Represented by 6 bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable to load the limit into.
    * @param follow_links Whether to resolve variable links.
    */
   void loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::terminate
-   * @brief NEEDS DOCUMENTATION
+   * @brief Immediately terminates the program
    *
-   * TODO(fairlight1337): Document this part.
+   * No further program operators will be executes. The program's return code will be set to the
+   * value of the parameter `return_code`.
    *
    * Identified by OpCode::Terminate. Represented by 2 bytes.
    *
-   * @param return_code tbd
+   * @param return_code The return code of the program after termination.
    */
   void terminate(int8_t return_code);
 
   /**
    * @fn Program::copyVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
-   *
-   * Identified by OpCode::CopyVariable. Represented by 11 bytes.
+   * @brief Copies the value of one variable into another
    *
    * @param source_variable_index The index of the source variable.
    * @param follow_source_links Whether to resolve source variable links.
@@ -629,13 +624,11 @@ class Program {
 
   /**
    * @fn Program::loadStringItemLengthIntoVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Load the actual length of a string table item into a variable
    *
    * Identified by OpCode::LoadStringItemLengthIntoVariable. Represented by 10 bytes.
    *
-   * @param string_table_index tbd
+   * @param string_table_index The string table item's index to read the length from.
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
    */
@@ -644,9 +637,12 @@ class Program {
 
   /**
    * @fn Program::checkIfInputWasSet
-   * @brief NEEDS DOCUMENTATION
+   * @brief Determine whether an input variable was written to since the last read operation
    *
-   * TODO(fairlight1337): Document this part.
+   * If since the last read operation the given variable at `variable_index` was written to, store
+   * the value `0x1` in the variable at `destination_variable_index`. Store `0x0` otherwise.
+   *
+   * For details on I/O behaviors, also see VmSession::setVariableBehavior.
    *
    * Identified by OpCode::CheckIfInputWasSet. Represented by 11 bytes.
    *
@@ -654,6 +650,7 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param destination_variable_index The index of the destination variable.
    * @param follow_destination_links Whether to resolve destination variable links.
+   * @sa VmSession::setVariableBehavior()
    */
   void checkIfInputWasSet(
       int32_t variable_index, bool follow_links,
@@ -661,9 +658,9 @@ class Program {
 
   /**
    * @fn Program::loadStringTableItemLengthLimitIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Load the maximum length of string table items into a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * This is the limit imposed on the Program by the VmSession associated to it during execution.
    *
    * Identified by OpCode::LoadStringTableItemLengthLimitIntoVariable. Represented by 6 bytes.
    *
@@ -674,78 +671,83 @@ class Program {
 
   /**
    * @fn Program::loadRandomValueIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Stores a random value into the given variable
    *
-   * TODO(fairlight1337): Document this part.
+   * A random numeric value will be stored in the variable `variable_index`. It is drawn from the
+   * full range of the data type `int32_t`.
    *
    * Identified by OpCode::LoadRandomValueIntoVariable. Represented by 6 bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable to store the random value in.
    * @param follow_links Whether to resolve variable links.
    */
   void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::unconditionalJumpToAbsoluteAddress
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Jumps to the given absolute address
    *
    * Identified by OpCode::UnconditionalJumpToAbsoluteAddress. Represented by 5 bytes.
    *
-   * @param addr tbd
+   * @param addr The absolute address to jump to.
    */
   void unconditionalJumpToAbsoluteAddress(int32_t addr);
 
   /**
    * @fn Program::unconditionalJumpToAbsoluteVariableAddress
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Jumps to an absolute address stored in a variable
    *
    * Identified by OpCode::UnconditionalJumpToAbsoluteVariableAddress. Represented by 6 bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable holding the absolute address to jump to.
    * @param follow_links Whether to resolve variable links.
    */
   void unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::unconditionalJumpToRelativeAddress
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Jumps to the given relative address
    *
    * Identified by OpCode::UnconditionalJumpToRelativeAddress. Represented by 5 bytes.
    *
-   * @param addr tbd
+   * @param addr The relativeaddress to jump to.
    */
   void unconditionalJumpToRelativeAddress(int32_t addr);
 
   /**
    * @fn Program::unconditionalJumpToRelativeVariableAddress
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Jumps to a relative address stored in a variable
    *
    * Identified by OpCode::UnconditionalJumpToRelativeVariableAddress. Represented by 6 bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable holding the relative address to jump to.
    * @param follow_links Whether to resolve variable links.
    */
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::loadStringItemIntoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads an item from the string table into consecutive variables.
    *
-   * TODO(fairlight1337): Document this part.
+   * The item at the string table index `string_table_index` will be stored in the variables
+   * starting at index `start_variable_index`, consecutively. Each variable stores the character
+   * value from the respective string table item. Example:
+   *
+   * String table item: `Entry`
+   * * `start_variable_index + 0 = E`
+   * * `start_variable_index + 1 = n`
+   * * `start_variable_index + 2 = t`
+   * * `start_variable_index + 3 = r`
+   * * `start_variable_index + 4 = y`
+   *
+   * The `follow_links` parameter will be applied to every index separately.
    *
    * Identified by OpCode::LoadStringItemIntoVariables. Represented by 10 bytes.
    *
-   * @param string_table_index tbd
+   * @param string_table_index The string table item to read character from.
    * @param start_variable_index The index of the start variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa loadVariableStringItemLengthIntoVariable()
    */
   void loadStringItemIntoVariables(
       int32_t string_table_index, int32_t start_variable_index, bool follow_links);
@@ -857,31 +859,37 @@ class Program {
 
   /**
    * @fn Program::moduloVariableByConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a constant modulo operation on a variable and stores the result
    *
-   * TODO(fairlight1337): Document this part.
+   * The given constant will be modulo'ed onto the given variable. The result will be stored in the
+   * same variable.
+   *
+   * `variable = variable % constant`
    *
    * Identified by OpCode::ModuloVariableByConstant. Represented by 11 bytes.
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param modulo_constant tbd
+   * @param modulo_constant The constant to modulo onto the variable.
    */
   void moduloVariableByConstant(
       int32_t variable_index, bool follow_links, int32_t modulo_constant);
 
   /**
    * @fn Program::moduloVariableByVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a variable modulo operation on a variable and stores the result
    *
-   * TODO(fairlight1337): Document this part.
+   * The modulo variable's value will be modulo'ed onto the given variable. The result will be
+   * stored in the first variable.
+   *
+   * `variable = variable % modulo_variable`
    *
    * Identified by OpCode::ModuloVariableByVariable. Represented by 11 bytes.
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param modulo_variable_index The index of the variable.
-   * @param modulo_follow_links Whether to resolve variable links.
+   * @param modulo_variable_index The index of the modulo variable.
+   * @param modulo_follow_links Whether to resolve the modulo variable's links.
    */
   void moduloVariableByVariable(
       int32_t variable_index, bool follow_links,
@@ -889,29 +897,29 @@ class Program {
 
   /**
    * @fn Program::rotateVariableLeft
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-wise rotate the given variable to the left
    *
-   * TODO(fairlight1337): Document this part.
+   * Negative values cause a rotation to the right.
    *
    * Identified by OpCode::RotateVariableLeft. Represented by 7 bytes.
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param places tbd
+   * @param places How many bits to rotate the variable to the left (can be negative).
    */
   void rotateVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
 
   /**
    * @fn Program::rotateVariableRight
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-wise rotate the given variable to the left
    *
-   * TODO(fairlight1337): Document this part.
+   * Negative values cause a rotation to the left.
    *
    * Identified by OpCode::RotateVariableRight. Represented by 7 bytes.
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param places tbd
+   * @param places How many bits to rotate the variable to the right (can be negative).
    */
   void rotateVariableRight(int32_t variable_index, bool follow_links, int8_t places);
 
@@ -996,9 +1004,7 @@ class Program {
 
   /**
    * @fn Program::swapVariables
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Swaps the contents of two variables
    *
    * Identified by OpCode::SwapVariables. Represented by 11 bytes.
    *
@@ -1057,9 +1063,10 @@ class Program {
 
   /**
    * @fn Program::loadVariableStringItemIntoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads a variable item from the string table into consecutive variables.
    *
-   * TODO(fairlight1337): Document this part.
+   * See `loadStringItemLengthIntoVariable` for details. The string table index is not fixed in this
+   * variant, but is read from the `string_item_variable_index` variable.
    *
    * Identified by OpCode::LoadVariableStringItemIntoVariables. Represented by 11 bytes.
    *
@@ -1067,6 +1074,7 @@ class Program {
    * @param follow_links_string_item Whether to resolve variable links.
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa loadStringItemLengthIntoVariable()
    */
   void loadVariableStringItemIntoVariables(
       int32_t string_item_variable_index, bool follow_links_string_item,
@@ -1074,9 +1082,10 @@ class Program {
 
   /**
    * @fn Program::terminateWithVariableReturnCode
-   * @brief NEEDS DOCUMENTATION
+   * @brief Immediately terminates the program, returning a variable return code
    *
-   * TODO(fairlight1337): Document this part.
+   * No further program operators will be executes. The program's return code will be set to the
+   * value of the value of the `variable_index` variable.
    *
    * Identified by OpCode::TerminateWithVariableReturnCode. Represented by 6 bytes.
    *
@@ -1155,9 +1164,10 @@ class Program {
 
   /**
    * @fn Program::compareIfVariableGtConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compares if a variable is > a given constant
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable is greater than the given constant, the value `0x1` will be stored in the
+   * target variable, else `0x0` will be stored.
    *
    * Identified by OpCode::CompareIfVariableGtConstant. Represented by 15 bytes.
    *
@@ -1173,9 +1183,10 @@ class Program {
 
   /**
    * @fn Program::compareIfVariableLtConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compares if a variable is < a given constant
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable is smaller than the given constant, the value `0x1` will be stored in the
+   * target variable, else `0x0` will be stored.
    *
    * Identified by OpCode::CompareIfVariableLtConstant. Represented by 15 bytes.
    *
@@ -1191,9 +1202,10 @@ class Program {
 
   /**
    * @fn Program::compareIfVariableEqConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compares if a variable is = a given constant
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable is equal to the given constant, the value `0x1` will be stored in the target
+   * variable, else `0x0` will be stored.
    *
    * Identified by OpCode::CompareIfVariableEqConstant. Represented by 15 bytes.
    *
@@ -1209,9 +1221,10 @@ class Program {
 
   /**
    * @fn Program::compareIfVariableGtVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compares if a variable is > another variable
    *
-   * TODO(fairlight1337): Document this part.
+   * If variable a is greater than variable b, the value `0x1` will be stored in the target
+   * variable, else `0x0` will be stored.
    *
    * Identified by OpCode::CompareIfVariableGtVariable. Represented by 16 bytes.
    *
@@ -1228,9 +1241,10 @@ class Program {
 
   /**
    * @fn Program::compareIfVariableLtVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compares if a variable is < another variable
    *
-   * TODO(fairlight1337): Document this part.
+   * If variable a is smaller than variable b, the value `0x1` will be stored in the target
+   * variable, else `0x0` will be stored.
    *
    * Identified by OpCode::CompareIfVariableLtVariable. Represented by 16 bytes.
    *
@@ -1247,9 +1261,10 @@ class Program {
 
   /**
    * @fn Program::compareIfVariableEqVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Compares if a variable is = another variable
    *
-   * TODO(fairlight1337): Document this part.
+   * If variable a is equal to variable b, the value `0x1` will be stored in the target variable,
+   * else `0x0` will be stored.
    *
    * Identified by OpCode::CompareIfVariableEqVariable. Represented by 16 bytes.
    *
@@ -1364,41 +1379,61 @@ class Program {
 
   /**
    * @fn Program::appendData4
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends 4 bytes to the program's byte code store.
    *
-   * TODO(fairlight1337): Document this part.
+   * Throws if the bytes don't fit for constant size programs. Extends the space for dynamically
+   * growing programs if required.
+   *
+   * @param data The byte data to append to the program.
    */
   void appendData4(int32_t data);
 
   /**
    * @fn Program::appendData2
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends 2 bytes to the program's byte code store.
    *
-   * TODO(fairlight1337): Document this part.
+   * Throws if the bytes don't fit for constant size programs. Extends the space for dynamically
+   * growing programs if required.
+   *
+   * @param data The byte data to append to the program.
    */
   void appendData2(int16_t data);
 
   /**
    * @fn Program::appendData1
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends 1 byte to the program's byte code store.
    *
-   * TODO(fairlight1337): Document this part.
+   * Throws if the byte doesn't fit for constant size programs. Extends the space for dynamically
+   * growing programs if required.
+   *
+   * @param data The byte data to append to the program.
    */
   void appendData1(int8_t data);
 
   /**
    * @fn Program::appendFlag1
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends 1 byte to the program's byte code store representing a boolean flag
    *
-   * TODO(fairlight1337): Document this part.
+   * If `flag` is `true`, the value `0x1` will be appended. Otherwise, `0x0` will be appended.
+   *
+   * Throws if the byte doesn't fit for constant size programs. Extends the space for dynamically
+   * growing programs if required.
+   *
+   * @param flag The boolean flag to append to the program.
    */
   void appendFlag1(bool flag);
 
   /**
    * @fn Program::appendCode1
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends 1 byte to the program's byte code store representing an operator code
    *
-   * TODO(fairlight1337): Document this part.
+   * The operator code will be converted into a 1 byte value and is then appended to the program
+   * code.
+   *
+   * Throws if the byte doesn't fit for constant size programs. Extends the space for dynamically
+   * growing programs if required.
+   *
+   * @param flag The boolean flag to append to the program.
    */
   void appendCode1(OpCode opcode);
 
