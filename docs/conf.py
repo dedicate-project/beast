@@ -25,7 +25,7 @@ copyright = '2022, Jan Winkler'
 author = 'Jan Winkler'
 master_doc = 'index'
 
-extensions = ['breathe']
+extensions = ['breathe', 'sphinx.ext.autosectionlabel']
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'sphinx_rtd_theme'
