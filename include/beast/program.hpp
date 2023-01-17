@@ -613,6 +613,8 @@ class Program {
    * @fn Program::copyVariable
    * @brief Copies the value of one variable into another
    *
+   * Identified by OpCode::CopyVariable. Represented by 11 bytes.
+   *
    * @param source_variable_index The index of the source variable.
    * @param follow_source_links Whether to resolve source variable links.
    * @param destination_variable_index The index of the destination variable.
