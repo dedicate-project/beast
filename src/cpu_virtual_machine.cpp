@@ -8,6 +8,20 @@
 #include <beast/opcodes.hpp>
 #include <beast/time_functions.hpp>
 
+namespace {
+/**
+ * @brief Converts a boolean flag to a string representation
+ *
+ * A value of `true` will be converted to "true", `false` will become "false".
+ *
+ * @param flag The boolean flag to convert to a string value
+ * @return A string representing the passed in boolean state
+ */
+std::string to_string(bool flag) {
+  return flag ? "true" : "false";
+}
+}  // namespace
+
 namespace beast {
 
 bool CpuVirtualMachine::step(VmSession& session) {
@@ -38,7 +52,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int32_t variable_content = session.getData4();
     debug("set_variable(" + std::to_string(variable_index) + ", "
-          + std::to_string(variable_content) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable_content) + ", " + to_string(follow_links) + ")");
     session.setVariable(variable_index, variable_content, follow_links);
   } break;
 
@@ -53,7 +67,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int32_t constant = session.getData4();
     debug("add_constant_to_variable(" + std::to_string(variable_index)
-          + ", " + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ")");
+          + ", " + to_string(follow_links) + ", " + std::to_string(constant) + ")");
     session.addConstantToVariable(variable_index, constant, follow_links);
   } break;
 
@@ -63,8 +77,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t destination_variable = session.getData4();
     const bool follow_destination_links = session.getData1() != 0x0;
     debug("add_variable_to_variable(" + std::to_string(source_variable) + ", "
-          + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable)
-          + ", " + (follow_destination_links ? "true" : "false") + ")");
+          + to_string(follow_source_links) + ", " + std::to_string(destination_variable)
+          + ", " + to_string(follow_destination_links) + ")");
     session.addVariableToVariable(
         source_variable, destination_variable, follow_source_links, follow_destination_links);
   } break;
@@ -74,7 +88,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int32_t constant = session.getData4();
     debug("subtract_constant_from_variable(" + std::to_string(variable_index) + ", "
-          + (follow_links ? "true" : "false") + ", " + std::to_string(constant) + ")");
+          + to_string(follow_links) + ", " + std::to_string(constant) + ")");
     session.subtractConstantFromVariable(variable_index, constant, follow_links);
   } break;
 
@@ -84,8 +98,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t destination_variable = session.getData4();
     const bool follow_destination_links = session.getData1() != 0x0;
     debug("subtract_variable_from_variable(" + std::to_string(source_variable) + ", "
-          + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable)
-          + ", " + (follow_destination_links ? "true" : "false") + ")");
+          + to_string(follow_source_links) + ", " + std::to_string(destination_variable)
+          + ", " + to_string(follow_destination_links) + ")");
     session.subtractVariableFromVariable(
         source_variable, destination_variable, follow_source_links, follow_destination_links);
   } break;
@@ -96,8 +110,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t addr_variable = session.getData4();
     const bool follow_addr_links = session.getData1() != 0x0;
     debug("relative_jump_to_variable_address_if_variable_gt_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", "
-          + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_condition_links) + ", "
+          + std::to_string(addr_variable) + ", " + to_string(follow_addr_links) + ")");
     session.relativeJumpToVariableAddressIfVariableGt0(
         condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
@@ -108,8 +122,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t addr_variable = session.getData4();
     const bool follow_addr_links = session.getData1() != 0x0;
     debug("relative_jump_to_variable_address_if_variable_lt_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", "
-          + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_condition_links) + ", "
+          + std::to_string(addr_variable) + ", " + to_string(follow_addr_links) + ")");
     session.relativeJumpToVariableAddressIfVariableLt0(
         condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
@@ -120,8 +134,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t addr_variable = session.getData4();
     const bool follow_addr_links = session.getData1() != 0x0;
     debug("relative_jump_to_variable_address_if_variable_eq_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", "
-          + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_condition_links) + ", "
+          + std::to_string(addr_variable) + ", " + to_string(follow_addr_links) + ")");
     session.relativeJumpToVariableAddressIfVariableEq0(
         condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
@@ -132,8 +146,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t addr_variable = session.getData4();
     const bool follow_addr_links = session.getData1() != 0x0;
     debug("absolute_jump_to_variable_address_if_variable_gt_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", "
-          + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_condition_links) + ", "
+          + std::to_string(addr_variable) + ", " + to_string(follow_addr_links) + ")");
     session.absoluteJumpToVariableAddressIfVariableGt0(
         condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
@@ -144,8 +158,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t addr_variable = session.getData4();
     const bool follow_addr_links = session.getData1() != 0x0;
     debug("absolute_jump_to_variable_address_if_variable_lt_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", "
-          + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_condition_links) + ", "
+          + std::to_string(addr_variable) + ", " + to_string(follow_addr_links) + ")");
     session.absoluteJumpToVariableAddressIfVariableLt0(
         condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
@@ -156,8 +170,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t addr_variable = session.getData4();
     const bool follow_addr_links = session.getData1() != 0x0;
     debug("absolute_jump_to_variable_address_if_variable_eq_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", "
-          + std::to_string(addr_variable) + ", " + (follow_addr_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_condition_links) + ", "
+          + std::to_string(addr_variable) + ", " + to_string(follow_addr_links) + ")");
     session.absoluteJumpToVariableAddressIfVariableEq0(
         condition_variable, follow_condition_links, addr_variable, follow_addr_links);
   } break;
@@ -167,7 +181,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
     debug("relative_jump_to_address_if_variable_gt_0(" + std::to_string(condition_variable)
-          + ", " + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+          + ", " + to_string(follow_condition_links) + ", " + std::to_string(addr) + ")");
     session.relativeJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
@@ -176,7 +190,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
     debug("relative_jump_to_address_if_variable_lt_0(" + std::to_string(condition_variable) + ", "
-          + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+          + to_string(follow_condition_links) + ", " + std::to_string(addr) + ")");
     session.relativeJumpToAddressIfVariableLt0(condition_variable, follow_condition_links, addr);
   } break;
 
@@ -185,7 +199,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
     debug("relative_jump_to_address_if_variable_eq_0(" + std::to_string(condition_variable) + ", "
-          + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+          + to_string(follow_condition_links) + ", " + std::to_string(addr) + ")");
     session.relativeJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
@@ -194,7 +208,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
     debug("absolute_jump_to_address_if_variable_gt_0(" + std::to_string(condition_variable) + ", "
-          + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+          + to_string(follow_condition_links) + ", " + std::to_string(addr) + ")");
     session.absoluteJumpToAddressIfVariableGt0(condition_variable, follow_condition_links, addr);
   } break;
 
@@ -203,7 +217,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
     debug("absolute_jump_to_address_if_variable_lt_0(" + std::to_string(condition_variable) + ", "
-          + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+          + to_string(follow_condition_links) + ", " + std::to_string(addr) + ")");
     session.absoluteJumpToAddressIfVariableLt0(condition_variable, follow_condition_links, addr);
   } break;
 
@@ -212,7 +226,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_condition_links = session.getData1() != 0x0;
     const int32_t addr = session.getData4();
     debug("absolute_jump_to_address_if_variable_eq_0(" + std::to_string(condition_variable) + ", "
-          + (follow_condition_links ? "true" : "false") + ", " + std::to_string(addr) + ")");
+          + to_string(follow_condition_links) + ", " + std::to_string(addr) + ")");
     session.absoluteJumpToAddressIfVariableEq0(condition_variable, follow_condition_links, addr);
   } break;
 
@@ -220,7 +234,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_memory_size_into_variable(" + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(follow_links) + ")");
     session.loadMemorySizeIntoVariable(variable, follow_links);
   } break;
 
@@ -230,8 +244,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t destination_variable = session.getData4();
     const bool follow_destination_links = session.getData1() != 0x0;
     debug("check_if_variable_is_input(" + std::to_string(source_variable) + ", "
-          + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable)
-          + ", " + (follow_destination_links ? "true" : "false") + ")");
+          + to_string(follow_source_links) + ", " + std::to_string(destination_variable)
+          + ", " + to_string(follow_destination_links) + ")");
     session.checkIfVariableIsInput(
         source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
@@ -242,8 +256,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t destination_variable = session.getData4();
     const bool follow_destination_links = session.getData1() != 0x0;
     debug("check_if_variable_is_output(" + std::to_string(source_variable) + ", "
-          + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable)
-          + ", " + (follow_destination_links ? "true" : "false") + ")");
+          + to_string(follow_source_links) + ", " + std::to_string(destination_variable)
+          + ", " + to_string(follow_destination_links) + ")");
     session.checkIfVariableIsOutput(
         source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
@@ -252,7 +266,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_input_count_into_variable(" + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(follow_links) + ")");
     session.loadInputCountIntoVariable(variable, follow_links);
   } break;
 
@@ -260,7 +274,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_output_count_into_variable(" + std::to_string(variable)
-          + ", " + (follow_links ? "true" : "false") + ")");
+          + ", " + to_string(follow_links) + ")");
     session.loadOutputCountIntoVariable(variable, follow_links);
   } break;
 
@@ -268,7 +282,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_current_address_into_variable(" + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(follow_links) + ")");
     session.loadCurrentAddressIntoVariable(variable, follow_links);
   } break;
 
@@ -277,7 +291,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const bool as_char = session.getData1() != 0x0;
     debug("print_variable(" + std::to_string(variable_index) + ", "
-          + (follow_links ? "true" : "false") + ", " + (as_char ? "true" : "false") + ")");
+          + to_string(follow_links) + ", " + to_string(as_char) + ")");
     session.printVariable(variable_index, follow_links, as_char);
   } break;
 
@@ -304,7 +318,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_string_table_limit_into_variable(" + std::to_string(variable_index) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(follow_links) + ")");
     session.loadStringTableLimitIntoVariable(variable_index, follow_links);
   } break;
 
@@ -320,8 +334,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t destination_variable = session.getData4();
     const bool follow_destination_links = session.getData1() != 0x0;
     debug("copy_variable(" + std::to_string(source_variable) + ", "
-          + (follow_source_links ? "true" : "false") + ", " + std::to_string(destination_variable)
-          + ", " + (follow_destination_links ? "true" : "false") + ")");
+          + to_string(follow_source_links) + ", " + std::to_string(destination_variable)
+          + ", " + to_string(follow_destination_links) + ")");
     session.copyVariable(
         source_variable, follow_source_links, destination_variable, follow_destination_links);
   } break;
@@ -331,7 +345,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_string_item_length_into_variable(" + std::to_string(string_table_index) + ", "
-          + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable_index) + ", " + to_string(follow_links) + ")");
     session.loadStringItemLengthIntoVariable(string_table_index, variable_index, follow_links);
   } break;
 
@@ -340,7 +354,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t start_variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_string_item_into_variables(" + std::to_string(string_table_index) + ", "
-          + std::to_string(start_variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(start_variable_index) + ", " + to_string(follow_links) + ")");
     session.loadStringItemIntoVariables(string_table_index, start_variable_index, follow_links);
   } break;
 
@@ -350,7 +364,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("perform_system_call(" + std::to_string(major_code) + ", " + std::to_string(minor_code)
-          + ", " + std::to_string(variable_index) + ", " + (follow_links ? "true" : "false") + ")");
+          + ", " + std::to_string(variable_index) + ", " + to_string(follow_links) + ")");
     session.performSystemCall(major_code, minor_code, variable_index, follow_links);
   } break;
 
@@ -359,7 +373,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int8_t places = session.getData1();
     debug("bit_shift_variable_left(" + std::to_string(variable_index) + ", "
-          + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
+          + to_string(follow_links) + ", " + std::to_string(places) + ")");
     session.bitShiftVariable(variable_index, follow_links, places);
   } break;
 
@@ -368,7 +382,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const auto places = static_cast<int8_t>(-session.getData1());
     debug("bit_shift_variable_right(" + std::to_string(variable_index) + ", "
-          + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
+          + to_string(follow_links) + ", " + std::to_string(places) + ")");
     session.bitShiftVariable(variable_index, follow_links, places);
   } break;
 
@@ -376,7 +390,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("bit_wise_invert_variable(" + std::to_string(variable_index) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(follow_links) + ")");
     session.bitWiseInvertVariable(variable_index, follow_links);
   } break;
 
@@ -386,8 +400,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("bit_wise_and_two_variables("
-          + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+          + std::to_string(variable_index_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_index_b) + ", " + to_string(follow_links_b) + ")");
     session.bitWiseAndTwoVariables(
         variable_index_a, follow_links_a, variable_index_b, follow_links_b);
   } break;
@@ -398,8 +412,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("bit_wise_or_two_variables("
-          + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+          + std::to_string(variable_index_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_index_b) + ", " + to_string(follow_links_b) + ")");
     session.bitWiseOrTwoVariables(
         variable_index_a, follow_links_a, variable_index_b, follow_links_b);
   } break;
@@ -410,8 +424,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_index_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("bit_wise_xor_two_variables("
-          + std::to_string(variable_index_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_index_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+          + std::to_string(variable_index_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_index_b) + ", " + to_string(follow_links_b) + ")");
     session.bitWiseXorTwoVariables(
         variable_index_a, follow_links_a, variable_index_b, follow_links_b);
   } break;
@@ -420,7 +434,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_random_value_into_variable(" + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(follow_links) + ")");
     session.loadRandomValueIntoVariable(variable, follow_links);
   } break;
 
@@ -429,7 +443,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int32_t modulo_constant = session.getData4();
     debug("modulo_variable_by_constant("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(modulo_constant) + ")");
     session.moduloVariableByConstant(variable, follow_links, modulo_constant);
   } break;
@@ -440,8 +454,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t modulo_variable = session.getData4();
     const bool modulo_follow_links = session.getData1() != 0x0;
     debug("modulo_variable_by_variable("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
-          + std::to_string(modulo_variable) + ", " + (modulo_follow_links ? "true" : "false")
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
+          + std::to_string(modulo_variable) + ", " + to_string(modulo_follow_links)
           + ")");
     session.moduloVariableByVariable(variable, follow_links, modulo_variable, modulo_follow_links);
   } break;
@@ -451,7 +465,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int8_t places = session.getData1();
     debug("rotate_variable_left(" + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
+          + to_string(follow_links) + ", " + std::to_string(places) + ")");
     session.rotateVariable(variable, follow_links, places);
   } break;
 
@@ -460,7 +474,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const auto places = static_cast<int8_t>(-session.getData1());
     debug("rotate_variable_right(" + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ", " + std::to_string(places) + ")");
+          + to_string(follow_links) + ", " + std::to_string(places) + ")");
     session.rotateVariable(variable, follow_links, places);
   } break;
 
@@ -474,7 +488,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("unconditional_jump_to_absolute_variable_address("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.unconditionalJumpToAbsoluteVariableAddress(variable, follow_links);
   } break;
 
@@ -488,7 +502,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("unconditional_jump_to_relative_variable_address("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.unconditionalJumpToRelativeVariableAddress(variable, follow_links);
   } break;
 
@@ -498,9 +512,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t destination_variable = session.getData4();
     const bool follow_destination_links = session.getData1() != 0x0;
     debug("check_if_input_was_set("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(destination_variable) + ", "
-          + (follow_destination_links ? "true" : "false") + ")");
+          + to_string(follow_destination_links) + ")");
     session.checkIfInputWasSet(
         variable, follow_links, destination_variable, follow_destination_links);
   } break;
@@ -509,7 +523,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("load_string_table_item_length_limit_into_variable("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.loadStringTableItemLengthLimitIntoVariable(variable, follow_links);
   } break;
 
@@ -519,8 +533,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("push_variable_on_stack("
-          + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", "
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(stack_variable) + ", " + to_string(stack_follow_links) + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.pushVariableOnStack(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
@@ -529,7 +543,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool stack_follow_links = session.getData1() != 0x0;
     const int32_t constant = session.getData4();
     debug("push_constant_on_stack("
-          + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", "
+          + std::to_string(stack_variable) + ", " + to_string(stack_follow_links) + ", "
           + std::to_string(constant) + ")");
     session.pushConstantOnStack(stack_variable, stack_follow_links, constant);
   } break;
@@ -540,8 +554,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("pop_variable_from_stack("
-          + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", "
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(stack_variable) + ", " + to_string(stack_follow_links) + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.popVariableFromStack(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
@@ -549,7 +563,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t stack_variable = session.getData4();
     const bool stack_follow_links = session.getData1() != 0x0;
     debug("pop_top_item_from_stack("
-          + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ")");
+          + std::to_string(stack_variable) + ", " + to_string(stack_follow_links) + ")");
     session.popTopItemFromStack(stack_variable, stack_follow_links);
   } break;
 
@@ -559,8 +573,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("check_if_stack_is_empty("
-          + std::to_string(stack_variable) + ", " + (stack_follow_links ? "true" : "false") + ", "
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(stack_variable) + ", " + to_string(stack_follow_links) + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.checkIfStackIsEmpty(stack_variable, stack_follow_links, variable, follow_links);
   } break;
 
@@ -570,8 +584,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable_b = session.getData4();
     const bool follow_links_b = session.getData1() != 0x0;
     debug("swap_variables("
-          + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ")");
+          + std::to_string(variable_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_b) + ", " + to_string(follow_links_b) + ")");
     session.swapVariables(variable_a, follow_links_a, variable_b, follow_links_b);
   } break;
 
@@ -585,7 +599,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     }
     const auto string_content = std::string(buffer.data(), string_length);
     debug("set_variable_string_table_entry("
-          + std::to_string(string_table_variable_index) + ", " + (follow_links ? "true" : "false")
+          + std::to_string(string_table_variable_index) + ", " + to_string(follow_links)
           + ", " + std::to_string(string_length) + ", '" + string_content + "')");
     session.setVariableStringTableEntry(string_table_variable_index, follow_links, string_content);
   } break;
@@ -594,7 +608,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("print_variable_string_from_string_table("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.printVariableStringFromStringTable(variable, follow_links);
   } break;
 
@@ -605,8 +619,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     debug("load_variable_string_item_length_into_variable("
           + std::to_string(string_item_variable) + ", "
-          + (string_item_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(string_item_follow_links) + ", " + std::to_string(variable) + ", "
+          + to_string(follow_links) + ")");
     session.loadVariableStringItemLengthIntoVariable(
         string_item_variable, string_item_follow_links, variable, follow_links);
   } break;
@@ -618,8 +632,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     debug("load_variable_string_item_into_variable("
           + std::to_string(string_item_variable) + ", "
-          + (string_item_follow_links ? "true" : "false") + ", " + std::to_string(variable) + ", "
-          + (follow_links ? "true" : "false") + ")");
+          + to_string(string_item_follow_links) + ", " + std::to_string(variable) + ", "
+          + to_string(follow_links) + ")");
     session.loadVariableStringItemIntoVariables(
         string_item_variable, string_item_follow_links, variable, follow_links);
   } break;
@@ -628,7 +642,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
     debug("terminate_with_variable_return_code("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ")");
+          + std::to_string(variable) + ", " + to_string(follow_links) + ")");
     session.terminateWithVariableReturnCode(variable, follow_links);
   } break;
 
@@ -638,8 +652,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_bit_shift_variable_left("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
-          + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false")
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
+          + std::to_string(places_variable) + ", " + to_string(places_follow_links)
           + ")");
     session.variableBitShiftVariableLeft(
         variable, follow_links, places_variable, places_follow_links);
@@ -651,8 +665,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_bit_shift_variable_right("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
-          + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false")
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
+          + std::to_string(places_variable) + ", " + to_string(places_follow_links)
           + ")");
     session.variableBitShiftVariableRight(
         variable, follow_links, places_variable, places_follow_links);
@@ -664,8 +678,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_rotate_variable_left("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
-          + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false")
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
+          + std::to_string(places_variable) + ", " + to_string(places_follow_links)
           + ")");
     session.variableRotateVariableLeft(
         variable, follow_links, places_variable, places_follow_links);
@@ -677,13 +691,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t places_variable = session.getData4();
     const bool places_follow_links = session.getData1() != 0x0;
     debug("variable_rotate_variable_right("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
-          + std::to_string(places_variable) + ", " + (places_follow_links ? "true" : "false")
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
+          + std::to_string(places_variable) + ", " + to_string(places_follow_links)
           + ")");
     session.variableRotateVariableRight(
         variable, follow_links, places_variable, places_follow_links);
   } break;
-  
+
   case OpCode::CompareIfVariableGtConstant: {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
@@ -691,13 +705,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("compare_if_variable_gt_constant("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(constant) + ", " + std::to_string(target_variable) + ", "
-          + (target_follow_links ? "true" : "false"));
+          + to_string(target_follow_links));
     session.compareIfVariableGtConstant(
         variable, follow_links, constant, target_variable, target_follow_links);
   } break;
-  
+
   case OpCode::CompareIfVariableLtConstant: {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
@@ -705,13 +719,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("compare_if_variable_lt_constant("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(constant) + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.compareIfVariableLtConstant(
         variable, follow_links, constant, target_variable, target_follow_links);
   } break;
-  
+
   case OpCode::CompareIfVariableEqConstant: {
     const int32_t variable = session.getData4();
     const bool follow_links = session.getData1() != 0x0;
@@ -719,13 +733,13 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("compare_if_variable_eq_constant("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(constant) + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.compareIfVariableEqConstant(
         variable, follow_links, constant, target_variable, target_follow_links);
   } break;
-  
+
   case OpCode::CompareIfVariableGtVariable: {
     const int32_t variable_a = session.getData4();
     const bool follow_links_a = session.getData1() != 0x0;
@@ -734,14 +748,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("compare_if_variable_gt_variable("
-          + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(variable_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_b) + ", " + to_string(follow_links_b) + ", "
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.compareIfVariableGtVariable(
         variable_a, follow_links_a, variable_b, follow_links_b,
         target_variable, target_follow_links);
   } break;
-  
+
   case OpCode::CompareIfVariableLtVariable: {
     const int32_t variable_a = session.getData4();
     const bool follow_links_a = session.getData1() != 0x0;
@@ -750,14 +764,14 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("compare_if_variable_lt_variable("
-          + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(variable_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_b) + ", " + to_string(follow_links_b) + ", "
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.compareIfVariableLtVariable(
         variable_a, follow_links_a, variable_b, follow_links_b,
         target_variable, target_follow_links);
   } break;
-  
+
   case OpCode::CompareIfVariableEqVariable: {
     const int32_t variable_a = session.getData4();
     const bool follow_links_a = session.getData1() != 0x0;
@@ -766,9 +780,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("compare_if_variable_eq_variable("
-          + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(variable_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_b) + ", " + to_string(follow_links_b) + ", "
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.compareIfVariableEqVariable(
         variable_a, follow_links_a, variable_b, follow_links_b,
         target_variable, target_follow_links);
@@ -781,9 +795,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("get_max_of_variable_and_constant("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(constant) + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.getMaxOfVariableAndConstant(
         variable, follow_links, constant, target_variable, target_follow_links);
   } break;
@@ -795,9 +809,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("get_min_of_variable_and_constant("
-          + std::to_string(variable) + ", " + (follow_links ? "true" : "false") + ", "
+          + std::to_string(variable) + ", " + to_string(follow_links) + ", "
           + std::to_string(constant) + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.getMinOfVariableAndConstant(
         variable, follow_links, constant, target_variable, target_follow_links);
   } break;
@@ -810,9 +824,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("get_max_of_variable_and_variable("
-          + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(variable_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_b) + ", " + to_string(follow_links_b) + ", "
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.getMaxOfVariableAndVariable(
         variable_a, follow_links_a, variable_b, follow_links_b,
         target_variable, target_follow_links);
@@ -826,9 +840,9 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t target_variable = session.getData4();
     const bool target_follow_links = session.getData1() != 0x0;
     debug("get_min_of_variable_and_variable("
-          + std::to_string(variable_a) + ", " + (follow_links_a ? "true" : "false") + ", "
-          + std::to_string(variable_b) + ", " + (follow_links_b ? "true" : "false") + ", "
-          + std::to_string(target_variable) + ", " + (target_follow_links ? "true" : "false"));
+          + std::to_string(variable_a) + ", " + to_string(follow_links_a) + ", "
+          + std::to_string(variable_b) + ", " + to_string(follow_links_b) + ", "
+          + std::to_string(target_variable) + ", " + to_string(target_follow_links));
     session.getMinOfVariableAndVariable(
         variable_a, follow_links_a, variable_b, follow_links_b,
         target_variable, target_follow_links);
