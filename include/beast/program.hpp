@@ -756,53 +756,55 @@ class Program {
 
   /**
    * @fn Program::performSystemCall
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a system call according to its parameters
    *
-   * TODO(fairlight1337): Document this part.
+   * Performs system calls for different purposes. The currently implemented set of functionalities
+   * and valid parameter ranges can be found in VmSession::performSystemCall.
    *
    * Identified by OpCode::PerformSystemCall. Represented by 8 bytes.
    *
-   * @param major_code tbd
-   * @param minor_code tbd
+   * @param major_code The major code of the system call to perform
+   * @param minor_code The minor code of the system call to perform
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa VmSession::performSystemCall()
    */
   void performSystemCall(
       int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::bitShiftVariableLeft
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-shift a variable to the left
    *
-   * TODO(fairlight1337): Document this part.
+   * Bit-shifts the given variable by `places` bits to the left. The right side will be filled up
+   * with zero bits.
    *
    * Identified by OpCode::BitShiftVariableLeft. Represented by 7 bytes.
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param places tbd
+   * @param places The amount of places to shift the variable to the left.
    */
   void bitShiftVariableLeft(int32_t variable_index, bool follow_links, int8_t places);
 
   /**
    * @fn Program::bitShiftVariableRight
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-shift a variable to the right
    *
-   * TODO(fairlight1337): Document this part.
+   * Bit-shifts the given variable by `places` bits to the right. The left side will be filled up
+   * with zero bits.
    *
    * Identified by OpCode::BitShiftVariableRight. Represented by 7 bytes.
    *
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
-   * @param places tbd
+   * @param places The amount of places to shift the variable to the right.
    */
   void bitShiftVariableRight(int32_t variable_index, bool follow_links, int8_t places);
 
   /**
    * @fn Program::bitWiseInvertVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Bit-wise inverts the given variable
    *
    * Identified by OpCode::BitWiseInvertVariable. Represented by 5 bytes.
    *
@@ -813,48 +815,48 @@ class Program {
 
   /**
    * @fn Program::bitWiseAndTwoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a bit-wise AND operation on two variables
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in `variable_index_b`.
    *
    * Identified by OpCode::BitWiseAndTwoVariables. Represented by 11 bytes.
    *
-   * @param variable_index_a The index of the variable.
-   * @param follow_links_a Whether to resolve variable links.
-   * @param variable_index_b The index of the variable.
-   * @param follow_links_b Whether to resolve variable links.
+   * @param variable_index_a The index of the first variable.
+   * @param follow_links_a Whether to resolve first variable's links.
+   * @param variable_index_b The index of the second variable.
+   * @param follow_links_b Whether to resolve second variable's links.
    */
   void bitWiseAndTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::bitWiseOrTwoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a bit-wise OR operation on two variables
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in `variable_index_b`.
    *
    * Identified by OpCode::BitWiseOrTwoVariables. Represented by 11 bytes.
    *
-   * @param variable_index_a The index of the variable.
-   * @param follow_links_a Whether to resolve variable links.
-   * @param variable_index_b The index of the variable.
-   * @param follow_links_b Whether to resolve variable links.
+   * @param variable_index_a The index of the first variable.
+   * @param follow_links_a Whether to resolve first variable's links.
+   * @param variable_index_b The index of the second variable.
+   * @param follow_links_b Whether to resolve second variable's links.
    */
   void bitWiseOrTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::bitWiseXorTwoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a bit-wise XOR operation on two variables
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in `variable_index_b`.
    *
    * Identified by OpCode::BitWiseXorTwoVariables. Represented by 11 bytes.
    *
-   * @param variable_index_a The index of the variable.
-   * @param follow_links_a Whether to resolve variable links.
-   * @param variable_index_b The index of the variable.
-   * @param follow_links_b Whether to resolve variable links.
+   * @param variable_index_a The index of the first variable.
+   * @param follow_links_a Whether to resolve first variable's links.
+   * @param variable_index_b The index of the second variable.
+   * @param follow_links_b Whether to resolve second variable's links.
    */
   void bitWiseXorTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
@@ -927,16 +929,20 @@ class Program {
 
   /**
    * @fn Program::pushVariableOnStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pushes the content of a variable onto a stack
    *
-   * TODO(fairlight1337): Document this part.
+   * A stack is identified by a variable holding the current size of the stack, and a number of
+   * declared variables after it. This operator increases the current size of the stack by 1, and
+   * copies the value of the passed in variable into the variable index that is at
+   * `stack_variable_index + previous_size + 1`.
    *
    * Identified by OpCode::PushVariableOnStack. Represented by 11 bytes.
    *
-   * @param stack_variable_index The index of the variable.
-   * @param follow_links_stack Whether to resolve variable links.
+   * @param stack_variable_index The index of the stack variable.
+   * @param follow_links_stack Whether to resolve the stack variable's links.
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa pushConstantOnStack(), popVariableFromStack(), popTopItemFromStack(), checkIfStackIsEmpty()
    */
   void pushVariableOnStack(
       int32_t stack_variable_index, bool follow_links_stack,
@@ -944,24 +950,27 @@ class Program {
 
   /**
    * @fn Program::pushConstantOnStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pushes a constant value onto a stack
    *
-   * TODO(fairlight1337): Document this part.
+   * Similar to pushVariableOnStack, but pushes a constant value passed to this operand onto the
+   * stack rather than reading the value from a variable.
    *
    * Identified by OpCode::PushConstantOnStack. Represented by 10 bytes.
    *
    * @param stack_variable_index The index of the variable.
    * @param follow_links_stack Whether to resolve variable links.
    * @param constant tbd
+   * @sa pushVariableOnStack(), popVariableFromStack(), popTopItemFromStack(), checkIfStackIsEmpty()
    */
   void pushConstantOnStack(
       int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
 
   /**
    * @fn Program::popVariableFromStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Removes the top item from the stack and stores it in a variable.
    *
-   * TODO(fairlight1337): Document this part.
+   * Removes the top item from the stack, reducing the stack size by 1. The value of the removed
+   * item will be stored in `variable_index`. Throws if the stack was empty before.
    *
    * Identified by OpCode::PopVariableFromStack. Represented by 11 bytes.
    *
@@ -969,6 +978,7 @@ class Program {
    * @param follow_links_stack Whether to resolve variable links.
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa pushVariableOnStack(), pushConstantOnStack(), popTopItemFromStack(), checkIfStackIsEmpty()
    */
   void popVariableFromStack(
       int32_t stack_variable_index, bool follow_links_stack,
@@ -976,22 +986,26 @@ class Program {
 
   /**
    * @fn Program::popTopItemFromStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Removes the top item from the stack
    *
-   * TODO(fairlight1337): Document this part.
+   * Effectively, the stack size will be reduced by 1. The top item will be discarded. Throws if the
+   * stack was empty before.
    *
    * Identified by OpCode::PopTopItemFromStack. Represented by 6 bytes.
    *
    * @param stack_variable_index The index of the variable.
    * @param follow_links_stack Whether to resolve variable links.
+   * @sa popVariableFromStack(), popVariableFromStack(), checkIfStackIsEmpty()
+   * @sa pushVariableOnStack(), pushConstantOnStack(), popVariableFromStack(), checkIfStackIsEmpty()
    */
   void popTopItemFromStack(int32_t stack_variable_index, bool follow_links_stack);
 
   /**
    * @fn Program::checkIfStackIsEmpty
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks whether there are no items on a stack
    *
-   * TODO(fairlight1337): Document this part.
+   * If the stack at variable `stack_variable_index` contains no items, the variable at
+   * `variable_index` will be set to `0x1`, and `0x0` if there is at least one item on the stack.
    *
    * Identified by OpCode::CheckIfStackIsEmpty. Represented by 11 bytes.
    *
@@ -999,6 +1013,7 @@ class Program {
    * @param follow_links_stack Whether to resolve variable links.
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
+   * @sa pushConstantOnStack(), pushVariableOnStack(), pushConstantOnStack(), popTopItemFromStack()
    */
   void checkIfStackIsEmpty(
       int32_t stack_variable_index, bool follow_links_stack,
@@ -1020,44 +1035,40 @@ class Program {
 
   /**
    * @fn Program::setVariableStringTableEntry
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Sets an entry in the string table at a variable index
    *
    * Identified by OpCode::SetVariableStringTableEntry. Represented by 8 + string length bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable to read the string table index from.
    * @param follow_links Whether to resolve variable links.
-   * @param string tbd
+   * @param string The string to store in the string table
+   * @sa setStringTableEntry()
    */
   void setVariableStringTableEntry(
       int32_t variable_index, bool follow_links, const std::string& string);
 
   /**
    * @fn Program::printVariableStringFromStringTable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Prints an entry from the string table from a variable index
    *
    * Identified by OpCode::PrintVariableStringFromStringTable. Represented by 6 bytes.
    *
-   * @param variable_index The index of the variable.
+   * @param variable_index The index of the variable to read the string table index from.
    * @param follow_links Whether to resolve variable links.
+   * @sa printStringFromStringTable()
    */
   void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::loadVariableStringItemLengthIntoVariable
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Loads the length of a variable string table index into a variable
    *
    * Identified by OpCode::LoadVariableStringItemLengthIntoVariable. Represented by 11 bytes.
    *
-   * @param string_item_variable_index The index of the variable.
-   * @param follow_links_string_item Whether to resolve variable links.
-   * @param variable_index The index of the variable.
-   * @param follow_links Whether to resolve variable links.
+   * @param string_item_variable_index The index of the variable to read the string table index from
+   * @param follow_links_string_item Whether to resolve the string table index variable's links
+   * @param variable_index The index of the variable to store the length in
+   * @param follow_links Whether to resolve the target variable's links
    */
   void loadVariableStringItemLengthIntoVariable(
       int32_t string_item_variable_index, bool follow_links_string_item,
@@ -1098,16 +1109,15 @@ class Program {
 
   /**
    * @fn Program::variableBitShiftVariableLeft
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Bit-shifts a variable to the left by a variable amount of places
    *
    * Identified by OpCode::VariableBitShiftVariableLeft. Represented by 11 bytes.
    *
-   * @param variable_index The index of the variable.
-   * @param follow_links Whether to resolve variable links.
-   * @param places_variable_index The index of the variable.
-   * @param follow_links_places Whether to resolve variable links.
+   * @param variable_index The target variable that should be bit-shifted
+   * @param follow_links Whether to resolve the target variable's links
+   * @param places_variable_index The variable holding the amount to shift by
+   * @param follow_links_places Whether to resolve the amount variable's links
+   * @sa bitShiftVariableLeft()
    */
   void variableBitShiftVariableLeft(
       int32_t variable_index, bool follow_links,
@@ -1115,16 +1125,15 @@ class Program {
 
   /**
    * @fn Program::variableBitShiftVariableRight
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Bit-shifts a variable to the right by a variable amount of places
    *
    * Identified by OpCode::VariableBitShiftVariableRight. Represented by 11 bytes.
    *
-   * @param variable_index The index of the variable.
-   * @param follow_links Whether to resolve variable links.
-   * @param places_variable_index The index of the variable.
-   * @param follow_links_places Whether to resolve variable links.
+   * @param variable_index The target variable that should be bit-shifted
+   * @param follow_links Whether to resolve the target variable's links
+   * @param places_variable_index The variable holding the amount to shift by
+   * @param follow_links_places Whether to resolve the amount variable's links
+   * @sa bitShiftVariableRight()
    */
   void variableBitShiftVariableRight(
       int32_t variable_index, bool follow_links,
@@ -1132,16 +1141,14 @@ class Program {
 
   /**
    * @fn Program::variableRotateVariableLeft
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Rotates a variable to the left by a variable amount of places
    *
    * Identified by OpCode::VariableRotateVariableLeft. Represented by 11 bytes.
    *
-   * @param variable_index The index of the variable.
-   * @param follow_links Whether to resolve variable links.
-   * @param places_variable_index The index of the variable.
-   * @param follow_links_places Whether to resolve variable links.
+   * @param variable_index The target variable that should be rotated
+   * @param follow_links Whether to resolve the target variable's links
+   * @param places_variable_index The variable holding the amount to rotate by
+   * @param follow_links_places Whether to resolve the amount variable's links
    */
   void variableRotateVariableLeft(
       int32_t variable_index, bool follow_links,
@@ -1149,16 +1156,14 @@ class Program {
 
   /**
    * @fn Program::variableRotateVariableRight
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Rotates a variable to the right by a variable amount of places
    *
    * Identified by OpCode::VariableRotateVariableRight. Represented by 11 bytes.
    *
-   * @param variable_index The index of the variable.
-   * @param follow_links Whether to resolve variable links.
-   * @param places_variable_index The index of the variable.
-   * @param follow_links_places Whether to resolve variable links.
+   * @param variable_index The target variable that should be rotated
+   * @param follow_links Whether to resolve the target variable's links
+   * @param places_variable_index The variable holding the amount to rotate by
+   * @param follow_links_places Whether to resolve the amount variable's links
    */
   void variableRotateVariableRight(
       int32_t variable_index, bool follow_links,
@@ -1441,33 +1446,27 @@ class Program {
 
   /**
    * @fn Program::ensureSize
-   * @brief NEEDS DOCUMENTATION
+   * @brief If too small, resizes the internal byte storage to accomodate up to `size` bytes.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param size The size that should be ensured to fit into the program space.
    */
   void ensureSize(uint32_t size);
 
   /**
    * @var Program::data_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief The internal program storage for byte code
    */
   std::vector<unsigned char> data_;
 
   /**
    * @var Program::pointer_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Points to the next byte where any appended data will be stored
    */
   uint32_t pointer_;
 
   /**
    * @var Program::grows_dynamically_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this part.
+   * @brief Denotes whether the program grows dynamically or is of constant size
    */
   bool grows_dynamically_;
 };
