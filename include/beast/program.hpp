@@ -48,10 +48,9 @@ class Program {
    * @fn Program::Program
    * @brief Growing program constructor
    *
-   * This constructor declares the program as growing dynamically when operators are added to it or
-   * other programs are inserted into it.
+   * The default setting is to make programs gow dynamically.
    */
-  Program();
+  Program() = default;
 
   /**
    * @fn Program::Program(int32_t)
@@ -156,7 +155,7 @@ class Program {
    *
    * @param other The program to be inserted into the current instance.
    */
-  void insertProgram(Program& other);
+  void insertProgram(const Program& other);
 
   /**
    * @fn Program::getData
@@ -1690,13 +1689,13 @@ class Program {
    * @var Program::pointer_
    * @brief Points to the next byte where any appended data will be stored
    */
-  uint32_t pointer_;
+  uint32_t pointer_ = 0;
 
   /**
    * @var Program::grows_dynamically_
    * @brief Denotes whether the program grows dynamically or is of constant size
    */
-  bool grows_dynamically_;
+  bool grows_dynamically_ = true;
 };
 
 }  // namespace beast

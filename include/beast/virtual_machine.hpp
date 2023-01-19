@@ -38,10 +38,9 @@ class VirtualMachine {
    * @fn VirtualMachine::VirtualMachine
    * @brief Constructor for the VirtualMachine base class
    *
-   * This is the base class constructor for all virtual machine implementations. It sets the minimum
-   * message severity to MessageSeverity::Info to prevent debug message spamming.
+   * This is the base class constructor for all virtual machine implementations.
    */
-  VirtualMachine();
+  VirtualMachine() = default;
 
   /**
    * @fn VirtualMachine::~VirtualMachine
@@ -128,7 +127,7 @@ class VirtualMachine {
    * Only messages that are equal or above this severity are actually printed. All other messages
    * are silently dropped.
    */
-  MessageSeverity minimum_severity_;
+  MessageSeverity minimum_severity_ = MessageSeverity::Info;
 };
 
 }  // namespace beast

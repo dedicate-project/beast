@@ -6,16 +6,12 @@
 
 namespace beast {
 
-Program::Program()
-  : pointer_{0}, grows_dynamically_{true} {
-}
-
 Program::Program(int32_t space)
-  : data_(space, 0x00), pointer_{0}, grows_dynamically_{false} {
+  : data_(space, 0x00), grows_dynamically_{false} {
 }
 
 Program::Program(std::vector<unsigned char> data)
-  : data_{std::move(data)}, pointer_{0}, grows_dynamically_{false} {
+  : data_{std::move(data)}, grows_dynamically_{false} {
 }
 
 size_t Program::getSize() const {
@@ -56,9 +52,9 @@ uint32_t Program::getPointer() const {
   return pointer_;
 }
 
-void Program::insertProgram(Program& other) {
+void Program::insertProgram(const Program& other) {
   const size_t to_fit = other.getSize();
-  if (!canFit(to_fit)) {
+  if (!canFit(static_cast<uint32_t>(to_fit))) {
     throw std::runtime_error("Unable to fit other program into program.");
   }
   for (uint32_t idx = 0; idx < to_fit; ++idx) {
@@ -288,7 +284,7 @@ void Program::printVariable(int32_t variable_index, bool follow_links, bool as_c
 }
 
 void Program::setStringTableEntry(int32_t string_table_index, const std::string& string) {
-  if (!canFit(3 + string.size())) {
+  if (!canFit(static_cast<uint32_t>(3 + string.size()))) {
     throw std::runtime_error("Unable to fit instruction into program.");
   }
 

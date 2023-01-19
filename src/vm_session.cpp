@@ -15,9 +15,8 @@ namespace beast {
 VmSession::VmSession(
     Program program, size_t variable_count, size_t string_table_count,
     size_t max_string_size)
-  : program_{std::move(program)}, pointer_{0}, variable_count_{variable_count}
-  , string_table_count_{string_table_count}, max_string_size_{max_string_size}
-  , maximum_print_buffer_length_{256}, was_terminated_{false}, return_code_{0} {
+  : program_{std::move(program)}, variable_count_{variable_count}
+  , string_table_count_{string_table_count}, max_string_size_{max_string_size} {
 }
 
 void VmSession::setVariableBehavior(int32_t variable_index, VariableIoBehavior behavior) {
@@ -167,7 +166,7 @@ void VmSession::unregisterVariable(int32_t variable_index) {
   variables_.erase(variable_index);
 }
 
-void VmSession::setStringTableEntry(int32_t string_table_index, const std::string& string_content) {
+void VmSession::setStringTableEntry(int32_t string_table_index, std::string_view string_content) {
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
     throw std::runtime_error("String table index out of bounds.");
   }
@@ -188,7 +187,7 @@ const std::string& VmSession::getStringTableEntry(int32_t string_table_index) co
   return iterator->second;
 }
 
-void VmSession::appendToPrintBuffer(const std::string& string) {
+void VmSession::appendToPrintBuffer(std::string_view string) {
   if (print_buffer_.size() + string.size() > maximum_print_buffer_length_) {
     throw std::runtime_error("Print buffer overflow.");
   }
@@ -714,7 +713,7 @@ void VmSession::swapVariables(
 }
 
 void VmSession::setVariableStringTableEntry(
-    int32_t variable_index, bool follow_links, const std::string& string_content) {
+    int32_t variable_index, bool follow_links, std::string_view string_content) {
   const int32_t string_table_index = getVariableValueInternal(variable_index, follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
     throw std::runtime_error("String table index out of bounds.");

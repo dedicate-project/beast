@@ -257,7 +257,7 @@ class VmSession {
    * @param string_table_index The string table index to set.
    * @param string The content to store in the string table.
    */
-  void setStringTableEntry(int32_t string_table_index, const std::string& string_content);
+  void setStringTableEntry(int32_t string_table_index, std::string_view string_content);
 
   /**
    * @fn VmSession::getStringTableEntry
@@ -278,7 +278,7 @@ class VmSession {
    * @param string The string to append to the print buffer.
    * @sa appendVariableToPrintBuffer(), getPrintBuffer(), clearPrintBuffer()
    */
-  void appendToPrintBuffer(const std::string& string);
+  void appendToPrintBuffer(std::string_view string);
 
   /**
    * @fn VmSession::appendVariableToPrintBuffer
@@ -970,7 +970,7 @@ class VmSession {
    * TODO(fairlight1337): Document this part.
    */
   void setVariableStringTableEntry(
-      int32_t variable_index, bool follow_links, const std::string& string_content);
+      int32_t variable_index, bool follow_links, std::string_view string_content);
 
   /**
    * @fn VmSession::printVariableStringFromStringTable
@@ -1233,7 +1233,7 @@ class VmSession {
    *
    * Always points to the byte in the program's byte code that will be executed next.
    */
-  int32_t pointer_;
+  int32_t pointer_ = 0;
 
   /**
    * @var VmSession::variable_count_
@@ -1261,7 +1261,7 @@ class VmSession {
    *
    * @sa clearPrintBuffer()
    */
-  size_t maximum_print_buffer_length_;
+  size_t maximum_print_buffer_length_ = 256;
 
   /**
    * @var VmSession::variables_
@@ -1296,7 +1296,7 @@ class VmSession {
    * When this flag is set, VirtualMachine instances are not supposed to further execute the
    * program.
    */
-  bool was_terminated_;
+  bool was_terminated_ = false;
 
   /**
    * @var VmSession::return_code_
@@ -1306,7 +1306,7 @@ class VmSession {
    *
    * @sa terminate(), terminateWithVariableReturnCode(), getReturnCode()
    */
-  int8_t return_code_;
+  int8_t return_code_ = 0;
 };
 
 }  // namespace beast

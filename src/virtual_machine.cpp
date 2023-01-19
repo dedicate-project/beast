@@ -2,10 +2,6 @@
 
 namespace beast {
 
-VirtualMachine::VirtualMachine()
-  : minimum_severity_{MessageSeverity::Info} {
-}
-
 void VirtualMachine::setMinimumMessageSeverity(MessageSeverity minimum_severity) {
   minimum_severity_ = minimum_severity;
 }
