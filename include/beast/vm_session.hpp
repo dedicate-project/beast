@@ -334,17 +334,26 @@ class VmSession {
 
   /**
    * @fn VmSession::addConstantToVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Adds a constant to a variable's value
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::addConstantToVariable for the intended operator use.
+   *
+   * @param variable_index The variable to add the constant to
+   * @param constant The constant to add to the variable
+   * @param follow_links Wehether to resolve the variable's links
    */
   void addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
   /**
    * @fn VmSession::addVariableToVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Add the value of one variable to another variable
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::addVariableToVariable for the intended operator use.
+   *
+   * @param source_variable The variable to add to the other variable
+   * @param destination_variable The variable to add the value to
+   * @param follow_source_links Whether to resolve the source variable's links
+   * @param follow_destination_links Whether to resolve the destination variable's links
    */
   void addVariableToVariable(
       int32_t source_variable, int32_t destination_variable,
@@ -352,17 +361,26 @@ class VmSession {
 
   /**
    * @fn VmSession::subtractConstantFromVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Subtract a constant from a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::subtractConstantFromVariable for the intended operator use.
+   *
+   * @param variable_index The variable to subtract the constant from
+   * @param constant The constant to subtract from the variable
+   * @param follow_links Wehether to resolve the variable's links
    */
   void subtractConstantFromVariable(int32_t variable_index, int32_t constant, bool follow_links);
 
   /**
    * @fn VmSession::subtractVariableFromVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Subtract a variable from a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::subtractVariableFromVariable for the intended operator use.
+   *
+   * @param source_variable The variable to subtract from the other variable
+   * @param destination_variable The variable to subtract the value from
+   * @param follow_source_links Whether to resolve the source variable's links
+   * @param follow_destination_links Whether to resolve the destination variable's links
    */
   void subtractVariableFromVariable(
       int32_t source_variable, int32_t destination_variable,
@@ -372,7 +390,14 @@ class VmSession {
    * @fn VmSession::relativeJumpToVariableAddressIfVariableGt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::relativeJumpToVariableAddressIfVariableGt0 for the intended operator use.
+   *
+   * Perform a relative jump to a variable address if a condition variable is > 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr_variable The variable holding the target address
+   * @param follow_addr_links Whether to resolve the target address variable's links
    */
   void relativeJumpToVariableAddressIfVariableGt0(
       int32_t condition_variable, bool follow_condition_links,
@@ -382,7 +407,14 @@ class VmSession {
    * @fn VmSession::relativeJumpToVariableAddressIfVariableLt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::relativeJumpToVariableAddressIfVariableLt0 for the intended operator use.
+   *
+   * Perform a relative jump to a variable address if a condition variable is < 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr_variable The variable holding the target address
+   * @param follow_addr_links Whether to resolve the target address variable's links
    */
   void relativeJumpToVariableAddressIfVariableLt0(
       int32_t condition_variable, bool follow_condition_links,
@@ -392,7 +424,14 @@ class VmSession {
    * @fn VmSession::relativeJumpToVariableAddressIfVariableEq0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::relativeJumpToVariableAddressIfVariableEq0 for the intended operator use.
+   *
+   * Perform a relative jump to a variable address if a condition variable is = 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr_variable The variable holding the target address
+   * @param follow_addr_links Whether to resolve the target address variable's links
    */
   void relativeJumpToVariableAddressIfVariableEq0(
       int32_t condition_variable, bool follow_condition_links,
@@ -402,7 +441,14 @@ class VmSession {
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableGt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::absoluteJumpToVariableAddressIfVariableGt0 for the intended operator use.
+   *
+   * Perform an absolute jump to a variable address if a condition variable is > 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr_variable The variable holding the target address
+   * @param follow_addr_links Whether to resolve the target address variable's links
    */
   void absoluteJumpToVariableAddressIfVariableGt0(
       int32_t condition_variable, bool follow_condition_links,
@@ -412,7 +458,14 @@ class VmSession {
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableLt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::absoluteJumpToVariableAddressIfVariableLt0 for the intended operator use.
+   *
+   * Perform an absolute jump to a variable address if a condition variable is < 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr_variable The variable holding the target address
+   * @param follow_addr_links Whether to resolve the target address variable's links
    */
   void absoluteJumpToVariableAddressIfVariableLt0(
       int32_t condition_variable, bool follow_condition_links,
@@ -422,7 +475,14 @@ class VmSession {
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableEq0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::absoluteJumpToVariableAddressIfVariableEq0 for the intended operator use.
+   *
+   * Perform an absolute jump to a variable address if a condition variable is = 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr_variable The variable holding the target address
+   * @param follow_addr_links Whether to resolve the target address variable's links
    */
   void absoluteJumpToVariableAddressIfVariableEq0(
       int32_t condition_variable, bool follow_condition_links,
@@ -432,7 +492,13 @@ class VmSession {
    * @fn VmSession::relativeJumpToAddressIfVariableGt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::relativeJumpToAddressIfVariableGt0 for the intended operator use.
+   *
+   * Perform a relative jump to a fixed address if a condition variable is > 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr The target address
    */
   void relativeJumpToAddressIfVariableGt0(
       int32_t condition_variable, bool follow_condition_links, int32_t addr);
@@ -441,7 +507,13 @@ class VmSession {
    * @fn VmSession::relativeJumpToAddressIfVariableLt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::relativeJumpToAddressIfVariableLt0 for the intended operator use.
+   *
+   * Perform a relative jump to a fixed address if a condition variable is < 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr The target address
    */
   void relativeJumpToAddressIfVariableLt0(
       int32_t condition_variable, bool follow_condition_links, int32_t addr);
@@ -450,7 +522,13 @@ class VmSession {
    * @fn VmSession::relativeJumpToAddressIfVariableEq0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::relativeJumpToAddressIfVariableEq0 for the intended operator use.
+   *
+   * Perform a relative jump to a fixed address if a condition variable is = 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr The target address
    */
   void relativeJumpToAddressIfVariableEq0(
       int32_t condition_variable, bool follow_condition_links, int32_t addr);
@@ -459,7 +537,13 @@ class VmSession {
    * @fn VmSession::absoluteJumpToAddressIfVariableGt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::absoluteJumpToAddressIfVariableGt0 for the intended operator use.
+   *
+   * Perform an absolute jump to a fixed address if a condition variable is > 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr The target address
    */
   void absoluteJumpToAddressIfVariableGt0(
       int32_t condition_variable, bool follow_condition_links, int32_t addr);
@@ -468,7 +552,13 @@ class VmSession {
    * @fn VmSession::absoluteJumpToAddressIfVariableLt0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::absoluteJumpToAddressIfVariableLt0 for the intended operator use.
+   *
+   * Perform an absolute jump to a fixed address if a condition variable is < 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr The target address
    */
   void absoluteJumpToAddressIfVariableLt0(
       int32_t condition_variable, bool follow_condition_links, int32_t addr);
@@ -477,24 +567,42 @@ class VmSession {
    * @fn VmSession::absoluteJumpToAddressIfVariableEq0
    * @brief NEEDS DOCUMENTATION
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::absoluteJumpToAddressIfVariableEq0 for the intended operator use.
+   *
+   * Perform an absolute jump to a fixed address if a condition variable is = 0.
+   *
+   * @param condition_variable The variable holding the value to compare
+   * @param follow_condition_links Whether to resolve the comparison variable's links
+   * @param addr The target address
    */
   void absoluteJumpToAddressIfVariableEq0(
       int32_t condition_variable, bool follow_condition_links, int32_t addr);
 
   /**
    * @fn VmSession::loadMemorySizeIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the maximum number of variables into a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::loadMemorySizeIntoVariable for the intended operator use.
+   *
+   * @param variable The variable to store the result in
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadMemorySizeIntoVariable(int32_t variable, bool follow_links);
 
   /**
    * @fn VmSession::checkIfVariableIsInput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if a variable is registered as input, stores the result
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::checkIfVariableIsInput for the intended operator use.
+   *
+   * Checks whether the variable `source_variable` is registered as an input.
+   * If yes, stores `0x1` in `destination_variable`, and `0x0` otherwise.
+   *
+   * @param source_variable The variable to check for being an input
+   * @param follow_source_links Whether to resolve the source variable's links
+   * @param destination_variable The variable to store the result in
+   * @param follow_destination_links Whether to resolve the destination
+   *        variable's links
    */
   void checkIfVariableIsInput(
       int32_t source_variable, bool follow_source_links,
@@ -502,9 +610,18 @@ class VmSession {
 
   /**
    * @fn VmSession::checkIfVariableIsOutput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if a variable is registered as output, stores the result
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::checkIfVariableIsOutput for the intended operator use.
+   *
+   * Checks whether the variable `source_variable` is registered as an output.
+   * If yes, stores `0x1` in `destination_variable`, and `0x0` otherwise.
+   *
+   * @param source_variable The variable to check for being an output
+   * @param follow_source_links Whether to resolve the source variable's links
+   * @param destination_variable The variable to store the result in
+   * @param follow_destination_links Whether to resolve the destination
+   *        variable's links
    */
   void checkIfVariableIsOutput(
       int32_t source_variable, bool follow_source_links,
@@ -512,9 +629,15 @@ class VmSession {
 
   /**
    * @fn VmSession::copyVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Copies the value of one variable into another
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::copyVariable for the intended operator use.
+   *
+   * @param source_variable The variable to copy the value from
+   * @param follow_source_links Whether to resolve the source variable's links
+   * @param destination_variable The variable to store the result in
+   * @param follow_destination_links Whether to resolve the destination
+   *        variable's links
    */
   void copyVariable(
       int32_t source_variable, bool follow_source_links,
@@ -524,6 +647,8 @@ class VmSession {
    * @fn VmSession::loadInputCountIntoVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::loadInputCountIntoVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void loadInputCountIntoVariable(int32_t variable, bool follow_links);
@@ -531,6 +656,8 @@ class VmSession {
   /**
    * @fn VmSession::loadOutputCountIntoVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::loadOutputCountIntoVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -540,6 +667,8 @@ class VmSession {
    * @fn VmSession::loadCurrentAddressIntoVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::loadCurrentAddressIntoVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void loadCurrentAddressIntoVariable(int32_t variable, bool follow_links);
@@ -547,6 +676,8 @@ class VmSession {
   /**
    * @fn VmSession::checkIfInputWasSet
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::checkIfInputWasSet for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -558,6 +689,8 @@ class VmSession {
    * @fn VmSession::loadStringTableLimitIntoVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::loadStringTableLimitIntoVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links);
@@ -565,6 +698,8 @@ class VmSession {
   /**
    * @fn VmSession::loadStringTableItemLengthLimitIntoVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::loadStringTableItemLengthLimitIntoVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -574,6 +709,8 @@ class VmSession {
    * @fn VmSession::loadRandomValueIntoVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::loadRandomValueIntoVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
@@ -581,6 +718,8 @@ class VmSession {
   /**
    * @fn VmSession::unconditionalJumpToAbsoluteAddress
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::unconditionalJumpToAbsoluteAddress for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -590,6 +729,8 @@ class VmSession {
    * @fn VmSession::unconditionalJumpToAbsoluteVariableAddress
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::unconditionalJumpToAbsoluteVariableAddress for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links);
@@ -597,6 +738,8 @@ class VmSession {
   /**
    * @fn VmSession::unconditionalJumpToRelativeAddress
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::unconditionalJumpToRelativeAddress for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -606,6 +749,8 @@ class VmSession {
    * @fn VmSession::unconditionalJumpToRelativeVariableAddress
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::unconditionalJumpToRelativeVariableAddress for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
@@ -613,6 +758,8 @@ class VmSession {
   /**
    * @fn VmSession::loadStringItemLengthIntoVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::loadStringItemLengthIntoVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -622,6 +769,8 @@ class VmSession {
   /**
    * @fn VmSession::loadStringItemIntoVariables
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::loadStringItemIntoVariables for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -664,6 +813,8 @@ class VmSession {
    * @fn VmSession::bitShiftVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::bitShiftVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places);
@@ -672,6 +823,8 @@ class VmSession {
    * @fn VmSession::bitWiseInvertVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::bitWiseInvertVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void bitWiseInvertVariable(int32_t variable_index, bool follow_links);
@@ -679,6 +832,8 @@ class VmSession {
   /**
    * @fn VmSession::bitWiseAndTwoVariables
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::bitWiseAndTwoVariables for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -689,6 +844,8 @@ class VmSession {
    * @fn VmSession::bitWiseOrTwoVariables
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::bitWiseOrTwoVariables for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void bitWiseOrTwoVariables(
@@ -697,6 +854,8 @@ class VmSession {
   /**
    * @fn VmSession::bitWiseXorTwoVariables
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::bitWiseXorTwoVariables for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -707,6 +866,8 @@ class VmSession {
    * @fn VmSession::moduloVariableByConstant
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::moduloVariableByConstant for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t constant);
@@ -714,6 +875,8 @@ class VmSession {
   /**
    * @fn VmSession::moduloVariableByVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::moduloVariableByVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -725,6 +888,8 @@ class VmSession {
    * @fn VmSession::rotateVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::rotateVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void rotateVariable(int32_t variable_index, bool follow_links, int8_t places);
@@ -732,6 +897,8 @@ class VmSession {
   /**
    * @fn VmSession::pushVariableOnStack
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::pushVariableOnStack for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -743,6 +910,8 @@ class VmSession {
    * @fn VmSession::pushConstantOnStack
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::pushConstantOnStack for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void pushConstantOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t constant);
@@ -750,6 +919,8 @@ class VmSession {
   /**
    * @fn VmSession::popVariableFromStack
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::popVariableFromStack for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -761,6 +932,8 @@ class VmSession {
    * @fn VmSession::popTopItemFromStack
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::popTopItemFromStack for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void popTopItemFromStack(int32_t stack_variable_index, bool stack_follow_links);
@@ -768,6 +941,8 @@ class VmSession {
   /**
    * @fn VmSession::checkIfStackIsEmpty
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::checkIfStackIsEmpty for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -779,6 +954,8 @@ class VmSession {
    * @fn VmSession::swapVariables
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::swapVariables for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void swapVariables(
@@ -787,6 +964,8 @@ class VmSession {
   /**
    * @fn VmSession::setVariableStringTableEntry
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::setVariableStringTableEntry for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -797,6 +976,8 @@ class VmSession {
    * @fn VmSession::printVariableStringFromStringTable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::printVariableStringFromStringTable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
@@ -804,6 +985,8 @@ class VmSession {
   /**
    * @fn VmSession::loadVariableStringItemLengthIntoVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::loadVariableStringItemLengthIntoVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -815,6 +998,8 @@ class VmSession {
    * @fn VmSession::loadVariableStringItemIntoVariables
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::loadVariableStringItemIntoVariables for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void loadVariableStringItemIntoVariables(
@@ -825,6 +1010,8 @@ class VmSession {
    * @fn VmSession::terminateWithVariableReturnCode
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::terminateWithVariableReturnCode for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void terminateWithVariableReturnCode(int32_t variable_index, bool follow_links);
@@ -832,6 +1019,8 @@ class VmSession {
   /**
    * @fn VmSession::variableBitShiftVariableLeft
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::variableBitShiftVariableLeft for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -843,6 +1032,8 @@ class VmSession {
    * @fn VmSession::variableBitShiftVariableRight
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::variableBitShiftVariableRight for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void variableBitShiftVariableRight(
@@ -852,6 +1043,8 @@ class VmSession {
   /**
    * @fn VmSession::variableRotateVariableLeft
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::variableRotateVariableLeft for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -863,6 +1056,8 @@ class VmSession {
    * @fn VmSession::variableRotateVariableRight
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::variableRotateVariableRight for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void variableRotateVariableRight(
@@ -872,6 +1067,8 @@ class VmSession {
   /**
    * @fn VmSession::compareIfVariableGtConstant
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::compareIfVariableGtConstant for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -883,6 +1080,8 @@ class VmSession {
    * @fn VmSession::compareIfVariableLtConstant
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::compareIfVariableLtConstant for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void compareIfVariableLtConstant(
@@ -892,6 +1091,8 @@ class VmSession {
   /**
    * @fn VmSession::compareIfVariableEqConstant
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::compareIfVariableEqConstant for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -903,6 +1104,8 @@ class VmSession {
    * @fn VmSession::compareIfVariableGtVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::compareIfVariableGtVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void compareIfVariableGtVariable(
@@ -912,6 +1115,8 @@ class VmSession {
   /**
    * @fn VmSession::compareIfVariableLtVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::compareIfVariableLtVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -923,6 +1128,8 @@ class VmSession {
    * @fn VmSession::compareIfVariableEqVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::compareIfVariableEqVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void compareIfVariableEqVariable(
@@ -932,6 +1139,8 @@ class VmSession {
   /**
    * @fn VmSession::getMaxOfVariableAndConstant
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::getMaxOfVariableAndConstant for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -943,6 +1152,8 @@ class VmSession {
    * @fn VmSession::getMinOfVariableAndConstant
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::getMinOfVariableAndConstant for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void getMinOfVariableAndConstant(
@@ -952,6 +1163,8 @@ class VmSession {
   /**
    * @fn VmSession::getMaxOfVariableAndVariable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::getMaxOfVariableAndVariable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -963,6 +1176,8 @@ class VmSession {
    * @fn VmSession::getMinOfVariableAndVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::getMinOfVariableAndVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void getMinOfVariableAndVariable(
@@ -973,6 +1188,8 @@ class VmSession {
    * @fn VmSession::printVariable
    * @brief NEEDS DOCUMENTATION
    *
+   * See Program::printVariable for the intended operator use.
+   *
    * TODO(fairlight1337): Document this part.
    */
   void printVariable(int32_t variable_index, bool follow_links, bool as_char);
@@ -980,6 +1197,8 @@ class VmSession {
   /**
    * @fn VmSession::printStringFromStringTable
    * @brief NEEDS DOCUMENTATION
+   *
+   * See Program::printStringFromStringTable for the intended operator use.
    *
    * TODO(fairlight1337): Document this part.
    */
@@ -1046,17 +1265,19 @@ class VmSession {
 
   /**
    * @var VmSession::variables_
-   * @brief NEEDS DOCUMENTATION
+   * @brief Holds the program's variable memory
    *
-   * TODO(fairlight1337): Document this part.
+   * The map's index is the actual variables' indices. The content is a pair of the variable's
+   * description (type, I/O behavior, modified flag) and the actual numerical value.
    */
   std::map<int32_t, std::pair<VariableDescriptor, int32_t>> variables_;
 
   /**
    * @var VmSession::string_table_
-   * @brief NEEDS DOCUMENTATION
+   * @brief Holds the program's string table
    *
-   * TODO(fairlight1337): Document this part.
+   * The map's index is the actual string table items' indices. The value for each is the actual
+   * string value stored for each string table item.
    */
   std::map<int32_t, std::string> string_table_;
 
