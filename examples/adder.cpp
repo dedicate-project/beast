@@ -26,19 +26,19 @@ int main(int /*argc*/, char** /*argv*/) {
             << static_cast<uint32_t>(version[1]) << "."
             << static_cast<uint32_t>(version[2]) << "." << std::endl;
 
-  // Thse `+` calculations are supposed to be performed (operands and expected result)
+  /* These `+` calculations are supposed to be performed (operands and expected result) */
   const std::vector<Calculation> add_calculations
       {{1, 1, 2}, {7, 2, 9}, {100, 1000, 1100}, {1, -1, 0}, {-10000, -81, -10081}};
 
   /* Declare the variable indices and values to use in this program. */
-  // These are the I/O variables
+  /* These are the I/O variables */
   const int32_t operand_variable_a = 0;
   const int32_t operand_variable_b = 1;
   const int32_t trigger_calc_variable = 2;
   const int32_t trigger_quit_variable = 3;
   const int32_t result_variable = 4;
   const int32_t prg_ready = 5;
-  // These are the internal variables
+  /* These are the internal variables */
   const int32_t calc_triggered_variable = 6;
   const int32_t quit_triggered_variable = 7;
 
@@ -47,16 +47,16 @@ int main(int /*argc*/, char** /*argv*/) {
      without knowledge of the exact operator sizes. The main program `prg` further down then
      includes the `add_prg` and `quit_prg` programs using the `insertProgram` method. */
 
-  // Define the actual addition program part
+  /* Define the actual addition program part */
   beast::Program add_prg;
   add_prg.addVariableToVariable(operand_variable_a, true, operand_variable_b, true);
   add_prg.copyVariable(operand_variable_b, true, result_variable, true);
 
-  // Define the quit program part
+  /* Define the quit program part */
   beast::Program quit_prg;
   quit_prg.terminate(0);
 
-  // Define the main program
+  /* Define the main program */
   beast::Program prg;
   prg.declareVariable(calc_triggered_variable, beast::Program::VariableType::Int32);
   prg.setVariable(calc_triggered_variable, 0x0, true);
@@ -130,7 +130,7 @@ int main(int /*argc*/, char** /*argv*/) {
     } break;
 
     case CalculationState::WaitingForQuit: {
-      // Do nothing, waiting for the program to end.
+      /* Do nothing, waiting for the program to end. */
     } break;
     }
   }

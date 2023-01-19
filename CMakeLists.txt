@@ -78,6 +78,7 @@ if(BEAST_BUILD_EXAMPLES)
 
   declare_example(adder)
   declare_example(feedloop)
+  declare_example(hello_world)
 endif()
 
 # Testing
