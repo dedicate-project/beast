@@ -128,6 +128,15 @@ class VmSession {
   bool hasOutputDataAvailable(int32_t variable_index, bool follow_links);
 
   /**
+   * @fn VmSession::setMaximumPrintBufferLength
+   * @brief Sets the maximum length in characters that the print buffer can hold
+   *
+   * If the print buffer reaches a length of more than this value, an exception is thrown. This can
+   * be prevented by regularly calling clearPrintBuffer.
+   */
+  void setMaximumPrintBufferLength(size_t maximum_print_buffer_length);
+
+  /**
    * @fn VmSession::getData4
    * @brief Return the next 4 bytes of program byte code
    *
@@ -1024,6 +1033,16 @@ class VmSession {
    * @brief The maximum length of a string stored in the string table
    */
   size_t max_string_size_;
+
+  /**
+   * @var VmSession::maximum_print_buffer_length_
+   * @brief The maximum length of the print buffer
+   *
+   * To prevent this buffer from overflowing, clearPrintBuffer should be called regularly.
+   *
+   * @sa clearPrintBuffer()
+   */
+  size_t maximum_print_buffer_length_;
 
   /**
    * @var VmSession::variables_

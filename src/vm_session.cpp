@@ -17,7 +17,7 @@ VmSession::VmSession(
     size_t max_string_size)
   : program_{std::move(program)}, pointer_{0}, variable_count_{variable_count}
   , string_table_count_{string_table_count}, max_string_size_{max_string_size}
-  , was_terminated_{false}, return_code_{0} {
+  , maximum_print_buffer_length_{256}, was_terminated_{false}, return_code_{0} {
 }
 
 void VmSession::setVariableBehavior(int32_t variable_index, VariableIoBehavior behavior) {
@@ -43,6 +43,10 @@ bool VmSession::hasOutputDataAvailable(int32_t variable_index, bool follow_links
     throw std::runtime_error("Variable behavior not declared as output");
   }
   return iterator->second.first.changed_since_last_interaction;
+}
+
+void VmSession::setMaximumPrintBufferLength(size_t maximum_print_buffer_length) {
+  maximum_print_buffer_length_ = maximum_print_buffer_length;
 }
 
 int32_t VmSession::getData4() {
@@ -189,6 +193,9 @@ const std::string& VmSession::getStringTableEntry(int32_t string_table_index) co
 }
 
 void VmSession::appendToPrintBuffer(const std::string& string) {
+  if (print_buffer_.size() + string.size() > maximum_print_buffer_length_) {
+    throw std::runtime_error("Print buffer overflow.");
+  }
   print_buffer_ += string;
 }
 
