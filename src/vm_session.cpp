@@ -68,39 +68,35 @@ int8_t VmSession::getData1() {
 }
 
 int32_t VmSession::getVariableValue(int32_t variable_index, bool follow_links) {
-  std::pair<VariableDescriptor, int32_t>& variable =
-      variables_[getRealVariableIndex(variable_index, follow_links)];
-  if (variable.first.behavior == VariableIoBehavior::Output) {
-    variable.first.changed_since_last_interaction = false;
+  auto& [variable, value] = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.behavior == VariableIoBehavior::Output) {
+    variable.changed_since_last_interaction = false;
   }
-  return variable.second;
+  return value;
 }
 
 int32_t VmSession::getVariableValueInternal(int32_t variable_index, bool follow_links) {
-  std::pair<VariableDescriptor, int32_t>& variable =
-      variables_[getRealVariableIndex(variable_index, follow_links)];
-  if (variable.first.behavior == VariableIoBehavior::Input) {
-    variable.first.changed_since_last_interaction = false;
+  auto& [variable, value] = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.behavior == VariableIoBehavior::Input) {
+    variable.changed_since_last_interaction = false;
   }
-  return variable.second;
+  return value;
 }
 
 void VmSession::setVariableValue(int32_t variable_index, bool follow_links, int32_t value) {
-  std::pair<VariableDescriptor, int32_t>& variable =
-      variables_[getRealVariableIndex(variable_index, follow_links)];
-  if (variable.first.behavior == VariableIoBehavior::Input) {
-    variable.first.changed_since_last_interaction = true;
+  auto& [variable, current_value] = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.behavior == VariableIoBehavior::Input) {
+    variable.changed_since_last_interaction = true;
   }
-  variable.second = value;
+  current_value = value;
 }
 
 void VmSession::setVariableValueInternal(int32_t variable_index, bool follow_links, int32_t value) {
-  std::pair<VariableDescriptor, int32_t>& variable =
-      variables_[getRealVariableIndex(variable_index, follow_links)];
-  if (variable.first.behavior == VariableIoBehavior::Output) {
-    variable.first.changed_since_last_interaction = true;
+  auto& [variable, current_value] = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.behavior == VariableIoBehavior::Output) {
+    variable.changed_since_last_interaction = true;
   }
-  variable.second = value;
+  current_value = value;
 }
 
 bool VmSession::isAtEnd() const {
