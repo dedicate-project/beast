@@ -185,6 +185,9 @@ class Program {
    * @fn Program::declareVariable
    * @brief Declares a variable at an index and assigns a type
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Declares a numerical variable index, alongside its designated type. A variable type can either
    * be an actual value storage (of type VariableType::Int32) or a link to another variable index
    * (of type VariableType::Link).
@@ -200,6 +203,9 @@ class Program {
   /**
    * @fn Program::setVariable
    * @brief Sets the value of a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Sets the value of a variable at the given index to the value `content`. The variable index
    * needs to be declared prior to this.
@@ -217,6 +223,9 @@ class Program {
    * @fn Program::undeclareVariable
    * @brief Removes a variable declaration at the given index
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * The variable declared at the given index is undeclared. The index, type, and value are
    * removed from the variable memory. If at that index no variable is declared, an exception
    * is thrown.
@@ -232,6 +241,9 @@ class Program {
    * @fn Program::addConstantToVariable
    * @brief Adds a constant value to the value held in a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::AddConstantToVariable. Represented by 8 bytes.
    *
    * @param variable_index The index of the variable to add the constant to.
@@ -243,6 +255,9 @@ class Program {
   /**
    * @fn Program::addVariableToVariable
    * @brief Adds the value of one variable to that of another variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The contents of `source_variable_index` are added to the contents of
    * `destination_variable_index`. The result is stored in `destination_variable_index`.
@@ -262,6 +277,9 @@ class Program {
    * @fn Program::subtractConstantFromVariable
    * @brief Subtract a constant value from the value held in a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::SubtractConstantFromVariable. Represented by 10 bytes.
    *
    * @param variable_index The index of the variable to subtract the constant from.
@@ -273,6 +291,9 @@ class Program {
   /**
    * @fn Program::subtractVariableFromVariable
    * @brief Subtracts the value of one variable from that of another variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The contents of `source_variable_index` are subtracted from the contents of
    * `destination_variable_index`. The result is stored in `destination_variable_index`.
@@ -292,6 +313,9 @@ class Program {
    * @fn Program::relativeJumpToVariableAddressIfVariableGreaterThanZero
    * @brief Performs a relative jump to a variable address if a variable is > 0
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::RelativeJumpToVariableAddressIfVariableGt0. Represented by 11 bytes.
    *
    * @param variable_index The index of the variable.
@@ -307,6 +331,9 @@ class Program {
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableLessThanZero
    * @brief Performs a relative jump to a variable address if a variable is < 0
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::RelativeJumpToVariableAddressIfVariableLt0. Represented by 11 bytes.
    *
@@ -324,6 +351,9 @@ class Program {
    * @fn Program::relativeJumpToVariableAddressIfVariableEqualsZero
    * @brief Performs a relative jump to a variable address if a variable is = 0
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::RelativeJumpToVariableAddressIfVariableEq0. Represented by 11 bytes.
    *
    * @param variable_index The index of the variable.
@@ -339,6 +369,9 @@ class Program {
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableGreaterThanZero
    * @brief Performs an absolute jump to a variable address if a variable is > 0
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableGt0. Represented by 11 bytes.
    *
@@ -356,6 +389,9 @@ class Program {
    * @fn Program::absoluteJumpToVariableAddressIfVariableLessThanZero
    * @brief Performs an absolute jump to a variable address if a variable is < 0
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableLt0. Represented by 11 bytes.
    *
    * @param variable_index The index of the variable.
@@ -371,6 +407,9 @@ class Program {
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableEqualsZero
    * @brief Performs an absolute jump to a variable address if a variable is = 0
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::AbsoluteJumpToVariableAddressIfVariableEq0. Represented by 11 bytes.
    *
@@ -388,6 +427,9 @@ class Program {
    * @fn Program::relativeJumpToAddressIfVariableGreaterThanZero
    * @brief Performs a relative jump to a fixed address if a variable is > 0
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::RelativeJumpIfVariableGt0. Represented by 10 bytes.
    *
    * @param variable_index The index of the variable.
@@ -400,6 +442,9 @@ class Program {
   /**
    * @fn Program::relativeJumpToAddressIfVariableLessThanZero
    * @brief Performs a relative jump to a fixed address if a variable is < 0
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::RelativeJumpIfVariableLt0. Represented by 10 bytes.
    *
@@ -414,6 +459,9 @@ class Program {
    * @fn Program::relativeJumpToAddressIfVariableEqualsZero
    * @brief Performs a relative jump to a fixed address if a variable is = 0
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::RelativeJumpIfVariableEq0. Represented by 10 bytes.
    *
    * @param variable_index The index of the variable.
@@ -426,6 +474,9 @@ class Program {
   /**
    * @fn Program::absoluteJumpToAddressIfVariableGreaterThanZero
    * @brief Performs an absolute jump to a fixed address if a variable is > 0
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::AbsoluteJumpIfVariableGt0. Represented by 10 bytes.
    *
@@ -440,6 +491,9 @@ class Program {
    * @fn Program::absoluteJumpToAddressIfVariableLessThanZero
    * @brief Performs an absolute jump to a fixed address if a variable is < 0
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::AbsoluteJumpIfVariableLt0. Represented by 10 bytes.
    *
    * @param variable_index The index of the variable.
@@ -452,6 +506,9 @@ class Program {
   /**
    * @fn Program::absoluteJumpToAddressIfVariableEqualsZero
    * @brief Performs an absolute jump to a fixed address if a variable is = 0
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::AbsoluteJumpIfVariableEq0. Represented by 10 bytes.
    *
@@ -466,6 +523,9 @@ class Program {
    * @fn Program::loadMemorySizeIntoVariable
    * @brief Loads the maximum number of VmSession variables into a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::LoadMemorySizeIntoVariable. Represented by 6 bytes.
    *
    * @param variable_index The index of the variable.
@@ -476,6 +536,9 @@ class Program {
   /**
    * @fn Program::checkIfVariableIsInput
    * @brief Check if a variable is defined as an input
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * If the variable `source_variable_index` is defined as having the
    * VariableIoBehavior::Input, set the value of the variable
@@ -496,6 +559,9 @@ class Program {
    * @fn Program::checkIfVariableIsOutput
    * @brief Check if a variable is defined as an output
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * If the variable `source_variable_index` is defined as having the
    * VariableIoBehavior::Output, set the value of the variable
    * `destination_variable_index` to `0x1`, else set it to `0x0`.
@@ -515,6 +581,9 @@ class Program {
    * @fn Program::loadInputCountIntoVariable
    * @brief Load the number of registered input variables into a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::LoadInputCountIntoVariable. Represented by 6 bytes.
    *
    * @param variable_index The index of the variable.
@@ -525,6 +594,9 @@ class Program {
   /**
    * @fn Program::loadOutputCountIntoVariable
    * @brief Load the number of registered output variables into a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::LoadOutputCountIntoVariable. Represented by 6 bytes.
    *
@@ -537,6 +609,9 @@ class Program {
    * @fn Program::loadCurrentAddressIntoVariable
    * @brief Load the current program execution pointer value into a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::LoadCurrentAddressIntoVariable. Represented by 6 bytes.
    *
    * @param variable_index The index of the variable.
@@ -547,6 +622,9 @@ class Program {
   /**
    * @fn Program::printVariable
    * @brief Print the value of a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The value stored in the variable `variable_index` will be printed. If
    * `as_char` is `true`, then the variable's least significant byte will be
@@ -564,6 +642,9 @@ class Program {
    * @fn Program::setStringTableEntry
    * @brief Set the content of an entry in the string table
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Sets the value that is stored for a specified entry in the string table.
    *
    * Identified by OpCode::SetStringTableEntry. Represented by 7 + string length bytes.
@@ -577,6 +658,9 @@ class Program {
    * @fn Program::printStringFromStringTable
    * @brief Prints a string from the string table
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::PrintStringFromStringTable. Represented by 5 bytes.
    *
    * @param string_table_index The string stored at this index will be printed.
@@ -586,6 +670,9 @@ class Program {
   /**
    * @fn Program::loadStringTableLimitIntoVariable
    * @brief Loads the maximum number of items in the string table into a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * This is equivalent to the number of possible string items an associated VmSession provides.
    *
@@ -600,6 +687,9 @@ class Program {
    * @fn Program::terminate
    * @brief Immediately terminates the program
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * No further program operators will be executes. The program's return code will be set to the
    * value of the parameter `return_code`.
    *
@@ -612,6 +702,9 @@ class Program {
   /**
    * @fn Program::copyVariable
    * @brief Copies the value of one variable into another
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::CopyVariable. Represented by 11 bytes.
    *
@@ -628,6 +721,9 @@ class Program {
    * @fn Program::loadStringItemLengthIntoVariable
    * @brief Load the actual length of a string table item into a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::LoadStringItemLengthIntoVariable. Represented by 10 bytes.
    *
    * @param string_table_index The string table item's index to read the length from.
@@ -640,6 +736,9 @@ class Program {
   /**
    * @fn Program::checkIfInputWasSet
    * @brief Determine whether an input variable was written to since the last read operation
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * If since the last read operation the given variable at `variable_index` was written to, store
    * the value `0x1` in the variable at `destination_variable_index`. Store `0x0` otherwise.
@@ -662,6 +761,9 @@ class Program {
    * @fn Program::loadStringTableItemLengthLimitIntoVariable
    * @brief Load the maximum length of string table items into a variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * This is the limit imposed on the Program by the VmSession associated to it during execution.
    *
    * Identified by OpCode::LoadStringTableItemLengthLimitIntoVariable. Represented by 6 bytes.
@@ -674,6 +776,9 @@ class Program {
   /**
    * @fn Program::loadRandomValueIntoVariable
    * @brief Stores a random value into the given variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * A random numeric value will be stored in the variable `variable_index`. It is drawn from the
    * full range of the data type `int32_t`.
@@ -689,6 +794,9 @@ class Program {
    * @fn Program::unconditionalJumpToAbsoluteAddress
    * @brief Jumps to the given absolute address
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::UnconditionalJumpToAbsoluteAddress. Represented by 5 bytes.
    *
    * @param addr The absolute address to jump to.
@@ -698,6 +806,9 @@ class Program {
   /**
    * @fn Program::unconditionalJumpToAbsoluteVariableAddress
    * @brief Jumps to an absolute address stored in a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::UnconditionalJumpToAbsoluteVariableAddress. Represented by 6 bytes.
    *
@@ -710,6 +821,9 @@ class Program {
    * @fn Program::unconditionalJumpToRelativeAddress
    * @brief Jumps to the given relative address
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::UnconditionalJumpToRelativeAddress. Represented by 5 bytes.
    *
    * @param addr The relativeaddress to jump to.
@@ -719,6 +833,9 @@ class Program {
   /**
    * @fn Program::unconditionalJumpToRelativeVariableAddress
    * @brief Jumps to a relative address stored in a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::UnconditionalJumpToRelativeVariableAddress. Represented by 6 bytes.
    *
@@ -730,6 +847,9 @@ class Program {
   /**
    * @fn Program::loadStringItemIntoVariables
    * @brief Loads an item from the string table into consecutive variables.
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The item at the string table index `string_table_index` will be stored in the variables
    * starting at index `start_variable_index`, consecutively. Each variable stores the character
@@ -758,6 +878,9 @@ class Program {
    * @fn Program::performSystemCall
    * @brief Performs a system call according to its parameters
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Performs system calls for different purposes. The currently implemented set of functionalities
    * and valid parameter ranges can be found in VmSession::performSystemCall.
    *
@@ -776,6 +899,9 @@ class Program {
    * @fn Program::bitShiftVariableLeft
    * @brief Bit-shift a variable to the left
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Bit-shifts the given variable by `places` bits to the left. The right side will be filled up
    * with zero bits.
    *
@@ -790,6 +916,9 @@ class Program {
   /**
    * @fn Program::bitShiftVariableRight
    * @brief Bit-shift a variable to the right
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Bit-shifts the given variable by `places` bits to the right. The left side will be filled up
    * with zero bits.
@@ -806,6 +935,9 @@ class Program {
    * @fn Program::bitWiseInvertVariable
    * @brief Bit-wise inverts the given variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::BitWiseInvertVariable. Represented by 5 bytes.
    *
    * @param variable_index The index of the variable.
@@ -816,6 +948,9 @@ class Program {
   /**
    * @fn Program::bitWiseAndTwoVariables
    * @brief Performs a bit-wise AND operation on two variables
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The result will be stored in `variable_index_b`.
    *
@@ -833,6 +968,9 @@ class Program {
    * @fn Program::bitWiseOrTwoVariables
    * @brief Performs a bit-wise OR operation on two variables
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * The result will be stored in `variable_index_b`.
    *
    * Identified by OpCode::BitWiseOrTwoVariables. Represented by 11 bytes.
@@ -849,6 +987,9 @@ class Program {
    * @fn Program::bitWiseXorTwoVariables
    * @brief Performs a bit-wise XOR operation on two variables
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * The result will be stored in `variable_index_b`.
    *
    * Identified by OpCode::BitWiseXorTwoVariables. Represented by 11 bytes.
@@ -864,6 +1005,9 @@ class Program {
   /**
    * @fn Program::moduloVariableByConstant
    * @brief Performs a constant modulo operation on a variable and stores the result
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The given constant will be modulo'ed onto the given variable. The result will be stored in the
    * same variable.
@@ -882,6 +1026,9 @@ class Program {
   /**
    * @fn Program::moduloVariableByVariable
    * @brief Performs a variable modulo operation on a variable and stores the result
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * The modulo variable's value will be modulo'ed onto the given variable. The result will be
    * stored in the first variable.
@@ -903,6 +1050,9 @@ class Program {
    * @fn Program::rotateVariableLeft
    * @brief Bit-wise rotate the given variable to the left
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Negative values cause a rotation to the right.
    *
    * Identified by OpCode::RotateVariableLeft. Represented by 7 bytes.
@@ -917,6 +1067,9 @@ class Program {
    * @fn Program::rotateVariableRight
    * @brief Bit-wise rotate the given variable to the left
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Negative values cause a rotation to the left.
    *
    * Identified by OpCode::RotateVariableRight. Represented by 7 bytes.
@@ -930,6 +1083,9 @@ class Program {
   /**
    * @fn Program::pushVariableOnStack
    * @brief Pushes the content of a variable onto a stack
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * A stack is identified by a variable holding the current size of the stack, and a number of
    * declared variables after it. This operator increases the current size of the stack by 1, and
@@ -952,6 +1108,9 @@ class Program {
    * @fn Program::pushConstantOnStack
    * @brief Pushes a constant value onto a stack
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Similar to pushVariableOnStack, but pushes a constant value passed to this operand onto the
    * stack rather than reading the value from a variable.
    *
@@ -968,6 +1127,9 @@ class Program {
   /**
    * @fn Program::popVariableFromStack
    * @brief Removes the top item from the stack and stores it in a variable.
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Removes the top item from the stack, reducing the stack size by 1. The value of the removed
    * item will be stored in `variable_index`. Throws if the stack was empty before.
@@ -988,6 +1150,9 @@ class Program {
    * @fn Program::popTopItemFromStack
    * @brief Removes the top item from the stack
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Effectively, the stack size will be reduced by 1. The top item will be discarded. Throws if the
    * stack was empty before.
    *
@@ -1003,6 +1168,9 @@ class Program {
   /**
    * @fn Program::checkIfStackIsEmpty
    * @brief Checks whether there are no items on a stack
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * If the stack at variable `stack_variable_index` contains no items, the variable at
    * `variable_index` will be set to `0x1`, and `0x0` if there is at least one item on the stack.
@@ -1023,6 +1191,9 @@ class Program {
    * @fn Program::swapVariables
    * @brief Swaps the contents of two variables
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::SwapVariables. Represented by 11 bytes.
    *
    * @param variable_index_a The index of the variable.
@@ -1036,6 +1207,9 @@ class Program {
   /**
    * @fn Program::setVariableStringTableEntry
    * @brief Sets an entry in the string table at a variable index
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::SetVariableStringTableEntry. Represented by 8 + string length bytes.
    *
@@ -1051,6 +1225,9 @@ class Program {
    * @fn Program::printVariableStringFromStringTable
    * @brief Prints an entry from the string table from a variable index
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::PrintVariableStringFromStringTable. Represented by 6 bytes.
    *
    * @param variable_index The index of the variable to read the string table index from.
@@ -1062,6 +1239,9 @@ class Program {
   /**
    * @fn Program::loadVariableStringItemLengthIntoVariable
    * @brief Loads the length of a variable string table index into a variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::LoadVariableStringItemLengthIntoVariable. Represented by 11 bytes.
    *
@@ -1077,6 +1257,9 @@ class Program {
   /**
    * @fn Program::loadVariableStringItemIntoVariables
    * @brief Loads a variable item from the string table into consecutive variables.
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * See `loadStringItemLengthIntoVariable` for details. The string table index is not fixed in this
    * variant, but is read from the `string_item_variable_index` variable.
@@ -1097,6 +1280,9 @@ class Program {
    * @fn Program::terminateWithVariableReturnCode
    * @brief Immediately terminates the program, returning a variable return code
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * No further program operators will be executes. The program's return code will be set to the
    * value of the value of the `variable_index` variable.
    *
@@ -1110,6 +1296,9 @@ class Program {
   /**
    * @fn Program::variableBitShiftVariableLeft
    * @brief Bit-shifts a variable to the left by a variable amount of places
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * Identified by OpCode::VariableBitShiftVariableLeft. Represented by 11 bytes.
    *
@@ -1127,6 +1316,9 @@ class Program {
    * @fn Program::variableBitShiftVariableRight
    * @brief Bit-shifts a variable to the right by a variable amount of places
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::VariableBitShiftVariableRight. Represented by 11 bytes.
    *
    * @param variable_index The target variable that should be bit-shifted
@@ -1143,6 +1335,9 @@ class Program {
    * @fn Program::variableRotateVariableLeft
    * @brief Rotates a variable to the left by a variable amount of places
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::VariableRotateVariableLeft. Represented by 11 bytes.
    *
    * @param variable_index The target variable that should be rotated
@@ -1158,6 +1353,9 @@ class Program {
    * @fn Program::variableRotateVariableRight
    * @brief Rotates a variable to the right by a variable amount of places
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * Identified by OpCode::VariableRotateVariableRight. Represented by 11 bytes.
    *
    * @param variable_index The target variable that should be rotated
@@ -1172,6 +1370,9 @@ class Program {
   /**
    * @fn Program::compareIfVariableGtConstant
    * @brief Compares if a variable is > a given constant
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * If the variable is greater than the given constant, the value `0x1` will be stored in the
    * target variable, else `0x0` will be stored.
@@ -1192,6 +1393,9 @@ class Program {
    * @fn Program::compareIfVariableLtConstant
    * @brief Compares if a variable is < a given constant
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * If the variable is smaller than the given constant, the value `0x1` will be stored in the
    * target variable, else `0x0` will be stored.
    *
@@ -1211,6 +1415,9 @@ class Program {
    * @fn Program::compareIfVariableEqConstant
    * @brief Compares if a variable is = a given constant
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * If the variable is equal to the given constant, the value `0x1` will be stored in the target
    * variable, else `0x0` will be stored.
    *
@@ -1229,6 +1436,9 @@ class Program {
   /**
    * @fn Program::compareIfVariableGtVariable
    * @brief Compares if a variable is > another variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * If variable a is greater than variable b, the value `0x1` will be stored in the target
    * variable, else `0x0` will be stored.
@@ -1250,6 +1460,9 @@ class Program {
    * @fn Program::compareIfVariableLtVariable
    * @brief Compares if a variable is < another variable
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * If variable a is smaller than variable b, the value `0x1` will be stored in the target
    * variable, else `0x0` will be stored.
    *
@@ -1269,6 +1482,9 @@ class Program {
   /**
    * @fn Program::compareIfVariableEqVariable
    * @brief Compares if a variable is = another variable
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * If variable a is equal to variable b, the value `0x1` will be stored in the target variable,
    * else `0x0` will be stored.
@@ -1290,6 +1506,9 @@ class Program {
    * @fn Program::getMaxOfVariableAndConstant
    * @brief Compare a variable to a constant and store the larger value
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * This operator compares the value stored in a variable against a constant. The larger value is
    * stored in the target variable.
    *
@@ -1309,6 +1528,9 @@ class Program {
   /**
    * @fn Program::getMinOfVariableAndConstant
    * @brief Compare a variable to a constant and store the smaller value
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * This operator compares the value stored in a variable against a constant. The smaller value is
    * stored in the target variable.
@@ -1330,6 +1552,9 @@ class Program {
    * @fn Program::getMaxOfVariableAndVariable
    * @brief Compare a variable to another variable and store the larger value
    *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
+   *
    * This operator compares the value stored in one variable against the value stored in another
    * variable. The larger value is stored in the target variable.
    *
@@ -1350,6 +1575,9 @@ class Program {
   /**
    * @fn Program::getMinOfVariableAndVariable
    * @brief Compare a variable to another variable and store the smaller value
+   *
+   * This call adds the corresponding operator to the program. The operator's action does not take
+   * immediate effect.
    *
    * This operator compares the value stored in one variable against the value stored in another
    * variable. The smaller value is stored in the target variable.
@@ -1379,7 +1607,7 @@ class Program {
    * the available space is expanded upon this call to fit the requested bytes.
    *
    * @param bytes The number of bytes to fit into the program space.
-   * 
+   *
    * @return True when the bytes fit into the available program space, False otherwise.
    */
   bool canFit(uint32_t bytes);

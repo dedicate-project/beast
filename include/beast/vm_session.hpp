@@ -179,105 +179,147 @@ class VmSession {
 
   /**
    * @fn VmSession::isAtEnd
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks whether the associated program is at the end of its executable code
    *
-   * TODO(fairlight1337): Document this part.
+   * Effectively, this function returns whether the instruction pointer points beyond the end of the
+   * code.
+   *
+   * @return Boolean flag denoting whether the program execution is at its end
    */
   bool isAtEnd() const;
 
   /**
    * @fn VmSession::registerVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Registers a variable at index and type in the variable memory
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::declareVariable for the intended operator use.
+   *
+   * @param variable_index The index to declare the variable at.
+   * @param variable_type The designated type of the variable.
+   * @sa unregisterVariable()
    */
   void registerVariable(int32_t variable_index, Program::VariableType variable_type);
 
   /**
    * @fn VmSession::getRealVariableIndex
-   * @brief NEEDS DOCUMENTATION
+   * @brief Resolves a variable index based on linkage
    *
-   * TODO(fairlight1337): Document this part.
+   * The first variable index that is not a link is returned. This method detects circular linkage,
+   * and throws if either this is detected or if any variable index points outside of the valid
+   * variable memory.
+   *
+   * @param variable_index The index of the start variable.
+   * @param follow_links Whether to resolve variable links.
    */
   int32_t getRealVariableIndex(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the value of a variable
    *
-   * TODO(fairlight1337): Document this part.
+   * Sets the value of a variable at the given index to the value `content`. The variable index
+   * needs to be declared prior to this.
+   *
+   * See Program::setVariable for the intended operator use.
+   *
+   * @param variable_index The index of the variable.
+   * @param value The value to assign to the variable.
+   * @param follow_links Whether to resolve variable links.
    */
   void setVariable(int32_t variable_index, int32_t value, bool follow_links);
 
   /**
    * @fn VmSession::unregisterVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Removes a registered variable from the internal variable memory
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::undeclareVariable for the intended operator use.
+   *
+   * @param variable_index The index of the variable to undeclare.
+   * @sa registerVariable()
    */
   void unregisterVariable(int32_t variable_index);
 
   /**
    * @fn VmSession::setStringTableEntry
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the content of a string table entry
    *
-   * TODO(fairlight1337): Document this part.
+   * See Program::setStringTableEntry for the intended operator use.
+   *
+   * @param string_table_index The string table index to set.
+   * @param string The content to store in the string table.
    */
   void setStringTableEntry(int32_t string_table_index, const std::string& string_content);
 
   /**
    * @fn VmSession::getStringTableEntry
-   * @brief NEEDS DOCUMENTATION
+   * @brief Returns the string value stored at the given index in the string table
    *
-   * TODO(fairlight1337): Document this part.
+   * @param string_table_index The string table index to read the string from
+   * @return The string read from the string table at the specified index
    */
   const std::string& getStringTableEntry(int32_t string_table_index) const;
 
   /**
    * @fn VmSession::appendToPrintBuffer
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends a string to the current print buffer
    *
-   * TODO(fairlight1337): Document this part.
+   * The print buffer is a store for all characters that should be printed to screen. This method
+   * appends a given string to the already existing content.
+   *
+   * @param string The string to append to the print buffer.
+   * @sa appendVariableToPrintBuffer(), getPrintBuffer(), clearPrintBuffer()
    */
   void appendToPrintBuffer(const std::string& string);
 
   /**
    * @fn VmSession::appendVariableToPrintBuffer
-   * @brief NEEDS DOCUMENTATION
+   * @brief Appends the value of a variable to the print buffer
    *
-   * TODO(fairlight1337): Document this part.
+   * The value can be added to the print buffer either via its numeric value or as the character
+   * value of the least significant byte of the variable's value.
+   *
+   * @param variable_index The variable to read the value from
+   * @param follow_links Whether to resolve variable links
+   * @param as_char Whether to append the LSB char value to the buffer (`true`) or the numeric value
+   *        of the entire `int32_t` (`false`)
+   * @sa appendToPrintBuffer(), getPrintBuffer(), clearPrintBuffer()
    */
   void appendVariableToPrintBuffer(int32_t variable_index, bool follow_links, bool as_char);
 
   /**
    * @fn VmSession::getPrintBuffer
-   * @brief NEEDS DOCUMENTATION
+   * @brief Returns a reference to the print buffer
    *
-   * TODO(fairlight1337): Document this part.
+   * @sa appendToPrintBuffer(), appendVariableToPrintBuffer(), clearPrintBuffer()
    */
   const std::string& getPrintBuffer() const;
 
   /**
    * @fn VmSession::clearPrintBuffer
-   * @brief NEEDS DOCUMENTATION
+   * @brief Cleas the print buffer
    *
-   * TODO(fairlight1337): Document this part.
+   * @sa appendToPrintBuffer(), appendVariableToPrintBuffer(), getPrintBuffer()
    */
   void clearPrintBuffer();
 
   /**
    * @fn VmSession::terminate
-   * @brief NEEDS DOCUMENTATION
+   * @brief Marks the program as terminates and sets its return code
    *
-   * TODO(fairlight1337): Document this part.
+   * To prevent further execution, this call marks the program as terminated internally. The passed
+   * in return code is stored.
+   *
+   * @param return_code The return code to store for the program
+   * @sa getReturnCode(), terminateWithVariableReturnCode()
    */
   void terminate(int8_t return_code);
 
   /**
    * @fn VmSession::getReturnCode
-   * @brief NEEDS DOCUMENTATION
+   * @brief Returns the return code for a program
    *
-   * TODO(fairlight1337): Document this part.
+   * This function returns the return code set by any terminate call. If this function is called
+   * before the program ends, its returned value will be `0x0`.
    */
   int8_t getReturnCode() const;
 
