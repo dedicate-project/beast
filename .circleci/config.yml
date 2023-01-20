@@ -100,12 +100,6 @@ jobs:
       - coveralls/upload:
           path_to_lcov: ./build/coverage.info
           token: COVERALLS_REPO_TOKEN
-      - run:
-          name: list dir
-          command: ls
-      - run:
-          name: list build dir
-          command: ls build
       - persist_to_workspace:
           root: .
           paths:
@@ -118,11 +112,10 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: list dir
-          command: ls
-      - run:
-          name: list build dir
-          command: ls build
+          name: Copy coverage report
+          command: |
+            cd build
+            cp coverage.info coverage.gcov
       - sonarcloud/scan
   memory-check:
     docker:
