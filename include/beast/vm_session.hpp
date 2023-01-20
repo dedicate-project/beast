@@ -645,41 +645,48 @@ class VmSession {
 
   /**
    * @fn VmSession::loadInputCountIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the number of declared input variables into a variable
    *
    * See Program::loadInputCountIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable The index of the target variable
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadInputCountIntoVariable(int32_t variable, bool follow_links);
 
   /**
    * @fn VmSession::loadOutputCountIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the number of declared output variables into a variable
    *
    * See Program::loadOutputCountIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable The index of the target variable
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadOutputCountIntoVariable(int32_t variable, bool follow_links);
 
   /**
    * @fn VmSession::loadCurrentAddressIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the current execution pointer address into a variable
    *
    * See Program::loadCurrentAddressIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable The index of the target variable
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadCurrentAddressIntoVariable(int32_t variable, bool follow_links);
 
   /**
    * @fn VmSession::checkIfInputWasSet
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if an input variable has received data
    *
    * See Program::checkIfInputWasSet for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the target variable is not declared as an input variable this call will
+   * throw an exception.
+   *
+   * @param variable_index The index of the input variable to check
+   * @param follow_links Whether to resolve the variable's links
    */
   void checkIfInputWasSet(
       int32_t variable_index, bool follow_links,
@@ -687,92 +694,117 @@ class VmSession {
 
   /**
    * @fn VmSession::loadStringTableLimitIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the maximum number of indices in the string table into a variable
    *
    * See Program::loadStringTableLimitIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The index of the variable
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadStringTableItemLengthLimitIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the maximum number of characters per string table item into a variable
    *
    * See Program::loadStringTableItemLengthLimitIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The index of the variable
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadStringTableItemLengthLimitIntoVariable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadRandomValueIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads a random number in the range of `int32_t` into a variable
    *
    * See Program::loadRandomValueIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The index of the variable
+   * @param follow_links Whether to resolve the variable's links
    */
   void loadRandomValueIntoVariable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::unconditionalJumpToAbsoluteAddress
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs an unconditional jump to an absolute address
    *
    * See Program::unconditionalJumpToAbsoluteAddress for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param addr The absolute address to jump to
    */
   void unconditionalJumpToAbsoluteAddress(int32_t addr);
 
   /**
    * @fn VmSession::unconditionalJumpToAbsoluteVariableAddress
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs an unconditional jump to an absolute address read from a variable
    *
    * See Program::unconditionalJumpToAbsoluteVariableAddress for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable containing the absolute address to jump to
+   * @param follow_links Whether to resolve variable links
    */
   void unconditionalJumpToAbsoluteVariableAddress(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::unconditionalJumpToRelativeAddress
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs an unconditional jump to a relative address
    *
    * See Program::unconditionalJumpToRelativeAddress for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param addr The absolute address to jump to
    */
   void unconditionalJumpToRelativeAddress(int32_t addr);
 
   /**
    * @fn VmSession::unconditionalJumpToRelativeVariableAddress
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs an unconditional jump to a relative address read from a variable
    *
    * See Program::unconditionalJumpToRelativeVariableAddress for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable containing the relative address to jump to
+   * @param follow_links Whether to resolve variable links
    */
   void unconditionalJumpToRelativeVariableAddress(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadStringItemLengthIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the length of a specific string table item into a variable
    *
    * See Program::loadStringItemLengthIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param string_table_index The string table index to read the length from
+   * @param variable_index The variable the length should be stored in
+   * @param follow_links Whether to resolve variable links
    */
   void loadStringItemLengthIntoVariable(
       int32_t string_table_index, int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadStringItemIntoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads a string table item's content into a number of consecutive variables
    *
    * See Program::loadStringItemIntoVariables for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The string item read from the string table will be iterated character by character.
+   * Each character goes into a variable at the respective relative index, starting from
+   * the specified start variable index. The variables will then contain the respective
+   * characters in their least significant byte.
+   *
+   * Example:
+   * * String table item = "Entry"
+   * * start_variable_index + 0 = "E"
+   * * start_variable_index + 1 = "n"
+   * * start_variable_index + 2 = "t"
+   * * start_variable_index + 3 = "r"
+   * * start_variable_index + 4 = "y"
+   *
+   * Variable links will be resolved per variable if `follow_links` is `true`.
+   *
+   * @param string_table_index The string table index to read the characters from
+   * @param start_variable_index The variable where the first character is stored
+   * @param follow_links Whether to resolve variable links
+   * @sa loadVariableStringItemIntoVariables()
    */
   void loadStringItemIntoVariables(
       int32_t string_table_index, int32_t start_variable_index, bool follow_links);
