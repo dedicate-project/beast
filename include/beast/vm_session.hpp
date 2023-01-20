@@ -926,7 +926,7 @@ class VmSession {
    * The result will be stored in the same variable.
    * `variable = variable % constant`
    *
-   * @param variable_index The variable to bit-shift
+   * @param variable_index The variable to modulo
    * @param follow_links Whether to resolve variable links
    * @param constant The constant to modulo the variable's value by
    */
@@ -934,11 +934,17 @@ class VmSession {
 
   /**
    * @fn VmSession::moduloVariableByVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a modulo operation on a variable, using a modulo value from a second variable
    *
    * See Program::moduloVariableByVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in the first variable.
+   * `variable = variable % modulo_variable`
+   *
+   * @param variable_index The variable to modulo
+   * @param follow_links Whether to resolve the variable's links
+   * @param modulo_variable_index The variable to use as modulo value
+   * @param modulo_follow_links Whether to resolve the modulo variable's links
    */
   void moduloVariableByVariable(
       int32_t variable_index, bool follow_links,
@@ -946,21 +952,28 @@ class VmSession {
 
   /**
    * @fn VmSession::rotateVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-wise rotates a variable by a number of places
    *
    * See Program::rotateVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * Positive values of `places` rotate to the left, negative values rotate to the right.
+   *
+   * @param variable_index The variable to rotate
+   * @param follow_links Whether to resolve the variable's links
+   * @param places The amount of places by which to rotate the variable
    */
   void rotateVariable(int32_t variable_index, bool follow_links, int8_t places);
 
   /**
    * @fn VmSession::pushVariableOnStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pushes the value of a variable onto a stack
    *
    * See Program::pushVariableOnStack for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param stack_variable_index The stack variable index
+   * @param stack_follow_links Whether to resolve the stack variable's links
+   * @param variable_index The variable whose value to push onto the stack
+   * @param follow_links Whether to resolve the value variable's links
    */
   void pushVariableOnStack(
       int32_t stack_variable_index, bool stack_follow_links,
@@ -968,21 +981,26 @@ class VmSession {
 
   /**
    * @fn VmSession::pushConstantOnStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pushes a constant value onto a stack
    *
    * See Program::pushConstantOnStack for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param stack_variable_index The stack variable index
+   * @param stack_follow_links Whether to resolve the stack variable's links
+   * @param constant The constant value to push onto the stack
    */
   void pushConstantOnStack(int32_t stack_variable_index, bool stack_follow_links, int32_t constant);
 
   /**
    * @fn VmSession::popVariableFromStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pops the top item from a stack and stores its value in a variable
    *
    * See Program::popVariableFromStack for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param stack_variable_index The stack variable index
+   * @param stack_follow_links Whether to resolve the stack variable's links
+   * @param variable_index The variable in which to store the top stack item
+   * @param follow_links Whether to resolve the target variable's links
    */
   void popVariableFromStack(
       int32_t stack_variable_index, bool stack_follow_links,
@@ -990,21 +1008,28 @@ class VmSession {
 
   /**
    * @fn VmSession::popTopItemFromStack
-   * @brief NEEDS DOCUMENTATION
+   * @brief Removes the top item from a stack and discards it
    *
    * See Program::popTopItemFromStack for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param stack_variable_index The stack variable index
+   * @param stack_follow_links Whether to resolve the stack variable's links
    */
   void popTopItemFromStack(int32_t stack_variable_index, bool stack_follow_links);
 
   /**
    * @fn VmSession::checkIfStackIsEmpty
-   * @brief NEEDS DOCUMENTATION
+   * @brief Determines whether a stack is empty, stores the result
    *
    * See Program::checkIfStackIsEmpty for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the stack at `stack_variable_index` is empty, the value `0x1` is stored in the target
+   * variable. Otherwise, `0x0` is stored.
+   *
+   * @param stack_variable_index The stack variable index
+   * @param stack_follow_links Whether to resolve the stack variable's links
+   * @param variable_index The variable in which to store the top stack item
+   * @param follow_links Whether to resolve the target variable's links
    */
   void checkIfStackIsEmpty(
       int32_t stack_variable_index, bool stack_follow_links,
@@ -1012,11 +1037,14 @@ class VmSession {
 
   /**
    * @fn VmSession::swapVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Swaps the content of two variables
    *
    * See Program::swapVariables for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index_a The first variable to swap
+   * @param follow_links_a Whether to resolve the first variable's links
+   * @param variable_index_b The second variable to swap
+   * @param follow_links_b Whether to resolve the second variable's links
    */
   void swapVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
