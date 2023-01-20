@@ -1051,32 +1051,49 @@ class VmSession {
 
   /**
    * @fn VmSession::setVariableStringTableEntry
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the content of a string table item at a variable index
    *
    * See Program::setVariableStringTableEntry for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The index at which the target string is stored in the string table is defined by the
+   * variable `variable_index`.
+   *
+   * @param variable_index The variable containing the string table index
+   * @param follow_links Whether to resolve the variable's links
+   * @param string_content The string to store in the string table
    */
   void setVariableStringTableEntry(
       int32_t variable_index, bool follow_links, std::string_view string_content);
 
   /**
    * @fn VmSession::printVariableStringFromStringTable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Prints a string from the string table based on a variable index
    *
    * See Program::printVariableStringFromStringTable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The string value stored in the string table at the defined index
+   * `string_table_index` is appended to the print buffer.
+   *
+   * @param variable_index The variable index to use as string table index
+   * @param follow_links Whether to resolve the variable's links
    */
   void printVariableStringFromStringTable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadVariableStringItemLengthIntoVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads the length of a variable string table item into a variable
    *
    * See Program::loadVariableStringItemLengthIntoVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * Retrieves the length of a stored string table item and stored it in the target variable
+   * `variable_index`. The string table item index used is retrieved from
+   * `string_item_variable_index`.
+   *
+   * @param string_item_variable_index The variable holding the string table item index
+   * @param string_item_follow_links Whether to resolve the string item variable's links
+   * @param variable_index The variable to store the length in
+   * @param follow_links Whether to resolve the target variable's links
+   * @sa loadStringItemLengthIntoVariable()
    */
   void loadVariableStringItemLengthIntoVariable(
       int32_t string_item_variable_index, bool string_item_follow_links,
@@ -1084,11 +1101,19 @@ class VmSession {
 
   /**
    * @fn VmSession::loadVariableStringItemIntoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Loads a variable string table item's content into a number of consecutive variables
    *
    * See Program::loadVariableStringItemIntoVariables for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * This call is similar to loadStringItemIntoVariables with the difference that the string
+   * table index is not passed as a fixed value, but is read from the variable index
+   * `string_item_variable_index`.
+   *
+   * @param string_item_variable_index The variable holding the string table item index
+   * @param string_item_follow_links Whether to resolve the string table index variable's links
+   * @param start_variable_index The variable where the first character is stored
+   * @param follow_links Whether to resolve the start variable's links
+   * @sa loadStringItemIntoVariables()
    */
   void loadVariableStringItemIntoVariables(
       int32_t string_item_variable_index, bool string_item_follow_links,
@@ -1096,21 +1121,31 @@ class VmSession {
 
   /**
    * @fn VmSession::terminateWithVariableReturnCode
-   * @brief NEEDS DOCUMENTATION
+   * @brief Marks the program as terminates and sets a variable return code
    *
    * See Program::terminateWithVariableReturnCode for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * This call is very similar to the terminate call. Instead of setting the return value to
+   * a fixed value though, it reads the return code from the variable index
+   * `variable_index`.
+   *
+   * @param variable_index The variable to read the return code from
+   * @param follow_links Whether to resolve the variable's links
+   * @sa terminate()
    */
   void terminateWithVariableReturnCode(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::variableBitShiftVariableLeft
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-shift a variable by a variable number of places to the left
    *
    * See Program::variableBitShiftVariableLeft for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to bit-shift to the left
+   * @param follow_links Whether to resolve variable links
+   * @param places_variable_index The variable holding the places to shift by
+   * @param places_follow_links Whether to resolve the places variable's links
+   * @sa bitShiftVariableLeft()
    */
   void variableBitShiftVariableLeft(
       int32_t variable_index, bool follow_links,
@@ -1118,11 +1153,15 @@ class VmSession {
 
   /**
    * @fn VmSession::variableBitShiftVariableRight
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-shift a variable by a variable number of places to the right
    *
    * See Program::variableBitShiftVariableRight for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to bit-shift to the right
+   * @param follow_links Whether to resolve variable links
+   * @param places_variable_index The variable holding the places to shift by
+   * @param places_follow_links Whether to resolve the places variable's links
+   * @sa bitShiftVariableRight()
    */
   void variableBitShiftVariableRight(
       int32_t variable_index, bool follow_links,
@@ -1130,11 +1169,16 @@ class VmSession {
 
   /**
    * @fn VmSession::variableRotateVariableLeft
-   * @brief NEEDS DOCUMENTATION
+   * @brief Rotates a variable to the left by a variable amount of places
    *
    * See Program::variableRotateVariableLeft for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to rotate to the left
+   * @param follow_links Whether to resolve the rotated variable's links
+   * @param places_variable_index The variable holding the amount of places
+   *        to rotate
+   * @param places_follow_links Whether to resolve the places variable's links
+   * @sa rotateVariableLeft(), rotateVariableRight(), variableRotateVariableRight()
    */
   void variableRotateVariableLeft(
       int32_t variable_index, bool follow_links,
@@ -1142,11 +1186,16 @@ class VmSession {
 
   /**
    * @fn VmSession::variableRotateVariableRight
-   * @brief NEEDS DOCUMENTATION
+   * @brief Rotates a variable to the right by a variable amount of places
    *
    * See Program::variableRotateVariableRight for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to rotate to the right
+   * @param follow_links Whether to resolve the rotated variable's links
+   * @param places_variable_index The variable holding the amount of places
+   *        to rotate
+   * @param places_follow_links Whether to resolve the places variable's links
+   * @sa rotateVariableLeft(), rotateVariableRight(), variableRotateVariableLeft()
    */
   void variableRotateVariableRight(
       int32_t variable_index, bool follow_links,
@@ -1154,11 +1203,18 @@ class VmSession {
 
   /**
    * @fn VmSession::compareIfVariableGtConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if a variable is larger than a constant, stores the result
    *
    * See Program::compareIfVariableGtConstant for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable larger than the constant, store `0x1` in the target variable.
+   * Store `0x0` otherwise.
+   *
+   * @param variable_index The variable to compare
+   * @param follow_links Whether to resolve the variable's links
+   * @param constant The constant to compare to
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void compareIfVariableGtConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -1166,11 +1222,18 @@ class VmSession {
 
   /**
    * @fn VmSession::compareIfVariableLtConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if a variable is smaller than a constant, stores the result
    *
    * See Program::compareIfVariableLtConstant for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable smaller than the constant, store `0x1` in the target variable.
+   * Store `0x0` otherwise.
+   *
+   * @param variable_index The variable to compare
+   * @param follow_links Whether to resolve the variable's links
+   * @param constant The constant to compare to
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void compareIfVariableLtConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -1178,11 +1241,18 @@ class VmSession {
 
   /**
    * @fn VmSession::compareIfVariableEqConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if a variable has the same value as a constant, stores the result
    *
    * See Program::compareIfVariableEqConstant for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the variable has the same value as the constant, store `0x1` in the target variable.
+   * Store `0x0` otherwise.
+   *
+   * @param variable_index The variable to compare
+   * @param follow_links Whether to resolve the variable's links
+   * @param constant The constant to compare to
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void compareIfVariableEqConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -1190,11 +1260,19 @@ class VmSession {
 
   /**
    * @fn VmSession::compareIfVariableGtVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief ecks if one variable is larger than another, stores the result
    *
    * See Program::compareIfVariableGtVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the first variable is larger than the second, store `0x1` in the target variable.
+   * Store `0x0` otherwise.
+   *
+   * @param variable_index_a The first variable to compare
+   * @param follow_links_a Whether to resolve the first variable's links
+   * @param variable_index_b The second variable to compare
+   * @param follow_links_b Whether to resolve the second variable's links
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void compareIfVariableGtVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -1202,11 +1280,19 @@ class VmSession {
 
   /**
    * @fn VmSession::compareIfVariableLtVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if one variable is smaller than another, stores the result
    *
    * See Program::compareIfVariableLtVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the first variable is smaller than the second, store `0x1` in the target variable.
+   * Store `0x0` otherwise.
+   *
+   * @param variable_index_a The first variable to compare
+   * @param follow_links_a Whether to resolve the first variable's links
+   * @param variable_index_b The second variable to compare
+   * @param follow_links_b Whether to resolve the second variable's links
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void compareIfVariableLtVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -1214,11 +1300,18 @@ class VmSession {
 
   /**
    * @fn VmSession::compareIfVariableEqVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Checks if two variables have the same value, stores the result
    *
    * See Program::compareIfVariableEqVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If the two variable values are equal, store `0x1` in the target variable. Store `0x0` otherwise.
+   *
+   * @param variable_index_a The first variable to compare
+   * @param follow_links_a Whether to resolve the first variable's links
+   * @param variable_index_b The second variable to compare
+   * @param follow_links_b Whether to resolve the second variable's links
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void compareIfVariableEqVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -1226,11 +1319,15 @@ class VmSession {
 
   /**
    * @fn VmSession::getMaxOfVariableAndConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Chooses the larger of a variable and a constant value, stores the result
    *
    * See Program::getMaxOfVariableAndConstant for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to compare
+   * @param follow_links Whether to resolve the variable's links
+   * @param constant The constant to compare
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void getMaxOfVariableAndConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -1238,11 +1335,15 @@ class VmSession {
 
   /**
    * @fn VmSession::getMinOfVariableAndConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Chooses the smaller of a variable and a constant value, stores the result
    *
    * See Program::getMinOfVariableAndConstant for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to compare
+   * @param follow_links Whether to resolve the variable's links
+   * @param constant The constant to compare
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void getMinOfVariableAndConstant(
       int32_t variable_index, bool follow_links, int32_t constant,
@@ -1250,11 +1351,16 @@ class VmSession {
 
   /**
    * @fn VmSession::getMaxOfVariableAndVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Chooses the larger of two variable values, stores the result
    *
    * See Program::getMaxOfVariableAndVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index_a The first variable to compare
+   * @param follow_links_a Whether to resolve the first variable's links
+   * @param variable_index_b The second variable to compare
+   * @param follow_links_b Whether to resolve the second variable's links
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void getMaxOfVariableAndVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -1262,11 +1368,16 @@ class VmSession {
 
   /**
    * @fn VmSession::getMinOfVariableAndVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Chooses the smaller of two variable values, stores the result
    *
    * See Program::getMinOfVariableAndVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index_a The first variable to compare
+   * @param follow_links_a Whether to resolve the first variable's links
+   * @param variable_index_b The second variable to compare
+   * @param follow_links_b Whether to resolve the second variable's links
+   * @param target_variable_index The variable to store the result in
+   * @param target_follow_links Whether to resolve the target variable's links
    */
   void getMinOfVariableAndVariable(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
@@ -1274,38 +1385,50 @@ class VmSession {
 
   /**
    * @fn VmSession::printVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Prints the value of a variable
    *
    * See Program::printVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * If `as_char` is `false`, this appends the numeric value stored at `variable_index` as string
+   * to the print buffer. If `as_char` is `true`, only the least significant byte of the variable's
+   * value is appended as one character to the print buffer.
+   *
+   * @param variable_index The variable to read the value from
+   * @param follow_links Whether to resolve the variable's links
+   * @param as_char Whether to print the numeric or the char value
    */
   void printVariable(int32_t variable_index, bool follow_links, bool as_char);
 
   /**
    * @fn VmSession::printStringFromStringTable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Prints a string from the string table based on a fixed index
    *
    * See Program::printStringFromStringTable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The string value stored in the string table at the defined index
+   * `string_table_index` is appended to the print buffer.
+   *
+   * @param string_table_index The string table index to read the string from
    */
   void printStringFromStringTable(int32_t string_table_index);
 
  private:
   /**
    * @fn VmSession::getVariableValueInternal
-   * @brief NEEDS DOCUMENTATION
+   * @brief Get and returns the value of a variable and adjusts the read flag
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to get the value from
+   * @param follow_links Whether to resolve the variable's links
    */
   int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setVariableValueInternal
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the value of a variable and adjusts the modified flag
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to set
+   * @param follow_links Whether to resolve the variable's links
+   * @param value The value to store in the variable
    */
   void setVariableValueInternal(int32_t variable_index, bool follow_links, int32_t value);
 
