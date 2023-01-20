@@ -198,6 +198,20 @@ class VmSession {
   bool isAtEnd() const;
 
   /**
+   * @fn VmSession::setExitedAbnormally
+   * @brief Marks the program as exited abnormally
+   */
+  void setExitedAbnormally();
+
+  /**
+   * @fn VmSession::didExitAbnormally
+   * @brief Denotes whether the program has been marked as exited abnormally
+   *
+   * @return A boolean flag denoting whether the program has exited abnormally.
+   */
+  bool didExitAbnormally() const;
+
+  /**
    * @fn VmSession::registerVariable
    * @brief Registers a variable at index and type in the variable memory
    *
@@ -1508,6 +1522,12 @@ class VmSession {
    * program.
    */
   bool was_terminated_ = false;
+
+  /**
+   * @var VmSession::exited_abnormally_
+   * @brief Denotes whether the program exited abnormally.
+   */
+  bool exited_abnormally_ = false;
 
   /**
    * @var VmSession::return_code_

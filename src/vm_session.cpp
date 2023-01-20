@@ -102,6 +102,14 @@ bool VmSession::isAtEnd() const {
   return was_terminated_ || pointer_ >= program_.getSize();
 }
 
+void VmSession::setExitedAbnormally() {
+  exited_abnormally_ = true;
+}
+
+bool VmSession::didExitAbnormally() const {
+  return exited_abnormally_;
+}
+
 void VmSession::registerVariable(int32_t variable_index, Program::VariableType variable_type) {
   if (variable_index < 0 || variable_index >= variable_count_) {
     throw std::out_of_range("Invalid variable index.");

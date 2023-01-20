@@ -117,6 +117,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(stacks)
   declare_test(system_calls)
   declare_test(variables)
+  declare_test(vm_session)
 endif(BEAST_BUILD_TESTS)
 
 # Install targets
