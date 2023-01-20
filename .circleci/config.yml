@@ -105,7 +105,7 @@ jobs:
           command: ls
       - run:
           name: list build dir
-          command: build
+          command: ls build
       - persist_to_workspace:
           root: .
           paths:
@@ -122,7 +122,7 @@ jobs:
           command: ls
       - run:
           name: list build dir
-          command: build
+          command: ls build
       - sonarcloud/scan
   memory-check:
     docker:
