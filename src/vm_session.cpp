@@ -137,7 +137,7 @@ int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_link
 
     if (iterator->second.first.type == Program::VariableType::Link) {
       if (visited_indices.find(variable_index) != visited_indices.end()) {
-        throw std::logic_error("Circular variable index link.");
+        throw std::invalid_argument("Circular variable index link.");
       }
       visited_indices.insert(variable_index);
       variable_index = getVariableValueInternal(variable_index, false);

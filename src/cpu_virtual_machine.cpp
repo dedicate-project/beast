@@ -32,6 +32,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
   } catch(...) {
     // Unable to get more data; the program came to an unexpected end.
     panic("Program ended unexpectedly.");
+    // TODO(fairlight1337): Add a separate flag to the session where the VM can denote that a
+    // program ended unexpectedly.
     return false;
   }
 
