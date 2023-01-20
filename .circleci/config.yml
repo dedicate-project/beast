@@ -91,7 +91,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y npm lcov ccache
+            sudo apt-get install -y npm lcov gcovr
       - run:
           name: Generate coverage report
           command: |
