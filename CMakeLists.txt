@@ -33,11 +33,12 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
   include(CodeCoverage)
 
-  add_compile_options(-g -O0 -lprofiler -fprofile-arcs -ftest-coverage --coverage)
+  add_compile_options(-g -O0 -lprofiler -fprofile-arcs -ftest-coverage -coverage)
 
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/*)
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/*
+    SONARQUBE)
 else()
   add_compile_options(-O3)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")

@@ -111,11 +111,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run:
-          name: Copy coverage report
-          command: |
-            cd build
-            cp coverage.info coverage.gcov
       - sonarcloud/scan
   memory-check:
     docker:
