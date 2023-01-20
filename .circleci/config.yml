@@ -100,6 +100,10 @@ jobs:
       - coveralls/upload:
           path_to_lcov: ./build/coverage.info
           token: COVERALLS_REPO_TOKEN
+      - persist_to_workspace:
+          root: .
+          paths:
+            - "."
   sonarqube:
     docker:
       - image: cimg/base:stable
@@ -140,7 +144,7 @@ workflows:
       - sonarqube:
           context: SonarCloud
           requires:
-            - build_debug
+            - test
       - memory-check:
           requires:
             - build_debug
