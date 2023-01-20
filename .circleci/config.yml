@@ -4,7 +4,7 @@ orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.3
 
 jobs:
-  build:
+  prepare_environment:
     docker:
       - image: cimg/base:stable
     resource_class: small
@@ -24,6 +24,38 @@ jobs:
           name: Create build directory
           command: |
             mkdir -p build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - "."
+  build_release:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Setup cmake
+          command: |
+            cd build
+            cmake ..
+      - run:
+          name: Build
+          command: |
+            cd build
+            make
+      - persist_to_workspace:
+          root: .
+          paths:
+            - "."
+  build_debug:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Setup cmake
           command: |
@@ -90,14 +122,20 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - build
+      - prepare_environment
+      - build_release:
+          requires:
+            - prepare_environment
+      - build_debug:
+          requires:
+            - prepare_environment
       - test:
           requires:
-            - build
+            - build_debug
       - sonarqube:
           context: SonarCloud
           requires:
-            - build
+            - build_debug
       - memory-check:
           requires:
-            - build
+            - build_debug
