@@ -65,7 +65,7 @@ jobs:
           name: Setup cmake
           command: |
             cd build
-            cmake -DCMAKE_BUILD_TYPE=Debug ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DCODE_COVERAGE_VERBOSE=Yes ..
       - run:
           name: Build
           command: |
