@@ -28,7 +28,7 @@ VmSession::VariableIoBehavior VmSession::getVariableBehavior(
     int32_t variable_index, bool follow_links) {
   const auto iterator = variables_.find(getRealVariableIndex(variable_index, follow_links));
   if (iterator == variables_.end()) {
-    throw std::runtime_error("Variable index not declared");
+    throw std::invalid_argument("Variable index not declared");
   }
   return iterator->second.first.behavior;
 }
@@ -36,10 +36,10 @@ VmSession::VariableIoBehavior VmSession::getVariableBehavior(
 bool VmSession::hasOutputDataAvailable(int32_t variable_index, bool follow_links) {
   const auto iterator = variables_.find(getRealVariableIndex(variable_index, follow_links));
   if (iterator == variables_.end()) {
-    throw std::runtime_error("Variable index not declared");
+    throw std::invalid_argument("Variable index not declared");
   }
   if (iterator->second.first.behavior != VariableIoBehavior::Output) {
-    throw std::runtime_error("Variable behavior not declared as output");
+    throw std::invalid_argument("Variable behavior not declared as output");
   }
   return iterator->second.first.changed_since_last_interaction;
 }
@@ -104,21 +104,21 @@ bool VmSession::isAtEnd() const {
 
 void VmSession::registerVariable(int32_t variable_index, Program::VariableType variable_type) {
   if (variable_index < 0 || variable_index >= variable_count_) {
-    throw std::runtime_error("Invalid variable index.");
+    throw std::out_of_range("Invalid variable index.");
   }
 
   if (variable_type != Program::VariableType::Int32 &&
       variable_type != Program::VariableType::Link) {
-    throw std::runtime_error("Invalid declarative variable type.");
+    throw std::invalid_argument("Invalid declarative variable type.");
   }
 
   if (variables_.find(variable_index) != variables_.end()) {
-    throw std::runtime_error("Variable index already declared.");
+    throw std::invalid_argument("Variable index already declared.");
   }
 
   if (variables_.size() == variable_count_) {
     // No more space for variables
-    throw std::runtime_error("Variables cache full.");
+    throw std::overflow_error("Variables cache full.");
   }
 
   VariableDescriptor descriptor({variable_type, VariableIoBehavior::Store, false});
@@ -137,17 +137,17 @@ int32_t VmSession::getRealVariableIndex(int32_t variable_index, bool follow_link
 
     if (iterator->second.first.type == Program::VariableType::Link) {
       if (visited_indices.find(variable_index) != visited_indices.end()) {
-        throw std::runtime_error("Circular variable index link.");
+        throw std::logic_error("Circular variable index link.");
       }
       visited_indices.insert(variable_index);
       variable_index = getVariableValueInternal(variable_index, false);
     } else {
-      throw std::runtime_error("Invalid declarative variable type.");
+      throw std::invalid_argument("Invalid declarative variable type.");
     }
   }
 
   // Undeclared variables cannot be set.
-  throw std::runtime_error("Variable index not declared.");
+  throw std::invalid_argument("Variable index not declared.");
 }
 
 void VmSession::setVariable(int32_t variable_index, int32_t value, bool follow_links) {
@@ -156,11 +156,11 @@ void VmSession::setVariable(int32_t variable_index, int32_t value, bool follow_l
 
 void VmSession::unregisterVariable(int32_t variable_index) {
   if (variable_index < 0 || variable_index >= variable_count_) {
-    throw std::runtime_error("Invalid variable index.");
+    throw std::out_of_range("Invalid variable index.");
   }
 
   if (variables_.find(variable_index) == variables_.end()) {
-    throw std::runtime_error("Variable index not declared, cannot undeclare.");
+    throw std::invalid_argument("Variable index not declared, cannot undeclare.");
   }
 
   variables_.erase(variable_index);
@@ -168,11 +168,11 @@ void VmSession::unregisterVariable(int32_t variable_index) {
 
 void VmSession::setStringTableEntry(int32_t string_table_index, std::string_view string_content) {
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   if (string_content.size() > max_string_size_) {
-    throw std::runtime_error("String too long.");
+    throw std::length_error("String too long.");
   }
 
   string_table_[string_table_index] = string_content;
@@ -181,7 +181,7 @@ void VmSession::setStringTableEntry(int32_t string_table_index, std::string_view
 const std::string& VmSession::getStringTableEntry(int32_t string_table_index) const {
   const auto iterator = string_table_.find(string_table_index);
   if (iterator == string_table_.end()) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   return iterator->second;
@@ -189,7 +189,7 @@ const std::string& VmSession::getStringTableEntry(int32_t string_table_index) co
 
 void VmSession::appendToPrintBuffer(std::string_view string) {
   if (print_buffer_.size() + string.size() > maximum_print_buffer_length_) {
-    throw std::runtime_error("Print buffer overflow.");
+    throw std::overflow_error("Print buffer overflow.");
   }
   print_buffer_ += string;
 }
@@ -203,7 +203,7 @@ void VmSession::appendVariableToPrintBuffer(
       const auto val =
           static_cast<char>(
               static_cast<uint32_t>(getVariableValueInternal(variable_index, false)) & flag);
-      appendToPrintBuffer(std::string(&val, 1));
+      appendToPrintBuffer(std::string_view(&val, 1));
     } else {
       appendToPrintBuffer(std::to_string(getVariableValueInternal(variable_index, false)));
     }
@@ -211,10 +211,10 @@ void VmSession::appendVariableToPrintBuffer(
     appendToPrintBuffer(
         "L{" + std::to_string(getVariableValueInternal(variable_index, false)) + "}");
   } else {
-    throw std::runtime_error("Cannot print unsupported variable type (" +
-                             std::to_string(
-                                 static_cast<int32_t>(variables_[variable_index].first.type))
-                             + ").");
+    throw std::invalid_argument("Cannot print unsupported variable type (" +
+                                std::to_string(
+                                    static_cast<int32_t>(variables_[variable_index].first.type))
+                                + ").");
   }
 }
 
@@ -388,8 +388,8 @@ void VmSession::copyVariable(
 
 void VmSession::loadInputCountIntoVariable(int32_t variable, bool follow_links) {
   int32_t input_count = 0;
-  for (const std::pair<const int32_t, std::pair<VariableDescriptor, int32_t>>& pair : variables_) {
-    if (pair.second.first.behavior == VariableIoBehavior::Input) {
+  for (const auto& [index, variable_data] : variables_) {
+    if (variable_data.first.behavior == VariableIoBehavior::Input) {
       input_count++;
     }
   }
@@ -398,8 +398,8 @@ void VmSession::loadInputCountIntoVariable(int32_t variable, bool follow_links) 
 
 void VmSession::loadOutputCountIntoVariable(int32_t variable, bool follow_links) {
   int32_t output_count = 0;
-  for (const std::pair<const int32_t, std::pair<VariableDescriptor, int32_t>>& pair : variables_) {
-    if (pair.second.first.behavior == VariableIoBehavior::Output) {
+  for (const auto& [index, variable_data] : variables_) {
+    if (variable_data.first.behavior == VariableIoBehavior::Output) {
       output_count++;
     }
   }
@@ -413,16 +413,15 @@ void VmSession::loadCurrentAddressIntoVariable(int32_t variable, bool follow_lin
 void VmSession::checkIfInputWasSet(
     int32_t variable_index, bool follow_links,
     int32_t destination_variable, bool follow_destination_links) {
-  std::pair<VariableDescriptor, int32_t>& variable =
-      variables_[getRealVariableIndex(variable_index, follow_links)];
-  if (variable.first.behavior != VariableIoBehavior::Input) {
-    throw std::runtime_error("Variable is not an input.");
+  auto& [variable, value] = variables_[getRealVariableIndex(variable_index, follow_links)];
+  if (variable.behavior != VariableIoBehavior::Input) {
+    throw std::invalid_argument("Variable is not an input.");
   }
 
   setVariableValueInternal(
       destination_variable, follow_destination_links,
-      variable.first.changed_since_last_interaction ? 0x1 : 0x0);
-  variable.first.changed_since_last_interaction = false;
+      variable.changed_since_last_interaction ? 0x1 : 0x0);
+  variable.changed_since_last_interaction = false;
 }
 
 void VmSession::loadStringTableLimitIntoVariable(int32_t variable_index, bool follow_links) {
@@ -467,7 +466,7 @@ void VmSession::unconditionalJumpToRelativeVariableAddress(
 void VmSession::loadStringItemLengthIntoVariable(
     int32_t string_table_index, int32_t variable_index, bool follow_links) {
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   setVariableValueInternal(
@@ -477,12 +476,12 @@ void VmSession::loadStringItemLengthIntoVariable(
 void VmSession::loadStringItemIntoVariables(
     int32_t string_table_index, int32_t start_variable_index, bool follow_links) {
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   const auto iterator = string_table_.find(string_table_index);
   if (iterator == string_table_.end()) {
-    throw std::runtime_error("String table index not defined.");
+    throw std::invalid_argument("String table index not defined.");
   }
 
   const size_t size = iterator->second.size();
@@ -512,7 +511,8 @@ void VmSession::performSystemCall(
     switch (minor_code) {
     case 0: {  // UTC Timezone (hours)
       // Calculate the timezone offset in minutes
-      const int32_t utc_offset_hours = std::floor(static_cast<double>(offset_minutes) / 60.0);
+      const auto utc_offset_hours =
+          static_cast<int32_t>(std::floor(static_cast<double>(offset_minutes) / 60.0));
       setVariableValueInternal(variable_index, follow_links, utc_offset_hours);
     } break;
 
@@ -523,27 +523,27 @@ void VmSession::performSystemCall(
     } break;
 
     case 2: {  // Seconds
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_sec));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_sec);
     } break;
 
     case 3: {  // Minutes
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_min));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_min);
     } break;
 
     case 4: {  // Hours
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_hour));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_hour);
     } break;
 
     case 5: {  // Day
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_mday));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_mday);
     } break;
 
     case 6: {  // Month
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_mon));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_mon);
     } break;
 
     case 7: {  // Year
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_year));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_year);
     } break;
 
     case 8: {  // Week
@@ -562,19 +562,20 @@ void VmSession::performSystemCall(
       const int32_t first_day_weekday = first_day_tm.tm_wday;
 
       const int32_t current_week = (current_day - 1 + first_day_weekday) / 7 + 1;
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(current_week));
+      setVariableValueInternal(variable_index, follow_links, current_week);
     } break;
 
     case 9: {  // Day of Week
-      setVariableValueInternal(variable_index, follow_links, static_cast<int32_t>(utc_tm.tm_wday));
+      setVariableValueInternal(variable_index, follow_links, utc_tm.tm_wday);
     } break;
 
     default:
-      throw std::runtime_error("Unknown major/minor code combination for system call: "
-                               + std::to_string(major_code) + ", " + std::to_string(minor_code));
+      throw std::invalid_argument("Unknown major/minor code combination for system call: "
+                                  + std::to_string(major_code) + ", " + std::to_string(minor_code));
     }
   } else {
-    throw std::runtime_error("Unknown major code for system call: " + std::to_string(major_code));
+    throw std::invalid_argument("Unknown major code for system call: "
+                                + std::to_string(major_code));
   }
 }
 
@@ -639,7 +640,7 @@ void VmSession::moduloVariableByVariable(
 
 void VmSession::rotateVariable(int32_t variable_index, bool follow_links, int8_t places) {
   const auto value = static_cast<uint32_t>(getVariableValueInternal(variable_index, follow_links));
-  const uint8_t abs_places = std::abs(places);
+  const auto abs_places = static_cast<uint8_t>(std::abs(places));
   if (places < 0) {
    // Rotate right
     const uint32_t result =
@@ -679,7 +680,7 @@ void VmSession::popVariableFromStack(
   const int32_t current_stack_size =
       getVariableValueInternal(stack_variable_index, stack_follow_links);
   if (current_stack_size == 0) {
-    throw std::runtime_error("Cannot pop value from stack, stack empty.");
+    throw std::underflow_error("Cannot pop value from stack, stack empty.");
   }
   const int32_t last_value =
       getVariableValueInternal(
@@ -692,7 +693,7 @@ void VmSession::popTopItemFromStack(int32_t stack_variable_index, bool stack_fol
   const int32_t current_stack_size =
       getVariableValueInternal(stack_variable_index, stack_follow_links);
   if (current_stack_size == 0) {
-    throw std::runtime_error("Cannot pop value from stack, stack empty.");
+    throw std::underflow_error("Cannot pop value from stack, stack empty.");
   }
   setVariableValueInternal(stack_variable_index, true, current_stack_size - 1);
 }
@@ -716,11 +717,11 @@ void VmSession::setVariableStringTableEntry(
     int32_t variable_index, bool follow_links, std::string_view string_content) {
   const int32_t string_table_index = getVariableValueInternal(variable_index, follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   if (string_content.size() > max_string_size_) {
-    throw std::runtime_error("String too long.");
+    throw std::length_error("String too long.");
   }
 
   string_table_[string_table_index] = string_content;
@@ -729,7 +730,7 @@ void VmSession::setVariableStringTableEntry(
 void VmSession::printVariableStringFromStringTable(int32_t variable_index, bool follow_links) {
   const int32_t string_table_index = getVariableValueInternal(variable_index, follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   appendToPrintBuffer(getStringTableEntry(string_table_index));
@@ -741,7 +742,7 @@ void VmSession::loadVariableStringItemLengthIntoVariable(
   const int32_t string_table_index =
       getVariableValueInternal(string_item_variable_index, string_item_follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   setVariableValueInternal(
@@ -754,12 +755,12 @@ void VmSession::loadVariableStringItemIntoVariables(
   const int32_t string_table_index =
       getVariableValueInternal(string_item_variable_index, string_item_follow_links);
   if (string_table_index < 0 || string_table_index >= string_table_count_) {
-    throw std::runtime_error("String table index out of bounds.");
+    throw std::out_of_range("String table index out of bounds.");
   }
 
   const auto iterator = string_table_.find(string_table_index);
   if (iterator == string_table_.end()) {
-    throw std::runtime_error("String table index not defined.");
+    throw std::invalid_argument("String table index not defined.");
   }
 
   const size_t size = iterator->second.size();

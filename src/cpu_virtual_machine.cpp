@@ -849,7 +849,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
   } break;
 
   default: {
-    throw std::runtime_error("Undefined instruction reached.");
+    throw std::invalid_argument("Undefined instruction reached.");
   }
   }
 

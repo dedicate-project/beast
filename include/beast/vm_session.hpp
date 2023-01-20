@@ -843,64 +843,92 @@ class VmSession {
 
   /**
    * @fn VmSession::bitShiftVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-shift a variable by a given number of places
    *
    * See Program::bitShiftVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * Positive amounts of places shift to the left, negative amounts shift to the right.
+   *
+   * @param variable_index The variable to bit-shift
+   * @param follow_links Whether to resolve variable links
+   * @param places The amount of places to shift by
    */
   void bitShiftVariable(int32_t variable_index, bool follow_links, int8_t places);
 
   /**
    * @fn VmSession::bitWiseInvertVariable
-   * @brief NEEDS DOCUMENTATION
+   * @brief Bit-wise invert a variable
    *
    * See Program::bitWiseInvertVariable for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * @param variable_index The variable to invert
+   * @param follow_links Whether to resolve variable links
    */
   void bitWiseInvertVariable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::bitWiseAndTwoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Perform a bit-wise AND operation on two variables
    *
    * See Program::bitWiseAndTwoVariables for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in `variable_index_b`:
+   * `b = a & b`
+   *
+   * @param variable_index The first variable
+   * @param follow_links Whether to resolve the first variable's links
+   * @param variable_index The second variable (also the target)
+   * @param follow_links Whether to resolve the second variable's links
    */
   void bitWiseAndTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::bitWiseOrTwoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Perform a bit-wise OR operation on two variables
    *
    * See Program::bitWiseOrTwoVariables for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in `variable_index_b`:
+   * `b = a | b`
+   *
+   * @param variable_index The first variable
+   * @param follow_links Whether to resolve the first variable's links
+   * @param variable_index The second variable (also the target)
+   * @param follow_links Whether to resolve the second variable's links
    */
   void bitWiseOrTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::bitWiseXorTwoVariables
-   * @brief NEEDS DOCUMENTATION
+   * @brief Perform a bit-wise XOR operation on two variables
    *
    * See Program::bitWiseXorTwoVariables for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in `variable_index_b`:
+   * `b = a ^ b`
+   *
+   * @param variable_index The first variable
+   * @param follow_links Whether to resolve the first variable's links
+   * @param variable_index The second variable (also the target)
+   * @param follow_links Whether to resolve the second variable's links
    */
   void bitWiseXorTwoVariables(
       int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::moduloVariableByConstant
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs a modulo operation on the variable, using the specified constant
    *
    * See Program::moduloVariableByConstant for the intended operator use.
    *
-   * TODO(fairlight1337): Document this part.
+   * The result will be stored in the same variable.
+   * `variable = variable % constant`
+   *
+   * @param variable_index The variable to bit-shift
+   * @param follow_links Whether to resolve variable links
+   * @param constant The constant to modulo the variable's value by
    */
   void moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t constant);
 

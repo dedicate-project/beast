@@ -20,7 +20,7 @@ size_t Program::getSize() const {
 
 int32_t Program::getData4(int32_t offset) {
   if ((offset + 4) > getSize()) {
-    throw std::runtime_error("Unable to retrieve data (not enough data left).");
+    throw std::underflow_error("Unable to retrieve data (not enough data left).");
   }
 
   int32_t buffer = 0x0;
@@ -30,7 +30,7 @@ int32_t Program::getData4(int32_t offset) {
 
 int16_t Program::getData2(int32_t offset) {
   if ((offset + 2) > getSize()) {
-    throw std::runtime_error("Unable to retrieve data (not enough data left).");
+    throw std::underflow_error("Unable to retrieve data (not enough data left).");
   }
 
   int16_t buffer = 0x0;
@@ -40,7 +40,7 @@ int16_t Program::getData2(int32_t offset) {
 
 int8_t Program::getData1(int32_t offset) {
   if ((offset + 1) > getSize()) {
-    throw std::runtime_error("Unable to retrieve data (not enough data left).");
+    throw std::underflow_error("Unable to retrieve data (not enough data left).");
   }
 
   int8_t buffer = 0x0;
@@ -55,7 +55,7 @@ uint32_t Program::getPointer() const {
 void Program::insertProgram(const Program& other) {
   const size_t to_fit = other.getSize();
   if (!canFit(static_cast<uint32_t>(to_fit))) {
-    throw std::runtime_error("Unable to fit other program into program.");
+    throw std::overflow_error("Unable to fit other program into program.");
   }
   for (uint32_t idx = 0; idx < to_fit; ++idx) {
     data_[pointer_ + idx] = other.getData()[idx];
@@ -285,7 +285,7 @@ void Program::printVariable(int32_t variable_index, bool follow_links, bool as_c
 
 void Program::setStringTableEntry(int32_t string_table_index, const std::string& string) {
   if (!canFit(static_cast<uint32_t>(3 + string.size()))) {
-    throw std::runtime_error("Unable to fit instruction into program.");
+    throw std::overflow_error("Unable to fit instruction into program.");
   }
 
   appendCode1(OpCode::SetStringTableEntry);
@@ -733,21 +733,21 @@ bool Program::canFit(uint32_t bytes) {
 }
 
 void Program::appendData4(int32_t data) {
-  if (!canFit(4)) { throw std::runtime_error("Unable to fit data into program."); }
+  if (!canFit(4)) { throw std::overflow_error("Unable to fit data into program."); }
 
   std::memcpy(&data_[pointer_], &data, 4);
   pointer_ += 4;
 }
 
 void Program::appendData2(int16_t data) {
-  if (!canFit(2)) { throw std::runtime_error("Unable to fit data into program."); }
+  if (!canFit(2)) { throw std::overflow_error("Unable to fit data into program."); }
 
   std::memcpy(&data_[pointer_], &data, 2);
   pointer_ += 2;
 }
 
 void Program::appendData1(int8_t data) {
-  if (!canFit(1)) { throw std::runtime_error("Unable to fit data into program."); }
+  if (!canFit(1)) { throw std::overflow_error("Unable to fit data into program."); }
 
   std::memcpy(&data_[pointer_], &data, 1);
   pointer_ += 1;
