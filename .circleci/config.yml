@@ -60,7 +60,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y clang-tidy lcov ccache
+            sudo apt-get install -y clang-tidy lcov ccache gcovr
       - run:
           name: Setup cmake
           command: |
