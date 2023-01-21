@@ -8,7 +8,6 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=dedicate-project_beast&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=dedicate-project_beast)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Maintenance](https://img.shields.io/maintenance/yes/2023)
