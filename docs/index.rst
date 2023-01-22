@@ -13,12 +13,10 @@ BEAST (Binary Evolution And Sentience Toolkit) is an open source project `hosted
    use-cases. Explore potential :ref:`Real World Applications`.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Project Table of Contents
 
-   api.rst
-   operators.rst
-   real_world_applications.rst
+   bytecode_virtual_machine.rst
 
 
 Project Synopsis
