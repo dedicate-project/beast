@@ -14,7 +14,7 @@ Program RandomProgramFactory::generate(
   std::mt19937 mersenne_engine{random_device()};
   std::uniform_int_distribution<int32_t> code_distribution(
       0, static_cast<int32_t>(OpCode::Size) - 1);
-  std::uniform_int_distribution<int32_t> var_distribution(0, memory_size - 1);
+  std::uniform_int_distribution<int32_t> var_distribution(0, static_cast<int32_t>(memory_size) - 1);
   std::uniform_int_distribution<int32_t> bool_distribution(0, 1);
   std::uniform_int_distribution<int32_t> int32_distribution(
       std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
@@ -24,7 +24,8 @@ Program RandomProgramFactory::generate(
       -static_cast<int32_t>(static_cast<double>(size) * 0.5),
       static_cast<int32_t>(static_cast<double>(size) * 0.5));
   std::uniform_int_distribution<int32_t> abs_addr_distribution(0, size);
-  std::uniform_int_distribution<int32_t> string_table_index_distribution(0, string_table_size);
+  std::uniform_int_distribution<int32_t> string_table_index_distribution(
+      0, static_cast<int32_t>(string_table_size));
 
   // A random string that fits into the string table, with characters ranging from ASCII 33-126.
   const auto string_item_generator = [&mersenne_engine, &string_table_item_length]() {
@@ -33,8 +34,7 @@ Program RandomProgramFactory::generate(
       std::uniform_int_distribution<> char_distribution(33, 126);
       const int32_t length = length_distribution(mersenne_engine);
       for (uint32_t idx = 0; idx < length; idx++) {
-        const char c = char_distribution(mersenne_engine);
-        random_string += c;
+        random_string += static_cast<char>(char_distribution(mersenne_engine));
       }
       return random_string;
   };
@@ -57,7 +57,7 @@ Program RandomProgramFactory::generate(
   // A random value from the signed int8 range.
   const auto int8_generator =
       [&int8_distribution, &mersenne_engine]() {
-        return int8_distribution(mersenne_engine);
+        return static_cast<int8_t>(int8_distribution(mersenne_engine));
       };
   // A random relative address in the range [-size/2, size/2).
   const auto rel_addr_generator =
@@ -94,7 +94,7 @@ Program RandomProgramFactory::generate(
 
     case OpCode::Terminate: {
       std::uniform_int_distribution<int32_t> return_code_distribution{-127, 128};
-      fragment.terminate(return_code_distribution(mersenne_engine));
+      fragment.terminate(static_cast<int8_t>(return_code_distribution(mersenne_engine)));
     } break;
 
     case OpCode::TerminateWithVariableReturnCode: {
