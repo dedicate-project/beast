@@ -78,6 +78,7 @@ if(BEAST_BUILD_EXAMPLES)
   endmacro()
 
   declare_example(adder)
+  declare_example(bubblesort)
   declare_example(feedloop)
   declare_example(hello_world)
 endif()
