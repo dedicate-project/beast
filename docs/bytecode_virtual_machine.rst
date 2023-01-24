@@ -12,6 +12,7 @@ virtual machine that can execute those programs.
    api.rst
    operators.rst
    real_world_applications.rst
+   example_programs.rst
 
 
 Bytecode Programs
@@ -21,7 +22,8 @@ The bytecode that is used in BEAST programs is identified by a custom set of ope
 execute a well-defined action within a virtualized environment.
 
 The operators supported by BEAST are listed in the :ref:`Operators` document, complete with a
-programming interface.
+programming interface. For examples how to use these operators, please refer to the :ref:`Example
+Programs` document.
 
 
 Virtual Machine

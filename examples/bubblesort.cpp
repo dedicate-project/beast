@@ -83,7 +83,8 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.compareIfVariableGtVariable(var_l1, true, var_l2, true, var_temp, true);
   beast::Program swap;
   swap.swapVariables(var_l1, true, var_l2, true);
-  prg.relativeJumpToAddressIfVariableEqualsZero(var_temp, true, swap.getSize());
+  prg.relativeJumpToAddressIfVariableEqualsZero(
+      var_temp, true, static_cast<int32_t>(swap.getSize()));
   prg.insertProgram(swap);
 
   /* The next two blocks are the cascaded loop tails; `var_j` controls the inner loop, `var_i`
