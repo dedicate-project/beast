@@ -151,7 +151,7 @@ enum class OpCode : int8_t {
   PopTopItemFromStack                        = 0x4b,   ///< Pop the top item from a stack
   CheckIfStackIsEmpty                        = 0x4c,   ///< Check if a stack contains no items
 
-  Size
+  Size                                       = 0x4d    ///< Used to determine operator count
 };
 
 }  // namespace beast

@@ -451,10 +451,6 @@ Program RandomProgramFactory::generate(
       break;
     }
 
-    // TODO(fairlight1337): Implement generation of random programs using the full set of available
-    // operators. Also, cover this method with tests properly, beyond checking the target size of
-    // the generated programs.
-
     if (fragment.getSize() + prg.getPointer() > prg.getSize()) {
       // The instruction doesn't fit into the program anymore. Generation is done.
       break;
