@@ -21,7 +21,7 @@ if read_the_docs_build:
     breathe_projects['BEAST'] = output_dir + '/xml'
 
 project = 'BEAST'
-copyright = '2022, Jan Winkler'
+copyright = '2022-2023, Jan Winkler'
 author = 'Jan Winkler'
 master_doc = 'index'
 
