@@ -2,14 +2,14 @@
 
 ## Stage 1: Bytecode Interpreter (Virtual Machine)
 - [x] Build the general pipeline for defining programs and running them
-- [ ] Fully cover the entire code base
+- [x] Cover the entire code base
 - [x] Add more operators to have a solid base of operators available
 - [ ] Write up documentation for how things work, what the architecture is, etc.
 - [x] Set up CI/CD using CircleCI, GitHub CodeQL, AppVeyor
 - [x] Set up automatic build of Doxygen and Sphinx documentation using the ReadTheDocs service
 - [x] Set up GitHub repository with all contributing guidelines, code of conduct, security guidelines, license, issue templates, etc.
 - [ ] Clean up all code and documentation, finish documenting all entities
-- [ ] Add more examples for how to use the virtual machine and implemented operators
+- [x] Add more examples for how to use the virtual machine and implemented operators
 
 ## Stage 2: Genetic Algorithms and Program Evaluation
 - [ ] Develop an environment where programs are semi-randomly generated and can be evaluated based on manually defined criteria
