@@ -23,7 +23,7 @@ class ProgramFactoryBase {
    * @param size tbd
    * @return tbd
    */
-  virtual Program generate(size_t size) = 0;
+  virtual Program generate(uint32_t size) = 0;
 };
 
 }  // namespace beast

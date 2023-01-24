@@ -5,9 +5,9 @@
 TEST_CASE("random_programs_have_the_right_size", "random_program_factory") {
   beast::RandomProgramFactory factory;
 
-  const int32_t random_program_size_1 = 60;
-  const int32_t random_program_size_2 = 22;
-  const int32_t random_program_size_3 = 513;
+  const uint32_t random_program_size_1 = 60;
+  const uint32_t random_program_size_2 = 22;
+  const uint32_t random_program_size_3 = 513;
 
   beast::Program program_1 = factory.generate(random_program_size_1);
   beast::Program program_2 = factory.generate(random_program_size_2);

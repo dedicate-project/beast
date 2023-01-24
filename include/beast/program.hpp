@@ -62,7 +62,7 @@ class Program {
    *
    * @param space The constant space available in the program.
    */
-  explicit Program(int32_t space);
+  explicit Program(uint32_t space);
 
   /**
    * @fn Program::Program(std::vector<unsigned char>)

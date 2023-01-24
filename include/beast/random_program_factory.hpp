@@ -23,7 +23,7 @@ class RandomProgramFactory : public ProgramFactoryBase {
    * @param size tbd
    * @return tbd
    */
-  Program generate(size_t size) override;
+  Program generate(uint32_t size) override;
 };
 
 }  // namespace beast

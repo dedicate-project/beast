@@ -2,7 +2,7 @@
 
 namespace beast {
 
-Program RandomProgramFactory::generate(size_t size) {
+Program RandomProgramFactory::generate(uint32_t size) {
   Program prg(size);
 
   // TODO(fairlight1337): Implement generation of actual random programs here. Right now, this
