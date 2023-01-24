@@ -23,14 +23,15 @@ Program RandomProgramFactory::generate(
   std::uniform_int_distribution<int32_t> rel_addr_distribution(
       -static_cast<int32_t>(static_cast<double>(size) * 0.5),
       static_cast<int32_t>(static_cast<double>(size) * 0.5));
-  std::uniform_int_distribution<int32_t> abs_addr_distribution(0, size);
+  std::uniform_int_distribution<int32_t> abs_addr_distribution(0, static_cast<int32_t>(size));
   std::uniform_int_distribution<int32_t> string_table_index_distribution(
       0, static_cast<int32_t>(string_table_size));
 
   // A random string that fits into the string table, with characters ranging from ASCII 33-126.
   const auto string_item_generator = [&mersenne_engine, &string_table_item_length]() {
       std::string random_string;
-      std::uniform_int_distribution<> length_distribution(0, string_table_item_length);
+      std::uniform_int_distribution<> length_distribution(
+          0, static_cast<int32_t>(string_table_item_length));
       std::uniform_int_distribution<> char_distribution(33, 126);
       const int32_t length = length_distribution(mersenne_engine);
       for (uint32_t idx = 0; idx < length; idx++) {
