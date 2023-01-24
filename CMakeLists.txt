@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(beast
   LANGUAGES CXX
-  VERSION 0.0.9
+  VERSION 0.1.0
   DESCRIPTION "Byte code generator, parser, and virtual machine for evaluating evolutionary code sequences."
   HOMEPAGE_URL "https://github.com/dedicate-project/beast/")
 
