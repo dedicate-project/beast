@@ -10,20 +10,30 @@ namespace beast {
  * @class ProgramFactoryBase
  * @brief NEEDS DOCUMENTATION
  *
- * TODO(fairlight1337): Implement this function.
+ * TODO(fairlight1337): Document this class.
  */
 class ProgramFactoryBase {
  public:
   /**
-   * @fn ProgramFactoryBase::generate
-   * @brief NEEDS DOCUMENTATION
+   * @fn ProgramFactoryBase::~ProgramFactoryBase
+   * @brief Default virtual destructor
    *
-   * TODO(fairlight1337): Implement this function.
-   *
-   * @param size tbd
-   * @return tbd
+   * Ensures vtable consistency.
    */
-  virtual Program generate(uint32_t size) = 0;
+  virtual ~ProgramFactoryBase() = default;
+
+  /**
+   * @fn ProgramFactoryBase::generate
+   * @brief Generates a program based on the factory's semantics
+   *
+   * TODO(fairlight1337): Document this function.
+   *
+   * @param size The size of the program to generate
+   * @return The generated program
+   */
+  virtual Program generate(
+      uint32_t size, uint32_t memory_size, uint32_t string_table_size,
+      uint32_t string_table_item_length) = 0;
 };
 
 }  // namespace beast

@@ -10,20 +10,30 @@ namespace beast {
  * @class RandomProgramFactory
  * @brief NEEDS DOCUMENTATION
  *
- * TODO(fairlight1337): Implement this function.
+ * TODO(fairlight1337): Document this class.
  */
 class RandomProgramFactory : public ProgramFactoryBase {
  public:
   /**
-   * @fn RandomProgramFactory::generate
-   * @brief NEEDS DOCUMENTATION
+   * @fn ProgramFactoryBase::~RandomProgramFactory
+   * @brief Default virtual destructor
    *
-   * TODO(fairlight1337): Implement this function.
-   *
-   * @param size tbd
-   * @return tbd
+   * Ensures vtable consistency.
    */
-  Program generate(uint32_t size) override;
+  virtual ~RandomProgramFactory() = default;
+
+  /**
+   * @fn RandomProgramFactory::generate
+   * @brief Generates a program consisting of random but valid operators and operands
+   *
+   * TODO(fairlight1337): Document this function.
+   *
+   * @param size The size of the program to generate
+   * @return A randomly generated program
+   */
+  Program generate(
+      uint32_t size, uint32_t memory_size, uint32_t string_table_size,
+      uint32_t string_table_item_length) override;
 };
 
 }  // namespace beast
