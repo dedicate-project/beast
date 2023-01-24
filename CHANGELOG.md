@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A base class for Program Factories
+- A concrete implementation of the base class for Random Programs
+- Covered the random programs factory via tests
+
+### Fixed
+
+- Fixed size program initialization is done via an unsigned value, not signed
+
 ## [0.1.0]
 
 ### Added
