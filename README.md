@@ -12,6 +12,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Maintenance](https://img.shields.io/maintenance/yes/2023)
 ![Platforms](https://img.shields.io/badge/platforms-linux%20%7C%20windows-lightgrey)
+![Version](https://img.shields.io/github/v/release/dedicate-project/beast?sort=semver)
 
 <p align="center">
  <img src="https://github.com/dedicate-project/beast/blob/main/images/beast_head_logo_small.png" />
