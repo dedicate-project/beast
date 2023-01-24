@@ -3,8 +3,8 @@ Example Programs
 
 To illustrate how to implement BEAST programs, a couple of examples are provided. The following
 example programs can be found as part of the BEAST environment in `the repository
-<relativeJumpToAddressIfVariableGreaterThanZero>`_, with each featuring explanations of how the
-programs work in their respective source code:
+<https://github.com/dedicate-project/beast>`_, with each featuring explanations of how the programs
+work in their respective source code:
 
 
 Hello World
