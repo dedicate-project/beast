@@ -8,6 +8,7 @@
 #include <beast/cpu_virtual_machine.hpp>
 #include <beast/opcodes.hpp>
 #include <beast/program.hpp>
+#include <beast/random_program_factory.hpp>
 #include <beast/time_functions.hpp>
 #include <beast/version.h>
 #include <beast/vm_session.hpp>

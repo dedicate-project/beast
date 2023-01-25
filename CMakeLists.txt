@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(beast
   LANGUAGES CXX
-  VERSION 0.1.0
+  VERSION 0.1.1
   DESCRIPTION "Byte code generator, parser, and virtual machine for evaluating evolutionary code sequences."
   HOMEPAGE_URL "https://github.com/dedicate-project/beast/")
 
@@ -58,6 +58,7 @@ add_library(${PROJECT_NAME}
   src/beast.cpp
   src/cpu_virtual_machine.cpp
   src/program.cpp
+  src/random_program_factory.cpp
   src/time_functions.cpp
   src/vm_session.cpp
   src/virtual_machine.cpp)
@@ -115,6 +116,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(misc)
   declare_test(printing_and_string_table)
   declare_test(program)
+  declare_test(random_program_factory)
   declare_test(stacks)
   declare_test(system_calls)
   declare_test(variables)

@@ -149,7 +149,9 @@ enum class OpCode : int8_t {
   PopVariableFromStack                       = 0x4a,   ///< Pop the top item from a stack into a
                                                        ///  variable
   PopTopItemFromStack                        = 0x4b,   ///< Pop the top item from a stack
-  CheckIfStackIsEmpty                        = 0x4c    ///< Check if a stack contains no items
+  CheckIfStackIsEmpty                        = 0x4c,   ///< Check if a stack contains no items
+
+  Size                                       = 0x4d    ///< Used to determine operator count
 };
 
 }  // namespace beast

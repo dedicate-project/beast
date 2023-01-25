@@ -6,7 +6,7 @@
 
 namespace beast {
 
-Program::Program(int32_t space)
+Program::Program(uint32_t space)
   : data_(space, 0x00), grows_dynamically_{false} {
 }
 

@@ -12,7 +12,9 @@
 - [x] Add more examples for how to use the virtual machine and implemented operators
 
 ## Stage 2: Genetic Algorithms and Program Evaluation
-- [ ] Develop an environment where programs are semi-randomly generated and can be evaluated based on manually defined criteria
+- [x] Develop program factories that semi-randomly generate programs
+- [ ] Develop runtime statistics protocols that record specific execution characteristics of programs
+- [ ] Develop program performance evaluators, taking into account runtime statistics, but also specific criteria that programs are supposed to satisfy, and scoring them
 - [ ] Develop a genetic algorithms based approach to recombining programs that perform well based on the implemented criteria
 
 ## Stage 3: High level Language
