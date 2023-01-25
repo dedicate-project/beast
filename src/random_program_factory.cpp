@@ -12,19 +12,19 @@ Program RandomProgramFactory::generate(
 
   std::random_device random_device;
   std::mt19937 mersenne_engine{random_device()};
-  std::uniform_int_distribution<int32_t> code_distribution(
+  std::uniform_int_distribution<> code_distribution(
       0, static_cast<int32_t>(OpCode::Size) - 1);
-  std::uniform_int_distribution<int32_t> var_distribution(0, static_cast<int32_t>(memory_size) - 1);
-  std::uniform_int_distribution<int32_t> bool_distribution(0, 1);
-  std::uniform_int_distribution<int32_t> int32_distribution(
+  std::uniform_int_distribution<> var_distribution(0, static_cast<int32_t>(memory_size) - 1);
+  std::uniform_int_distribution<> bool_distribution(0, 1);
+  std::uniform_int_distribution<> int32_distribution(
       std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
-  std::uniform_int_distribution<int32_t> int8_distribution(
+  std::uniform_int_distribution<> int8_distribution(
       std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max());
-  std::uniform_int_distribution<int32_t> rel_addr_distribution(
+  std::uniform_int_distribution<> rel_addr_distribution(
       -static_cast<int32_t>(static_cast<double>(size) * 0.5),
       static_cast<int32_t>(static_cast<double>(size) * 0.5));
-  std::uniform_int_distribution<int32_t> abs_addr_distribution(0, static_cast<int32_t>(size));
-  std::uniform_int_distribution<int32_t> string_table_index_distribution(
+  std::uniform_int_distribution<> abs_addr_distribution(0, static_cast<int32_t>(size));
+  std::uniform_int_distribution<> string_table_index_distribution(
       0, static_cast<int32_t>(string_table_size));
 
   // A random string that fits into the string table, with characters ranging from ASCII 33-126.
@@ -79,8 +79,7 @@ Program RandomProgramFactory::generate(
   while (true) {
     Program fragment;
 
-    const auto code = static_cast<OpCode>(code_distribution(mersenne_engine));
-    switch (code) {
+    switch (static_cast<OpCode>(code_distribution(mersenne_engine))) {
     case OpCode::NoOp: {
       fragment.noop();
     } break;
@@ -94,7 +93,7 @@ Program RandomProgramFactory::generate(
     } break;
 
     case OpCode::Terminate: {
-      std::uniform_int_distribution<int32_t> return_code_distribution{-127, 128};
+      std::uniform_int_distribution<> return_code_distribution{-127, 128};
       fragment.terminate(static_cast<int8_t>(return_code_distribution(mersenne_engine)));
     } break;
 
