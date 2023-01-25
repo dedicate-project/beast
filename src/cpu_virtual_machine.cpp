@@ -301,7 +301,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const int32_t string_table_index = session.getData4();
     const int16_t string_length = session.getData2();
     std::vector<char> buffer(string_length);
-    for (unsigned int idx = 0; idx < string_length; ++idx) {
+    for (int32_t idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
     const auto string_content = std::string(buffer.data(), string_length);
@@ -596,7 +596,7 @@ bool CpuVirtualMachine::step(VmSession& session) {
     const bool follow_links = session.getData1() != 0x0;
     const int16_t string_length = session.getData2();
     std::vector<char> buffer(string_length);
-    for (unsigned int idx = 0; idx < string_length; ++idx) {
+    for (int32_t idx = 0; idx < string_length; ++idx) {
       buffer[idx] = session.getData1();
     }
     const auto string_content = std::string(buffer.data(), string_length);

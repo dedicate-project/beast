@@ -34,7 +34,7 @@ Program RandomProgramFactory::generate(
           0, static_cast<int32_t>(string_table_item_length));
       std::uniform_int_distribution<> char_distribution(33, 126);
       const int32_t length = length_distribution(mersenne_engine);
-      for (uint32_t idx = 0; idx < length; idx++) {
+      for (int32_t idx = 0; idx < length; idx++) {
         random_string += static_cast<char>(char_distribution(mersenne_engine));
       }
       return random_string;
