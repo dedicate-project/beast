@@ -60,14 +60,20 @@ class VmSession {
   /**
    * @brief Contains statistical information and metadata about an executed program
    *
-   * TODO(fairlight1337): Document this struct.
+   * When a program is executed by a VirtualMachine instance, that VM is supposed to inform the
+   * session of any operators that were executed. The usage count for each operator is recorded in
+   * the session, alongside the overall number of steps executed, whether the program has
+   * terminated, whether the termination was abnormal (an exception throw), and what the program's
+   * return code was.
+   *
+   * @sa getRuntimeStatistics(), informAboutstep(), resetRuntimeStatistics()
    */
   struct RuntimeStatistics {
-    uint32_t steps_executed;
-    bool terminated;
-    bool abnormal_exit;
-    std::map<OpCode, uint32_t> operator_executions;
-    int8_t return_code;
+    uint32_t steps_executed;                         ///< How many steps were executed
+    bool terminated;                                 ///< Whether the program has terminated
+    bool abnormal_exit;                              ///< Whether the program execution was abnormal
+    int8_t return_code;                              ///< The program's return code
+    std::map<OpCode, uint32_t> operator_executions;  ///< How often which operator was executed
   };
 
   /**
@@ -90,25 +96,23 @@ class VmSession {
 
   /**
    * @fn VmSession::informAboutStep
-   * @brief NEEDS DOCUMENTATION
+   * @brief Informs the session which operator is being executed in this step
    *
-   * TODO(fairlight1337): Document this function.
+   * The overall number of steps, but also per operator type are recorded in the runtime statistics.
+   *
+   * @param operator_code The OpCode value of the operator being executed
    */
   void informAboutStep(OpCode operator_code);
 
   /**
    * @fn VmSession::resetRuntimeStatistics
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this function.
+   * @brief Resets the runtime statistics
    */
   void resetRuntimeStatistics();
 
   /**
    * @fn VmSession::getRuntimeStatistics
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this function.
+   * @brief Returns a reference to the runtime statistics
    */
   const RuntimeStatistics& getRuntimeStatistics() const;
 
@@ -1536,9 +1540,7 @@ class VmSession {
 
   /**
    * @var VmSession::runtime_statistics_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this variable.
+   * @brief Holds this session's runtime statistics
    */
   RuntimeStatistics runtime_statistics_;
 };
