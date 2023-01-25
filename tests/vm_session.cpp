@@ -10,7 +10,7 @@ TEST_CASE("when_marked_exited_abnormally_that_status_can_be_retrieved", "vm_sess
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setExitedAbnormally();
 
-  REQUIRE(session.didExitAbnormally() == true);
+  REQUIRE(session.getRuntimeStatistics().abnormal_exit == true);
 }
 
 TEST_CASE("when_not_marked_exited_abnormally_that_status_can_be_retrieved", "vm_session") {
@@ -20,7 +20,7 @@ TEST_CASE("when_not_marked_exited_abnormally_that_status_can_be_retrieved", "vm_
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
 
-  REQUIRE(session.didExitAbnormally() == false);
+  REQUIRE(session.getRuntimeStatistics().abnormal_exit == false);
 }
 
 TEST_CASE("set_io_behaviors_can_be_retrieved", "vm_session") {

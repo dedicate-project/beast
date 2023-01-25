@@ -19,6 +19,19 @@ VmSession::VmSession(
   , string_table_count_{string_table_count}, max_string_size_{max_string_size} {
 }
 
+void VmSession::informAboutStep(OpCode operator_code) {
+  runtime_statistics_.steps_executed++;
+  runtime_statistics_.operator_executions[operator_code]++;
+}
+
+void VmSession::resetRuntimeStatistics() {
+  runtime_statistics_ = RuntimeStatistics{};
+}
+
+const VmSession::RuntimeStatistics& VmSession::getRuntimeStatistics() const {
+  return runtime_statistics_;
+}
+
 void VmSession::setVariableBehavior(int32_t variable_index, VariableIoBehavior behavior) {
   VariableDescriptor descriptor({Program::VariableType::Int32, behavior, false});
   variables_[variable_index] = std::make_pair(descriptor, 0);
@@ -99,15 +112,11 @@ void VmSession::setVariableValueInternal(int32_t variable_index, bool follow_lin
 }
 
 bool VmSession::isAtEnd() const {
-  return was_terminated_ || pointer_ >= program_.getSize();
+  return runtime_statistics_.terminated || pointer_ >= program_.getSize();
 }
 
 void VmSession::setExitedAbnormally() {
-  exited_abnormally_ = true;
-}
-
-bool VmSession::didExitAbnormally() const {
-  return exited_abnormally_;
+  runtime_statistics_.abnormal_exit = true;
 }
 
 void VmSession::registerVariable(int32_t variable_index, Program::VariableType variable_type) {
@@ -235,12 +244,8 @@ void VmSession::clearPrintBuffer() {
 }
 
 void VmSession::terminate(int8_t return_code) {
-  return_code_ = return_code;
-  was_terminated_ = true;
-}
-
-int8_t VmSession::getReturnCode() const {
-  return return_code_;
+  runtime_statistics_.return_code = return_code;
+  runtime_statistics_.terminated = true;
 }
 
 void VmSession::addConstantToVariable(int32_t variable_index, int32_t constant, bool follow_links) {
@@ -782,8 +787,8 @@ void VmSession::loadVariableStringItemIntoVariables(
 void VmSession::terminateWithVariableReturnCode(int32_t variable_index, bool follow_links) {
   const auto return_code =
       static_cast<int8_t>(getVariableValueInternal(variable_index, follow_links));
-  return_code_ = return_code;
-  was_terminated_ = true;
+  runtime_statistics_.return_code = return_code;
+  runtime_statistics_.terminated = true;
 }
 
 void VmSession::variableBitShiftVariableLeft(

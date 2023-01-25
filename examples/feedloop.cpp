@@ -77,5 +77,5 @@ int main(int /*argc*/, char** /*argv*/) {
     }
   }
 
-  return session.getReturnCode();
+  return session.getRuntimeStatistics().return_code;
 }
