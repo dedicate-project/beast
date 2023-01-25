@@ -46,5 +46,8 @@ logically, but semantically they are correct. These programs can be used as seed
 recombination, ensuring that at least the semantic layer is close to what is executable within the
 BEAST environment.
 
+Future plans for this class include adding an option to exclude specific operators from the
+generation process.
+
 .. doxygenclass:: beast::RandomProgramFactory
    :members:
