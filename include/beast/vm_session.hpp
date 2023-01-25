@@ -66,7 +66,7 @@ class VmSession {
    * terminated, whether the termination was abnormal (an exception throw), and what the program's
    * return code was.
    *
-   * @sa getRuntimeStatistics(), informAboutstep(), resetRuntimeStatistics()
+   * @sa getRuntimeStatistics(), informAboutStep(), resetRuntimeStatistics()
    */
   struct RuntimeStatistics {
     uint32_t steps_executed;                         ///< How many steps were executed
@@ -113,6 +113,8 @@ class VmSession {
   /**
    * @fn VmSession::getRuntimeStatistics
    * @brief Returns a reference to the runtime statistics
+   *
+   * @return A constant reference to the runtime statistics object
    */
   const RuntimeStatistics& getRuntimeStatistics() const;
 
