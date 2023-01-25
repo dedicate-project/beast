@@ -58,6 +58,25 @@ class VmSession {
   };
 
   /**
+   * @brief Contains statistical information and metadata about an executed program
+   *
+   * When a program is executed by a VirtualMachine instance, that VM is supposed to inform the
+   * session of any operators that were executed. The usage count for each operator is recorded in
+   * the session, alongside the overall number of steps executed, whether the program has
+   * terminated, whether the termination was abnormal (an exception throw), and what the program's
+   * return code was.
+   *
+   * @sa getRuntimeStatistics(), informAboutStep(), resetRuntimeStatistics()
+   */
+  struct RuntimeStatistics {
+    uint32_t steps_executed;                         ///< How many steps were executed
+    bool terminated;                                 ///< Whether the program has terminated
+    bool abnormal_exit;                              ///< Whether the program execution was abnormal
+    int8_t return_code;                              ///< The program's return code
+    std::map<OpCode, uint32_t> operator_executions;  ///< How often which operator was executed
+  };
+
+  /**
    * @fn VmSession::VmSession
    * @brief Standard constructor
    *
@@ -74,6 +93,30 @@ class VmSession {
   VmSession(
       Program program, size_t variable_count, size_t string_table_count,
       size_t max_string_size);
+
+  /**
+   * @fn VmSession::informAboutStep
+   * @brief Informs the session which operator is being executed in this step
+   *
+   * The overall number of steps, but also per operator type are recorded in the runtime statistics.
+   *
+   * @param operator_code The OpCode value of the operator being executed
+   */
+  void informAboutStep(OpCode operator_code);
+
+  /**
+   * @fn VmSession::resetRuntimeStatistics
+   * @brief Resets the runtime statistics
+   */
+  void resetRuntimeStatistics();
+
+  /**
+   * @fn VmSession::getRuntimeStatistics
+   * @brief Returns a reference to the runtime statistics
+   *
+   * @return A constant reference to the runtime statistics object
+   */
+  const RuntimeStatistics& getRuntimeStatistics() const;
 
   /**
    * @fn VmSession::setVariableBehavior
@@ -204,14 +247,6 @@ class VmSession {
   void setExitedAbnormally();
 
   /**
-   * @fn VmSession::didExitAbnormally
-   * @brief Denotes whether the program has been marked as exited abnormally
-   *
-   * @return A boolean flag denoting whether the program has exited abnormally.
-   */
-  bool didExitAbnormally() const;
-
-  /**
    * @fn VmSession::registerVariable
    * @brief Registers a variable at index and type in the variable memory
    *
@@ -333,18 +368,9 @@ class VmSession {
    * in return code is stored.
    *
    * @param return_code The return code to store for the program
-   * @sa getReturnCode(), terminateWithVariableReturnCode()
+   * @sa terminateWithVariableReturnCode()
    */
   void terminate(int8_t return_code);
-
-  /**
-   * @fn VmSession::getReturnCode
-   * @brief Returns the return code for a program
-   *
-   * This function returns the return code set by any terminate call. If this function is called
-   * before the program ends, its returned value will be `0x0`.
-   */
-  int8_t getReturnCode() const;
 
   /**
    * @fn VmSession::addConstantToVariable
@@ -1515,29 +1541,10 @@ class VmSession {
   std::string print_buffer_;
 
   /**
-   * @var VmSession::was_terminated_
-   * @brief Denotes whether the program has been terminated.
-   *
-   * When this flag is set, VirtualMachine instances are not supposed to further execute the
-   * program.
+   * @var VmSession::runtime_statistics_
+   * @brief Holds this session's runtime statistics
    */
-  bool was_terminated_ = false;
-
-  /**
-   * @var VmSession::exited_abnormally_
-   * @brief Denotes whether the program exited abnormally.
-   */
-  bool exited_abnormally_ = false;
-
-  /**
-   * @var VmSession::return_code_
-   * @brief Holds the program's current return code
-   *
-   * Can be set via terminate calls. Can be retrieved via the getReturnCode function.
-   *
-   * @sa terminate(), terminateWithVariableReturnCode(), getReturnCode()
-   */
-  int8_t return_code_ = 0;
+  RuntimeStatistics runtime_statistics_;
 };
 
 }  // namespace beast

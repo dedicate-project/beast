@@ -10,7 +10,7 @@ TEST_CASE("when_marked_exited_abnormally_that_status_can_be_retrieved", "vm_sess
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setExitedAbnormally();
 
-  REQUIRE(session.didExitAbnormally() == true);
+  REQUIRE(session.getRuntimeStatistics().abnormal_exit == true);
 }
 
 TEST_CASE("when_not_marked_exited_abnormally_that_status_can_be_retrieved", "vm_session") {
@@ -20,7 +20,7 @@ TEST_CASE("when_not_marked_exited_abnormally_that_status_can_be_retrieved", "vm_
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
 
-  REQUIRE(session.didExitAbnormally() == false);
+  REQUIRE(session.getRuntimeStatistics().abnormal_exit == false);
 }
 
 TEST_CASE("set_io_behaviors_can_be_retrieved", "vm_session") {
@@ -203,4 +203,43 @@ TEST_CASE("registering_a_variable_beyond_memory_limit_throws", "vm_session") {
   }
 
   REQUIRE(threw == true);
+}
+
+TEST_CASE("runtime_statistics_correctly_record_operator_execution", "vm_session") {
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+  session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
+  session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
+  session.informAboutStep(beast::OpCode::CopyVariable);
+  session.informAboutStep(beast::OpCode::PerformSystemCall);
+  session.informAboutStep(beast::OpCode::PerformSystemCall);
+  session.informAboutStep(beast::OpCode::ModuloVariableByVariable);
+  session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
+
+  beast::VmSession::RuntimeStatistics statistics = session.getRuntimeStatistics();
+  REQUIRE(statistics.steps_executed == 7);
+  REQUIRE(statistics.operator_executions[beast::OpCode::LoadCurrentAddressIntoVariable] == 3);
+  REQUIRE(statistics.operator_executions[beast::OpCode::CopyVariable] == 1);
+  REQUIRE(statistics.operator_executions[beast::OpCode::PerformSystemCall] == 2);
+  REQUIRE(statistics.operator_executions[beast::OpCode::ModuloVariableByVariable] == 1);
+}
+
+TEST_CASE("runtime_statistics_reset_correctly", "vm_session") {
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+  session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
+  session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
+  session.informAboutStep(beast::OpCode::CopyVariable);
+  session.informAboutStep(beast::OpCode::PerformSystemCall);
+  session.informAboutStep(beast::OpCode::PerformSystemCall);
+  session.informAboutStep(beast::OpCode::ModuloVariableByVariable);
+  session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
+
+  session.resetRuntimeStatistics();
+  beast::VmSession::RuntimeStatistics statistics = session.getRuntimeStatistics();
+  REQUIRE(statistics.steps_executed == 0);
+  REQUIRE(statistics.operator_executions[beast::OpCode::LoadCurrentAddressIntoVariable] == 0);
+  REQUIRE(statistics.operator_executions[beast::OpCode::CopyVariable] == 0);
+  REQUIRE(statistics.operator_executions[beast::OpCode::PerformSystemCall] == 0);
+  REQUIRE(statistics.operator_executions[beast::OpCode::ModuloVariableByVariable] == 0);
 }

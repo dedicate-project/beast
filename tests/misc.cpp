@@ -35,7 +35,7 @@ TEST_CASE("termination_prevents_further_execution_and_sets_return_code", "misc")
   while (vm.step(session)) {}
 
   REQUIRE(session.getVariableValue(0, true) == 0);
-  REQUIRE(session.getReturnCode() == return_code);
+  REQUIRE(session.getRuntimeStatistics().return_code == return_code);
 }
 
 TEST_CASE("current_address_can_be_determined", "misc") {
@@ -68,7 +68,7 @@ TEST_CASE("termination_prevents_further_execution_and_sets_variable_return_code"
   while (vm.step(session)) {}
 
   REQUIRE(session.getVariableValue(0, true) == 0);
-  REQUIRE(session.getReturnCode() == return_code);
+  REQUIRE(session.getRuntimeStatistics().return_code == return_code);
 }
 
 TEST_CASE("load_random_value_into_variable", "misc") {

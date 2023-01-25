@@ -37,6 +37,8 @@ bool CpuVirtualMachine::step(VmSession& session) {
     return false;
   }
 
+  session.informAboutStep(instruction);
+
   switch (instruction) {
   case OpCode::NoOp:
     break;

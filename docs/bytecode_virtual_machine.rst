@@ -32,3 +32,11 @@ Virtual Machine
 The virtual machine concept provided within the BEAST environment allows to execute bytecode
 programs. The individual classes and their programming interface used in the virtual machine are
 described in the :ref:`API` document.
+
+
+Sessions
+--------
+
+A session (specifically `VmSession`) is a stateful encapsulation of a Program instance. It holds
+information such as the current execution pointer when running a program, but also the program
+itself, and a set of :ref:`Runtime Statistics`.

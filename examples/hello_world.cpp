@@ -46,5 +46,5 @@ int main(int /*argc*/, char** /*argv*/) {
 
   /* Return the program's return code. This defaults to `0x0`, but could be different if the program
      terminates with an error code. */
-  return session.getReturnCode();
+  return session.getRuntimeStatistics().return_code;
 }
