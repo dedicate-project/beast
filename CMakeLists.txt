@@ -62,6 +62,7 @@ add_library(${PROJECT_NAME}
   src/time_functions.cpp
   src/vm_session.cpp
   src/virtual_machine.cpp
+  src/evaluators/aggregation_evaluator.cpp
   src/evaluators/noop_evaluator.cpp)
 
 # Examples
