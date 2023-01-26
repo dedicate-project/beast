@@ -2,7 +2,7 @@
 
 namespace beast {
 
-double NoOpEvaluator::evaluate(const VmSession& session) {
+double NoOpEvaluator::evaluate(const VmSession& session) const {
   VmSession::RuntimeStatistics statistics = session.getRuntimeStatistics();
 
   // If no steps were executed, short-circuit.

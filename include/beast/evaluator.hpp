@@ -38,7 +38,7 @@ class Evaluator {
    * @param session The session object to base the score determination on
    * @return A score value from 0.0 (no fit) to 1.0 (perfect fit)
    */
-  virtual double evaluate(const VmSession& session) = 0;
+  virtual double evaluate(const VmSession& session) const = 0;
 };
 
 }  // namespace beast

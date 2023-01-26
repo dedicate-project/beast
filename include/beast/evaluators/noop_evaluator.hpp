@@ -27,7 +27,7 @@ class NoOpEvaluator : public Evaluator {
    * @param session The session object to base the score determination on
    * @return A score value from 0.0 (no no-ops) to 1.0 (only no-ops)
    */
-  double evaluate(const VmSession& session) override;
+  double evaluate(const VmSession& session) const override;
 };
 
 }  // namespace beast
