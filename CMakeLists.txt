@@ -61,7 +61,8 @@ add_library(${PROJECT_NAME}
   src/random_program_factory.cpp
   src/time_functions.cpp
   src/vm_session.cpp
-  src/virtual_machine.cpp)
+  src/virtual_machine.cpp
+  src/evaluators/noop_evaluator.cpp)
 
 # Examples
 if(BEAST_BUILD_EXAMPLES)
@@ -110,6 +111,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(beast)
   declare_test(bit_manipulation)
   declare_test(cpu_vm)
+  declare_test(evaluators)
   declare_test(io)
   declare_test(jumps)
   declare_test(math)
