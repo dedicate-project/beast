@@ -5,7 +5,7 @@
 
 #include <beast/beast.hpp>
 
-TEST_CASE("noop_evaluator_returns_correct_fraction_of_noop_operations", "evaluators") {
+TEST_CASE("op_usage_evaluator_returns_correct_fraction_of_noop_operations", "evaluators") {
   beast::Program prg;
   beast::VmSession session(std::move(prg), 0, 0, 0);
   session.informAboutStep(beast::OpCode::LoadCurrentAddressIntoVariable);
@@ -25,43 +25,43 @@ TEST_CASE("noop_evaluator_returns_correct_fraction_of_noop_operations", "evaluat
   session.informAboutStep(beast::OpCode::NoOp);
   session.informAboutStep(beast::OpCode::PerformSystemCall);
 
-  beast::NoOpEvaluator evaluator;
+  beast::OperatorUsageEvaluator evaluator(beast::OpCode::NoOp);
   const double score = evaluator.evaluate(session);
 
   REQUIRE(std::abs(score - 0.25) < std::numeric_limits<double>::epsilon());
 }
 
-TEST_CASE("noop_evaluator_returns_zero_if_no_operations_present", "evaluators") {
+TEST_CASE("op_usage_evaluator_returns_zero_if_no_operations_present", "evaluators") {
   beast::Program prg;
   beast::VmSession session(std::move(prg), 0, 0, 0);
 
-  beast::NoOpEvaluator evaluator;
+  beast::OperatorUsageEvaluator evaluator(beast::OpCode::NoOp);
   const double score = evaluator.evaluate(session);
 
   REQUIRE(std::abs(score) < std::numeric_limits<double>::epsilon());
 }
 
-TEST_CASE("noop_evaluator_returns_zero_if_no_noop_operations_present", "evaluators") {
+TEST_CASE("op_usage_evaluator_returns_zero_if_no_noop_operations_present", "evaluators") {
   beast::Program prg;
   beast::VmSession session(std::move(prg), 0, 0, 0);
   session.informAboutStep(beast::OpCode::PerformSystemCall);
   session.informAboutStep(beast::OpCode::CopyVariable);
   session.informAboutStep(beast::OpCode::ModuloVariableByVariable);
 
-  beast::NoOpEvaluator evaluator;
+  beast::OperatorUsageEvaluator evaluator(beast::OpCode::NoOp);
   const double score = evaluator.evaluate(session);
 
   REQUIRE(std::abs(score) < std::numeric_limits<double>::epsilon());
 }
 
-TEST_CASE("noop_evaluator_returns_one_if_only_noop_operations_present", "evaluators") {
+TEST_CASE("op_usage_evaluator_returns_one_if_only_noop_operations_present", "evaluators") {
   beast::Program prg;
   beast::VmSession session(std::move(prg), 0, 0, 0);
   session.informAboutStep(beast::OpCode::NoOp);
   session.informAboutStep(beast::OpCode::NoOp);
   session.informAboutStep(beast::OpCode::NoOp);
 
-  beast::NoOpEvaluator evaluator;
+  beast::OperatorUsageEvaluator evaluator(beast::OpCode::NoOp);
   const double score = evaluator.evaluate(session);
 
   REQUIRE(std::abs(score - 1.0) < std::numeric_limits<double>::epsilon());
@@ -77,8 +77,10 @@ TEST_CASE("aggregation_evaluator_averages_values_for_equal_weights_in_noop_eval"
   session.informAboutStep(beast::OpCode::CopyVariable);
   session.informAboutStep(beast::OpCode::ModuloVariableByVariable);
 
-  std::shared_ptr<beast::NoOpEvaluator> noop_evaluator_1 = std::make_shared<beast::NoOpEvaluator>();
-  std::shared_ptr<beast::NoOpEvaluator> noop_evaluator_2 = std::make_shared<beast::NoOpEvaluator>();
+  std::shared_ptr<beast::OperatorUsageEvaluator> noop_evaluator_1 =
+      std::make_shared<beast::OperatorUsageEvaluator>(beast::OpCode::NoOp);
+  std::shared_ptr<beast::OperatorUsageEvaluator> noop_evaluator_2 =
+      std::make_shared<beast::OperatorUsageEvaluator>(beast::OpCode::NoOp);
 
   beast::AggregationEvaluator evaluator;
   evaluator.addEvaluator(noop_evaluator_1, 1.0, false);

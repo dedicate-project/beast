@@ -63,7 +63,7 @@ add_library(${PROJECT_NAME}
   src/vm_session.cpp
   src/virtual_machine.cpp
   src/evaluators/aggregation_evaluator.cpp
-  src/evaluators/noop_evaluator.cpp)
+  src/evaluators/operator_usage_evaluator.cpp)
 
 # Examples
 if(BEAST_BUILD_EXAMPLES)

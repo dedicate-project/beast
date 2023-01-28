@@ -1,8 +1,12 @@
-#include <beast/evaluators/noop_evaluator.hpp>
+#include <beast/evaluators/operator_usage_evaluator.hpp>
 
 namespace beast {
 
-double NoOpEvaluator::evaluate(const VmSession& session) const {
+OperatorUsageEvaluator::OperatorUsageEvaluator(OpCode opcode)
+  : opcode_{opcode} {
+}
+
+double OperatorUsageEvaluator::evaluate(const VmSession& session) const {
   VmSession::RuntimeStatistics statistics = session.getRuntimeStatistics();
 
   // If no steps were executed, short-circuit.
@@ -10,7 +14,7 @@ double NoOpEvaluator::evaluate(const VmSession& session) const {
     return 0.0;
   }
 
-  // score = no-op operator executions / total operator executions
+  // score = specific operator executions / total operator executions
   return
       static_cast<double>(statistics.operator_executions[OpCode::NoOp]) /
       static_cast<double>(statistics.steps_executed);

@@ -15,7 +15,7 @@
 #include <beast/vm_session.hpp>
 
 #include <beast/evaluators/aggregation_evaluator.hpp>
-#include <beast/evaluators/noop_evaluator.hpp>
+#include <beast/evaluators/operator_usage_evaluator.hpp>
 
 namespace beast {
 
