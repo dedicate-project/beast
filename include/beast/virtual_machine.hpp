@@ -66,10 +66,15 @@ class VirtualMachine {
    * passed in that contains a program to execute, and a state at which the program currently is
    * (including instruction pointer, variable memory, and string table).
    *
+   * When the `dry_run` parameter is passed, the VM is supposed to only step through the operations
+   * in a program and not actually execute them. This can be used to count the effective amount and
+   * individual types of operators in a program, as well as analyze its structure.
+   *
    * @param session The VmSession instance that holds the program and state to step through.
+   * @param dry_run Determines whether operators are executed or just read.
    * @return A boolean flag denoting whether the session can further execute instructions.
    */
-  virtual bool step(VmSession& session) = 0;
+  virtual bool step(VmSession& session, bool dry_run) = 0;
 
  protected:
   /**

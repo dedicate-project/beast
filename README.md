@@ -77,7 +77,7 @@ int main(int /*argc*/, char** /*argv*/) {
   beast::CpuVirtualMachine vm;
 
   // Run the program for as long as it runs.
-  while (vm.step(session)) {
+  while (vm.step(session, false)) {
     // Send to output whatever the current step wants to print and clear the internal
     // buffer afterwards.
     std::cout << session.getPrintBuffer();

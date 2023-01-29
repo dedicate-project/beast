@@ -14,7 +14,7 @@ class CpuVirtualMachine : public VirtualMachine {
    */
   ~CpuVirtualMachine() override = default;
 
-  bool step(VmSession& session) override;
+  bool step(VmSession& session, bool dry_run) override;
 
  protected:
   void message(MessageSeverity severity, const std::string& message) override;

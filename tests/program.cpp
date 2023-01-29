@@ -93,7 +93,7 @@ TEST_CASE("inserted_programs_work_as_intended", "program") {
 
   beast::VmSession session(std::move(prg3), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(index, true) == value2);
 }

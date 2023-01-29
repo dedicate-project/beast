@@ -77,7 +77,7 @@ TEST_CASE("set_direct_variable_value", "variables") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(index, true) == value);
 }
@@ -97,7 +97,7 @@ TEST_CASE("set_linked_variable_value", "variables") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(link_index, true) == var_value);
 }
@@ -116,7 +116,7 @@ TEST_CASE("copying_a_variable_copies_its_value", "variables") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(source_variable_index, true) == session.getVariableValue(destination_variable_index, true));
 }
@@ -132,12 +132,12 @@ TEST_CASE("undeclared_variables_cannot_be_set", "variables") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  vm.step(session);
-  vm.step(session);
+  vm.step(session, false);
+  vm.step(session, false);
 
   bool threw = false;
   try {
-    vm.step(session);
+    vm.step(session, false);
   } catch(...) {
     threw = true;
   }
@@ -160,7 +160,7 @@ TEST_CASE("variables_can_be_swapped", "variables") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_a, true) == variable_value_b);
   REQUIRE(session.getVariableValue(variable_index_b, true) == variable_value_a);

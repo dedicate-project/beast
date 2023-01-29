@@ -30,7 +30,7 @@ class MockVirtualMachine : public beast::VirtualMachine {
     return cache_[severity];
   }
 
-  bool step(beast::VmSession& /*session*/) override {
+  bool step(beast::VmSession& /*session*/, bool /*dry_run*/) override {
     return true;
   }
 

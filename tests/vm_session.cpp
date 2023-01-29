@@ -69,7 +69,7 @@ TEST_CASE("output_data_availability_can_be_determined", "vm_session") {
   session.setVariableBehavior(variable_index_output, beast::VmSession::VariableIoBehavior::Output);
 
   beast::CpuVirtualMachine vm;
-  vm.step(session);
+  vm.step(session, false);
 
   REQUIRE(session.hasOutputDataAvailable(variable_index_output, true) == true);
 }
@@ -135,10 +135,10 @@ TEST_CASE("appending_to_print_buffer_beyond_buffer_limit_throws", "vm_session") 
   beast::VmSession session(std::move(prg), 0, 1, 100);
   session.setMaximumPrintBufferLength(10);
   beast::CpuVirtualMachine vm;
-  vm.step(session);
+  vm.step(session, false);
   bool threw = false;
   try {
-    vm.step(session);
+    vm.step(session, false);
   } catch(...) {
     threw = true;
   }
@@ -156,10 +156,10 @@ TEST_CASE("double_registering_variable_throws", "vm_session") {
   beast::VmSession session(std::move(prg), 1, 0, 0);
   beast::CpuVirtualMachine vm;
 
-  vm.step(session);
+  vm.step(session, false);
   bool threw = false;
   try {
-    vm.step(session);
+    vm.step(session, false);
   } catch(...) {
     threw = true;
   }
@@ -178,7 +178,7 @@ TEST_CASE("registering_a_negative_variable_index_throws", "vm_session") {
 
   bool threw = false;
   try {
-    vm.step(session);
+    vm.step(session, false);
   } catch(...) {
     threw = true;
   }
@@ -197,7 +197,7 @@ TEST_CASE("registering_a_variable_beyond_memory_limit_throws", "vm_session") {
 
   bool threw = false;
   try {
-    vm.step(session);
+    vm.step(session, false);
   } catch(...) {
     threw = true;
   }

@@ -120,7 +120,7 @@ int main(int /*argc*/, char** /*argv*/) {
   /* If desired, the minimum message severity can be adjusted here to print the executed byte code
      operators and their operands. Just uncomment the next line to see them during execution. */
   // virtual_machine.setMinimumMessageSeverity(beast::VirtualMachine::MessageSeverity::Debug);
-  while (virtual_machine.step(session)) {}
+  while (virtual_machine.step(session, false)) {}
 
   /* Print the sorted output. */
   std::cout << "Output: ";

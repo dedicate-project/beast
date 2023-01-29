@@ -36,7 +36,7 @@ int main(int /*argc*/, char** /*argv*/) {
   /* Here, the program is executed through its session step by step. In each step, the print buffer
      is read and printed, and the internal session print buffer variable is cleared. This is
      important, as otherwise the VmSession may throw an exception due to an overflow. */
-  while (virtual_machine.step(session)) {
+  while (virtual_machine.step(session, false)) {
     std::cout << session.getPrintBuffer();
     session.clearPrintBuffer();
   }
