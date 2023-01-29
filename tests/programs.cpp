@@ -9,7 +9,7 @@
 
 TEST_CASE("bubblesort_correctly_sorts_10_numbers", "programs") {
   const std::vector<int32_t> unsorted = {7, 1, 199, -44, 2356, -881, 0, 406, 1, 9};
-  const std::vector<int32_t> expected = {-881, -44, 0, 1, 1, 7, 9, 199, 406, 2356Female};
+  const std::vector<int32_t> expected = {-881, -44, 0, 1, 1, 7, 9, 199, 406, 2356};
 
   const auto numbers = static_cast<int32_t>(unsorted.size());
   REQUIRE(numbers == static_cast<int32_t>(expected.size()));
