@@ -2,6 +2,7 @@
 
 // Standard
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 // Internal
@@ -87,4 +88,33 @@ TEST_CASE("bubblesort_correctly_sorts_10_numbers", "programs") {
   for (int32_t idx : output_variables) {
     REQUIRE(session.getVariableValue(idx, true) == expected[idx - numbers]);
   }
+}
+
+TEST_CASE("static_and_dynamic_operator_counts_yield_correct_result", "programs") {
+  const std::string message = "Some message.";
+  
+  beast::Program prg;
+  prg.noop();
+  prg.setStringTableEntry(0, message);
+  prg.printStringFromStringTable(0);
+  prg.terminate(0);
+  prg.noop();
+
+  beast::CpuVirtualMachine virtual_machine;
+
+  beast::VmSession session_static(prg, 0, 0, 0);
+  while (virtual_machine.step(session_static, true)) {}
+  beast::VmSession::RuntimeStatistics static_analysis_data = session_static.getRuntimeStatistics();
+
+  beast::VmSession session_dynamic(prg, 0, 1, 50);
+  while (virtual_machine.step(session_dynamic, false)) {}
+  beast::VmSession::RuntimeStatistics dynamic_analysis_data =
+      session_dynamic.getRuntimeStatistics();
+
+  beast::OperatorUsageEvaluator noop_evaluator(beast::OpCode::NoOp);
+  const double static_noop_ratio = noop_evaluator.evaluate(session_static);
+  const double dynamic_noop_ratio = noop_evaluator.evaluate(session_dynamic);
+
+  REQUIRE(std::abs(static_noop_ratio - 0.4) < std::numeric_limits<double>::epsilon());
+  REQUIRE(std::abs(dynamic_noop_ratio - 0.25) < std::numeric_limits<double>::epsilon());
 }
