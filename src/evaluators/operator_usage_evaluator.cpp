@@ -16,7 +16,7 @@ double OperatorUsageEvaluator::evaluate(const VmSession& session) const {
 
   // score = specific operator executions / total operator executions
   return
-      static_cast<double>(statistics.operator_executions[OpCode::NoOp]) /
+      static_cast<double>(statistics.operator_executions[opcode_]) /
       static_cast<double>(statistics.steps_executed);
 }
 
