@@ -16,7 +16,8 @@ VmSession::VmSession(
     Program program, size_t variable_count, size_t string_table_count,
     size_t max_string_size)
   : program_{std::move(program)}, variable_count_{variable_count}
-  , string_table_count_{string_table_count}, max_string_size_{max_string_size} {
+  , string_table_count_{string_table_count}, max_string_size_{max_string_size}
+  , runtime_statistics_{RuntimeStatistics()} {
 }
 
 void VmSession::informAboutStep(OpCode operator_code) {
