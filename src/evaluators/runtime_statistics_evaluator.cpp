@@ -67,7 +67,7 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
       score =
           w1 * (1.0 - steps_executed_noop_fraction) +
           w2 * total_steps_noop_fraction +
-          w3 * program_executed_fraction
+          w3 * (1.0 - program_executed_fraction)
 
      The weight values w1 and w2 must be chosen carefully so that programs can correctly
      converge to a good balance between runtime and static structure efficiency.
@@ -76,7 +76,7 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
   return
       w1_ * (1.0 - steps_executed_noop_fraction) +
       w2_ * total_steps_noop_fraction +
-      w3_ * program_executed_fraction;
+      w3_ * (1.0 - program_executed_fraction);
 }
 
 }  // namespace beast

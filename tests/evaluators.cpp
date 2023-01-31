@@ -153,3 +153,35 @@ TEST_CASE("both_focused_rs_eval_yields_half_score_for_only_noop_programs", "eval
   REQUIRE(std::abs(0.5 - evaluator.evaluate(session)) <
           std::numeric_limits<double>::epsilon());
 }
+
+TEST_CASE("exec_focused_rs_eval_yields_zero_score_for_compl_exec_prgs", "evaluators") {
+  beast::Program prg;
+  prg.noop();
+  prg.noop();
+  prg.noop();
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
+
+  beast::RuntimeStatisticsEvaluator evaluator(0.0, 0.0);
+
+  REQUIRE(std::abs(evaluator.evaluate(session)) < std::numeric_limits<double>::epsilon());
+}
+
+TEST_CASE("exec_focused_rs_eval_yields_partial_score_for_partially_exec_prgs", "evaluators") {
+  beast::Program prg;
+  prg.terminate(0);
+  prg.noop();
+  prg.noop();
+  prg.noop();
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
+
+  beast::RuntimeStatisticsEvaluator evaluator(0.0, 0.0);
+
+  REQUIRE(std::abs(0.75 - evaluator.evaluate(session)) <
+          std::numeric_limits<double>::epsilon());
+}
