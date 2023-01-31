@@ -70,8 +70,8 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
     These aspects need to be combined into a single score value. Given the considerations from
     above, the formula for this score value hence becomes:
 
-      prg_exec_weight_ = 1.0 - dyn_noop_weight - stat_noop_weight
-                         with dyn_noop_weight + stat_noop_weight <= 1.0
+      prg_exec_weight = 1.0 - dyn_noop_weight - stat_noop_weight
+                        with dyn_noop_weight + stat_noop_weight <= 1.0
 
       score =
           dyn_noop_weight * (1.0 - steps_executed_noop_fraction) +
