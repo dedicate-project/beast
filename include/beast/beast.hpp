@@ -16,6 +16,7 @@
 
 #include <beast/evaluators/aggregation_evaluator.hpp>
 #include <beast/evaluators/operator_usage_evaluator.hpp>
+#include <beast/evaluators/runtime_statistics_evaluator.hpp>
 
 namespace beast {
 
