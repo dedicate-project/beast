@@ -1,5 +1,9 @@
 #include <beast/evaluators/runtime_statistics_evaluator.hpp>
 
+// Standard
+#include <stdexcept>
+
+// Internal
 #include <beast/cpu_virtual_machine.hpp>
 
 namespace beast {
