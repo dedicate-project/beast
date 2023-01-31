@@ -22,7 +22,7 @@ class RuntimeStatisticsEvaluator : public Evaluator {
    *
    * TODO(fairlight1337): Document this function.
    */
-  RuntimeStatisticsEvaluator(double w1, double w2, double w3);
+  RuntimeStatisticsEvaluator(double w1, double w2);
 
   /**
    * @fn OperatorUsageEvaluator::evaluate

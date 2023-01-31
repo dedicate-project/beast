@@ -4,8 +4,11 @@
 
 namespace beast {
 
-RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(double w1, double w2, double w3)
-  : w1_{w1}, w2_{w2}, w3_{w3} {
+RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(double w1, double w2)
+  : w1_{w1}, w2_{w2}, w3_{1.0 - w1 - w2} {
+  if (w1 + w2 > 1.0) {
+    throw std::invalid_argument("w1 + w2 must be <= 1.0");
+  }
 }
 
 double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
@@ -59,12 +62,14 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
     These aspects need to be combined into a single score value. Given the considerations from
     above, the formula for this score value hence becomes:
 
+      w3 = 1.0 - w1 - w2, with w1 + w2 <= 1.0
+
       score =
           w1 * (1.0 - steps_executed_noop_fraction) +
           w2 * total_steps_noop_fraction +
           w3 * program_executed_fraction
 
-     The weight values w1, w2, and w3 must be chosen carefully so that programs can correctly
+     The weight values w1 and w2 must be chosen carefully so that programs can correctly
      converge to a good balance between runtime and static structure efficiency.
    */
 
