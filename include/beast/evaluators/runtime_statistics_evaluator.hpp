@@ -22,7 +22,7 @@ class RuntimeStatisticsEvaluator : public Evaluator {
    *
    * TODO(fairlight1337): Document this function.
    */
-  explicit RuntimeStatisticsEvaluator(double w1, double w2);
+  explicit RuntimeStatisticsEvaluator(double dyn_noop_weight, double stat_noop_weight);
 
   /**
    * @fn OperatorUsageEvaluator::evaluate
@@ -34,11 +34,11 @@ class RuntimeStatisticsEvaluator : public Evaluator {
   double evaluate(const VmSession& session) const override;
 
  private:
-  double w1_;
+  double dyn_noop_weight_;
 
-  double w2_;
+  double stat_noop_weight_;
 
-  double w3_;
+  double prg_exec_weight_;
 };
 
 }  // namespace beast

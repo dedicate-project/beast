@@ -75,7 +75,7 @@ class VmSession {
     bool abnormal_exit;                              ///< Whether the program execution was abnormal
     int8_t return_code;                              ///< The program's return code
     std::map<OpCode, uint32_t> operator_executions;  ///< How often which operator was executed
-    std::set<int32_t> executed_indices;              ///< Which operator indices were executed
+    std::set<uint32_t> executed_indices;             ///< Which operator indices were executed
   };
 
   /**

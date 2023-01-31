@@ -8,10 +8,12 @@
 
 namespace beast {
 
-RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(double w1, double w2)
-  : w1_{w1}, w2_{w2}, w3_{1.0 - w1 - w2} {
-  if (w1 + w2 > 1.0) {
-    throw std::invalid_argument("w1 + w2 must be <= 1.0");
+RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(
+    double dyn_noop_weight, double stat_noop_weight)
+  : dyn_noop_weight_{dyn_noop_weight}, stat_noop_weight_{stat_noop_weight},
+    prg_exec_weight_{1.0 - dyn_noop_weight - stat_noop_weight} {
+  if (dyn_noop_weight + stat_noop_weight > 1.0) {
+    throw std::invalid_argument("dyn_noop_weight + stat_noop_weight must be <= 1.0");
   }
 }
 
@@ -19,9 +21,9 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
   VmSession::RuntimeStatistics dynamic_statistics = session.getRuntimeStatistics();
 
   /* The number of steps actually taken when executing the program. */
-  const int32_t steps_executed = dynamic_statistics.steps_executed;
+  const uint32_t steps_executed = dynamic_statistics.steps_executed;
   /* The number of noop operators actually executed when executing the program. */
-  const int32_t steps_executed_noop = dynamic_statistics.operator_executions[OpCode::NoOp];
+  const uint32_t steps_executed_noop = dynamic_statistics.operator_executions[OpCode::NoOp];
   /* The fraction of noop vs. all steps executed. We want this to be low. */
   const double steps_executed_noop_fraction =
       static_cast<double>(steps_executed_noop) / static_cast<double>(steps_executed);
@@ -35,9 +37,9 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
   VmSession::RuntimeStatistics static_statistics = static_session.getRuntimeStatistics();
 
   /* The number of operators present in the program. */
-  const int32_t total_steps = static_statistics.steps_executed;
+  const uint32_t total_steps = static_statistics.steps_executed;
   /* The number of noop operators present in the program. */
-  const int32_t total_steps_noop = static_statistics.operator_executions[OpCode::NoOp];
+  const uint32_t total_steps_noop = static_statistics.operator_executions[OpCode::NoOp];
   /* The fraction of noop vs. all steps present in the program. We want this to be high. */
   const double total_steps_noop_fraction =
       static_cast<double>(total_steps_noop) / static_cast<double>(total_steps);
@@ -68,21 +70,23 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
     These aspects need to be combined into a single score value. Given the considerations from
     above, the formula for this score value hence becomes:
 
-      w3 = 1.0 - w1 - w2, with w1 + w2 <= 1.0
+      prg_exec_weight_ = 1.0 - dyn_noop_weight - stat_noop_weight
+                         with dyn_noop_weight + stat_noop_weight <= 1.0
 
       score =
-          w1 * (1.0 - steps_executed_noop_fraction) +
-          w2 * total_steps_noop_fraction +
-          w3 * (1.0 - program_executed_fraction)
+          dyn_noop_weight * (1.0 - steps_executed_noop_fraction) +
+          stat_noop_weight * total_steps_noop_fraction +
+          prg_exec_weight * (1.0 - program_executed_fraction)
 
-     The weight values w1 and w2 must be chosen carefully so that programs can correctly
-     converge to a good balance between runtime and static structure efficiency.
+     The weight values dyn_noop_weight and stat_noop_weight must be chosen carefully so that
+     programs can correctly converge to a good balance between runtime and static structure
+     efficiency.
    */
 
   return
-      w1_ * (1.0 - steps_executed_noop_fraction) +
-      w2_ * total_steps_noop_fraction +
-      w3_ * (1.0 - program_executed_fraction);
+      dyn_noop_weight_ * (1.0 - steps_executed_noop_fraction) +
+      stat_noop_weight_ * total_steps_noop_fraction +
+      prg_exec_weight_ * (1.0 - program_executed_fraction);
 }
 
 }  // namespace beast
