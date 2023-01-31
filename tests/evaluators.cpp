@@ -106,3 +106,50 @@ TEST_CASE("aggregation_evaluator_throws_if_no_evaluator_added", "evaluators") {
 
   REQUIRE(threw == true);
 }
+
+TEST_CASE("dyn_focused_rs_eval_yields_zero_score_for_only_noop_programs", "evaluators") {
+  beast::Program prg;
+  prg.noop();
+  prg.noop();
+  prg.noop();
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
+
+  beast::RuntimeStatisticsEvaluator evaluator(1.0, 0.0);
+
+  REQUIRE(std::abs(evaluator.evaluate(session)) < std::numeric_limits<double>::epsilon());
+}
+
+TEST_CASE("stat_focused_rs_eval_yields_one_score_for_only_noop_programs", "evaluators") {
+  beast::Program prg;
+  prg.noop();
+  prg.noop();
+  prg.noop();
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
+
+  beast::RuntimeStatisticsEvaluator evaluator(0.0, 1.0);
+
+  REQUIRE(std::abs(1.0 - evaluator.evaluate(session)) <
+          std::numeric_limits<double>::epsilon());
+}
+
+TEST_CASE("both_focused_rs_eval_yields_half_score_for_only_noop_programs", "evaluators") {
+  beast::Program prg;
+  prg.noop();
+  prg.noop();
+  prg.noop();
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
+
+  beast::RuntimeStatisticsEvaluator evaluator(0.5, 0.5);
+
+  REQUIRE(std::abs(0.5 - evaluator.evaluate(session)) <
+          std::numeric_limits<double>::epsilon());
+}
