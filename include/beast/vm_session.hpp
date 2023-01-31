@@ -104,13 +104,13 @@ class VmSession {
    *
    * @param operator_code The OpCode value of the operator being executed
    */
-  void informAboutStep(OpCode operator_code);
+  void informAboutStep(OpCode operator_code) noexcept;
 
   /**
    * @fn VmSession::resetRuntimeStatistics
    * @brief Resets the runtime statistics
    */
-  void resetRuntimeStatistics();
+  void resetRuntimeStatistics() noexcept;
 
   /**
    * @fn VmSession::reset
@@ -119,7 +119,7 @@ class VmSession {
    * This function resets the internal state of this session instance, retaining its configuration
    * parameters and associated program data.
    */
-  void reset();
+  void reset() noexcept;
 
   /**
    * @fn VmSession::getRuntimeStatistics
@@ -127,7 +127,7 @@ class VmSession {
    *
    * @return A constant reference to the runtime statistics object
    */
-  const RuntimeStatistics& getRuntimeStatistics() const;
+  const RuntimeStatistics& getRuntimeStatistics() const noexcept;
 
   /**
    * @fn VmSession::setVariableBehavior
@@ -249,7 +249,7 @@ class VmSession {
    *
    * @return Boolean flag denoting whether the program execution is at its end
    */
-  bool isAtEnd() const;
+  bool isAtEnd() const noexcept;
 
   /**
    * @fn VmSession::setExitedAbnormally

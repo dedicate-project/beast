@@ -20,17 +20,17 @@ VmSession::VmSession(
   resetRuntimeStatistics();
 }
 
-void VmSession::informAboutStep(OpCode operator_code) {
+void VmSession::informAboutStep(OpCode operator_code) noexcept {
   runtime_statistics_.steps_executed++;
   runtime_statistics_.operator_executions[operator_code]++;
   runtime_statistics_.executed_indices.insert(pointer_);
 }
 
-void VmSession::resetRuntimeStatistics() {
+void VmSession::resetRuntimeStatistics() noexcept {
   runtime_statistics_ = RuntimeStatistics{};
 }
 
-void VmSession::reset() {
+void VmSession::reset() noexcept {
   resetRuntimeStatistics();
   variables_ = std::map<int32_t, std::pair<VariableDescriptor, int32_t>>{};
   string_table_ = std::map<int32_t, std::string>{};
@@ -38,7 +38,7 @@ void VmSession::reset() {
   pointer_ = 0;
 }
 
-const VmSession::RuntimeStatistics& VmSession::getRuntimeStatistics() const {
+const VmSession::RuntimeStatistics& VmSession::getRuntimeStatistics() const noexcept {
   return runtime_statistics_;
 }
 
@@ -121,7 +121,7 @@ void VmSession::setVariableValueInternal(int32_t variable_index, bool follow_lin
   current_value = value;
 }
 
-bool VmSession::isAtEnd() const {
+bool VmSession::isAtEnd() const noexcept {
   return runtime_statistics_.terminated || pointer_ >= program_.getSize();
 }
 

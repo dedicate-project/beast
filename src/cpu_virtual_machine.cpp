@@ -952,7 +952,7 @@ bool CpuVirtualMachine::step(VmSession& session, bool dry_run) {
   return !session.isAtEnd();
 }
 
-void CpuVirtualMachine::message(MessageSeverity severity, const std::string& message) {
+void CpuVirtualMachine::message(MessageSeverity severity, const std::string& message) noexcept {
   std::ostream& out_stream = std::cout;
   uint32_t color_fg = 0;
   uint32_t color_bg = 0;

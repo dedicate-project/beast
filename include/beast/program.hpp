@@ -85,7 +85,7 @@ class Program {
    *
    * @return The size of the program in bytes.
    */
-  size_t getSize() const;
+  size_t getSize() const noexcept;
 
   /**
    * @fn Program::getData4
@@ -141,7 +141,7 @@ class Program {
    *
    * @return The current program population pointer position.
    */
-  uint32_t getPointer() const;
+  uint32_t getPointer() const noexcept;
 
   /**
    * @fn Program::insertProgram
@@ -168,7 +168,7 @@ class Program {
    *
    * @return A constant std::vector containing the byte code of this instance.
    */
-  const std::vector<unsigned char>& getData() const;
+  const std::vector<unsigned char>& getData() const noexcept;
 
   /**
    * @fn Program::noop
@@ -1677,7 +1677,7 @@ class Program {
    *
    * @param size The size that should be ensured to fit into the program space.
    */
-  void ensureSize(uint32_t size);
+  void ensureSize(uint32_t size) noexcept ;
 
   /**
    * @var Program::data_

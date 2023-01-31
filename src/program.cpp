@@ -14,7 +14,7 @@ Program::Program(std::vector<unsigned char> data)
   : data_{std::move(data)}, grows_dynamically_{false} {
 }
 
-size_t Program::getSize() const {
+size_t Program::getSize() const noexcept {
   return data_.size();
 }
 
@@ -48,7 +48,7 @@ int8_t Program::getData1(int32_t offset) {
   return buffer;
 }
 
-uint32_t Program::getPointer() const {
+uint32_t Program::getPointer() const noexcept {
   return pointer_;
 }
 
@@ -63,7 +63,7 @@ void Program::insertProgram(const Program& other) {
   pointer_ += static_cast<uint32_t>(to_fit);
 }
 
-const std::vector<unsigned char>& Program::getData() const {
+const std::vector<unsigned char>& Program::getData() const noexcept {
   return data_;
 }
 
@@ -761,7 +761,7 @@ void Program::appendCode1(OpCode opcode) {
   appendData1(static_cast<int8_t>(opcode));
 }
 
-void Program::ensureSize(uint32_t size) {
+void Program::ensureSize(uint32_t size) noexcept {
   if (data_.size() < size) {
     data_.resize(size);
   }

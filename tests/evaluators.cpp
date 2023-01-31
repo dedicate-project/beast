@@ -230,3 +230,17 @@ TEST_CASE("adding_nullptr_to_aggregation_eval_throws", "evaluators") {
 
   REQUIRE(threw == true);
 }
+
+TEST_CASE("adding_negative_weight_to_aggregation_eval_throws", "evaluators") {
+  std::shared_ptr<beast::AggregationEvaluator> child =
+      std::make_shared<beast::AggregationEvaluator>();
+  beast::AggregationEvaluator parent;
+  bool threw = false;
+  try {
+    parent.addEvaluator(child, -0.1, false);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}

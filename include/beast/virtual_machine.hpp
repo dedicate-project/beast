@@ -56,7 +56,7 @@ class VirtualMachine {
    * severity is MessageSeverity::Info. To display all messages (including a trace of executed
    * operators and their operands), set the severity to MessageSeverity::Debug.
    */
-  void setMinimumMessageSeverity(MessageSeverity minimum_severity);
+  void setMinimumMessageSeverity(MessageSeverity minimum_severity) noexcept;
 
   /**
    * @fn VirtualMachine::step
@@ -86,44 +86,44 @@ class VirtualMachine {
    * implementation wants to print and should honor the given severity to signal to the user about a
    * message's urgency.
    */
-  virtual void message(MessageSeverity severity, const std::string& message) = 0;
+  virtual void message(MessageSeverity severity, const std::string& message) noexcept = 0;
 
   /**
    * @fn VirtualMachine::debug
    * @brief Prints a message with MessageSeverity::Debug severity
    */
-  void debug(const std::string& message);
+  void debug(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::info
    * @brief Prints a message with MessageSeverity::Info severity
    */
-  void info(const std::string& message);
+  void info(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::warning
    * @brief Prints a message with MessageSeverity::Warning severity
    */
-  void warning(const std::string& message);
+  void warning(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::error
    * @brief Prints a message with MessageSeverity::Error severity
    */
-  void error(const std::string& message);
+  void error(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::panic
    * @brief Prints a message with MessageSeverity::Panic severity
    */
-  void panic(const std::string& message);
+  void panic(const std::string& message) noexcept;
 
  private:
   /**
    * @fn VirtualMachine::shouldDisplayMessageWithSeverity
    * @brief Determines whether a message with a given severity should be displayed or not
    */
-  bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const;
+  bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const noexcept;
 
   /**
    * @var VirtualMachine::minimum_severity_
