@@ -18,6 +18,20 @@ TEST_CASE("stepping_outside_of_bounds_is_rejected_by_vm", "cpu_vm") {
   REQUIRE(rejected == false);
 }
 
+TEST_CASE("stepping_beyond_end_of_program_causes_abnormal_exit", "cpu_vm") {
+  beast::Program prg(2);
+  prg.noop();
+  prg.noop();
+
+  beast::VmSession session(std::move(prg), 500, 100, 50);
+  beast::CpuVirtualMachine vm;
+  vm.step(session, false);
+  vm.step(session, false);
+  vm.step(session, false);
+
+  REQUIRE(session.getRuntimeStatistics().abnormal_exit == true);
+}
+
 TEST_CASE("when_invalid_opcode_is_encoutered_vm_throws", "cpu_vm") {
   std::vector<unsigned char> bytecode = {0xff};
   beast::Program prg(std::move(bytecode));

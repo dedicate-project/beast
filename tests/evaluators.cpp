@@ -218,3 +218,15 @@ TEST_CASE("runtime_statistics_eval_gt_one_weights_throws", "evaluators") {
 
   REQUIRE(threw == true);
 }
+
+TEST_CASE("adding_nullptr_to_aggregation_eval_throws", "evaluators") {
+  beast::AggregationEvaluator evaluator;
+  bool threw = false;
+  try {
+    evaluator.addEvaluator(nullptr, 0.0, false);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
