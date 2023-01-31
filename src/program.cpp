@@ -60,7 +60,7 @@ void Program::insertProgram(const Program& other) {
   for (uint32_t idx = 0; idx < to_fit; ++idx) {
     data_[pointer_ + idx] = other.getData()[idx];
   }
-  pointer_ += to_fit;
+  pointer_ += static_cast<uint32_t>(to_fit);
 }
 
 const std::vector<unsigned char>& Program::getData() const {
