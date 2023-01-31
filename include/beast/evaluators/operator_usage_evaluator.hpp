@@ -25,7 +25,7 @@ class OperatorUsageEvaluator : public Evaluator {
    *
    * @param opcode The operator code to count
    */
-  OperatorUsageEvaluator(OpCode opcode);
+  explicit OperatorUsageEvaluator(OpCode opcode);
 
   /**
    * @fn OperatorUsageEvaluator::evaluate

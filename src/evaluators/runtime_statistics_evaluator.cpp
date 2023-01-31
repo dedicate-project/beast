@@ -25,7 +25,9 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
   VmSession static_session = session;
   static_session.reset();
   CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(static_session, true)) {}
+  while (virtual_machine.step(static_session, true)) {
+    /* Do nothing, just execute the entirely program in a static manner. */
+  }
   VmSession::RuntimeStatistics static_statistics = static_session.getRuntimeStatistics();
 
   /* The number of operators present in the program. */
