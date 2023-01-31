@@ -185,3 +185,36 @@ TEST_CASE("exec_focused_rs_eval_yields_partial_score_for_partially_exec_prgs", "
   REQUIRE(std::abs(0.75 - evaluator.evaluate(session)) <
           std::numeric_limits<double>::epsilon());
 }
+
+TEST_CASE("runtime_statistics_eval_negative_dyn_noop_weight_throws", "evaluators") {
+  bool threw = false;
+  try {
+    beast::RuntimeStatisticsEvaluator evaluator(-1.0, 0.0);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("runtime_statistics_eval_negative_stat_noop_weight_throws", "evaluators") {
+  bool threw = false;
+  try {
+    beast::RuntimeStatisticsEvaluator evaluator(0.0, -1.0);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("runtime_statistics_eval_gt_one_weights_throws", "evaluators") {
+  bool threw = false;
+  try {
+    beast::RuntimeStatisticsEvaluator evaluator(0.9, 0.2);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}

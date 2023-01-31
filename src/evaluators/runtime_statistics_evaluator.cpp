@@ -15,6 +15,10 @@ RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(
   if (dyn_noop_weight + stat_noop_weight > 1.0) {
     throw std::invalid_argument("dyn_noop_weight + stat_noop_weight must be <= 1.0");
   }
+
+  if (dyn_noop_weight < 0.0 || stat_noop_weight < 0.0) {
+    throw std::invalid_argument("dyn_noop_weight, stat_noop_weight must each be >= 0.0");
+  }
 }
 
 double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
