@@ -23,6 +23,7 @@ VmSession::VmSession(
 void VmSession::informAboutStep(OpCode operator_code) {
   runtime_statistics_.steps_executed++;
   runtime_statistics_.operator_executions[operator_code]++;
+  runtime_statistics_.executed_indices.insert(pointer_);
 }
 
 void VmSession::resetRuntimeStatistics() {
