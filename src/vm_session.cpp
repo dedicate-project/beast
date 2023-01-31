@@ -29,6 +29,14 @@ void VmSession::resetRuntimeStatistics() {
   runtime_statistics_ = RuntimeStatistics{};
 }
 
+void VmSession::reset() {
+  resetRuntimeStatistics();
+  variables_ = std::map<int32_t, std::pair<VariableDescriptor, int32_t>>{};
+  string_table_ = std::map<int32_t, std::string>{};
+  print_buffer_ = "";
+  pointer_ = 0;
+}
+
 const VmSession::RuntimeStatistics& VmSession::getRuntimeStatistics() const {
   return runtime_statistics_;
 }

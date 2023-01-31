@@ -111,6 +111,15 @@ class VmSession {
   void resetRuntimeStatistics();
 
   /**
+   * @fn VmSession::reset
+   * @brief Resets the entire VmSession object
+   *
+   * This function resets the internal state of this session instance, retaining its configuration
+   * parameters and associated program data.
+   */
+  void reset();
+
+  /**
    * @fn VmSession::getRuntimeStatistics
    * @brief Returns a reference to the runtime statistics
    *
