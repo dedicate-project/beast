@@ -5,11 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.2]
 
 ### Added
 
 - RuntimeStatistics object to store metadata about program execution
+- Evaluator base class for scoring VmSession data and static program data
+- RuntimeStatisticsEvaluator class scoring the dynamic runtime behavior and
+  the static structure of a program
+- AggregationEvaluator class for aggregating different evaluator scores
+- OperatorUsageEvaluator class for evaluating how much a specific operator was used
+  in a program
+- Updated documentation for evaluator classes
+- Added nothrow and noexcept tags to relevant methods
+- Corrected tests accordingly
+- Corrected ROADMAP.md by adding more detail to the second project phase
+- Added an evaluator example
 
 ## [0.1.1]
 
