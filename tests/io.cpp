@@ -120,11 +120,11 @@ TEST_CASE("checkig_noninput_variables_for_input_throws", "io") {
 
   beast::VmSession session(std::move(prg), 2, 0, 0);
   beast::CpuVirtualMachine vm;
-  vm.step(session, false);
-  vm.step(session, false);
+  (void)vm.step(session, false);
+  (void)vm.step(session, false);
   bool threw = false;
   try {
-    vm.step(session, false);
+    (void)vm.step(session, false);
   } catch(...) {
     threw = true;
   }

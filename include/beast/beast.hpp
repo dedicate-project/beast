@@ -28,7 +28,7 @@ namespace beast {
  *
  * @return A 3-element array holding the major, minor, and patch version parts.
  */
-std::array<uint8_t, 3> getVersion() noexcept;
+[[nodiscard]] std::array<uint8_t, 3> getVersion() noexcept;
 
 }  // namespace beast
 

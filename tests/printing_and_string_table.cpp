@@ -134,10 +134,10 @@ TEST_CASE("getting_invalid_string_table_item_length_throws", "printing_and_strin
 
   beast::VmSession session(std::move(prg), 1, 1, 1);
   beast::CpuVirtualMachine vm;
-  vm.step(session, false);
+  (void)vm.step(session, false);
   bool threw = false;
   try {
-    vm.step(session, false);
+    (void)vm.step(session, false);
   } catch(...) {
     threw = true;
   }
@@ -412,7 +412,7 @@ TEST_CASE("set_string_table_entry_outside_bounds_throws", "printing_and_string_t
   beast::CpuVirtualMachine vm;
   bool threw = false;
   try {
-    vm.step(session, false);
+    (void)vm.step(session, false);
   } catch(...) {
     threw = true;
   }
@@ -432,11 +432,11 @@ TEST_CASE("set_variable_string_table_entry_outside_bounds_throws", "printing_and
 
   beast::VmSession session(std::move(prg), 1, 21, 10);
   beast::CpuVirtualMachine vm;
-  vm.step(session, false);
-  vm.step(session, false);
+  (void)vm.step(session, false);
+  (void)vm.step(session, false);
   bool threw = false;
   try {
-    vm.step(session, false);
+    (void)vm.step(session, false);
   } catch(...) {
     threw = true;
   }

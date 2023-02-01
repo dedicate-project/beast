@@ -74,7 +74,7 @@ class VirtualMachine {
    * @param dry_run Determines whether operators are executed or just read.
    * @return A boolean flag denoting whether the session can further execute instructions.
    */
-  virtual bool step(VmSession& session, bool dry_run) = 0;
+  [[nodiscard]] virtual bool step(VmSession& session, bool dry_run) = 0;
 
  protected:
   /**
@@ -123,7 +123,7 @@ class VirtualMachine {
    * @fn VirtualMachine::shouldDisplayMessageWithSeverity
    * @brief Determines whether a message with a given severity should be displayed or not
    */
-  bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const noexcept;
+  [[nodiscard]] bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const noexcept;
 
   /**
    * @var VirtualMachine::minimum_severity_

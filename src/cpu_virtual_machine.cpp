@@ -17,7 +17,7 @@ namespace {
  * @param flag The boolean flag to convert to a string value
  * @return A string representing the passed in boolean state
  */
-std::string to_string(bool flag) {
+std::string to_string(bool flag) noexcept {
   return flag ? "true" : "false";
 }
 }  // namespace

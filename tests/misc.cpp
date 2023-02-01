@@ -92,12 +92,12 @@ TEST_CASE("load_random_value_into_variable", "misc") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  vm.step(session, false);
-  vm.step(session, false);
+  (void)vm.step(session, false);
+  (void)vm.step(session, false);
 
   bool any_is_random = false;
   while (vm.step(session, false)) {
-    vm.step(session, false);
+    (void)vm.step(session, false);
     if (session.getVariableValue(index, true) != 0) {
       any_is_random = true;
       break;

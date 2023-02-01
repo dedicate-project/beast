@@ -132,12 +132,12 @@ TEST_CASE("undeclared_variables_cannot_be_set", "variables") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  vm.step(session, false);
-  vm.step(session, false);
+  (void)vm.step(session, false);
+  (void)vm.step(session, false);
 
   bool threw = false;
   try {
-    vm.step(session, false);
+    (void)vm.step(session, false);
   } catch(...) {
     threw = true;
   }

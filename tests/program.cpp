@@ -6,7 +6,7 @@ TEST_CASE("retrieving_1_byte_too_many_from_program_throws", "program") {
   beast::Program prg(0);
   bool threw = false;
   try {
-    prg.getData1(0);
+    (void)prg.getData1(0);
   } catch(...) {
     threw = true;
   }
@@ -18,7 +18,7 @@ TEST_CASE("retrieving_2_bytes_too_many_from_program_throws", "program") {
   beast::Program prg(0);
   bool threw = false;
   try {
-    prg.getData2(0);
+    (void)prg.getData2(0);
   } catch(...) {
     threw = true;
   }
@@ -30,7 +30,7 @@ TEST_CASE("retrieving_4_bytes_too_many_from_program_throws", "program") {
   beast::Program prg(0);
   bool threw = false;
   try {
-    prg.getData4(0);
+    (void)prg.getData4(0);
   } catch(...) {
     threw = true;
   }

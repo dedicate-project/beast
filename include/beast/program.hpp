@@ -85,7 +85,7 @@ class Program {
    *
    * @return The size of the program in bytes.
    */
-  size_t getSize() const noexcept;
+  [[nodiscard]] size_t getSize() const noexcept;
 
   /**
    * @fn Program::getData4
@@ -99,7 +99,7 @@ class Program {
    * @return A 4 byte variable containing the next 4 program bytes, starting from an offset.
    * @sa getData2(), getData1()
    */
-  int32_t getData4(int32_t offset);
+  [[nodiscard]] int32_t getData4(int32_t offset);
 
   /**
    * @fn Program::getData2
@@ -113,7 +113,7 @@ class Program {
    * @return A 2 byte variable containing the next 2 program bytes, starting from an offset.
    * @sa getData4(), getData1()
    */
-  int16_t getData2(int32_t offset);
+  [[nodiscard]] int16_t getData2(int32_t offset);
 
   /**
    * @fn Program::getData1
@@ -127,7 +127,7 @@ class Program {
    * @return A 1 byte variable containing the next 1 program byte, starting from an offset.
    * @sa getData4(), getData2()
    */
-  int8_t getData1(int32_t offset);
+  [[nodiscard]] int8_t getData1(int32_t offset);
 
   /**
    * @fn Program::getPointer
@@ -141,7 +141,7 @@ class Program {
    *
    * @return The current program population pointer position.
    */
-  uint32_t getPointer() const noexcept;
+  [[nodiscard]] uint32_t getPointer() const noexcept;
 
   /**
    * @fn Program::insertProgram
@@ -168,7 +168,7 @@ class Program {
    *
    * @return A constant std::vector containing the byte code of this instance.
    */
-  const std::vector<unsigned char>& getData() const noexcept;
+  [[nodiscard]] const std::vector<unsigned char>& getData() const noexcept;
 
   /**
    * @fn Program::noop
@@ -1609,7 +1609,7 @@ class Program {
    *
    * @return True when the bytes fit into the available program space, False otherwise.
    */
-  bool canFit(uint32_t bytes);
+  [[nodiscard]] bool canFit(uint32_t bytes);
 
   /**
    * @fn Program::appendData4
