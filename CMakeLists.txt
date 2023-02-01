@@ -61,7 +61,10 @@ add_library(${PROJECT_NAME}
   src/random_program_factory.cpp
   src/time_functions.cpp
   src/vm_session.cpp
-  src/virtual_machine.cpp)
+  src/virtual_machine.cpp
+  src/evaluators/aggregation_evaluator.cpp
+  src/evaluators/runtime_statistics_evaluator.cpp
+  src/evaluators/operator_usage_evaluator.cpp)
 
 # Examples
 if(BEAST_BUILD_EXAMPLES)
@@ -80,6 +83,7 @@ if(BEAST_BUILD_EXAMPLES)
 
   declare_example(adder)
   declare_example(bubblesort)
+  declare_example(evaluation)
   declare_example(feedloop)
   declare_example(hello_world)
 endif()
@@ -110,12 +114,14 @@ if(BEAST_BUILD_TESTS)
   declare_test(beast)
   declare_test(bit_manipulation)
   declare_test(cpu_vm)
+  declare_test(evaluators)
   declare_test(io)
   declare_test(jumps)
   declare_test(math)
   declare_test(misc)
   declare_test(printing_and_string_table)
   declare_test(program)
+  declare_test(programs)
   declare_test(random_program_factory)
   declare_test(stacks)
   declare_test(system_calls)

@@ -1,50 +1,20 @@
+#include <catch2/catch.hpp>
+
 // Standard
 #include <algorithm>
-#include <iostream>
 #include <numeric>
-#include <random>
 #include <vector>
 
-// BEAST
+// Internal
 #include <beast/beast.hpp>
 
-int main(int /*argc*/, char** /*argv*/) {
-  /* Print BEAST library version. */
-  const auto version = beast::getVersion();
-  std::cout << "Using BEAST library version "
-            << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "."
-            << static_cast<uint32_t>(version[2]) << "." << std::endl;
+TEST_CASE("bubblesort_correctly_sorts_10_numbers", "programs") {
+  const std::vector<int32_t> unsorted = {7, 1, 199, -44, 2356, -881, 0, 406, 1, 9};
+  const std::vector<int32_t> expected = {-881, -44, 0, 1, 1, 7, 9, 199, 406, 2356};
 
-  /* This program illustrates how to implement the bubblesort algorithm using a BEAST program. */
+  const auto numbers = static_cast<int32_t>(unsorted.size());
+  REQUIRE(numbers == static_cast<int32_t>(expected.size()));
 
-  /* Initialize a set of variables for generating the random input. These are not necessarily
-     required for the sorting algorithm, but help to illustrate its practical functionality. */
-  std::random_device random_device;
-  std::mt19937 mersenne_engine{random_device()};
-  std::uniform_int_distribution<int32_t> distribution{1, 100};
-
-  const auto generator =
-      [&distribution, &mersenne_engine]() { return distribution(mersenne_engine); };
-
-  /* The input/output variables, but also the algorithm itself can be scaled to any number of
-     numbers to sort. In this example, we're sorting 10 random numbers using the function objects
-     from above. */
-  const int32_t numbers = 10;
-  std::vector<int32_t> input(numbers);
-  std::generate(input.begin(), input.end(), generator);
-
-  /* Print the unsorted input. */
-  std::cout << "Input: ";
-  for (int32_t number : input) {
-    std::cout << number << " ";
-  }
-  std::cout << std::endl;
-
-  /* Define the input and output indices used in the program. These are not only used internally,
-     but are also used to feed the unsorted input data into the program. There are ways to stream
-     this through fewer variables and then use arbitrary amounts of variables to sort (see the
-     `feedloop` example), but in the scope of this example this is not done. */
   std::vector<int32_t> input_variables(numbers);
   std::vector<int32_t> output_variables(numbers);
   std::iota(input_variables.begin(), input_variables.end(), 0);
@@ -102,34 +72,49 @@ int main(int /*argc*/, char** /*argv*/) {
     prg.copyVariable(idx - numbers, true, idx, true);
   }
 
-  /* for informational purposes only, print the sort program's total length. */
-  std::cout << "Program length: " << prg.getSize() << " bytes" << std::endl;
-
   /* Define the session to use, and register input and output variables. */
   beast::VmSession session(std::move(prg), 2 * numbers + 5, 0, 0);
   for (int32_t idx : input_variables) {
     session.setVariableBehavior(idx, beast::VmSession::VariableIoBehavior::Input);
-    session.setVariableValue(idx, true, input[idx]);
+    session.setVariableValue(idx, true, unsorted[idx]);
   }
   for (int32_t idx : output_variables) {
     session.setVariableBehavior(idx, beast::VmSession::VariableIoBehavior::Output);
   }
 
-  /* The CpuVirtualMachine class is used for execution. */
   beast::CpuVirtualMachine virtual_machine;
-  /* If desired, the minimum message severity can be adjusted here to print the executed byte code
-     operators and their operands. Just uncomment the next line to see them during execution. */
-  // virtual_machine.setMinimumMessageSeverity(beast::VirtualMachine::MessageSeverity::Debug);
   while (virtual_machine.step(session, false)) {}
 
-  /* Print the sorted output. */
-  std::cout << "Output: ";
   for (int32_t idx : output_variables) {
-    std::cout << session.getVariableValue(idx, true) << " ";
+    REQUIRE(session.getVariableValue(idx, true) == expected[idx - numbers]);
   }
-  std::cout << std::endl;
+}
 
-  /* Return the program's return code. This defaults to `0x0`, but could be different if the program
-     terminates with an error code. */
-  return session.getRuntimeStatistics().return_code;
+TEST_CASE("static_and_dynamic_operator_counts_yield_correct_result", "programs") {
+  const std::string message = "Some message.";
+  
+  beast::Program prg;
+  prg.noop();
+  prg.setStringTableEntry(0, message);
+  prg.printStringFromStringTable(0);
+  prg.terminate(0);
+  prg.noop();
+
+  beast::CpuVirtualMachine virtual_machine;
+
+  beast::VmSession session_static(prg, 0, 0, 0);
+  while (virtual_machine.step(session_static, true)) {}
+  beast::VmSession::RuntimeStatistics static_analysis_data = session_static.getRuntimeStatistics();
+
+  beast::VmSession session_dynamic(prg, 0, 1, 50);
+  while (virtual_machine.step(session_dynamic, false)) {}
+  beast::VmSession::RuntimeStatistics dynamic_analysis_data =
+      session_dynamic.getRuntimeStatistics();
+
+  beast::OperatorUsageEvaluator noop_evaluator(beast::OpCode::NoOp);
+  const double static_noop_ratio = noop_evaluator.evaluate(session_static);
+  const double dynamic_noop_ratio = noop_evaluator.evaluate(session_dynamic);
+
+  REQUIRE(std::abs(static_noop_ratio - 0.4) < std::numeric_limits<double>::epsilon());
+  REQUIRE(std::abs(dynamic_noop_ratio - 0.25) < std::numeric_limits<double>::epsilon());
 }

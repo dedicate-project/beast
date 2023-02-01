@@ -27,7 +27,7 @@ TEST_CASE("terminate_loop_while_variable_gt_0_with_variable_jump_address", "jump
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(1, true) == 6);
 }
@@ -57,7 +57,7 @@ TEST_CASE("terminate_loop_while_variable_lt_0_with_variable_jump_address", "jump
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(1, true) == 8);
 }
@@ -87,7 +87,7 @@ TEST_CASE("terminate_loop_while_variable_eq_0_with_variable_jump_address", "jump
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(1, true) == 4);
 }
@@ -114,7 +114,7 @@ TEST_CASE("terminate_loop_while_variable_gt_0_with_fixed_jump_address", "jumps")
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(1, true) == 6);
 }
@@ -141,7 +141,7 @@ TEST_CASE("terminate_loop_while_variable_lt_0_with_fixed_jump_address", "jumps")
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(1, true) == 8);
 }
@@ -168,7 +168,7 @@ TEST_CASE("terminate_loop_while_variable_eq_0_with_fixed_jump_address", "jumps")
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(1, true) == 4);
 }
@@ -183,7 +183,7 @@ TEST_CASE("unconditional_jump_to_absolute_address_works", "jumps") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
@@ -199,7 +199,7 @@ TEST_CASE("unconditional_jump_to_absolute_variable_address_works", "jumps") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
@@ -213,7 +213,7 @@ TEST_CASE("unconditional_jump_to_relative_address_works", "jumps") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(0, true) == 0);
 }
@@ -229,7 +229,7 @@ TEST_CASE("unconditional_jump_to_relative_variable_address_works", "jumps") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(0, true) == 0);
 }

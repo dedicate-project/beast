@@ -6,12 +6,17 @@
 
 // Internal
 #include <beast/cpu_virtual_machine.hpp>
+#include <beast/evaluator.hpp>
 #include <beast/opcodes.hpp>
 #include <beast/program.hpp>
 #include <beast/random_program_factory.hpp>
 #include <beast/time_functions.hpp>
 #include <beast/version.h>
 #include <beast/vm_session.hpp>
+
+#include <beast/evaluators/aggregation_evaluator.hpp>
+#include <beast/evaluators/operator_usage_evaluator.hpp>
+#include <beast/evaluators/runtime_statistics_evaluator.hpp>
 
 namespace beast {
 
@@ -23,7 +28,7 @@ namespace beast {
  *
  * @return A 3-element array holding the major, minor, and patch version parts.
  */
-std::array<uint8_t, 3> getVersion();
+[[nodiscard]] std::array<uint8_t, 3> getVersion() noexcept;
 
 }  // namespace beast
 

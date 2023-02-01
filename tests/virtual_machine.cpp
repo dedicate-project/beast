@@ -6,37 +6,37 @@ namespace {
 
 class MockVirtualMachine : public beast::VirtualMachine {
  public:
-  void sendDebugMessage(const std::string& message) {
+  void sendDebugMessage(const std::string& message) noexcept {
     debug(message);
   }
 
-  void sendInfoMessage(const std::string& message) {
+  void sendInfoMessage(const std::string& message) noexcept {
     info(message);
   }
 
-  void sendWarningMessage(const std::string& message) {
+  void sendWarningMessage(const std::string& message) noexcept {
     warning(message);
   }
 
-  void sendErrorMessage(const std::string& message) {
+  void sendErrorMessage(const std::string& message) noexcept {
     error(message);
   }
 
-  void sendPanicMessage(const std::string& message) {
+  void sendPanicMessage(const std::string& message) noexcept {
     panic(message);
   }
 
-  const std::string& getCachedMessage(beast::VirtualMachine::MessageSeverity severity) {
+  const std::string& getCachedMessage(beast::VirtualMachine::MessageSeverity severity) noexcept {
     return cache_[severity];
   }
 
-  bool step(beast::VmSession& /*session*/) override {
+  bool step(beast::VmSession& /*session*/, bool /*dry_run*/) override {
     return true;
   }
 
  protected:
    void message(beast::VirtualMachine::MessageSeverity severity, const std::string& message)
-       override {
+       noexcept override {
      cache_[severity] = message;
    }
 

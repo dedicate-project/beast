@@ -42,7 +42,7 @@ class ProgramFactoryBase {
    *        executed with
    * @return The generated Program instance
    */
-  virtual Program generate(
+  [[nodiscard]] virtual Program generate(
       uint32_t size, uint32_t memory_size, uint32_t string_table_size,
       uint32_t string_table_item_length) = 0;
 };

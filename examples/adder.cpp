@@ -90,7 +90,7 @@ int main(int /*argc*/, char** /*argv*/) {
   beast::CpuVirtualMachine virtual_machine;
   uint32_t calculation_index = 0;
   CalculationState state = CalculationState::WaitingForPrgReady;
-  while (virtual_machine.step(session)) {
+  while (virtual_machine.step(session, false)) {
     switch (state) {
     case CalculationState::WaitingForPrgReady: {
       if (session.getVariableValue(prg_ready, true) == 0x1) {

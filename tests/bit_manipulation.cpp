@@ -18,7 +18,7 @@ TEST_CASE("variables_can_be_variably_bit_shifted_left", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
@@ -39,7 +39,7 @@ TEST_CASE("variables_can_be_variably_bit_shifted_right", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
@@ -58,7 +58,7 @@ TEST_CASE("variables_can_be_rotated_left", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
@@ -76,7 +76,7 @@ TEST_CASE("variables_can_be_rotated_right", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
@@ -97,7 +97,7 @@ TEST_CASE("variables_can_be_rotated_left_by_variable_places", "bit_manipulation"
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
@@ -118,7 +118,7 @@ TEST_CASE("variables_can_be_rotated_right_by_variable_places", "bit_manipulation
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == rotated_value);
 }
@@ -135,7 +135,7 @@ TEST_CASE("variables_can_be_bit_wise_inverted", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == inverted_value);
 }
@@ -158,7 +158,7 @@ TEST_CASE("variables_can_be_bit_wise_anded", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
@@ -181,7 +181,7 @@ TEST_CASE("variables_can_be_bit_wise_ored", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
@@ -204,7 +204,7 @@ TEST_CASE("variables_can_be_bit_wise_xored", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_b, true) == expected_result);
 }
@@ -222,7 +222,7 @@ TEST_CASE("variables_can_be_bit_shifted_left", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
@@ -240,7 +240,7 @@ TEST_CASE("variables_can_be_bit_shifted_left_by_negative_amount", "bit_manipulat
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
@@ -258,7 +258,7 @@ TEST_CASE("variables_can_be_bit_shifted_right", "bit_manipulation") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }
@@ -276,7 +276,7 @@ TEST_CASE("variables_can_be_bit_shifted_right_by_negative_amount", "bit_manipula
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine vm;
-  while (vm.step(session)) {}
+  while (vm.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index, true) == shifted_value);
 }

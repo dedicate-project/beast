@@ -56,7 +56,7 @@ class VirtualMachine {
    * severity is MessageSeverity::Info. To display all messages (including a trace of executed
    * operators and their operands), set the severity to MessageSeverity::Debug.
    */
-  void setMinimumMessageSeverity(MessageSeverity minimum_severity);
+  void setMinimumMessageSeverity(MessageSeverity minimum_severity) noexcept;
 
   /**
    * @fn VirtualMachine::step
@@ -66,10 +66,15 @@ class VirtualMachine {
    * passed in that contains a program to execute, and a state at which the program currently is
    * (including instruction pointer, variable memory, and string table).
    *
+   * When the `dry_run` parameter is passed, the VM is supposed to only step through the operations
+   * in a program and not actually execute them. This can be used to count the effective amount and
+   * individual types of operators in a program, as well as analyze its structure.
+   *
    * @param session The VmSession instance that holds the program and state to step through.
+   * @param dry_run Determines whether operators are executed or just read.
    * @return A boolean flag denoting whether the session can further execute instructions.
    */
-  virtual bool step(VmSession& session) = 0;
+  [[nodiscard]] virtual bool step(VmSession& session, bool dry_run) = 0;
 
  protected:
   /**
@@ -81,44 +86,44 @@ class VirtualMachine {
    * implementation wants to print and should honor the given severity to signal to the user about a
    * message's urgency.
    */
-  virtual void message(MessageSeverity severity, const std::string& message) = 0;
+  virtual void message(MessageSeverity severity, const std::string& message) noexcept = 0;
 
   /**
    * @fn VirtualMachine::debug
    * @brief Prints a message with MessageSeverity::Debug severity
    */
-  void debug(const std::string& message);
+  void debug(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::info
    * @brief Prints a message with MessageSeverity::Info severity
    */
-  void info(const std::string& message);
+  void info(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::warning
    * @brief Prints a message with MessageSeverity::Warning severity
    */
-  void warning(const std::string& message);
+  void warning(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::error
    * @brief Prints a message with MessageSeverity::Error severity
    */
-  void error(const std::string& message);
+  void error(const std::string& message) noexcept;
 
   /**
    * @fn VirtualMachine::panic
    * @brief Prints a message with MessageSeverity::Panic severity
    */
-  void panic(const std::string& message);
+  void panic(const std::string& message) noexcept;
 
  private:
   /**
    * @fn VirtualMachine::shouldDisplayMessageWithSeverity
    * @brief Determines whether a message with a given severity should be displayed or not
    */
-  bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const;
+  [[nodiscard]] bool shouldDisplayMessageWithSeverity(MessageSeverity severity) const noexcept;
 
   /**
    * @var VirtualMachine::minimum_severity_

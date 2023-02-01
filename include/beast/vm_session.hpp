@@ -4,6 +4,7 @@
 // Standard
 #include <cstdint>
 #include <map>
+#include <set>
 
 // Internal
 #include <beast/program.hpp>
@@ -74,6 +75,7 @@ class VmSession {
     bool abnormal_exit;                              ///< Whether the program execution was abnormal
     int8_t return_code;                              ///< The program's return code
     std::map<OpCode, uint32_t> operator_executions;  ///< How often which operator was executed
+    std::set<uint32_t> executed_indices;             ///< Which operator indices were executed
   };
 
   /**
@@ -102,13 +104,22 @@ class VmSession {
    *
    * @param operator_code The OpCode value of the operator being executed
    */
-  void informAboutStep(OpCode operator_code);
+  void informAboutStep(OpCode operator_code) noexcept;
 
   /**
    * @fn VmSession::resetRuntimeStatistics
    * @brief Resets the runtime statistics
    */
-  void resetRuntimeStatistics();
+  void resetRuntimeStatistics() noexcept;
+
+  /**
+   * @fn VmSession::reset
+   * @brief Resets the entire VmSession object
+   *
+   * This function resets the internal state of this session instance, retaining its configuration
+   * parameters and associated program data.
+   */
+  void reset() noexcept;
 
   /**
    * @fn VmSession::getRuntimeStatistics
@@ -116,7 +127,7 @@ class VmSession {
    *
    * @return A constant reference to the runtime statistics object
    */
-  const RuntimeStatistics& getRuntimeStatistics() const;
+  [[nodiscard]] const RuntimeStatistics& getRuntimeStatistics() const noexcept;
 
   /**
    * @fn VmSession::setVariableBehavior
@@ -155,7 +166,7 @@ class VmSession {
    * @param follow_links Whether to resolve the variable's links
    * @sa setVariableBehavior()
    */
-  VariableIoBehavior getVariableBehavior(int32_t variable_index, bool follow_links);
+  [[nodiscard]] VariableIoBehavior getVariableBehavior(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::hasOutputDataAvailable
@@ -168,7 +179,7 @@ class VmSession {
    * @param follow_links Whether to resolve the variable's links
    * @return Returns `true` if data was written to the variable, `false` otherwise
    */
-  bool hasOutputDataAvailable(int32_t variable_index, bool follow_links);
+  [[nodiscard]] bool hasOutputDataAvailable(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setMaximumPrintBufferLength
@@ -185,7 +196,7 @@ class VmSession {
    *
    * @return The next 4 bytes of program byte code
    */
-  int32_t getData4();
+  [[nodiscard]] int32_t getData4();
 
   /**
    * @fn VmSession::getData2
@@ -193,7 +204,7 @@ class VmSession {
    *
    * @return The next 2 bytes of program byte code
    */
-  int16_t getData2();
+  [[nodiscard]] int16_t getData2();
 
   /**
    * @fn VmSession::getData1
@@ -201,7 +212,7 @@ class VmSession {
    *
    * @return The next 1 byte of program byte code
    */
-  int8_t getData1();
+  [[nodiscard]] int8_t getData1();
 
   /**
    * @fn VmSession::getVariableValue
@@ -214,7 +225,7 @@ class VmSession {
    * @param follow_links Whether to resolve the variable's links
    * @sa setVariableValue()
    */
-  int32_t getVariableValue(int32_t variable_index, bool follow_links);
+  [[nodiscard]] int32_t getVariableValue(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setVariableValue
@@ -238,7 +249,7 @@ class VmSession {
    *
    * @return Boolean flag denoting whether the program execution is at its end
    */
-  bool isAtEnd() const;
+  [[nodiscard]] bool isAtEnd() const noexcept;
 
   /**
    * @fn VmSession::setExitedAbnormally
@@ -269,7 +280,7 @@ class VmSession {
    * @param variable_index The index of the start variable.
    * @param follow_links Whether to resolve variable links.
    */
-  int32_t getRealVariableIndex(int32_t variable_index, bool follow_links);
+  [[nodiscard]] int32_t getRealVariableIndex(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setVariable
@@ -315,7 +326,7 @@ class VmSession {
    * @param string_table_index The string table index to read the string from
    * @return The string read from the string table at the specified index
    */
-  const std::string& getStringTableEntry(int32_t string_table_index) const;
+  [[nodiscard]] const std::string& getStringTableEntry(int32_t string_table_index) const;
 
   /**
    * @fn VmSession::appendToPrintBuffer
@@ -350,7 +361,7 @@ class VmSession {
    *
    * @sa appendToPrintBuffer(), appendVariableToPrintBuffer(), clearPrintBuffer()
    */
-  const std::string& getPrintBuffer() const;
+  [[nodiscard]] const std::string& getPrintBuffer() const;
 
   /**
    * @fn VmSession::clearPrintBuffer
@@ -1460,7 +1471,7 @@ class VmSession {
    * @param variable_index The variable to get the value from
    * @param follow_links Whether to resolve the variable's links
    */
-  int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
+  [[nodiscard]] int32_t getVariableValueInternal(int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::setVariableValueInternal

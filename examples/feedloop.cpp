@@ -55,7 +55,7 @@ int main(int /*argc*/, char** /*argv*/) {
 
   using namespace std::chrono_literals;
   auto last_timepoint = std::chrono::high_resolution_clock::now();
-  while (virtual_machine.step(session)) {
+  while (virtual_machine.step(session, false)) {
     const auto now = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double, std::milli> elapsed = now - last_timepoint;
     if (elapsed.count() > 1000) {  // 1s has passed

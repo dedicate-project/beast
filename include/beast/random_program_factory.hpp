@@ -32,7 +32,7 @@ class RandomProgramFactory : public ProgramFactoryBase {
    *        executed with
    * @return A randomly generated, but valid program
    */
-  Program generate(
+  [[nodiscard]] Program generate(
       uint32_t size, uint32_t memory_size, uint32_t string_table_size,
       uint32_t string_table_item_length) override;
 };
