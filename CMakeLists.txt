@@ -88,6 +88,7 @@ if(BEAST_BUILD_EXAMPLES)
   declare_example(evaluation)
   declare_example(feedloop)
   declare_example(hello_world)
+  declare_example(pipe)
 endif()
 
 # Testing
