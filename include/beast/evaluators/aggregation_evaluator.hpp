@@ -26,11 +26,15 @@ class AggregationEvaluator : public Evaluator {
    * @fn AggregationEvaluator::addEvaluator
    * @brief Adds an evaluator to this aggregation evaluator
    *
-   * TODO(fairlight1337): Document this function.
+   * Adds an evaluator to the aggregated list of evaluators. It can be weighted (relative; if you
+   * want the same weight for all evaluators contained, give them all the same weight, e.g. 1.0) and
+   * optionally its logic can be inverted (1.0 becomes 0.0 and vice versa, used to invert the
+   * specific evaluator's effect). Weights may not be negative, and `nullptr` is not accepted as an
+   * evaluator pointer.
    *
    * @param evaluator A pointer to the evaluator to add
-   * @param weight tbd
-   * @param invert_logic tbd
+   * @param weight The relative weight this evaluator's score should have in the aggregated score
+   * @param invert_logic Whether to invert this evaluator's score before aggregating it
    */
   void addEvaluator(const std::shared_ptr<Evaluator>& evaluator, double weight, bool invert_logic);
 
