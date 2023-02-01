@@ -7,4 +7,4 @@
 	url = https://github.com/bilke/cmake-modules.git
 [submodule "3rdparty/GALGO-2.0"]
 	path = 3rdparty/GALGO-2.0
-	url = git@github.com:dedicate-project/GALGO-2.0.git
+	url = https://github.com/dedicate-project/GALGO-2.0.git
