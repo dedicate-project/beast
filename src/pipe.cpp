@@ -31,9 +31,9 @@ void Pipe::evolve() {
   GAListGenome<int32_t> genome(staticEvaluatorWrapper);
   genome.userData(this);
 
-  GASimpleGA ga(genome);
+  GASimpleGA algorithm(genome);
   // TODO(fairlight1337): Fill and parameterize the GA here.
-  ga.evolve();
+  algorithm.evolve();
 }
 
 double Pipe::evaluate() {
