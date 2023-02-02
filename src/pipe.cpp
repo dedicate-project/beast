@@ -1,8 +1,5 @@
 #include <beast/pipe.hpp>
 
-// GALGO-2.0
-#include <Galgo.hpp>
-
 namespace beast {
 
 Pipe::Pipe(uint32_t population_size, uint32_t individual_size)

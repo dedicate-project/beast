@@ -49,8 +49,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(
   include
-  ${CMAKE_BINARY_DIR}/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/GALGO-2.0/src)
+  ${CMAKE_BINARY_DIR}/include)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
