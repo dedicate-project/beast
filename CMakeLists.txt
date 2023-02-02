@@ -29,8 +29,25 @@ if(BEAST_BUILD_DOCS)
   add_subdirectory("docs")
 endif()
 
-# Add galib if not was not built yet
+# Main BEAST library
+add_library(${PROJECT_NAME}
+  src/beast.cpp
+  src/cpu_virtual_machine.cpp
+  src/pipe.cpp
+  src/program.cpp
+  src/random_program_factory.cpp
+  src/time_functions.cpp
+  src/vm_session.cpp
+  src/virtual_machine.cpp
+  src/evaluators/aggregation_evaluator.cpp
+  src/evaluators/runtime_statistics_evaluator.cpp
+  src/evaluators/operator_usage_evaluator.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+  ga)
+
 if(NOT EXISTS ${CMAKE_BINARY_DIR}/galib/lib/libga.a)
+  # Add galib if not was not built yet
   include(ExternalProject)
   find_program(MAKE_EXE NAMES gmake nmake make)
   ExternalProject_Add(galib
@@ -40,6 +57,8 @@ if(NOT EXISTS ${CMAKE_BINARY_DIR}/galib/lib/libga.a)
     BUILD_COMMAND ${MAKE_EXE} lib CXXFLAGS='-fpermissive'
     BUILD_IN_SOURCE TRUE
     INSTALL_COMMAND make install)
+
+  add_dependencies(${PROJECT_NAME} galib)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -76,23 +95,6 @@ foreach(dir ${dirs})
 endforeach()
 
 configure_file(include/beast/version.h.in include/beast/version.h)
-
-# Main BEAST library
-add_library(${PROJECT_NAME}
-  src/beast.cpp
-  src/cpu_virtual_machine.cpp
-  src/pipe.cpp
-  src/program.cpp
-  src/random_program_factory.cpp
-  src/time_functions.cpp
-  src/vm_session.cpp
-  src/virtual_machine.cpp
-  src/evaluators/aggregation_evaluator.cpp
-  src/evaluators/runtime_statistics_evaluator.cpp
-  src/evaluators/operator_usage_evaluator.cpp)
-
-target_link_libraries(${PROJECT_NAME}
-  ga)
 
 # Examples
 if(BEAST_BUILD_EXAMPLES)
