@@ -19,12 +19,27 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
+message(STATUS "CMake is using the following C++ compiler: ${CMAKE_CXX_COMPILER}")
+
 if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
   add_compile_options(-Werror -pedantic)
 endif()
 
 if(BEAST_BUILD_DOCS)
   add_subdirectory("docs")
+endif()
+
+# Add galib if not was not built yet
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/galib/lib/libga.a)
+  include(ExternalProject)
+  find_program(MAKE_EXE NAMES gmake nmake make)
+  ExternalProject_Add(galib
+    GIT_REPOSITORY https://github.com/dedicate-project/galib.git
+    GIT_TAG main
+    CONFIGURE_COMMAND mkdir -p ${CMAKE_BINARY_DIR}\/galib/lib && sed -i "s@DESTDIR=\/usr\/local@DESTDIR=${CMAKE_BINARY_DIR}\/galib@g" ./makevars && find ./ -name "*.cpp" -o -name "*.h" -o -name "*.c" -o -name "*.cc" -o -name "*.C" | xargs sed -i.bak "s/register //g"
+    BUILD_COMMAND ${MAKE_EXE} lib CXXFLAGS='-fpermissive'
+    BUILD_IN_SOURCE TRUE
+    INSTALL_COMMAND make install)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -49,7 +64,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(
   include
-  ${CMAKE_BINARY_DIR}/include)
+  ${CMAKE_BINARY_DIR}/include
+  ${CMAKE_BINARY_DIR}/galib/include)
+
+link_directories(
+  ${CMAKE_BINARY_DIR}/galib/lib)
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
@@ -66,6 +90,9 @@ add_library(${PROJECT_NAME}
   src/evaluators/aggregation_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
   src/evaluators/operator_usage_evaluator.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+  ga)
 
 # Examples
 if(BEAST_BUILD_EXAMPLES)

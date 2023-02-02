@@ -58,6 +58,14 @@ class Pipe {
    */
   bool hasSpace();
 
+  /**
+   * @class Pipe::evaluate
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this function.
+   */
+  static double evaluate();
+
 private:
   /**
    * @var Pipe::max_size_
