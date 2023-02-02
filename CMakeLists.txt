@@ -45,7 +45,11 @@ foreach(file ${GALIB_SRCS})
 endforeach()
 add_library(galib ${GALIB_SRCS_FULL})
 set_target_properties(galib PROPERTIES CXX_CLANG_TIDY "")
-target_compile_options(galib PRIVATE -Wno-register -fpermissive -Wno-write-strings -Wno-permissive)
+target_compile_options(galib PRIVATE -fpermissive -Wno-write-strings -Wno-permissive)
+if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+  target_compile_options(galib PRIVATE -Wno-register)
+endif()
+
 
 # Main BEAST library
 add_library(${PROJECT_NAME}

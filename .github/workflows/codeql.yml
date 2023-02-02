@@ -35,7 +35,7 @@ jobs:
       run: sudo apt-get install -y clang-tidy lcov ccache
     - name: Build
       run: |
-        git submodule update
+        git submodule update --init --recursive
         mkdir build
         cd build
         cmake -DBEAST_BUILD_TESTS=NO ..
