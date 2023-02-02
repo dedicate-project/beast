@@ -5,3 +5,6 @@
 [submodule "3rdparty/cmake-modules"]
 	path = 3rdparty/cmake-modules
 	url = https://github.com/bilke/cmake-modules.git
+[submodule "3rdparty/galib"]
+	path = 3rdparty/galib
+	url = https://github.com/dedicate-project/galib

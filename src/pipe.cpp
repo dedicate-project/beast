@@ -1,8 +1,13 @@
 #include <beast/pipe.hpp>
 
 // GAlib
+// NOTE: For these includes, the `register` error needs to be ignored as this 3rdparty library uses
+// outdated code. This is not an issue for the library using it though.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wregister"
 #include <ga/GAListGenome.h>
 #include <ga/GASimpleGA.h>
+#pragma GCC diagnostic pop
 
 namespace beast {
 

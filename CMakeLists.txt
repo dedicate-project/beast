@@ -29,6 +29,24 @@ if(BEAST_BUILD_DOCS)
   add_subdirectory("docs")
 endif()
 
+set(GALIB_SRCS
+  garandom.C gaerror.C GAParameter.C GAStatistics.C GABaseGA.C GASStateGA.C
+  GASimpleGA.C GAIncGA.C GADemeGA.C GADCrowdingGA.C GASelector.C GAScaling.C
+  GAPopulation.C GAGenome.C GABinStr.C gabincvt.C GAAllele.C GA1DBinStrGenome.C
+  GA2DBinStrGenome.C GA3DBinStrGenome.C GABin2DecGenome.C GATreeBASE.C GATree.C
+  GATreeGenome.C GAListBASE.C GAList.C GAListGenome.C
+  # The following source files are specifically ignored because they are not needed and cause
+  # compilation issues.
+  # GAStringGenome.C GARealGenome.C GA1DArrayGenome.C GA2DArrayGenome.C GA3DArrayGenome.C
+  )
+set(GALIB_SRCS_FULL)
+foreach(file ${GALIB_SRCS})
+  list(APPEND GALIB_SRCS_FULL ${CMAKE_SOURCE_DIR}/3rdparty/galib/ga/${file})
+endforeach()
+add_library(galib ${GALIB_SRCS_FULL})
+set_target_properties(galib PROPERTIES CXX_CLANG_TIDY "")
+target_compile_options(galib PRIVATE -Wno-register -fpermissive -Wno-write-strings -Wno-permissive)
+
 # Main BEAST library
 add_library(${PROJECT_NAME}
   src/beast.cpp
@@ -44,22 +62,7 @@ add_library(${PROJECT_NAME}
   src/evaluators/operator_usage_evaluator.cpp)
 
 target_link_libraries(${PROJECT_NAME}
-  ga)
-
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/galib/lib/libga.a)
-  # Add galib if not was not built yet
-  include(ExternalProject)
-  find_program(MAKE_EXE NAMES gmake nmake make)
-  ExternalProject_Add(galib
-    GIT_REPOSITORY https://github.com/dedicate-project/galib.git
-    GIT_TAG main
-    CONFIGURE_COMMAND mkdir -p ${CMAKE_BINARY_DIR}\/galib/lib && sed -i "s@DESTDIR=\/usr\/local@DESTDIR=${CMAKE_BINARY_DIR}\/galib@g" ./makevars && find ./ -name "*.cpp" -o -name "*.h" -o -name "*.c" -o -name "*.cc" -o -name "*.C" | xargs sed -i.bak "s/register //g"
-    BUILD_COMMAND ${MAKE_EXE} lib CXXFLAGS='-fpermissive'
-    BUILD_IN_SOURCE TRUE
-    INSTALL_COMMAND make install)
-
-  add_dependencies(${PROJECT_NAME} galib)
-endif()
+  galib)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -84,10 +87,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 include_directories(
   include
   ${CMAKE_BINARY_DIR}/include
-  ${CMAKE_BINARY_DIR}/galib/include)
-
-link_directories(
-  ${CMAKE_BINARY_DIR}/galib/lib)
+  ${CMAKE_SOURCE_DIR}/3rdparty/galib)
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 foreach(dir ${dirs})
@@ -162,7 +162,7 @@ if(BEAST_BUILD_TESTS)
 endif(BEAST_BUILD_TESTS)
 
 # Install targets
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} galib
   EXPORT ${PROJECT_NAME}-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
