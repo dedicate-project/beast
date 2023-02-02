@@ -2,19 +2,19 @@
 
 namespace beast {
 
-Pipe::Pipe(uint32_t population_size, uint32_t individual_size)
-  : population_size_{population_size}, individual_size_{individual_size} {
+Pipe::Pipe(uint32_t max_size, uint32_t item_size)
+  : max_size_{max_size}, item_size_{item_size} {
 }
 
-void Pipe::addIndividualToInitialPopulation(VmSession& session) {
-  initial_population_.push_back(session);
+void Pipe::addInput(VmSession& session) {
+  input_.push_back(session);
 }
 
 void Pipe::evolve() {
 }
 
 bool Pipe::hasSpace() {
-  return initial_population_.size() < population_size_;
+  return input_.size() < max_size_;
 }
 
 }  // namespace beast

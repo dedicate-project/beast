@@ -31,7 +31,7 @@ int main(int /*argc*/, char** /*argv*/) {
         factory.generate(prg_size, mem_size, string_table_size, string_table_item_length);
     beast::VmSession session(
         std::move(prg), mem_size, string_table_size, string_table_item_length);
-    pipe.addIndividualToInitialPopulation(session);
+    pipe.addInput(session);
   }
 
   pipe.evolve();

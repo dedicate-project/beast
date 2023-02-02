@@ -24,7 +24,7 @@ class Pipe {
    *
    * TODO(fairlight1337): Document this function.
    */
-  Pipe(uint32_t population_size, uint32_t individual_size);
+  Pipe(uint32_t max_size, uint32_t item_size);
 
   /**
    * @class Pipe::~Pipe
@@ -40,7 +40,7 @@ class Pipe {
    *
    * TODO(fairlight1337): Document this function.
    */
-  void addIndividualToInitialPopulation(VmSession& session);
+  void addInput(VmSession& session);
 
   /**
    * @class Pipe::evolve
@@ -60,28 +60,28 @@ class Pipe {
 
 private:
   /**
-   * @var Pipe::population_size_
+   * @var Pipe::max_size_
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this var.
    */
-  uint32_t population_size_;
+  uint32_t max_size_;
 
   /**
-   * @var Pipe::individual_size_
+   * @var Pipe::item_size_
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this var.
    */
-  uint32_t individual_size_;
+  uint32_t item_size_;
 
   /**
-   * @var Pipe::initial_population_
+   * @var Pipe::input_
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this var.
    */
-  std::vector<VmSession> initial_population_;
+  std::vector<VmSession> input_;
 };
 
 }  // namespace beast
