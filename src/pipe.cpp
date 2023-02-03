@@ -48,8 +48,8 @@ void staticInitializerWrapper(GAGenome& genome) {
 }
 }  // namespace
 
-Pipe::Pipe(uint32_t max_size, uint32_t item_size)
-  : max_size_{max_size}, item_size_{item_size} {
+Pipe::Pipe(uint32_t max_candidates)
+  : max_candidates_{max_candidates} {
 }
 
 void Pipe::addInput(const std::vector<unsigned char>& candidate) {
@@ -62,13 +62,13 @@ void Pipe::evolve() {
   genome.userData(this);
 
   GASimpleGA algorithm(genome);
-  algorithm.populationSize(max_size_);
+  algorithm.populationSize(max_candidates_);
   // TODO(fairlight1337): Fill and parameterize the GA here.
   algorithm.evolve();
 }
 
 bool Pipe::hasSpace() const {
-  return input_.size() < max_size_;
+  return input_.size() < max_candidates_;
 }
 
 std::vector<unsigned char> Pipe::drawInput() {

@@ -25,7 +25,7 @@ class Pipe {
    *
    * TODO(fairlight1337): Document this function.
    */
-  Pipe(uint32_t max_size, uint32_t item_size);
+  Pipe(uint32_t max_candidates);
 
   /**
    * @class Pipe::~Pipe
@@ -77,20 +77,12 @@ class Pipe {
 
 private:
   /**
-   * @var Pipe::max_size_
+   * @var Pipe::max_candidates_
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this var.
    */
-  uint32_t max_size_;
-
-  /**
-   * @var Pipe::item_size_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this var.
-   */
-  uint32_t item_size_;
+  uint32_t max_candidates_;
 
   /**
    * @var Pipe::input_

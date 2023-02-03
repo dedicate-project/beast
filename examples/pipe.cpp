@@ -8,9 +8,8 @@
 class SimplePipe : public beast::Pipe {
  public:
   SimplePipe(
-      uint32_t max_size, uint32_t item_size, uint32_t mem_size,
-      uint32_t st_size, uint32_t sti_size)
-    : Pipe(max_size, item_size), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {
+      uint32_t max_candidates, uint32_t mem_size, uint32_t st_size, uint32_t sti_size)
+    : Pipe(max_candidates), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {
   }
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) const override {
@@ -57,7 +56,7 @@ int main(int /*argc*/, char** /*argv*/) {
   const uint32_t string_table_size = 10;
   const uint32_t string_table_item_length = 25;
 
-  SimplePipe pipe(pop_size, indiv_size, mem_size, string_table_size, string_table_item_length);
+  SimplePipe pipe(pop_size, mem_size, string_table_size, string_table_item_length);
   beast::RandomProgramFactory factory;
 
   while (pipe.hasSpace()) {
