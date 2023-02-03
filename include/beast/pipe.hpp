@@ -2,6 +2,7 @@
 #define BEAST_PIPE_HPP_
 
 // Standard
+#include <deque>
 #include <stdint.h>
 #include <vector>
 
@@ -40,7 +41,7 @@ class Pipe {
    *
    * TODO(fairlight1337): Document this function.
    */
-  void addInput(VmSession& session);
+  void addInput(const std::vector<unsigned char>& candidate);
 
   /**
    * @class Pipe::evolve
@@ -56,7 +57,7 @@ class Pipe {
    *
    * TODO(fairlight1337): Document this function.
    */
-  bool hasSpace();
+  bool hasSpace() const;
 
   /**
    * @class Pipe::evaluate
@@ -64,7 +65,15 @@ class Pipe {
    *
    * TODO(fairlight1337): Document this function.
    */
-  static double evaluate();
+  [[nodiscard]] virtual double evaluate(const std::vector<unsigned char>& program_data) const = 0;
+
+  /**
+   * @class Pipe::drawInput
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this function.
+   */
+  [[nodiscard]] std::vector<unsigned char> drawInput();
 
 private:
   /**
@@ -89,7 +98,7 @@ private:
    *
    * TODO(fairlight1337): Document this var.
    */
-  std::vector<VmSession> input_;
+  std::deque<std::vector<unsigned char>> input_;
 };
 
 }  // namespace beast
