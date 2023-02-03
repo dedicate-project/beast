@@ -1,7 +1,6 @@
 #include <beast/pipe.hpp>
 
 // Standard
-#include <iostream>
 #include <stdexcept>
 
 // GAlib
@@ -17,9 +16,17 @@ namespace beast {
 
 namespace {
 /**
- * @brief NEEDS DOCUMENTATION
+ * @brief Intermediary function to trigger evaluation of Genomes
  *
- * TODO(fairlight1337): Document this function.
+ * The pipe object is dereferences from the genome's user data to trigger the instance's evaluation
+ * function. The resulting score value is then returned to the GAlib mechanism.
+ *
+ * The function needs to be excluded from the clang-tidy linting process because the parameter would
+ * need to be made const, which does not match GAlib's evaluator signature. Ignoring it does no harm
+ * here as the function is not used anywhere else.
+ *
+ * @param genome The GAlib genome to evaluate
+ * @return The score value resulting from the evaluation
  */
 // NOLINTNEXTLINE
 float staticEvaluatorWrapper(GAGenome& genome) {
@@ -30,16 +37,20 @@ float staticEvaluatorWrapper(GAGenome& genome) {
   }
 
   const Pipe* pipe = static_cast<Pipe*>(genome.userData());
-  const auto score = static_cast<float>(pipe->evaluate(data));
-  std::cout << "Step: " << data.size() << ", " << score << std::endl;
-
-  return score;
+  return static_cast<float>(pipe->evaluate(data));
 }
 
 /**
- * @brief NEEDS DOCUMENTATION
+ * @brief Intermediary function to initialize Genomes
  *
- * TODO(fairlight1337): Document this function.
+ * The pipe object is dereferences from the genome's user data to draw from the instance's initial
+ * population candidates. The GAlib genomes are then initialized with that data.
+ *
+ * The function needs to be excluded from the clang-tidy linting process because the parameter would
+ * need to be made const, which does not match GAlib's evaluator signature. Ignoring it does no harm
+ * here as the function is not used anywhere else.
+ *
+ * @param genome The GAlib genome to initialize
  */
 // NOLINTNEXTLINE
 void staticInitializerWrapper(GAGenome& genome) {
@@ -49,7 +60,6 @@ void staticInitializerWrapper(GAGenome& genome) {
   for (unsigned char value : item) {
     list_genome.insert(value);
   }
-  std::cout << "Initialized: " << list_genome.size() << std::endl;
 }
 }  // namespace
 
@@ -62,28 +72,27 @@ void Pipe::addInput(const std::vector<unsigned char>& candidate) {
 }
 
 void Pipe::evolve() {
-  GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
+   GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
   genome.initializer(staticInitializerWrapper);
   genome.userData(this);
 
   GASimpleGA algorithm(genome);
   algorithm.populationSize(max_candidates_);
   
-  // TODO(fairlight1337): Fill and parameterize the GA here.
-  /*GAParameterList params{};
-    GASimpleGA::registerDefaultParameters(params);
-    algorithm.parameters(params);*/
+  /* TODO(fairlight1337): Fill and parameterize the GA here.
+   *
+   * GAParameterList params{};
+   * GASimpleGA::registerDefaultParameters(params);
+   * algorithm.parameters(params);
+   */
   
   algorithm.evolve();
 
   // Save the finalists if they pass the cut-off score.
   const GAPopulation& population = algorithm.population();
-  std::cout << algorithm.statistics() << std::endl;
-
   for (uint32_t idx = 0; idx < population.size(); ++idx) {
     GAGenome& individual = population.individual(idx);
     auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(individual);
-    std::cout << list_genome.size() << ", " << individual.score() << std::endl;
     if (list_genome.size() > 0 && individual.score() >= cut_off_score_) {
       std::vector<unsigned char> data;
       for (uint32_t idx = 0; idx < list_genome.size(); ++idx) {

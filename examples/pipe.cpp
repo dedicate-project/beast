@@ -14,7 +14,6 @@ class SimplePipe : public beast::Pipe {
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) const override {
     if (program_data.empty()) {
-      std::cout << "Out!" << std::endl;
       return 0.0;
     }
     beast::Program prg(program_data);
@@ -26,13 +25,11 @@ class SimplePipe : public beast::Pipe {
         // No action to perform, just statically step through the program.
       }
     } catch(...) {
-      std::cout << "It crashed" << std::endl;
       // If the program throws an exception, it gets a 0.0 score.
       return 0.0;
     }
 
     beast::OperatorUsageEvaluator evaluator(beast::OpCode::NoOp);
-    std::cout << "I gave it " << (1.0 - evaluator.evaluate(session)) << std::endl;
     return 1.0 - evaluator.evaluate(session);
   }
 

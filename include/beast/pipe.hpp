@@ -20,10 +20,13 @@ namespace beast {
 class Pipe {
  public:
   /**
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this struct.
    */
   struct OutputItem {
-    std::vector<unsigned char> data;
-    double score;
+    std::vector<unsigned char> data;  ///< tbd
+    double score;                     ///< tbd
   };
 
   /**
@@ -31,6 +34,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @param max_candidates tbd
    */
   Pipe(uint32_t max_candidates);
 
@@ -47,6 +52,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @param candidate tbd
    */
   void addInput(const std::vector<unsigned char>& candidate);
 
@@ -63,6 +70,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @return tbd
    */
   bool hasSpace() const;
 
@@ -71,6 +80,9 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @param program_data tbd
+   * @return tbd
    */
   [[nodiscard]] virtual double evaluate(const std::vector<unsigned char>& program_data) const = 0;
 
@@ -79,6 +91,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @return tbd
    */
   [[nodiscard]] std::vector<unsigned char> drawInput();
 
@@ -87,6 +101,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @return tbd
    */
   [[nodiscard]] bool hasOutput() const;
 
@@ -95,6 +111,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @return tbd
    */
   [[nodiscard]] OutputItem drawOutput();
 
@@ -103,6 +121,8 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @param cut_off_score tbd
    */
   void setCutOffScore(double cut_off_score);
 
@@ -112,6 +132,9 @@ class Pipe {
    * @brief NEEDS DOCUMENTATION
    *
    * TODO(fairlight1337): Document this function.
+   *
+   * @param finalist tbd
+   * @param score tbd
    */
   void storeFinalist(const std::vector<unsigned char>& finalist, float score);
 
@@ -142,9 +165,9 @@ class Pipe {
 
   /**
    * @var Pipe::cut_off_score_
-   * @brief NEEDS DOCUMENTATION
+   * @brief Determines the minimum score a finalist needs to have
    *
-   * TODO(fairlight1337): Document this var.
+   * Finalists below this score are not added to the output buffer.
    */
   double cut_off_score_ = 0.0;
 };
