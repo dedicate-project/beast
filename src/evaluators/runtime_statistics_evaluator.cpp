@@ -26,6 +26,10 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
 
   /* The number of steps actually taken when executing the program. */
   const uint32_t steps_executed = dynamic_statistics.steps_executed;
+  if (steps_executed == 0) {
+    // Not executing steps results in a zero score.
+    return 0.0;
+  }
   /* The number of noop operators actually executed when executing the program. */
   const uint32_t steps_executed_noop = dynamic_statistics.operator_executions[OpCode::NoOp];
   /* The fraction of noop vs. all steps executed. We want this to be low. */
@@ -35,6 +39,7 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
   VmSession static_session = session;
   static_session.reset();
   CpuVirtualMachine virtual_machine;
+  virtual_machine.setSilent(true);
   while (virtual_machine.step(static_session, true)) {
     /* Do nothing, just execute the entirely program in a static manner. */
   }
@@ -42,6 +47,10 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
 
   /* The number of operators present in the program. */
   const uint32_t total_steps = static_statistics.steps_executed;
+  if (total_steps == 0) {
+    // Not executing steps results in a zero score.
+    return 0.0;
+  }
   /* The number of noop operators present in the program. */
   const uint32_t total_steps_noop = static_statistics.operator_executions[OpCode::NoOp];
   /* The fraction of noop vs. all steps present in the program. We want this to be high. */

@@ -1,6 +1,7 @@
 #include <beast/pipe.hpp>
 
 // Standard
+#include <iostream>
 #include <stdexcept>
 
 // GAlib
@@ -45,6 +46,7 @@ void staticInitializerWrapper(GAGenome& genome) {
   for (unsigned char value : item) {
     list_genome.insert(value);
   }
+  std::cout << "Initialized: " << list_genome.size() << std::endl;
 }
 }  // namespace
 
@@ -62,9 +64,26 @@ void Pipe::evolve() {
   genome.userData(this);
 
   GASimpleGA algorithm(genome);
+  algorithm.maximize();
   algorithm.populationSize(max_candidates_);
   // TODO(fairlight1337): Fill and parameterize the GA here.
   algorithm.evolve();
+
+  // Save the finalists if they pass the cut-off score.
+  const GAPopulation& population = algorithm.population();
+  for (uint32_t idx = 0; idx < population.size(); ++idx) {
+    GAGenome& individual = population.individual(idx);
+    auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(genome);
+    std::cout << list_genome.size() << ", " << individual.score() << std::endl;
+    if (list_genome.size() > 0 && individual.score() >= cut_off_score_) {
+      std::vector<unsigned char> data;
+      for (uint32_t idx = 0; idx < list_genome.size(); ++idx) {
+        data.push_back(*list_genome[idx]);
+      }
+
+      storeFinalist(data, individual.score());
+    }
+  }
 }
 
 bool Pipe::hasSpace() const {
@@ -80,6 +99,29 @@ std::vector<unsigned char> Pipe::drawInput() {
   input_.pop_front();
 
   return item;
+}
+
+bool Pipe::hasOutput() const {
+  return !output_.empty();
+}
+
+Pipe::OutputItem Pipe::drawOutput() {
+  if (output_.empty()) {
+    throw std::underflow_error("No output candidates available to draw.");
+  }
+
+  OutputItem item = output_.front();
+  output_.pop_front();
+
+  return item;
+}
+
+void Pipe::setCutOffScore(double cut_off_score) {
+  cut_off_score_ = cut_off_score;
+}
+
+void Pipe::storeFinalist(const std::vector<unsigned char>& finalist, float score) {
+  output_.push_back({finalist, static_cast<double>(score)});
 }
 
 }  // namespace beast

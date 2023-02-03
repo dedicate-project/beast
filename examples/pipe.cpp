@@ -13,6 +13,9 @@ class SimplePipe : public beast::Pipe {
   }
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) const override {
+    if (program_data.empty()) {
+      return 0.0;
+    }
     beast::Program prg(program_data);
     beast::VmSession session(std::move(prg), mem_size_, st_size_, sti_size_);
     beast::CpuVirtualMachine virtual_machine;
@@ -22,12 +25,12 @@ class SimplePipe : public beast::Pipe {
         // No action to perform, just statically step through the program.
       }
     } catch(...) {
-      // If the program throws an exception, it gets 0.0 score.
+      // If the program throws an exception, it gets a 0.0 score.
       return 0.0;
     }
 
     beast::OperatorUsageEvaluator evaluator(beast::OpCode::NoOp);
-    return evaluator.evaluate(session);
+    return 1.0 - evaluator.evaluate(session);
   }
 
  private:
@@ -57,6 +60,7 @@ int main(int /*argc*/, char** /*argv*/) {
   const uint32_t string_table_item_length = 25;
 
   SimplePipe pipe(pop_size, mem_size, string_table_size, string_table_item_length);
+  //pipe.setCutOffScore(0.9);
   beast::RandomProgramFactory factory;
 
   while (pipe.hasSpace()) {
@@ -66,7 +70,16 @@ int main(int /*argc*/, char** /*argv*/) {
   }
 
   pipe.evolve();
-  // TODO(fairlight1337): Process output.
+
+  std::vector<std::vector<unsigned char>> finalists;
+  while (pipe.hasOutput()) {
+    const beast::Pipe::OutputItem item = pipe.drawOutput();
+    finalists.push_back(item.data);
+    std::cout << "Finalist: size = " << item.data.size() << " bytes, score = " << item.score
+              << std::endl;
+  }
+
+  std::cout << "Got " << finalists.size() << " finalists." << std::endl;
 
   return 0;
 }

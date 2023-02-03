@@ -20,6 +20,13 @@ namespace beast {
 class Pipe {
  public:
   /**
+   */
+  struct OutputItem {
+    std::vector<unsigned char> data;
+    double score;
+  };
+
+  /**
    * @class Pipe::Pipe
    * @brief NEEDS DOCUMENTATION
    *
@@ -75,7 +82,40 @@ class Pipe {
    */
   [[nodiscard]] std::vector<unsigned char> drawInput();
 
-private:
+  /**
+   * @class Pipe::hasOutput
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this function.
+   */
+  [[nodiscard]] bool hasOutput() const;
+
+  /**
+   * @class Pipe::drawOutput
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this function.
+   */
+  [[nodiscard]] OutputItem drawOutput();
+
+  /**
+   * @class Pipe::setCutOffScore
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this function.
+   */
+  void setCutOffScore(double cut_off_score);
+
+ protected:
+  /**
+   * @class Pipe::storeFinalist
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this function.
+   */
+  void storeFinalist(const std::vector<unsigned char>& finalist, float score);
+
+ private:
   /**
    * @var Pipe::max_candidates_
    * @brief NEEDS DOCUMENTATION
@@ -91,6 +131,22 @@ private:
    * TODO(fairlight1337): Document this var.
    */
   std::deque<std::vector<unsigned char>> input_;
+
+  /**
+   * @var Pipe::output_
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this var.
+   */
+  std::deque<OutputItem> output_;
+
+  /**
+   * @var Pipe::cut_off_score_
+   * @brief NEEDS DOCUMENTATION
+   *
+   * TODO(fairlight1337): Document this var.
+   */
+  double cut_off_score_ = 0.0;
 };
 
 }  // namespace beast
