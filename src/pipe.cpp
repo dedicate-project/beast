@@ -30,7 +30,10 @@ float staticEvaluatorWrapper(GAGenome& genome) {
   }
 
   const Pipe* pipe = static_cast<Pipe*>(genome.userData());
-  return static_cast<float>(pipe->evaluate(data));
+  const auto score = static_cast<float>(pipe->evaluate(data));
+  std::cout << "Step: " << data.size() << ", " << score << std::endl;
+
+  return score;
 }
 
 /**
@@ -64,16 +67,22 @@ void Pipe::evolve() {
   genome.userData(this);
 
   GASimpleGA algorithm(genome);
-  algorithm.maximize();
   algorithm.populationSize(max_candidates_);
+  
   // TODO(fairlight1337): Fill and parameterize the GA here.
+  /*GAParameterList params{};
+    GASimpleGA::registerDefaultParameters(params);
+    algorithm.parameters(params);*/
+  
   algorithm.evolve();
 
   // Save the finalists if they pass the cut-off score.
   const GAPopulation& population = algorithm.population();
+  std::cout << algorithm.statistics() << std::endl;
+
   for (uint32_t idx = 0; idx < population.size(); ++idx) {
     GAGenome& individual = population.individual(idx);
-    auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(genome);
+    auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(individual);
     std::cout << list_genome.size() << ", " << individual.score() << std::endl;
     if (list_genome.size() > 0 && individual.score() >= cut_off_score_) {
       std::vector<unsigned char> data;
