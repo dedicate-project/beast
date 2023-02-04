@@ -44,7 +44,7 @@ class Pipe {
    *
    * @param max_candidates The candidate population size for this pipe
    */
-  Pipe(uint32_t max_candidates);
+  explicit Pipe(uint32_t max_candidates);
 
   /**
    * @class Pipe::~Pipe

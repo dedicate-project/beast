@@ -90,8 +90,8 @@ void Pipe::evolve() {
 
   // Save the finalists if they pass the cut-off score.
   const GAPopulation& population = algorithm.population();
-  for (uint32_t idx = 0; idx < population.size(); ++idx) {
-    GAGenome& individual = population.individual(idx);
+  for (uint32_t pop_idx = 0; pop_idx < population.size(); ++pop_idx) {
+    GAGenome& individual = population.individual(pop_idx);
     auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(individual);
     if (list_genome.size() > 0 && individual.score() >= cut_off_score_) {
       std::vector<unsigned char> data;

@@ -19,8 +19,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
-message(STATUS "CMake is using the following C++ compiler: ${CMAKE_CXX_COMPILER}")
-
 if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
   add_compile_options(-Werror -pedantic)
 endif()
@@ -92,11 +90,6 @@ include_directories(
   include
   ${CMAKE_BINARY_DIR}/include
   ${CMAKE_SOURCE_DIR}/3rdparty/galib)
-
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-  message(STATUS "dir='${dir}'")
-endforeach()
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
