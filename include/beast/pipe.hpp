@@ -13,153 +13,156 @@ namespace beast {
 
 /**
  * @class Pipe
- * @brief NEEDS DOCUMENTATION
+ * @brief Base class for implementing evolutionary pipes
  *
- * TODO(fairlight1337): Document this class.
+ * Evolutionary pipes are the main mechanism for fitting a set of preliminary program candidates to
+ * a given task. A pipe implements the entire logic to judge the fitness of a program for the task,
+ * by implementing an `evaluate` function. This class is virtual and must be subclassed.
+ *
+ * @author Jan Winkler
+ * @date 2023-02-04
  */
 class Pipe {
  public:
   /**
-   * @brief NEEDS DOCUMENTATION
+   * @brief Holds information about finalist programs
    *
-   * TODO(fairlight1337): Document this struct.
+   * The result of a successful evolution consists of finalist programs that passed the minimum
+   * score in the task given. This struct holds the respective program code, as well as its score.
    */
   struct OutputItem {
-    std::vector<unsigned char> data;  ///< tbd
-    double score;                     ///< tbd
+    std::vector<unsigned char> data;  ///< The program code
+    double score;                     ///< The evaluation score this code achieved
   };
 
   /**
    * @class Pipe::Pipe
-   * @brief NEEDS DOCUMENTATION
+   * @brief Constructs the pipe for a maximum candidate buffer size
    *
-   * TODO(fairlight1337): Document this function.
+   * Pipes have a specific initial population size that needs to be met with candidates before
+   * evolution can begin. This size is specified in this constructor.
    *
-   * @param max_candidates tbd
+   * @param max_candidates The candidate population size for this pipe
    */
   Pipe(uint32_t max_candidates);
 
   /**
    * @class Pipe::~Pipe
-   * @brief NEEDS DOCUMENTATION
+   * @brief Deconstructs this instance
    *
-   * TODO(fairlight1337): Document this function.
+   * Required for vtable consistency.
    */
   virtual ~Pipe() = default;
 
   /**
-   * @class Pipe::addIndividualToInitialPopulation
-   * @brief NEEDS DOCUMENTATION
+   * @class Pipe::addInput
+   * @brief Add a candidate program code to the input pool
    *
-   * TODO(fairlight1337): Document this function.
+   * This function adds a given program code vector to the input candidate pool. These individuals
+   * will be used as initial population for evolution.
    *
-   * @param candidate tbd
+   * @param candidate The candidate program code to add to the input pool
    */
   void addInput(const std::vector<unsigned char>& candidate);
 
   /**
    * @class Pipe::evolve
-   * @brief NEEDS DOCUMENTATION
+   * @brief Performs an evolution of the input candidate programs according to the Pipe's task
    *
-   * TODO(fairlight1337): Document this function.
+   * Based on the `evaluate` function implemented in the concrete Pipe implementation, candidate
+   * programs are scored according to their performance in these tasks. This function performs the
+   * evolutionary steps required for recombination and formulation of new programs, and stores
+   * programs that pass the cut-off score into the output finalist buffer.
    */
   void evolve();
 
   /**
    * @class Pipe::hasSpace
-   * @brief NEEDS DOCUMENTATION
+   * @brief Denote whether space is left in the input pool
    *
-   * TODO(fairlight1337): Document this function.
-   *
-   * @return tbd
+   * @return `true` if the number of candidates in the input pool is less than the population size,
+   *         `false` otherwise.
    */
   bool hasSpace() const;
 
   /**
    * @class Pipe::evaluate
-   * @brief NEEDS DOCUMENTATION
+   * @brief Scores a candidate program according to a concrete task
    *
-   * TODO(fairlight1337): Document this function.
+   * The passed in program code shall be tested for suitability for a concrete task. The better the
+   * performance, the higher the score (0.0 - 1.0). Subclasses of the Pipe class need to implement
+   * this function, and it is the main driver for the evolutionary step.
    *
-   * @param program_data tbd
-   * @return tbd
+   * @param program_data The program candidate to score
+   * @return The evaluation score the program candidate achieved (0.0 - 1.0)
    */
   [[nodiscard]] virtual double evaluate(const std::vector<unsigned char>& program_data) const = 0;
 
   /**
    * @class Pipe::drawInput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pull an input candidate from the input buffer
    *
-   * TODO(fairlight1337): Document this function.
+   * Returns the oldest input buffer candidate and removes it from the buffer.
    *
-   * @return tbd
+   * @return An input candidate program code
    */
   [[nodiscard]] std::vector<unsigned char> drawInput();
 
   /**
    * @class Pipe::hasOutput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Denotes whether output finalists are available
    *
-   * TODO(fairlight1337): Document this function.
-   *
-   * @return tbd
+   * @return `true` if at least one output finalist is available, `false` otherwise
    */
   [[nodiscard]] bool hasOutput() const;
 
   /**
    * @class Pipe::drawOutput
-   * @brief NEEDS DOCUMENTATION
+   * @brief Pull an output finalist from the output buffer
    *
-   * TODO(fairlight1337): Document this function.
+   * Returns the oldest output buffer candidate and removes it from the buffer.
    *
-   * @return tbd
+   * @return An output finalist item consisting of program code and score
    */
   [[nodiscard]] OutputItem drawOutput();
 
   /**
    * @class Pipe::setCutOffScore
-   * @brief NEEDS DOCUMENTATION
+   * @brief Sets the cut-off score
    *
-   * TODO(fairlight1337): Document this function.
+   * Finalists that score below this score are discarded after evolution.
    *
-   * @param cut_off_score tbd
+   * @param cut_off_score The cut-off score under which to discard finalists
    */
   void setCutOffScore(double cut_off_score);
 
  protected:
   /**
    * @class Pipe::storeFinalist
-   * @brief NEEDS DOCUMENTATION
+   * @brief Stores a finalist in the output buffer
    *
-   * TODO(fairlight1337): Document this function.
-   *
-   * @param finalist tbd
-   * @param score tbd
+   * @param finalist The finalist program code to add to the buffer
+   * @param score The score the finalist program code has achieved in the evaluation
+   * @sa hasOutput(), drawOutput()
    */
   void storeFinalist(const std::vector<unsigned char>& finalist, float score);
 
  private:
   /**
    * @var Pipe::max_candidates_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this var.
+   * @brief Denotes the population size of this pipe
    */
   uint32_t max_candidates_;
 
   /**
    * @var Pipe::input_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this var.
+   * @brief Holds the input candidate programs
    */
   std::deque<std::vector<unsigned char>> input_;
 
   /**
    * @var Pipe::output_
-   * @brief NEEDS DOCUMENTATION
-   *
-   * TODO(fairlight1337): Document this var.
+   * @brief Holds the finalist output buffer
    */
   std::deque<OutputItem> output_;
 
