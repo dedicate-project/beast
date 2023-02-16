@@ -76,6 +76,8 @@ class VirtualMachine {
    */
   [[nodiscard]] virtual bool step(VmSession& session, bool dry_run) = 0;
 
+  void setSilent(bool silent);
+
  protected:
   /**
    * @fn VirtualMachine::message
@@ -133,6 +135,8 @@ class VirtualMachine {
    * are silently dropped.
    */
   MessageSeverity minimum_severity_ = MessageSeverity::Info;
+
+  bool silent_ = false;
 };
 
 }  // namespace beast

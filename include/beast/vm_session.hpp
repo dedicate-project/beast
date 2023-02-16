@@ -22,6 +22,9 @@ namespace beast {
  * executed program, and to steer instruction pointer movement. Also, the VirtualMachine classes
  * access the VmSession's variable memory and string table contents when executing a Program
  * instance's code.
+ *
+ * @author Jan Winkler
+ * @date 2022-12-19
  */
 class VmSession {
  public:

@@ -27,6 +27,45 @@ if(BEAST_BUILD_DOCS)
   add_subdirectory("docs")
 endif()
 
+set(GALIB_SRCS
+  garandom.C gaerror.C GAParameter.C GAStatistics.C GABaseGA.C GASStateGA.C
+  GASimpleGA.C GAIncGA.C GADemeGA.C GADCrowdingGA.C GASelector.C GAScaling.C
+  GAPopulation.C GAGenome.C GABinStr.C gabincvt.C GAAllele.C GA1DBinStrGenome.C
+  GA2DBinStrGenome.C GA3DBinStrGenome.C GABin2DecGenome.C GATreeBASE.C GATree.C
+  GATreeGenome.C GAListBASE.C GAList.C GAListGenome.C
+  # The following source files are specifically ignored because they are not needed and cause
+  # compilation issues.
+  # GAStringGenome.C GARealGenome.C GA1DArrayGenome.C GA2DArrayGenome.C GA3DArrayGenome.C
+  )
+set(GALIB_SRCS_FULL)
+foreach(file ${GALIB_SRCS})
+  list(APPEND GALIB_SRCS_FULL ${CMAKE_SOURCE_DIR}/3rdparty/galib/ga/${file})
+endforeach()
+add_library(galib ${GALIB_SRCS_FULL})
+set_target_properties(galib PROPERTIES CXX_CLANG_TIDY "")
+target_compile_options(galib PRIVATE -fpermissive)
+if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+  target_compile_options(galib PRIVATE -Wno-register -Wno-write-strings -Wno-permissive)
+endif()
+
+
+# Main BEAST library
+add_library(${PROJECT_NAME}
+  src/beast.cpp
+  src/cpu_virtual_machine.cpp
+  src/pipe.cpp
+  src/program.cpp
+  src/random_program_factory.cpp
+  src/time_functions.cpp
+  src/vm_session.cpp
+  src/virtual_machine.cpp
+  src/evaluators/aggregation_evaluator.cpp
+  src/evaluators/runtime_statistics_evaluator.cpp
+  src/evaluators/operator_usage_evaluator.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+  galib)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -49,22 +88,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(
   include
-  ${CMAKE_BINARY_DIR}/include)
+  ${CMAKE_BINARY_DIR}/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/galib)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
-
-# Main BEAST library
-add_library(${PROJECT_NAME}
-  src/beast.cpp
-  src/cpu_virtual_machine.cpp
-  src/program.cpp
-  src/random_program_factory.cpp
-  src/time_functions.cpp
-  src/vm_session.cpp
-  src/virtual_machine.cpp
-  src/evaluators/aggregation_evaluator.cpp
-  src/evaluators/runtime_statistics_evaluator.cpp
-  src/evaluators/operator_usage_evaluator.cpp)
 
 # Examples
 if(BEAST_BUILD_EXAMPLES)
@@ -86,6 +113,7 @@ if(BEAST_BUILD_EXAMPLES)
   declare_example(evaluation)
   declare_example(feedloop)
   declare_example(hello_world)
+  declare_example(pipe)
 endif()
 
 # Testing
@@ -119,6 +147,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(jumps)
   declare_test(math)
   declare_test(misc)
+  declare_test(pipe)
   declare_test(printing_and_string_table)
   declare_test(program)
   declare_test(programs)
@@ -131,7 +160,7 @@ if(BEAST_BUILD_TESTS)
 endif(BEAST_BUILD_TESTS)
 
 # Install targets
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} galib
   EXPORT ${PROJECT_NAME}-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

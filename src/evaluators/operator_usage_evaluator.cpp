@@ -6,7 +6,7 @@ OperatorUsageEvaluator::OperatorUsageEvaluator(OpCode opcode)
   : opcode_{opcode} {
 }
 
-double OperatorUsageEvaluator::evaluate(const VmSession& session) const {
+double OperatorUsageEvaluator::evaluate(const VmSession& session) {
   VmSession::RuntimeStatistics statistics = session.getRuntimeStatistics();
 
   // If no steps were executed, short-circuit.

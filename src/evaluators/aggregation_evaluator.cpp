@@ -18,7 +18,7 @@ void AggregationEvaluator::addEvaluator(
   evaluators_.push_back({evaluator, weight, invert_logic});
 }
 
-double AggregationEvaluator::evaluate(const VmSession& session) const {
+double AggregationEvaluator::evaluate(const VmSession& session) {
   // If no evaluators are available, throw an exception.
   if (evaluators_.empty()) {
     throw std::invalid_argument("No evaluators defined prior to calling evaluate().");
