@@ -36,7 +36,7 @@ float staticEvaluatorWrapper(GAGenome& genome) {
     data.push_back(*list_genome[idx]);
   }
 
-  const Pipe* pipe = static_cast<Pipe*>(genome.userData());
+  Pipe* pipe = static_cast<Pipe*>(genome.userData());
   return static_cast<float>(pipe->evaluate(data));
 }
 

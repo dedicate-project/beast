@@ -12,7 +12,7 @@ class SimplePipe : public beast::Pipe {
     : Pipe(max_candidates), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {
   }
 
-  [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) const override {
+  [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override {
     if (program_data.empty()) {
       return 0.0;
     }

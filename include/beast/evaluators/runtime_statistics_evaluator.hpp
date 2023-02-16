@@ -43,7 +43,7 @@ class RuntimeStatisticsEvaluator : public Evaluator {
    * @return A score value from 0.0 (bad runtime behavior and/or static structure) to 1.0 (very good
    *         behavior and structure)
    */
-  double evaluate(const VmSession& session) const override;
+  double evaluate(const VmSession& session) override;
 
  private:
   /**

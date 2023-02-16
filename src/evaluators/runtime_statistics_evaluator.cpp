@@ -21,7 +21,7 @@ RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(
   }
 }
 
-double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) const {
+double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) {
   VmSession::RuntimeStatistics dynamic_statistics = session.getRuntimeStatistics();
 
   /* The number of steps actually taken when executing the program. */

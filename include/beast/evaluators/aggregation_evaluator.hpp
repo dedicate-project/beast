@@ -56,7 +56,7 @@ class AggregationEvaluator : public Evaluator {
    * @param session The session object to base the score determination on
    * @return A score value from 0.0 to 1.0
    */
-  double evaluate(const VmSession& session) const override;
+  double evaluate(const VmSession& session) override;
 
  private:
   /**

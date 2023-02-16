@@ -37,7 +37,7 @@ class OperatorUsageEvaluator : public Evaluator {
    * @param session The session object to base the score determination on
    * @return A score value from 0.0 (specific op not found) to 1.0 (only specific op)
    */
-  double evaluate(const VmSession& session) const override;
+  double evaluate(const VmSession& session) override;
 
  private:
   /**

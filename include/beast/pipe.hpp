@@ -96,7 +96,7 @@ class Pipe {
    * @param program_data The program candidate to score
    * @return The evaluation score the program candidate achieved (0.0 - 1.0)
    */
-  [[nodiscard]] virtual double evaluate(const std::vector<unsigned char>& program_data) const = 0;
+  [[nodiscard]] virtual double evaluate(const std::vector<unsigned char>& program_data) = 0;
 
   /**
    * @class Pipe::drawInput
