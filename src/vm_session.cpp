@@ -3,6 +3,7 @@
 // Standard
 #include <chrono>
 #include <ctime>
+#include <iostream>
 #include <random>
 #include <set>
 #include <stdexcept>
@@ -647,6 +648,10 @@ void VmSession::bitWiseXorTwoVariables(
 
 void VmSession::moduloVariableByConstant(
     int32_t variable_index, bool follow_links, int32_t constant) {
+  if (constant <= 0) {
+    throw std::invalid_argument("Cannot modulo with a constant <= 0.");
+  }
+
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   const int32_t result = value % constant;
   setVariableValueInternal(variable_index, follow_links, result);
@@ -657,6 +662,10 @@ void VmSession::moduloVariableByVariable(
     int32_t modulo_variable_index, bool modulo_follow_links) {
   const int32_t value = getVariableValueInternal(variable_index, follow_links);
   const int32_t modulo_value = getVariableValueInternal(modulo_variable_index, modulo_follow_links);
+  if (modulo_value <= 0) {
+    throw std::invalid_argument("Cannot modulo with a modulo value <= 0.");
+  }
+
   const int32_t result = value % modulo_value;
   setVariableValueInternal(variable_index, follow_links, result);
 }

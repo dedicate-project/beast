@@ -72,20 +72,23 @@ void Pipe::addInput(const std::vector<unsigned char>& candidate) {
 }
 
 void Pipe::evolve() {
-   GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
+  GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
   genome.initializer(staticInitializerWrapper);
   genome.userData(this);
 
   GASimpleGA algorithm(genome);
   algorithm.populationSize(max_candidates_);
-  
+  algorithm.nGenerations(10);
+  algorithm.pMutation(0.001);
+  algorithm.pCrossover(0.5);
+
   /* TODO(fairlight1337): Fill and parameterize the GA here.
    *
    * GAParameterList params{};
    * GASimpleGA::registerDefaultParameters(params);
    * algorithm.parameters(params);
    */
-  
+
   algorithm.evolve();
 
   // Save the finalists if they pass the cut-off score.
@@ -93,6 +96,7 @@ void Pipe::evolve() {
   for (uint32_t pop_idx = 0; pop_idx < population.size(); ++pop_idx) {
     GAGenome& individual = population.individual(pop_idx);
     auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(individual);
+    //std::cout << pop_idx << ", " << population.size() << ", " << individual.score() << ", " << cut_off_score_ << ", " << list_genome.size() << std::endl;
     if (list_genome.size() > 0 && individual.score() >= cut_off_score_) {
       std::vector<unsigned char> data;
       for (uint32_t idx = 0; idx < list_genome.size(); ++idx) {
