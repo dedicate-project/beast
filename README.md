@@ -109,6 +109,12 @@ First, install the dependencies (assuming you're working on a Ubuntu system):
 sudo apt install clang-tidy ccache
 ```
 
+If you are on Ubuntu 22.04 or newer and encounter an issue where `clang-tidy` cannot find standard headers (like `<array>`), install this package:
+```bash
+sudo apt install libstdc++-12-dev
+```
+ane try compiling again.
+
 To build the project, check out the source code:
 ```bash
 git clone https://github.com/dedicate-project/beast/

@@ -23,8 +23,8 @@ TEST_CASE("checking_if_stack_is_empty_works", "stacks") {
   prg.checkIfStackIsEmpty(stack_variable_index_2, true, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
@@ -72,8 +72,8 @@ TEST_CASE("stacks_can_push_and_pop_constant_values", "stacks") {
   prg.checkIfStackIsEmpty(stack_variable_index, true, variable_index_empty_check, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_1, true) == constant_1);
   REQUIRE(session.getVariableValue(variable_index_2, true) == constant_2);
@@ -124,8 +124,8 @@ TEST_CASE("stacks_can_push_and_pop_variable_values", "stacks") {
   prg.popVariableFromStack(stack_variable_index, true, variable_index_3, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_1, true) == input_variable_value_1);
   REQUIRE(session.getVariableValue(variable_index_2, true) == input_variable_value_2);
