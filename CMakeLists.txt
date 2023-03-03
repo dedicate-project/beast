@@ -105,7 +105,7 @@ if(BEAST_BUILD_PIPELINES)
       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/pipelines)
 
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
-      target_link_libraries(pipelines_${name} PUBLIC gcov)
+      target_link_libraries(pipeline_${name} PUBLIC gcov)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
   endmacro()
 
