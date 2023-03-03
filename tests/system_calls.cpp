@@ -61,8 +61,8 @@ TEST_CASE("system_calls_provide_datetime_data", "system_calls") {
   prg.performSystemCall(0, 8, variable_index_wk, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {}
 
   REQUIRE(session.getVariableValue(variable_index_tz_h, true) != variable_value_tz_h);
   REQUIRE(session.getVariableValue(variable_index_tz_m, true) != variable_value_tz_m);
