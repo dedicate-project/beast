@@ -62,7 +62,8 @@ add_library(${PROJECT_NAME}
   src/virtual_machine.cpp
   src/evaluators/aggregation_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
-  src/evaluators/operator_usage_evaluator.cpp)
+  src/evaluators/operator_usage_evaluator.cpp
+  src/pipes/evaluator_pipe.cpp)
 
 target_link_libraries(${PROJECT_NAME}
   galib)
