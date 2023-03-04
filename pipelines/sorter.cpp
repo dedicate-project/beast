@@ -5,121 +5,6 @@
 // BEAST
 #include <beast/beast.hpp>
 
-class SingleStepInputForwardPipe : public beast::Pipe {
- public:
-  SingleStepInputForwardPipe(uint32_t max_candidates, uint32_t mem_size)
-    : Pipe(max_candidates), mem_size_{mem_size} {
-  }
-
-  [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override {
-    if (program_data.empty()) {
-      return 0.0;
-    }
-
-    std::vector<int32_t> values = {27, -3, 128, 4000, 0};
-
-    beast::Program prg(program_data);
-    beast::CpuVirtualMachine virtual_machine;
-    virtual_machine.setSilent(true);
-
-    uint32_t correct_forwards = 0;
-    const uint32_t steps_limit = 100;
-    for (int32_t value : values) {
-      beast::VmSession session(prg, mem_size_, 0, 0);
-      session.setVariableBehavior(0, beast::VmSession::VariableIoBehavior::Input);
-      session.setVariableBehavior(1, beast::VmSession::VariableIoBehavior::Output);
-      uint32_t steps = 0;
-
-      try {
-        session.setVariableValue(0, true, value);
-        while (steps < steps_limit && virtual_machine.step(session, false)) {
-          if (session.hasOutputDataAvailable(1, true)) {
-            // The program is expected to only assign the correct input value to the output
-            // variable. When the variable is set, the program execution is ended.
-            steps = steps_limit;
-            if (session.getVariableValue(1, true) == value) {
-              correct_forwards++;
-            }
-          }
-          steps++;
-        }
-      } catch(...) {
-        // If the program throws an exception, return a 0.0 score.
-        return 0.0;
-      }
-
-      if (correct_forwards == 0) {
-        // First forward failed, program is deemed unfit.
-        return 0.0;
-      }
-    }
-
-    return
-        std::min(1.0,
-                 (static_cast<double>(correct_forwards) / static_cast<double>(values.size()))
-                 + 0.1);
-  }
-
- private:
-  uint32_t mem_size_;
-};
-
-class ContinuousInputForwardPipe : public beast::Pipe {
- public:
-  ContinuousInputForwardPipe(uint32_t max_candidates, uint32_t mem_size)
-    : Pipe(max_candidates), mem_size_{mem_size} {
-  }
-
-  [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override {
-    if (program_data.empty()) {
-      return 0.0;
-    }
-
-    std::vector<int32_t> values = {5, 33, -909871, 0, 0, 234, 1, 2, -1, 125, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
-
-    beast::Program prg(program_data);
-    beast::CpuVirtualMachine virtual_machine;
-    virtual_machine.setSilent(true);
-
-    beast::VmSession session(std::move(prg), mem_size_, 0, 0);
-    session.setVariableBehavior(0, beast::VmSession::VariableIoBehavior::Input);
-    session.setVariableBehavior(1, beast::VmSession::VariableIoBehavior::Output);
-    uint32_t input_index = 0;
-    const uint32_t steps_limit = 2000;
-    uint32_t steps = 0;
-    uint32_t correct_forwards = 0;
-
-    session.setVariableValue(0, true, values[input_index]);
-
-    try {
-      do {
-        if (session.hasOutputDataAvailable(1, true)) {
-          if (session.getVariableValue(1, true) == values[input_index]) {
-            correct_forwards++;
-          }
-          input_index++;
-          if (input_index < values.size()) {
-            session.setVariableValue(0, true, values[input_index]);
-          }
-        }
-        steps++;
-      } while (input_index < values.size() &&
-               steps < steps_limit &&
-               virtual_machine.step(session, false));
-    } catch(...) {
-      return 0.0;
-    }
-
-    return
-        std::min(1.0,
-                 (static_cast<double>(correct_forwards) / static_cast<double>(values.size()))
-                 + (correct_forwards == 0 ? 0.1 : 0.0));
-  }
-
- private:
-  uint32_t mem_size_;
-};
-
 std::vector<std::vector<unsigned char>> runPipe(
     const std::shared_ptr<beast::Pipe>& pipe, std::vector<std::vector<unsigned char>> init_pop) {
   for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->hasSpace(); ++pop_idx) {
@@ -171,8 +56,10 @@ int main(int /*argc*/, char** /*argv*/) {
     std::vector<std::vector<unsigned char>> staged0;
     uint32_t last_staged0 = 0;
     while (staged0.size() < pop_size) {
-      std::shared_ptr<SingleStepInputForwardPipe> pipe0 =
-          std::make_shared<SingleStepInputForwardPipe>(pop_size, mem_size);
+      std::shared_ptr<beast::EvaluatorPipe> pipe0 =
+          std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+      const auto eval0 = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(1, 5, 100);
+      pipe0->addEvaluator(eval0, 1.0, false);
       pipe0->setCutOffScore(1.0);
 
       std::vector<std::vector<unsigned char>> init_pop0;
@@ -191,8 +78,10 @@ int main(int /*argc*/, char** /*argv*/) {
       }
     }
 
-    std::shared_ptr<ContinuousInputForwardPipe> pipe1 =
-        std::make_shared<ContinuousInputForwardPipe>(pop_size, mem_size);
+    std::shared_ptr<beast::EvaluatorPipe> pipe1 =
+        std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+    const auto eval1 = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(10, 2, 2000);
+    pipe1->addEvaluator(eval1, 1.0, false);
     pipe1->setCutOffScore(1.0);
 
     std::vector<std::vector<unsigned char>> finalists1 = runPipe(pipe1, staged0);
