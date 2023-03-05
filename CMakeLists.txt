@@ -49,6 +49,24 @@ if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
   target_compile_options(galib PRIVATE -Wno-register -Wno-write-strings -Wno-permissive)
 endif()
 
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
+  include(CodeCoverage)
+
+  add_compile_options(-g -O0 -lprofiler -fprofile-arcs -ftest-coverage -coverage)
+
+  setup_target_for_coverage_lcov(NAME coverage
+    EXECUTABLE make test
+    BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/*
+    SONARQUBE)
+else()
+  add_compile_options(-O3)
+endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Main BEAST library
 add_library(${PROJECT_NAME}
@@ -70,24 +88,6 @@ target_link_libraries(${PROJECT_NAME}
   galib)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
-  include(CodeCoverage)
-
-  add_compile_options(-g -O0 -lprofiler -fprofile-arcs -ftest-coverage -coverage)
-
-  setup_target_for_coverage_lcov(NAME coverage
-    EXECUTABLE make test
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/*
-    SONARQUBE)
-else()
-  add_compile_options(-O3)
-endif(CMAKE_BUILD_TYPE MATCHES "Debug")
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include_directories(
   include
