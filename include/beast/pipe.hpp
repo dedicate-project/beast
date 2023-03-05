@@ -173,6 +173,24 @@ class Pipe {
    * Finalists below this score are not added to the output buffer.
    */
   double cut_off_score_ = 0.0;
+
+  /**
+   * @var Pipe::num_generations_
+   * @brief The number of generations to run through during evolution
+   */
+  uint32_t num_generations_ = 10;
+
+  /**
+   * @var Pipe::mutation_probability_
+   * @brief The probability for gene mutation during evolution
+   */
+  float mutation_probability_ = 0.001f;
+
+  /**
+   * @var Pipe::crossover_probability_
+   * @brief The probability for gene crossover during evolution
+   */
+  float crossover_probability_ = 0.5f;
 };
 
 }  // namespace beast
