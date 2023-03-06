@@ -22,10 +22,10 @@ namespace beast {
 class Pipeline {
  public:
   struct Connection {
-    std::shared_ptr<Pipe> source_pipe_;
+    std::shared_ptr<Pipe> source_pipe;
     uint32_t source_slot_index;
 
-    std::shared_ptr<Pipe> destination_pipe_;
+    std::shared_ptr<Pipe> destination_pipe;
     uint32_t destination_slot_index;
   };
 
