@@ -73,6 +73,7 @@ add_library(${PROJECT_NAME}
   src/beast.cpp
   src/cpu_virtual_machine.cpp
   src/pipe.cpp
+  src/pipeline.cpp
   src/program.cpp
   src/random_program_factory.cpp
   src/time_functions.cpp
