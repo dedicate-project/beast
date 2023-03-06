@@ -17,10 +17,19 @@ void Pipeline::addPipe(const std::shared_ptr<Pipe>& pipe) {
 void Pipeline::connectPipes(
     const std::shared_ptr<Pipe>& source_pipe, uint32_t source_slot_index,
     const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index) {
-  Connection connection{source_pipe, source_slot_index, destination_pipe, destination_slot_index};
-  // TODO(fairlight1337): Check if individual source or destination ports are already occupied by
-  // other connections in this pipeline.
+  for (const Connection& connection : connections_) {
+    if (connection.source_pipe == source_pipe &&
+        connection.source_slot_index == source_slot_index) {
+      throw std::runtime_error("Source port already occupied on Pipe.");
+    }
 
+    if (connection.destination_pipe == destination_pipe &&
+        connection.destination_slot_index == destination_slot_index) {
+      throw std::runtime_error("Destination port already occupied on Pipe.");
+    }
+  }
+
+  Connection connection{source_pipe, source_slot_index, destination_pipe, destination_slot_index};
   connections_.push_back(connection);
 }
 
