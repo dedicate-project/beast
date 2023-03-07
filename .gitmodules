@@ -1,10 +1,18 @@
 [submodule "3rdparty/Catch2"]
 	path = 3rdparty/Catch2
 	url = https://github.com/catchorg/Catch2.git
-        branch = v2.x
+	branch = v2.x
 [submodule "3rdparty/cmake-modules"]
 	path = 3rdparty/cmake-modules
 	url = https://github.com/bilke/cmake-modules.git
 [submodule "3rdparty/galib"]
 	path = 3rdparty/galib
 	url = https://github.com/dedicate-project/galib
+[submodule "3rdparty/Crow"]
+	path = 3rdparty/Crow
+	url = https://github.com/CrowCpp/Crow
+	branch = v1.0+5
+[submodule "3rdparty/CLI11"]
+	path = 3rdparty/CLI11
+	url = https://github.com/CLIUtils/CLI11
+	branch = v2.3.2
