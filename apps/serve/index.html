@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>BEAST Serve</title>
+    <script src="js/fabric.min.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = new fabric.Canvas('canvas');
+      const rect = new fabric.Rect({
+        left: 100,
+        top: 100,
+        width: 50,
+        height: 50,
+        fill: 'red',
+        stroke: 'black',
+        strokeWidth: 2
+      });
+      canvas.add(rect);
+    </script>
+  </body>
+</html>

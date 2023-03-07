@@ -7,6 +7,7 @@ project(beast
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
 option(BEAST_BUILD_PIPELINES "Whether to build pipelines or not" YES)
+option(BEAST_BUILD_APPS "Whether to build apps or not" YES)
 option(BEAST_BUILD_EXAMPLES "Whether to build examples or not" YES)
 option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
@@ -86,14 +87,17 @@ add_library(${PROJECT_NAME}
   src/pipes/evaluator_pipe.cpp)
 
 target_link_libraries(${PROJECT_NAME}
-  galib)
+  galib
+  pthread)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(
   include
   ${CMAKE_BINARY_DIR}/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/galib)
+  ${CMAKE_SOURCE_DIR}/3rdparty/galib
+  ${CMAKE_SOURCE_DIR}/3rdparty/Crow/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
@@ -113,6 +117,24 @@ if(BEAST_BUILD_PIPELINES)
   endmacro()
 
   declare_pipeline(sorter)
+endif()
+
+# Apps
+if(BEAST_BUILD_APPS)
+  macro(declare_app name)
+    add_executable(app_${name} apps/${name}.cpp)
+    target_link_libraries(app_${name} PUBLIC ${PROJECT_NAME})
+
+    set_target_properties(app_${name}
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/apps)
+
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+      target_link_libraries(app_${name} PUBLIC gcov)
+    endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+  endmacro()
+
+  declare_app(serve)
 endif()
 
 # Examples
