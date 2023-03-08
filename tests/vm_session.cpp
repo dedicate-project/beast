@@ -23,6 +23,69 @@ TEST_CASE("when_not_marked_exited_abnormally_that_status_can_be_retrieved", "vm_
   REQUIRE(session.getRuntimeStatistics().abnormal_exit == false);
 }
 
+TEST_CASE("getting_variable_behavior_of_non_existent_variable_index_throws", "vm_session") {
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 3, 0, 0);
+
+  bool threw = false;
+  try {
+    static_cast<void>(session.getVariableBehavior(0, false));
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("checking_for_output_on_non_existent_variable_index_throws", "vm_session") {
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 3, 0, 0);
+
+  bool threw = false;
+  try {
+    static_cast<void>(session.hasOutputDataAvailable(0, false));
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("clearing_print_buffer_empties_it", "vm_session") {
+  const std::string test_string = "Entry";
+
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 3, 0, 0);
+
+  session.appendToPrintBuffer(test_string);
+  REQUIRE(session.getPrintBuffer() == test_string);
+
+  session.clearPrintBuffer();
+  REQUIRE(session.getPrintBuffer().empty());
+}
+
+TEST_CASE("setting_a_too_long_string_table_entry_throws", "vm_session") {
+  const std::string test_string = "Entry";
+  const int32_t max_string_length = test_string.size() - 1;
+  const int32_t variable_index = 0;
+  const int32_t string_table_index = 0;
+
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 1, 1, max_string_length);
+
+  session.registerVariable(variable_index, beast::Program::VariableType::Int32);
+  session.setVariable(variable_index, string_table_index, true);
+
+  bool threw = false;
+  try {
+    session.setVariableStringTableEntry(variable_index, true, test_string);
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
 TEST_CASE("set_io_behaviors_can_be_retrieved", "vm_session") {
   const int32_t variable_index_store = 0;
   const int32_t variable_index_input = 1;
