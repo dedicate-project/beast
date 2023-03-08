@@ -106,7 +106,7 @@ values), but this example shows the very bare basics of how to achieve a hello w
 
 First, install the dependencies (assuming you're working on a Ubuntu system):
 ```bash
-sudo apt install clang-tidy ccache
+sudo apt install clang-tidy ccache libasio-dev
 ```
 
 If you are on Ubuntu 22.04 or newer and encounter an issue where `clang-tidy` cannot find standard headers (like `<array>`), install this package:
