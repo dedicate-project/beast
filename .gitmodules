@@ -16,3 +16,7 @@
 	path = 3rdparty/CLI11
 	url = https://github.com/CLIUtils/CLI11
 	branch = v2.3.2
+[submodule "3rdparty/asio"]
+	path = 3rdparty/asio
+	url = https://github.com/chriskohlhoff/asio.git
+	branch = asio-1-26-0
