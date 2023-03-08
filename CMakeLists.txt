@@ -85,9 +85,9 @@ add_library(${PROJECT_NAME}
   src/evaluators/operator_usage_evaluator.cpp
   src/pipes/evaluator_pipe.cpp)
 
-target_link_libraries(${PROJECT_NAME}
-  galib
-  pthread)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(${PROJECT_NAME} galib Threads::Threads)
 
 add_executable(${PROJECT_NAME}-serve
   src/serve.cpp)
