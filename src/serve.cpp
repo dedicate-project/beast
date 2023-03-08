@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
            } else {
              res.code = 404;
            }
-         } catch(const std::ifstream::failure& /*exception*/) {
+         } catch(...) {
            res.code = 500;
          }
          res.end();
