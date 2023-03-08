@@ -522,12 +522,16 @@ void VmSession::performSystemCall(
     // Get the current UTC time
     const auto now_utc = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm utc_tm{};
-    gmtime_r(&now_utc, &utc_tm);
+    if (gmtime_r(&now_utc, &utc_tm) == nullptr) {
+      throw std::runtime_error("Time conversion failed.");
+    }
 
     // Get the current local time
     const auto now_local = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::tm local_tm{};
-    localtime_r(&now_local, &local_tm);
+    if (localtime_r(&now_local, &local_tm) == nullptr) {
+      throw std::runtime_error("Time conversion failed.");
+    }
 
     const int32_t offset_minutes =
         (local_tm.tm_hour - utc_tm.tm_hour) * 60 + (local_tm.tm_min - utc_tm.tm_min);
@@ -582,7 +586,10 @@ void VmSession::performSystemCall(
 
       const std::time_t first_day_time = std::mktime(&first_day_of_year);
       std::tm first_day_tm{};
-      gmtime_r(&first_day_time, &first_day_tm);
+      if (gmtime_r(&first_day_time, &first_day_tm) == nullptr) {
+        throw std::runtime_error("Time conversion failed.");
+      }
+
       const int32_t first_day_weekday = first_day_tm.tm_wday;
 
       const int32_t current_week = (current_day - 1 + first_day_weekday) / 7 + 1;
