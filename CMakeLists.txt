@@ -7,7 +7,6 @@ project(beast
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
 option(BEAST_BUILD_PIPELINES "Whether to build pipelines or not" YES)
-option(BEAST_BUILD_APPS "Whether to build apps or not" YES)
 option(BEAST_BUILD_EXAMPLES "Whether to build examples or not" YES)
 option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
@@ -26,7 +25,7 @@ if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
 endif()
 
 if(BEAST_BUILD_DOCS)
-  add_subdirectory("docs")
+  add_subdirectory(docs)
 endif()
 
 set(GALIB_SRCS
@@ -59,7 +58,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
     BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/*
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/* asio/*
     SONARQUBE)
 else()
   add_compile_options(-O3)
@@ -90,6 +89,15 @@ target_link_libraries(${PROJECT_NAME}
   galib
   pthread)
 
+add_executable(${PROJECT_NAME}-serve
+  src/serve.cpp)
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  target_link_libraries(${PROJECT_NAME}-serve PUBLIC gcov)
+endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+
+target_link_libraries(${PROJECT_NAME}-serve PUBLIC ${PROJECT_NAME})
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(
@@ -97,7 +105,8 @@ include_directories(
   ${CMAKE_BINARY_DIR}/include
   ${CMAKE_SOURCE_DIR}/3rdparty/galib
   ${CMAKE_SOURCE_DIR}/3rdparty/Crow/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include)
+  ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/asio/asio/include)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
@@ -117,24 +126,6 @@ if(BEAST_BUILD_PIPELINES)
   endmacro()
 
   declare_pipeline(sorter)
-endif()
-
-# Apps
-if(BEAST_BUILD_APPS)
-  macro(declare_app name)
-    add_executable(app_${name} apps/${name}.cpp)
-    target_link_libraries(app_${name} PUBLIC ${PROJECT_NAME})
-
-    set_target_properties(app_${name}
-      PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/apps)
-
-    if(CMAKE_BUILD_TYPE MATCHES "Debug")
-      target_link_libraries(app_${name} PUBLIC gcov)
-    endif(CMAKE_BUILD_TYPE MATCHES "Debug")
-  endmacro()
-
-  declare_app(serve)
 endif()
 
 # Examples
