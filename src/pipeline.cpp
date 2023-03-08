@@ -17,6 +17,16 @@ void Pipeline::addPipe(const std::shared_ptr<Pipe>& pipe) {
 void Pipeline::connectPipes(
     const std::shared_ptr<Pipe>& source_pipe, uint32_t source_slot_index,
     const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index) {
+  // Ensure that the pipes are both present already.
+  if (std::find(pipes_.begin(), pipes_.end(), source_pipe) == pipes_.end()) {
+    throw std::runtime_error("Source Pipe not in this Pipeline.");
+  }
+
+  if (std::find(pipes_.begin(), pipes_.end(), destination_pipe) == pipes_.end()) {
+    throw std::runtime_error("Destination Pipe not in this Pipeline.");
+  }
+
+  // Ensure this connection doesn't exist yet.
   for (const Connection& connection : connections_) {
     if (connection.source_pipe == source_pipe &&
         connection.source_slot_index == source_slot_index) {
