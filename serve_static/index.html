@@ -1,23 +1,93 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <title>BEAST Serve</title>
-    <script src="js/fabric.min.js"></script>
   </head>
   <body>
-    <canvas id="canvas"></canvas>
-    <script>
-      const canvas = new fabric.Canvas('canvas');
-      const rect = new fabric.Rect({
-        left: 100,
-        top: 100,
-        width: 50,
-        height: 50,
-        fill: 'red',
-        stroke: 'black',
-        strokeWidth: 2
-      });
-      canvas.add(rect);
+    <div id="root"></div>
+
+    <script src="js/react.development.js"></script>
+    <script src="js/react-dom.development.js"></script>
+    <script src="js/babel.min.js"></script>
+
+    <script type="text/babel">
+      // React component for the dialog box
+      class Dialog extends React.Component {
+        render() {
+          // Render nothing if the "show" prop is false
+          if (!this.props.show) {
+            return null;
+          }
+
+          // The gray background
+          const backdropStyle = {
+            position: "fixed",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            padding: 50,
+          };
+
+          // The modal "window"
+          const modalStyle = {
+            backgroundColor: "#fff",
+            borderRadius: 5,
+            maxWidth: 500,
+            minHeight: 300,
+            margin: "0 auto",
+            padding: 30,
+            position: "relative",
+          };
+
+          return (
+            <div style={backdropStyle}>
+              <div style={modalStyle}>
+                {this.props.children}
+
+                <div className="footer">
+                  <button onClick={this.props.onClose}>Close</button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+      }
+
+      // Render the dialog box
+      class App extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            show: false,
+          };
+        }
+
+        showModal = () => {
+          this.setState({ show: true });
+        };
+
+        hideModal = () => {
+          this.setState({ show: false });
+        };
+
+        render() {
+          return (
+            <div>
+              <h1>BEAST Serve</h1>
+              <button onClick={this.showModal}>Open the dialog</button>
+              <Dialog show={this.state.show} onClose={this.hideModal}>
+                <h2>Dialog Title</h2>
+                <p>Some content here...</p>
+              </Dialog>
+            </div>
+          );
+        }
+      }
+
+      ReactDOM.render(<App />, document.getElementById("root"));
     </script>
   </body>
 </html>
