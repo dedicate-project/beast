@@ -23,12 +23,15 @@ int main(int argc, char** argv) {
   try {
     cli.add_option("--html_root", html_root, "HTML root directory");
     cli.add_option("--http_port", html_root, "The HTTP port to serve on");
+
+    CLI11_PARSE(cli, argc, argv);
   } catch(const std::runtime_error& exception) {
     std::cerr << "Failed to prepare CLI parser: " << exception.what() << std::endl;
     return EXIT_FAILURE;
+  } catch(...) {
+    std::cerr << "Failed to prepare CLI parser due to unknown issue" << std::endl;
+    return EXIT_FAILURE;
   }
-
-  CLI11_PARSE(cli, argc, argv);
 
   // Set up web serving environment
   crow::SimpleApp app;
