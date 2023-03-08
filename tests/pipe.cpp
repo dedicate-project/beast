@@ -44,3 +44,29 @@ TEST_CASE("pipe_calls_evaluate_on_evolve", "pipe") {
 
   REQUIRE(pipe.getEvaluateCallCount() > 0);
 }
+
+TEST_CASE("drawing_input_from_pipe_without_candidates_throws", "pipe") {
+  MockPipe pipe(1);
+
+  bool threw = false;
+  try {
+    static_cast<void>(pipe.drawInput());
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
+
+TEST_CASE("drawing_output_from_pipe_without_candidates_throws", "pipe") {
+  MockPipe pipe(1);
+
+  bool threw = false;
+  try {
+    static_cast<void>(pipe.drawOutput());
+  } catch(...) {
+    threw = true;
+  }
+
+  REQUIRE(threw == true);
+}
