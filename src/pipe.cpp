@@ -6,11 +6,15 @@
 // GAlib
 // NOTE: For these includes, the `register` error needs to be ignored as this 3rdparty library uses
 // outdated code. This is not an issue for the library using it though.
+#ifndef _MSC_VER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wregister"
+#endif
 #include <ga/GAListGenome.h>
 #include <ga/GASimpleGA.h>
+#ifndef _MSC_VER
 #pragma GCC diagnostic pop
+#endif
 
 namespace beast {
 
