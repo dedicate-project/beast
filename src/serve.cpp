@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
            res.end();
          });
   } catch(...) {
-    std::cerr << "Failed to set up erver routes" << std::endl;
+    std::cerr << "Failed to set up server routes" << std::endl;
   }
 
   // Start application
