@@ -36,8 +36,9 @@ namespace {
 float staticEvaluatorWrapper(GAGenome& genome) {
   auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(genome);
   std::vector<unsigned char> data;
+  data.resize(list_genome.size());
   for (int32_t idx = 0; idx < list_genome.size(); ++idx) {
-    data.push_back(*list_genome[idx]);
+    data[idx] = *list_genome[idx];
   }
 
   Pipe* pipe = static_cast<Pipe*>(genome.userData());
@@ -95,8 +96,9 @@ void Pipe::evolve() {
     auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(individual);
     if (list_genome.size() > 0 && individual.score() >= cut_off_score_) {
       std::vector<unsigned char> data;
+      data.resize(list_genome.size());
       for (int32_t idx = 0; idx < list_genome.size(); ++idx) {
-        data.push_back(*list_genome[idx]);
+        data[idx] = *list_genome[idx];
       }
 
       storeFinalist(data, individual.score());
