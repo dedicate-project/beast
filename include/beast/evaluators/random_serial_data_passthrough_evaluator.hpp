@@ -53,6 +53,17 @@ class RandomSerialDataPassthroughEvaluator : public Evaluator {
 
  private:
   /**
+   * @fn RandomSerialDataPassthroughEvaluator::runProgram
+   * @brief Runs a candidate program session
+   *
+   * @param work_session The candidate program session to run
+   * @param values The input values to provide to the program for forwarding
+   * @return The number of correct input forwards
+   */
+  [[nodiscard]] uint32_t runProgram(
+      VmSession& work_session, const std::vector<int32_t>& values) const;
+
+  /**
    * @var RandomSerialDataPassthroughEvaluator::data_count_
    * @brief The number of random data points to use during evaluation
    */
