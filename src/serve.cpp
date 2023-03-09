@@ -16,7 +16,7 @@
 int main(int argc, char** argv) {
   // Default values
   std::string html_root = ".";
-  uint32_t http_port = 9192;
+  uint16_t http_port = 9192;
 
   // Parse command line arguments
   try {
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   // Set up serving routes
   try {
     CROW_ROUTE(app, "/<path>")
-        ([&](const crow::request& /*req*/, crow::response& res, const std::string& path) {
+        ([html_root](const crow::request& /*req*/, crow::response& res, const std::string& path) {
            const std::string full_path = html_root + "/" + path;
            try {
              if (std::ifstream(full_path)) {
