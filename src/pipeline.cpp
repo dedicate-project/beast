@@ -19,23 +19,23 @@ void Pipeline::connectPipes(
     const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index) {
   // Ensure that the pipes are both present already.
   if (std::find(pipes_.begin(), pipes_.end(), source_pipe) == pipes_.end()) {
-    throw std::runtime_error("Source Pipe not in this Pipeline.");
+    throw std::invalid_argument("Source Pipe not in this Pipeline.");
   }
 
   if (std::find(pipes_.begin(), pipes_.end(), destination_pipe) == pipes_.end()) {
-    throw std::runtime_error("Destination Pipe not in this Pipeline.");
+    throw std::invalid_argument("Destination Pipe not in this Pipeline.");
   }
 
   // Ensure this connection doesn't exist yet.
   for (const Connection& connection : connections_) {
     if (connection.source_pipe == source_pipe &&
         connection.source_slot_index == source_slot_index) {
-      throw std::runtime_error("Source port already occupied on Pipe.");
+      throw std::invalid_argument("Source port already occupied on Pipe.");
     }
 
     if (connection.destination_pipe == destination_pipe &&
         connection.destination_slot_index == destination_slot_index) {
-      throw std::runtime_error("Destination port already occupied on Pipe.");
+      throw std::invalid_argument("Destination port already occupied on Pipe.");
     }
   }
 
