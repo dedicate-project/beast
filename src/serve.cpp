@@ -51,6 +51,12 @@ int main(int argc, char** argv) {
 
   // Set up serving routes
   try {
+    CROW_ROUTE(app, "/api/v1/status")
+        ([](const crow::request& /*req*/) {
+           crow::json::wvalue value;
+           value["version"] = "0.1.x";
+           return value;
+         });
     CROW_ROUTE(app, "/<path>")
         ([html_root](const crow::request& /*req*/, crow::response& res, const std::string& path) {
            const std::string full_path = html_root + "/" + path;
