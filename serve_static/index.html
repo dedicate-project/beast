@@ -2,92 +2,100 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>BEAST Serve</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BEAST Composer</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@material-ui/core/umd/material-ui.production.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      const { AppBar, Drawer, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography } = MaterialUI;
+      const { render } = ReactDOM;
 
-    <script src="js/react.development.js"></script>
-    <script src="js/react-dom.development.js"></script>
-    <script src="js/babel.min.js"></script>
+      const drawerWidth = 240; // Define drawer width as a constant
 
-    <script type="text/babel">
-      // React component for the dialog box
-      class Dialog extends React.Component {
-        render() {
-          // Render nothing if the "show" prop is false
-          if (!this.props.show) {
-            return null;
-          }
+      const useStyles = makeStyles({
+        root: {
+          display: 'flex',
+        },
+        appBar: {
+          zIndex: 1,
+        },
+        drawer: {
+          width: drawerWidth,
+          flexShrink: 0,
+        },
+        drawerPaper: {
+          width: drawerWidth,
+        },
+        content: {
+          flexGrow: 1,
+          padding: 20,
+          marginTop: 50,
+        },
+      });
 
-          // The gray background
-          const backdropStyle = {
-            position: "fixed",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: "rgba(0,0,0,0.3)",
-            padding: 50,
-          };
-
-          // The modal "window"
-          const modalStyle = {
-            backgroundColor: "#fff",
-            borderRadius: 5,
-            maxWidth: 500,
-            minHeight: 300,
-            margin: "0 auto",
-            padding: 30,
-            position: "relative",
-          };
-
-          return (
-            <div style={backdropStyle}>
-              <div style={modalStyle}>
-                {this.props.children}
-
-                <div className="footer">
-                  <button onClick={this.props.onClose}>Close</button>
-                </div>
-              </div>
-            </div>
-          );
-        }
+      function getHomeContent() {
+        return "Welcome Home!";
       }
 
-      // Render the dialog box
-      class App extends React.Component {
-        constructor(props) {
-          super(props);
-          this.state = {
-            show: false,
-          };
-        }
+      function App() {
+        const classes = useStyles();
 
-        showModal = () => {
-          this.setState({ show: true });
+        const [content, setContent] = React.useState(getHomeContent());
+        const [title, setTitle] = React.useState('Home');
+
+        const handlePipelinesClick = () => {
+          setContent('You have no pipelines');
+          setTitle('Pipelines');
         };
 
-        hideModal = () => {
-          this.setState({ show: false });
+        const handleProgramCollectionClick = () => {
+          setContent('You have no program collection');
+          setTitle('Program Collection');
         };
 
-        render() {
-          return (
-            <div>
-              <h1>BEAST Serve</h1>
-              <button onClick={this.showModal}>Open the dialog</button>
-              <Dialog show={this.state.show} onClose={this.hideModal}>
-                <h2>Dialog Title</h2>
-                <p>Some content here...</p>
-              </Dialog>
-            </div>
-          );
-        }
+        return (
+          React.createElement("div", { className: classes.root },
+            React.createElement(AppBar, { position: "fixed", className: classes.appBar },
+              React.createElement(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
+                React.createElement(Typography, { variant: "h6" }, title)
+              )
+            ),
+            React.createElement(Drawer, {
+                className: classes.drawer,
+                variant: "permanent",
+                classes: {
+                  paper: classes.drawerPaper,
+                }
+              },
+              React.createElement(List, null,
+                React.createElement(ListItem, { button: true, onClick: handlePipelinesClick },
+                  React.createElement(ListItemIcon, null,
+                    React.createElement("i", { className: "material-icons" }, "lan")
+                  ),
+                  React.createElement(ListItemText, { primary: "Pipelines" })
+                ),
+                React.createElement(ListItem, { button: true, onClick: handleProgramCollectionClick },
+                  React.createElement(ListItemIcon, null,
+                    React.createElement("i", { className: "material-icons" }, "hive")
+                  ),
+                  React.createElement(ListItemText, { primary: "Program Collection" })
+                )
+              )
+            ),
+            React.createElement("main", { className: classes.content },
+              React.createElement("p", null, content)
+            )
+          )
+        );
       }
 
-      ReactDOM.render(<App />, document.getElementById("root"));
+      render(React.createElement(App), document.getElementById("root"));
     </script>
   </body>
 </html>
