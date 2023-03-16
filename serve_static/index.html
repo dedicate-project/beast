@@ -37,6 +37,30 @@
           padding: 20,
           marginTop: 50,
         },
+        connectionStatusConnected: {
+          flexGrow: 1,
+          textAlign: "center",
+          backgroundColor: "green",
+          position: "absolute",
+          top: 10,
+          right: 10,
+          width: 120,
+          height: 30,
+          paddingTop: 10,
+          border: "1px solid black",
+        },
+        connectionStatusDisconnected: {
+          flexGrow: 1,
+          textAlign: "center",
+          backgroundColor: "red",
+          position: "absolute",
+          top: 10,
+          right: 10,
+          width: 120,
+          height: 30,
+          paddingTop: 10,
+          border: "1px solid black",
+        },
       });
 
       function getHomeContent() {
@@ -48,6 +72,33 @@
 
         const [content, setContent] = React.useState(getHomeContent());
         const [title, setTitle] = React.useState('Home');
+
+        const [data, setData] = React.useState(null);
+        const [error, setError] = React.useState(null);
+
+        const [connected, setConnected] = React.useState(false)
+
+        React.useEffect(() => {
+          const fetchData = async () => {
+            try {
+              const response = await fetch('/api/v1/status');
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              const jsonData = await response.json();
+              // Process the returned data
+              setData(jsonData);
+              setError(null); // Reset error state if successful
+            } catch (error) {
+              setError(error.message); // Set error state if unsuccessful
+            }
+          };
+          fetchData();
+          const interval = setInterval(() => {
+            fetchData();
+          }, 5000); // Fetch data every 5 seconds
+          return () => clearInterval(interval);
+        }, []);
 
         const handlePipelinesClick = () => {
           setContent('You have no pipelines');
@@ -63,7 +114,8 @@
           React.createElement("div", { className: classes.root },
             React.createElement(AppBar, { position: "fixed", className: classes.appBar },
               React.createElement(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
-                React.createElement(Typography, { variant: "h6" }, title)
+                React.createElement(Typography, { variant: "h6" }, title),
+                React.createElement(Typography, { variant: "h8", className: connected ? classes.connectionStatusConnected : classes.connectionStatusDisconnected}, connected ? 'Connected' : 'Disconnected')
               )
             ),
             React.createElement(Drawer, {
