@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BEAST Composer</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -15,6 +15,11 @@
     <script>
       const { AppBar, Drawer, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography } = MaterialUI;
       const { render } = ReactDOM;
+      const {
+        useState,
+        useEffect,
+        createElement: e,
+      } = React;
 
       const drawerWidth = 240; // Define drawer width as a constant
 
@@ -44,7 +49,7 @@
           position: "absolute",
           top: 10,
           right: 10,
-          width: 120,
+          width: 150,
           height: 30,
           paddingTop: 10,
           border: "1px solid black",
@@ -56,7 +61,7 @@
           position: "absolute",
           top: 10,
           right: 10,
-          width: 120,
+          width: 150,
           height: 30,
           paddingTop: 10,
           border: "1px solid black",
@@ -70,15 +75,15 @@
       function App() {
         const classes = useStyles();
 
-        const [content, setContent] = React.useState(getHomeContent());
-        const [title, setTitle] = React.useState('Home');
+        const [content, setContent] = useState(getHomeContent());
+        const [title, setTitle] = useState('Home');
 
-        const [data, setData] = React.useState(null);
-        const [error, setError] = React.useState(null);
+        const [status, setStatus] = useState([]);
+        const [error, setError] = useState(null);
 
-        const [connected, setConnected] = React.useState(false)
+        const [connected, setConnected] = useState(false)
 
-        React.useEffect(() => {
+        useEffect(() => {
           const fetchData = async () => {
             try {
               const response = await fetch('/api/v1/status');
@@ -90,7 +95,7 @@
               try {
                 const jsonData = await response.json();
                 // Process the returned data
-                setData(jsonData);
+                setStatus(jsonData);
                 setError(null); // Reset error state if successful
               } catch (error) {
                 console.log("Json error");
@@ -108,54 +113,106 @@
           return () => clearInterval(interval);
         }, []);
 
+        function PipelineList() {
+          const [pipelines, setPipelines] = useState([]);
+
+          useEffect(() => {
+            const fetchData = async () => {
+              try {
+                const response = await fetch('/api/v1/pipelines');
+                if (!response.ok) {
+                  throw new Error('Network response was not ok');
+                }
+                try {
+                  const jsonData = await response.json();
+                  // Process the returned data
+                  setPipelines(jsonData);
+                } catch (error) {
+                  setPipelines([]);
+                  console.log("Json error");
+                  setError(error.message); // Set error state if unsuccessful
+                }
+              } catch (error) {
+                setPipelines([]);
+                setError(error.message); // Set error state if unsuccessful
+              }
+            };
+            fetchData();
+            const interval = setInterval(fetchData, 5000);
+            return () => clearInterval(interval);
+          }, []);
+
+          function showPipelineDetails(id) {
+            alert(`Show details for pipeline ID: ${id}`);
+          }
+
+          return e(
+            List,
+            null,
+            pipelines.map((pipeline) =>
+              e(
+                ListItem,
+                {
+                  key: pipeline.id,
+                  button: true,
+                  onClick: () => showPipelineDetails(pipeline.id),
+                },
+                e(ListItemIcon, null, e("i", { className: "material-icons" }, "lan")),
+                e(ListItemText, { primary: pipeline.name })
+              )
+            )
+          );
+        }
+
         const handlePipelinesClick = () => {
-          setContent('You have no pipelines');
           setTitle('Pipelines');
+          setContent(e(PipelineList));
         };
 
+
         const handleProgramCollectionClick = () => {
-          setContent('You have no program collection');
           setTitle('Program Collection');
+          setContent('You have no program collection');
         };
 
         return (
-          React.createElement("div", { className: classes.root },
-            React.createElement(AppBar, { position: "fixed", className: classes.appBar },
-              React.createElement(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
-                React.createElement(Typography, { variant: "h6" }, title),
-                React.createElement(Typography, { variant: "h8", className: connected ? classes.connectionStatusConnected : classes.connectionStatusDisconnected}, connected ? 'Connected' : 'Disconnected')
+          e("div", { className: classes.root },
+            e(AppBar, { position: "fixed", className: classes.appBar },
+              e(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
+                e(Typography, { variant: "h6" }, title),
+                e(Typography, { variant: "h8", className: connected ? classes.connectionStatusConnected : classes.connectionStatusDisconnected}, connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected')
               )
             ),
-            React.createElement(Drawer, {
+            e(Drawer, {
                 className: classes.drawer,
                 variant: "permanent",
                 classes: {
                   paper: classes.drawerPaper,
                 }
               },
-              React.createElement(List, null,
-                React.createElement(ListItem, { button: true, onClick: handlePipelinesClick },
-                  React.createElement(ListItemIcon, null,
-                    React.createElement("i", { className: "material-icons" }, "lan")
+              e(List, null,
+                e(ListItem, { button: true, onClick: handlePipelinesClick },
+                  e(ListItemIcon, null,
+                    e("i", { className: "material-icons" }, "lan" )
                   ),
-                  React.createElement(ListItemText, { primary: "Pipelines" })
+                  e(ListItemText, { primary: "Pipelines" })
                 ),
-                React.createElement(ListItem, { button: true, onClick: handleProgramCollectionClick },
-                  React.createElement(ListItemIcon, null,
-                    React.createElement("i", { className: "material-icons" }, "hive")
+                e(ListItem, { button: true, onClick: handleProgramCollectionClick },
+                  e(ListItemIcon, null,
+                    e("i", { className: "material-icons" }, "hive")
                   ),
-                  React.createElement(ListItemText, { primary: "Program Collection" })
+                  e(ListItemText, { primary: "Program Collection" })
                 )
               )
             ),
-            React.createElement("main", { className: classes.content },
-              React.createElement("p", null, content)
+            e("main", { className: classes.content },
+              e("p", null, content)
             )
           )
         );
       }
 
-      render(React.createElement(App), document.getElementById("root"));
+      render(e(App), document.getElementById("root"));
     </script>
   </body>
 </html>

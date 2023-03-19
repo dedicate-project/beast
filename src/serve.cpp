@@ -1,6 +1,7 @@
 // Standard
 #include <cstdlib>
 #include <iostream>
+#include <list>
 #include <string>
 
 // BEAST
@@ -12,6 +13,11 @@
 
 // CLI11
 #include <CLI/CLI.hpp>
+
+struct PipelineDescriptor {
+  std::string name;
+  beast::Pipeline pipeline;
+};
 
 void serveFile(crow::response* res, const std::string& full_path) {
   try {
@@ -46,6 +52,12 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  // Set up BEAST environment
+  std::list<PipelineDescriptor> pipelines;
+
+  pipelines.push_back({"Some Pipeline", beast::Pipeline()});
+  pipelines.push_back({"Some other Pipeline", beast::Pipeline()});
+
   // Set up web serving environment
   crow::SimpleApp app;
 
@@ -54,7 +66,24 @@ int main(int argc, char** argv) {
     CROW_ROUTE(app, "/api/v1/status")
         ([](const crow::request& /*req*/) {
            crow::json::wvalue value;
-           value["version"] = "0.1.x";
+           const auto version = beast::getVersion();
+           value["version"] =
+               std::to_string(version[0]) + "." +
+               std::to_string(version[1]) + "." +
+               std::to_string(version[2]);
+           return value;
+         });
+    CROW_ROUTE(app, "/api/v1/pipelines")
+        ([pipelines](const crow::request& /*req*/) {
+           crow::json::wvalue value;
+           uint32_t idx = 0;
+           for (const auto& pipeline : pipelines) {
+             crow::json::wvalue pipeline_item;
+             pipeline_item["id"] = idx;
+             pipeline_item["name"] = pipeline.name;
+             value[idx] = std::move(pipeline_item);
+             idx++;
+           }
            return value;
          });
     CROW_ROUTE(app, "/<path>")

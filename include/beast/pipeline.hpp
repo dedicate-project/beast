@@ -88,6 +88,30 @@ class Pipeline {
    */
   const std::list<Connection>& getConnections() const;
 
+  /**
+   * @fn Pipeline::start
+   * @brief Starts this pipeline
+   *
+   * Throws an exception is called when the pipeline is already running.
+   */
+  void start();
+
+  /**
+   * @fn Pipeline::stop
+   * @brief Stops this pipeline
+   *
+   * Throws an exception is called when the pipeline is not running.
+   */
+  void stop();
+
+  /**
+   * @fn Pipeline::isRunning
+   * @brief Denotes whether this pipeline is currently running
+   *
+   * @return Boolean value denoting whether this pipeline is currently running
+   */
+  bool isRunning() const;
+
  private:
   /**
    * @var Pipeline::pipes_
@@ -100,6 +124,12 @@ class Pipeline {
    * @brief Holds this Pipeline's connections
    */
   std::list<Connection> connections_;
+
+  /**
+   * @var Pipeline::is_running_
+   * @brief Holds a boolean status denoting whether this pipeline is currently running or not
+   */
+  bool is_running_ = false;
 };
 
 }  // namespace beast
