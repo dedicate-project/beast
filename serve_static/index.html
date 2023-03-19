@@ -14,39 +14,19 @@
     <div id="root"></div>
     <script>
       const { AppBar, Drawer, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button } = MaterialUI;
-      //const { Lan, PlayArrow, Stop } = MaterialUIIcons;
       const { render } = ReactDOM;
-      const {
-        useState,
-        useEffect,
-        createElement: e,
-      } = React;
+      const { useState, useEffect, createElement: e } = React;
+      const drawerWidth = 240;
 
-      const drawerWidth = 240; // Define drawer width as a constant
-
-      const useStyles = makeStyles({
-        root: {
-          display: 'flex',
-        },
-        appBar: {
-          zIndex: 1,
-        },
-        drawer: {
-          width: drawerWidth,
-          flexShrink: 0,
-        },
-        drawerPaper: {
-          width: drawerWidth,
-        },
-        content: {
-          flexGrow: 1,
-          padding: 20,
-          marginTop: 50,
-        },
-        connectionStatusConnected: {
+      const useStyles = makeStyles((theme) => ({
+        root: { display: 'flex' },
+        appBar: { zIndex: 1 },
+        drawer: { width: drawerWidth, flexShrink: 0 },
+        drawerPaper: { width: drawerWidth },
+        content: { flexGrow: 1, padding: 20, marginTop: 50 },
+        connectionStatus: {
           flexGrow: 1,
           textAlign: "center",
-          backgroundColor: "green",
           position: "absolute",
           top: 10,
           right: 10,
@@ -55,34 +35,17 @@
           paddingTop: 10,
           border: "1px solid black",
         },
-        connectionStatusDisconnected: {
-          flexGrow: 1,
-          textAlign: "center",
-          backgroundColor: "red",
-          position: "absolute",
-          top: 10,
-          right: 10,
-          width: 150,
-          height: 30,
-          paddingTop: 10,
-          border: "1px solid black",
-        },
-      });
-
-      function getHomeContent() {
-        return "Welcome Home!";
-      }
+        connected: { backgroundColor: "green" },
+        disconnected: { backgroundColor: "red" },
+      }));
 
       function App() {
         const classes = useStyles();
-
-        const [content, setContent] = useState(getHomeContent());
-        const [title, setTitle] = useState('Home');
-
+        const [content, setContent] = useState("Welcome Home!");
+        const [title, setTitle] = useState("Home");
         const [status, setStatus] = useState([]);
         const [error, setError] = useState(null);
-
-        const [connected, setConnected] = useState(false)
+        const [connected, setConnected] = useState(false);
 
         useEffect(() => {
           const fetchData = async () => {
@@ -204,7 +167,10 @@
             e(AppBar, { position: "fixed", className: classes.appBar },
               e(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
                 e(Typography, { variant: "h6" }, title),
-                e(Typography, { variant: "h8", className: connected ? classes.connectionStatusConnected : classes.connectionStatusDisconnected}, connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected')
+                e(Typography, { variant: "h8",
+                                className: classes.connectionStatus + " " +
+                                           (connected ? classes.connected : classes.disconnected)},
+                                connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected')
               )
             ),
             e(Drawer, {
