@@ -15,6 +15,7 @@
 #include <CLI/CLI.hpp>
 
 struct PipelineDescriptor {
+  uint32_t id;
   std::string name;
   beast::Pipeline pipeline;
 };
@@ -55,8 +56,8 @@ int main(int argc, char** argv) {
   // Set up BEAST environment
   std::list<PipelineDescriptor> pipelines;
 
-  pipelines.push_back({"Some Pipeline", beast::Pipeline()});
-  pipelines.push_back({"Some other Pipeline", beast::Pipeline()});
+  pipelines.push_back({5, "Some Pipeline", beast::Pipeline()});
+  pipelines.push_back({128, "Some other Pipeline", beast::Pipeline()});
 
   // Set up web serving environment
   crow::SimpleApp app;
@@ -73,27 +74,74 @@ int main(int argc, char** argv) {
                std::to_string(version[2]);
            return value;
          });
+    CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>")
+        ([&pipelines](const crow::request& /*req*/, int32_t id, const std::string& path) {
+           crow::json::wvalue value;
+           value["id"] = id;
+           auto iter = std::find_if(pipelines.begin(), pipelines.end(),
+                                   [id](const auto& pipeline) { return pipeline.id == id; });
+           if (iter == pipelines.end()) {
+             value["status"] = "failed";
+             value["error"] = "invalid_id";
+           } else {
+             auto& pipeline = iter->pipeline;
+             if (path == "start") {
+               if (!pipeline.isRunning()) {
+                 try {
+                   pipeline.start();
+                   value["status"] = "success";
+                 } catch(...) {
+                   value["status"] = "failed";
+                   value["error"] = "start_failed";
+                 }
+               } else {
+                 value["status"] = "failed";
+                 value["error"] = "already_running";
+               }
+             } else if (path == "stop") {
+               if (pipeline.isRunning()) {
+                 try {
+                   pipeline.stop();
+                   value["status"] = "success";
+                 } catch(...) {
+                   value["status"] = "failed";
+                   value["error"] = "stop_failed";
+                 }
+               } else {
+                 value["status"] = "failed";
+                 value["error"] = "not_running";
+               }
+             } else {
+               value["status"] = "failed";
+               value["error"] = "invalid_command";
+               value["command"] = path;
+             }
+           }
+           return value;
+         });
     CROW_ROUTE(app, "/api/v1/pipelines")
-        ([pipelines](const crow::request& /*req*/) {
+        ([&pipelines](const crow::request& /*req*/) {
            crow::json::wvalue value;
            uint32_t idx = 0;
            for (const auto& pipeline : pipelines) {
              crow::json::wvalue pipeline_item;
-             pipeline_item["id"] = idx;
+             pipeline_item["id"] = pipeline.id;
              pipeline_item["name"] = pipeline.name;
+             pipeline_item["state"] =
+                 pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
              value[idx] = std::move(pipeline_item);
              idx++;
            }
            return value;
          });
     CROW_ROUTE(app, "/<path>")
-        ([html_root](const crow::request& /*req*/, crow::response& res, const std::string& path) {
+        ([&html_root](const crow::request& /*req*/, crow::response& res, const std::string& path) {
            const std::string full_path = html_root + "/" + path;
            serveFile(&res, full_path);
            res.end();
          });
     CROW_ROUTE(app, "/")
-        ([html_root](const crow::request& /*req*/, crow::response& res) {
+        ([&html_root](const crow::request& /*req*/, crow::response& res) {
            const std::string full_path = html_root + "/index.html";
            serveFile(&res, full_path);
            res.end();

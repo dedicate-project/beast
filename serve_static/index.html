@@ -13,7 +13,8 @@
   <body>
     <div id="root"></div>
     <script>
-      const { AppBar, Drawer, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography } = MaterialUI;
+      const { AppBar, Drawer, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button } = MaterialUI;
+      //const { Lan, PlayArrow, Stop } = MaterialUIIcons;
       const { render } = ReactDOM;
       const {
         useState,
@@ -138,12 +139,19 @@
               }
             };
             fetchData();
-            const interval = setInterval(fetchData, 5000);
+            const interval = setInterval(fetchData, 1000);
             return () => clearInterval(interval);
           }, []);
 
           function showPipelineDetails(id) {
             alert(`Show details for pipeline ID: ${id}`);
+          }
+
+          async function handleButtonClick(id, action) {
+            const response = await fetch(`/api/v1/pipelines/${id}/${action}`, {
+              method: "GET",
+            });
+            // Handle response if necessary
           }
 
           return e(
@@ -158,7 +166,23 @@
                   onClick: () => showPipelineDetails(pipeline.id),
                 },
                 e(ListItemIcon, null, e("i", { className: "material-icons" }, "lan")),
-                e(ListItemText, { primary: pipeline.name })
+                e(ListItemText, { primary: pipeline.name }),
+                e(
+                  Button,
+                  {
+                    variant: "contained",
+                    style: {
+                      backgroundColor: pipeline.state === "running" ? "red" : "green",
+                      color: "white",
+                    },
+                    color: pipeline.state === "running" ? "secondary" : "primary",
+                    onClick: (event) => {
+                      event.stopPropagation();
+                      handleButtonClick(pipeline.id, pipeline.state === "running" ? "stop" : "start");
+                    },
+                  },
+                  pipeline.state === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow")
+                )
               )
             )
           );
