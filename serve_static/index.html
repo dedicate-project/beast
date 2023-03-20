@@ -13,7 +13,7 @@
   <body>
     <div id="root"></div>
     <script>
-      const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Snackbar, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button } = MaterialUI;
+      const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Snackbar, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button, Divider } = MaterialUI;
       const { render } = ReactDOM;
       const { useState, useEffect, createElement: e } = React;
       const drawerWidth = 240;
@@ -46,6 +46,7 @@
         const [status, setStatus] = useState([]);
         const [error, setError] = useState(null);
         const [connected, setConnected] = useState(false);
+        const [selectedDrawerItem, setSelectedDrawerItem] = useState(null);
 
         const ConnectedContext = React.createContext();
 
@@ -277,13 +278,33 @@
                 }
               },
               e(List, null,
-                e(ListItem, { button: true, onClick: handlePipelinesClick },
+                e(
+                  'div',
+                  { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' } },
+                  e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' }}),
+                ),
+                e(Divider),
+                e(ListItem, {
+                  button: true,
+                  selected: selectedDrawerItem == "pipelines",
+                  onClick: () => {
+                    handlePipelinesClick();
+                    setSelectedDrawerItem("pipelines");
+                  },
+                },
                   e(ListItemIcon, null,
                     e("i", { className: "material-icons" }, "lan" )
                   ),
                   e(ListItemText, { primary: "Pipelines" })
                 ),
-                e(ListItem, { button: true, onClick: handleProgramCollectionClick },
+                e(ListItem, {
+                  button: true,
+                  selected: selectedDrawerItem == "program-collection",
+                  onClick: () => {
+                    handleProgramCollectionClick();
+                    setSelectedDrawerItem("program-collection");
+                  },
+                },
                   e(ListItemIcon, null,
                     e("i", { className: "material-icons" }, "hive")
                   ),
