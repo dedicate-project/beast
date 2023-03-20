@@ -56,8 +56,21 @@ int main(int argc, char** argv) {
   // Set up BEAST environment
   std::list<PipelineDescriptor> pipelines;
 
-  pipelines.push_back({5, "Some Pipeline", beast::Pipeline()});
-  pipelines.push_back({128, "Some other Pipeline", beast::Pipeline()});
+  const auto add_pipeline =
+      [&pipelines](const std::string& name) -> uint32_t {
+        uint32_t new_id = -1;
+        std::list<PipelineDescriptor>::iterator iter;
+        do {
+          new_id++;
+          iter = std::find_if(pipelines.begin(), pipelines.end(),
+                              [new_id](const auto& pipeline) { return pipeline.id == new_id; });
+        } while(iter != pipelines.end());
+        pipelines.push_back({new_id, name, beast::Pipeline()});
+        return new_id;
+      };
+
+  add_pipeline("Some Pipeline");
+  add_pipeline("Some other Pipeline");
 
   // Set up web serving environment
   crow::SimpleApp app;
@@ -72,6 +85,15 @@ int main(int argc, char** argv) {
                std::to_string(version[0]) + "." +
                std::to_string(version[1]) + "." +
                std::to_string(version[2]);
+           return value;
+         });
+    CROW_ROUTE(app, "/api/v1/pipelines/new")
+    .methods("POST"_method)
+        ([&pipelines, &add_pipeline](const crow::request& req) {
+           crow::json::wvalue value;
+           const auto req_body = crow::json::load(req.body);
+           value["status"] = "success";
+           value["id"] = add_pipeline(static_cast<std::string>(req_body["name"]));
            return value;
          });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>")
