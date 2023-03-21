@@ -34,7 +34,7 @@ export default function App() {
   const [status, setStatus] = useState([]);
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(false);
-  const [selectedDrawerItem, setSelectedDrawerItem] = useState(null);
+  const [selectedDrawerItem, setSelectedDrawerItem] = useState('home');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,15 +66,36 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handlePipelinesClick = () => {
-    setTitle('Pipelines');
-    setContent(e(PipelineList));
-  };
+  const menuItems = [
+    { label: "Home", key: "home", icon: "home",
+      onClick: () => {
+        setTitle('Home');
+        setContent('Welcome Home!');
+        setSelectedDrawerItem("home"); }, },
+    { label: "Pipelines", key: "pipelines", icon: "lan",
+      onClick: () => {
+        setTitle('Pipelines');
+        setContent(e(PipelineList));
+        setSelectedDrawerItem("pipelines"); }, },
+    { label: "Program Collection", key: "program-collection", icon: "hive",
+      onClick: () => {
+        setTitle('Program Collection');
+        setContent('You have no program collection');
+        setSelectedDrawerItem("program-collection"); }, },
+  ];
 
-  const handleProgramCollectionClick = () => {
-    setTitle('Program Collection');
-    setContent('You have no program collection');
-  };
+  const menuItemsElements =
+        menuItems.map((item) =>
+                      e(ListItem, {
+                        button: true, selected: selectedDrawerItem === item.key,
+                        onClick: item.onClick,key: item.key,
+                      },
+                        e(ListItemIcon, null,
+                          e("i", { className: "material-icons" }, item.icon)
+                         ),
+                        e(ListItemText, { primary: item.label })
+                       )
+                     );
 
   return (
     e(StateContext.Provider,
@@ -103,32 +124,7 @@ export default function App() {
               e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' }}),
             ),
             e(Divider),
-            e(ListItem, {
-              button: true,
-              selected: selectedDrawerItem == "pipelines",
-              onClick: () => {
-                handlePipelinesClick();
-                setSelectedDrawerItem("pipelines");
-              },
-            },
-              e(ListItemIcon, null,
-                e("i", { className: "material-icons" }, "lan" )
-               ),
-              e(ListItemText, { primary: "Pipelines" })
-             ),
-            e(ListItem, {
-              button: true,
-              selected: selectedDrawerItem == "program-collection",
-              onClick: () => {
-                handleProgramCollectionClick();
-                setSelectedDrawerItem("program-collection");
-              },
-            },
-              e(ListItemIcon, null,
-                e("i", { className: "material-icons" }, "hive")
-               ),
-              e(ListItemText, { primary: "Program Collection" })
-             )
+            ...menuItemsElements
            )
          ),
         e("main", { className: classes.content },
