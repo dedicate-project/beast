@@ -1,7 +1,10 @@
 const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Snackbar, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button, Divider } = MaterialUI;
-const { useState, useEffect, createElement: e } = React;
+const { useContext, useState, useEffect, createElement: e } = React;
+import { StateContext } from './context.js';
 
 export function PipelineList() {
+  const { connected } = useContext(StateContext);
+
   const [pipelines, setPipelines] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [pipelineName, setPipelineName] = useState("");
@@ -136,7 +139,7 @@ export function PipelineList() {
       color: "primary",
       style: { position: "fixed", bottom: 20, right: 20 },
       onClick: handleOpenDialog,
-//      disabled: !connected,
+      disabled: !connected,
     }, e("i", { className: "material-icons", style: { pointerEvents: "none" } }, "add")),
     e(
       Dialog,
