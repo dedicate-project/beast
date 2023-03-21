@@ -2,6 +2,7 @@ const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContent
 const { render } = ReactDOM;
 const { useState, useEffect, createElement: e } = React;
 import { PipelineList } from './PipelineList.js';
+import { StateContext } from './context.js';
 
 const drawerWidth = 240;
 
@@ -34,8 +35,6 @@ export default function App() {
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(false);
   const [selectedDrawerItem, setSelectedDrawerItem] = useState(null);
-
-  const ConnectedContext = React.createContext();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,60 +77,63 @@ export default function App() {
   };
 
   return (
-    e("div", { className: classes.root },
-      e(AppBar, { position: "fixed", className: classes.appBar },
-        e(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
-          e(Typography, { variant: "h6" }, title),
-          e(Typography, { variant: "h8",
-                          className: classes.connectionStatus + " " +
-                          (connected ? classes.connected : classes.disconnected)},
-            connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected')
-         )
-       ),
-      e(Drawer, {
-        className: classes.drawer,
-        variant: "permanent",
-        classes: {
-          paper: classes.drawerPaper,
-        }
-      },
-        e(List, null,
-          e(
-            'div',
-            { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' } },
-            e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' }}),
-          ),
-          e(Divider),
-          e(ListItem, {
-            button: true,
-            selected: selectedDrawerItem == "pipelines",
-            onClick: () => {
-              handlePipelinesClick();
-              setSelectedDrawerItem("pipelines");
-            },
-          },
-            e(ListItemIcon, null,
-              e("i", { className: "material-icons" }, "lan" )
-             ),
-            e(ListItemText, { primary: "Pipelines" })
-           ),
-          e(ListItem, {
-            button: true,
-            selected: selectedDrawerItem == "program-collection",
-            onClick: () => {
-              handleProgramCollectionClick();
-              setSelectedDrawerItem("program-collection");
-            },
-          },
-            e(ListItemIcon, null,
-              e("i", { className: "material-icons" }, "hive")
-             ),
-            e(ListItemText, { primary: "Program Collection" })
+    e(StateContext.Provider,
+      { value: { connected, setConnected } },
+      e("div", { className: classes.root },
+        e(AppBar, { position: "fixed", className: classes.appBar },
+          e(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
+            e(Typography, { variant: "h6" }, title),
+            e(Typography, { variant: "h8",
+                            className: classes.connectionStatus + " " +
+                            (connected ? classes.connected : classes.disconnected)},
+              connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected')
            )
+         ),
+        e(Drawer, {
+          className: classes.drawer,
+          variant: "permanent",
+          classes: {
+            paper: classes.drawerPaper,
+          }
+        },
+          e(List, null,
+            e(
+              'div',
+              { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' } },
+              e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' }}),
+            ),
+            e(Divider),
+            e(ListItem, {
+              button: true,
+              selected: selectedDrawerItem == "pipelines",
+              onClick: () => {
+                handlePipelinesClick();
+                setSelectedDrawerItem("pipelines");
+              },
+            },
+              e(ListItemIcon, null,
+                e("i", { className: "material-icons" }, "lan" )
+               ),
+              e(ListItemText, { primary: "Pipelines" })
+             ),
+            e(ListItem, {
+              button: true,
+              selected: selectedDrawerItem == "program-collection",
+              onClick: () => {
+                handleProgramCollectionClick();
+                setSelectedDrawerItem("program-collection");
+              },
+            },
+              e(ListItemIcon, null,
+                e("i", { className: "material-icons" }, "hive")
+               ),
+              e(ListItemText, { primary: "Program Collection" })
+             )
+           )
+         ),
+        e("main", { className: classes.content },
+          e("p", null, content)
          )
-       ),
-      e("main", { className: classes.content },
-        e("p", null, content)
        )
      )
   );
