@@ -101,7 +101,7 @@ export function PipelineList() {
         null,
         e(
           Typography,
-          { variant: "body1", style: { marginBottom: 20 } },
+          { component: "div", variant: "body1", style: { marginBottom: 20 } },
           "Below is a list of available pipelines. Click on a pipeline to view its details, or use the Play/Stop buttons to control its execution."
         ),
         e(

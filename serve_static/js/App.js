@@ -121,14 +121,14 @@ export default function App() {
             e(
               'div',
               { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' } },
-              e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' }}),
+              e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' } }),
             ),
             e(Divider),
             ...menuItemsElements
            )
          ),
         e("main", { className: classes.content },
-          e("p", null, content)
+          e("div", null, content)
          )
        )
      )

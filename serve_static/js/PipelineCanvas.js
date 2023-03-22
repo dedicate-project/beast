@@ -15,9 +15,25 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const useResize = (callback) => {
+  const onResize = () => {
+    callback();
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+};
+
 export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight - 64 });
+
+  useResize(() => {
+    setDimensions({ width: window.innerWidth, height: window.innerHeight - 64 });
+  });
 
   const handleButtonClick = async (id, action) => {
     const response = await fetch(`/api/v1/pipelines/${id}/${action}`, {
