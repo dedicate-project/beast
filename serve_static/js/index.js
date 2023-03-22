@@ -1,6 +1,8 @@
-const { render } = ReactDOM;
-const { useState, useEffect, createElement: e } = React;
-
 import App from './App.js';
 
-render(e(App), document.getElementById("root"));
+const rootElement = document.getElementById('root');
+const appElement = React.createElement(App, null);
+
+ReactDOM.createRoot(rootElement).render(
+  React.createElement(React.StrictMode, null, appElement)
+);
