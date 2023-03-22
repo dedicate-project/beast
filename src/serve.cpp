@@ -96,6 +96,20 @@ int main(int argc, char** argv) {
            value["id"] = add_pipeline(static_cast<std::string>(req_body["name"]));
            return value;
          });
+    CROW_ROUTE(app, "/api/v1/pipelines/<int>")
+        ([&pipelines](const crow::request& /*req*/, int32_t id) {
+           crow::json::wvalue value;
+           value["id"] = id;
+           auto iter = std::find_if(pipelines.begin(), pipelines.end(),
+                                   [id](const auto& pipeline) { return pipeline.id == id; });
+           if (iter == pipelines.end()) {
+             value["status"] = "failed";
+             value["error"] = "invalid_id";
+           } else {
+             value["state"] = iter->pipeline.isRunning() ? std::string("running") : std::string("stopped");
+           }
+           return value;
+         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>")
         ([&pipelines](const crow::request& /*req*/, int32_t id, const std::string& path) {
            crow::json::wvalue value;
