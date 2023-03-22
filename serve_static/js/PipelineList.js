@@ -1,6 +1,7 @@
 const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Snackbar, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button, Divider } = MaterialUI;
 const { useContext, useState, useEffect, createElement: e } = React;
 import { StateContext } from './context.js';
+import { PipelineCanvas } from './PipelineCanvas.js';
 
 export function PipelineList() {
   const { connected } = useContext(StateContext);
@@ -19,6 +20,12 @@ export function PipelineList() {
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
+
+  function showPipelineDetails(pipeline) {
+    setSelectedPipeline(pipeline);
+  }
+
+  const [selectedPipeline, setSelectedPipeline] = useState(null);
 
   const handleSaveDialog = async () => {
     try {
@@ -78,10 +85,6 @@ export function PipelineList() {
     return () => clearInterval(interval);
   }, []);
 
-  function showPipelineDetails(id) {
-    alert(`Show details for pipeline ID: ${id}`);
-  }
-
   async function handleButtonClick(id, action) {
     const response = await fetch(`/api/v1/pipelines/${id}/${action}`, {
       method: "GET",
@@ -92,77 +95,85 @@ export function PipelineList() {
   return e(
     React.Fragment,
     null,
-    e(
-      Typography,
-      { variant: "body1", style: { marginBottom: 20 } },
-      "Below is a list of available pipelines. Click on a pipeline to view its details, or use the Play/Stop buttons to control its execution."
-    ),
-    e(
-      List,
-      null,
-      pipelines.map((pipeline) =>
-                    e(
-                      ListItem,
-                      {
-                        key: pipeline.id,
-                        button: true,
-                        onClick: () => showPipelineDetails(pipeline.id),
-                      },
-                      e(ListItemIcon, null, e("i", { className: "material-icons" }, "lan")),
-                      e(ListItemText, { primary: pipeline.name }),
-                      e(
-                        Button,
-                        {
-                          variant: "contained",
-                          style: {
-                            backgroundColor: pipeline.state === "running" ? "red" : "green",
-                            color: "white",
+    selectedPipeline === null
+      ? e(
+        React.Fragment,
+        null,
+        e(
+          Typography,
+          { variant: "body1", style: { marginBottom: 20 } },
+          "Below is a list of available pipelines. Click on a pipeline to view its details, or use the Play/Stop buttons to control its execution."
+        ),
+        e(
+          List,
+          null,
+          pipelines.map((pipeline) =>
+                        e(
+                          ListItem,
+                          {
+                            key: pipeline.id,
+                            button: true,
+                            onClick: () => showPipelineDetails(pipeline),
                           },
-                          color: pipeline.state === "running" ? "secondary" : "primary",
-                          onClick: (event) => {
-                            event.stopPropagation();
-                            handleButtonClick(pipeline.id, pipeline.state === "running" ? "stop" : "start");
-                          },
-                        },
-                        pipeline.state === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow")
-                      )
-                    )
-                   )
-    ),
-    pipelines.length === 0 &&
-      e(
-        Typography,
-        { variant: "body1", style: { marginBottom: 20 } },
-        "Click '+' to create a new pipeline."
-      ),
-    e(Fab, {
-      color: "primary",
-      style: { position: "fixed", bottom: 20, right: 20 },
-      onClick: handleOpenDialog,
-      disabled: !connected,
-    }, e("i", { className: "material-icons", style: { pointerEvents: "none" } }, "add")),
-    e(
-      Dialog,
-      {
-        open: openDialog,
-        onClose: handleCloseDialog,
-      },
-      e(DialogTitle, null, "Create a New Pipeline"),
-      e(DialogContent, null,
-        e(DialogContentText, null, "Enter the name of the new pipeline."),
-        e(TextField, {
-          autoFocus: true,
-          margin: "dense",
-          label: "Pipeline Name",
-          fullWidth: true,
-          onChange: (event) => setPipelineName(event.target.value),
-        })
-       ),
-      e(DialogActions, null,
-        e(Button, { onClick: handleCloseDialog, color: "primary" }, "Cancel"),
-        e(Button, { onClick: handleSaveDialog, color: "primary" }, "Save")
-       )
-    ),
+                          e(ListItemIcon, null, e("i", { className: "material-icons" }, "lan")),
+                          e(ListItemText, { primary: pipeline.name }),
+                          e(
+                            Button,
+                            {
+                              variant: "contained",
+                              style: {
+                                backgroundColor: pipeline.state === "running" ? "red" : "green",
+                                color: "white",
+                              },
+                              color: pipeline.state === "running" ? "secondary" : "primary",
+                              onClick: (event) => {
+                                event.stopPropagation();
+                                handleButtonClick(pipeline.id, pipeline.state === "running" ? "stop" : "start");
+                              },
+                            },
+                            pipeline.state === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow")
+                          )
+                        )
+                       )
+        ),
+        pipelines.length === 0 &&
+          e(
+            Typography,
+            { variant: "body1", style: { marginBottom: 20 } },
+            "Click '+' to create a new pipeline."
+          ),
+        e(Fab, {
+          color: "primary",
+          style: { position: "fixed", bottom: 20, right: 20 },
+          onClick: handleOpenDialog,
+          disabled: !connected,
+        }, e("i", { className: "material-icons", style: { pointerEvents: "none" } }, "add")),
+        e(
+          Dialog,
+          {
+            open: openDialog,
+            onClose: handleCloseDialog,
+          },
+          e(DialogTitle, null, "Create a New Pipeline"),
+          e(DialogContent, null,
+            e(DialogContentText, null, "Enter the name of the new pipeline."),
+            e(TextField, {
+              autoFocus: true,
+              margin: "dense",
+              label: "Pipeline Name",
+              fullWidth: true,
+              onChange: (event) => setPipelineName(event.target.value),
+            })
+           ),
+          e(DialogActions, null,
+            e(Button, { onClick: handleCloseDialog, color: "primary" }, "Cancel"),
+            e(Button, { onClick: handleSaveDialog, color: "primary", disabled: !pipelineName.trim() }, "Save") // Disable the Save button if pipelineName is empty or contains only spaces
+           )
+        ))
+      : e(PipelineCanvas, {
+        pipeline: selectedPipeline,
+        onBackButtonClick: () => setSelectedPipeline(null),
+      }),
     e(Snackbar, {
       open: snackbarOpen,
       autoHideDuration: 6000,
