@@ -27,38 +27,116 @@ const useResize = (callback) => {
   }, []);
 };
 
+function drawGrid(layer, width, height, gridSize) {
+  for (let i = 0; i < width; i += gridSize) {
+    const verticalLine = new Konva.Line({
+      points: [i, 0, i, height],
+      stroke: "lightgrey",
+      strokeWidth: 1,
+    });
+    layer.add(verticalLine);
+  }
+
+  for (let i = 0; i < height; i += gridSize) {
+    const horizontalLine = new Konva.Line({
+      points: [0, i, width, i],
+      stroke: "lightgrey",
+      strokeWidth: 1,
+    });
+    layer.add(horizontalLine);
+  }
+}
+
+function drawBorder(layer, width, height) {
+  const border = new Konva.Rect({
+    x: 0,
+    y: 0,
+    width: width,
+    height: height,
+    stroke: "black",
+    strokeWidth: 1,
+  });
+
+  layer.add(border);
+}
+
 export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
   const [stageInstance, setStageInstance] = useState(null);
 
-  const stageRef = React.useRef(null);
+  const stageRef = useRef(null);
+  const gridLayerRef = useRef(null);
+  const borderLayerRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const stage = new Konva.Stage({
-      container: stageRef.current, // Attach the stage to the div with ref 'stageRef'
+      container: stageRef.current,
       width: dimensions.width,
       height: dimensions.height,
     });
-    
-    setStageInstance(stage); // Store the stage instance in the state variable
+    setStageInstance(stage);
 
-    const layer = new Konva.Layer();
-    stage.add(layer);
+    gridLayerRef.current = new Konva.Layer();
+    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20); // Grid size = 20
+    stage.add(gridLayerRef.current);
+
+    const elementLayer = new Konva.Layer();
+    stage.add(elementLayer);
 
     const rect = new Konva.Rect({
       x: 20,
       y: 20,
       width: 100,
       height: 100,
-      fill: 'green',
+      fill: "green",
       draggable: true,
     });
-    layer.add(rect);
+    elementLayer.add(rect);
+    elementLayer.draw();
 
-    layer.draw();
+    borderLayerRef.current = new Konva.Layer({ listening: false });
+    drawBorder(borderLayerRef.current, dimensions.width, dimensions.height);
+    stage.add(borderLayerRef.current);
   }, []);
+
+  // Update the grid and border when dimensions change
+  const updateGridAndBorder = () => {
+    gridLayerRef.current.destroyChildren();
+    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20); // Set grid size (e.g., 20 pixels)
+    gridLayerRef.current.batchDraw();
+
+    borderLayerRef.current.destroyChildren();
+    drawBorder(borderLayerRef.current, dimensions.width, dimensions.height);
+    borderLayerRef.current.batchDraw();
+  };
+
+  useEffect(() => {
+    if (stageInstance) {
+      stageInstance.width(dimensions.width);
+      stageInstance.height(dimensions.height);
+      stageInstance.batchDraw();
+    }
+
+    // Set up a listener for dimension changes
+    const onDimensionsChange = () => {
+      stage.width(dimensions.width);
+      stage.height(dimensions.height);
+      updateGridAndBorder();
+    };
+
+    // Update the grid and border initially
+    updateGridAndBorder();
+
+    // Update the grid and border when dimensions change
+    const dimensionsObserver = new ResizeObserver(onDimensionsChange);
+    dimensionsObserver.observe(stageRef.current);
+
+    return () => {
+      dimensionsObserver.disconnect();
+    };
+  }, [dimensions]);
 
   useResize(() => {
     setDimensions({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
@@ -89,7 +167,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     const interval = setInterval(fetchPipelineState, 1000); // Fetch the pipeline state every 1000ms
     return () => clearInterval(interval); // Cleanup the interval on component unmount
   }, []);
-  
+
   useEffect(() => {
     if (stageInstance) {
       stageInstance.width(dimensions.width);
