@@ -27,19 +27,22 @@ const useResize = (callback) => {
   }, []);
 };
 
-function drawGrid(layer, width, height, gridSize) {
-  for (let i = 0; i < width; i += gridSize) {
+function drawGrid(layer, width, height, gridSize, gridSizeMultiplier) {
+  const extendedWidth = width * gridSizeMultiplier;
+  const extendedHeight = height * gridSizeMultiplier;
+
+  for (let i = 0; i < extendedWidth; i += gridSize) {
     const verticalLine = new Konva.Line({
-      points: [i, 0, i, height],
+      points: [i, 0, i, extendedHeight],
       stroke: "lightgrey",
       strokeWidth: 1,
     });
     layer.add(verticalLine);
   }
 
-  for (let i = 0; i < height; i += gridSize) {
+  for (let i = 0; i < extendedHeight; i += gridSize) {
     const horizontalLine = new Konva.Line({
-      points: [0, i, width, i],
+      points: [0, i, extendedWidth, i],
       stroke: "lightgrey",
       strokeWidth: 1,
     });
@@ -65,10 +68,15 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const [pipelineState, setPipelineState] = useState(pipeline.state);
   const [dimensions, setDimensions] = useState({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
   const [stageInstance, setStageInstance] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const [lastDragPoint, setLastDragPoint] = useState({ x: 0, y: 0 });
 
   const stageRef = useRef(null);
   const gridLayerRef = useRef(null);
   const borderLayerRef = useRef(null);
+  const elementLayerRef = useRef(null);
+  const draggingRef = useRef(false);
+  const lastDragPointRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const stage = new Konva.Stage({
@@ -78,12 +86,15 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     });
     setStageInstance(stage);
 
-    gridLayerRef.current = new Konva.Layer();
-    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20); // Grid size = 20
+    gridLayerRef.current = new Konva.Layer({
+      x: -dimensions.width, // Negative offset by half of the width
+      y: -dimensions.height, // Negative offset by half of the height
+    });
+    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20, 3); // Grid size = 20, gridSizeMultiplier = 3
     stage.add(gridLayerRef.current);
 
-    const elementLayer = new Konva.Layer();
-    stage.add(elementLayer);
+    elementLayerRef.current = new Konva.Layer();
+    stage.add(elementLayerRef.current);
 
     const rect = new Konva.Rect({
       x: 20,
@@ -93,18 +104,53 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       fill: "green",
       draggable: true,
     });
-    elementLayer.add(rect);
-    elementLayer.draw();
+    elementLayerRef.current.add(rect);
+    elementLayerRef.current.draw();
 
     borderLayerRef.current = new Konva.Layer({ listening: false });
     drawBorder(borderLayerRef.current, dimensions.width, dimensions.height);
     stage.add(borderLayerRef.current);
+
+    stage.on("mousedown", (e) => {
+      // Check if the middle mouse button is pressed
+      if (e.evt.button === 1) {
+        setDragging(true);
+        draggingRef.current = true;
+        lastDragPointRef.current = stage.getPointerPosition();
+      }
+    });
+
+    stage.on("mousemove", (e) => {
+      if (draggingRef.current) {
+        const pointerPosition = stage.getPointerPosition();
+        const dx = pointerPosition.x - lastDragPointRef.current.x;
+        const dy = pointerPosition.y - lastDragPointRef.current.y;
+
+        elementLayerRef.current.x(elementLayerRef.current.x() + dx);
+        elementLayerRef.current.y(elementLayerRef.current.y() + dy);
+        gridLayerRef.current.x(gridLayerRef.current.x() + dx);
+        gridLayerRef.current.y(gridLayerRef.current.y() + dy);
+
+        elementLayerRef.current.batchDraw();
+        gridLayerRef.current.batchDraw();
+
+        lastDragPointRef.current = pointerPosition;
+      }
+    });
+
+    stage.on("mouseup", () => {
+      draggingRef.current = false;
+    });
+
+    stage.on("mouseout", () => {
+      draggingRef.current = false;
+    });
   }, []);
 
   // Update the grid and border when dimensions change
   const updateGridAndBorder = () => {
     gridLayerRef.current.destroyChildren();
-    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20); // Set grid size (e.g., 20 pixels)
+    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20, 3); // Grid size = 20, gridSizeMultiplier = 3
     gridLayerRef.current.batchDraw();
 
     borderLayerRef.current.destroyChildren();
@@ -177,6 +223,17 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     }
   }, [dimensions, stageInstance]);
 
+  const resetGridPosition = () => {
+    if (gridLayerRef.current) {
+      gridLayerRef.current.x(-dimensions.width); // Reset X position
+      gridLayerRef.current.y(-dimensions.height); // Reset Y position
+      gridLayerRef.current.batchDraw();
+    }
+
+    elementLayerRef.current.x(0);
+    elementLayerRef.current.y(0);
+  };
+
   return e(
     React.Fragment,
     null,
@@ -205,12 +262,17 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         null,
         e(Button, {
           variant: "contained",
+          color: "default",
+          onClick: resetGridPosition,
+        }, e("i", { className: "material-icons" }, "home")),
+        e(Button, {
+          variant: "contained",
           style: {
             backgroundColor: pipelineState === "running" ? "red" : "green",
             color: "white",
           },
           onClick: () => handleButtonClick(pipeline.id, pipelineState === "running" ? "stop" : "start"),
-        }, pipelineState === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow"))
+        }, pipelineState === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow")),
       )
     ),
     e(
