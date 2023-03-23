@@ -1,5 +1,6 @@
 const { useState, createElement: e, useEffect, useRef, useLayoutEffect } = React;
 const { Typography, Box, Button, TextField, Toolbar, IconButton, makeStyles } = MaterialUI;
+const { Stage, Layer, Rect } = Konva;
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -29,10 +30,38 @@ const useResize = (callback) => {
 export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
-  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight - 64 });
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
+  const [stageInstance, setStageInstance] = useState(null);
+
+  const stageRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const stage = new Konva.Stage({
+      container: stageRef.current, // Attach the stage to the div with ref 'stageRef'
+      width: dimensions.width,
+      height: dimensions.height,
+    });
+    
+    setStageInstance(stage); // Store the stage instance in the state variable
+
+    const layer = new Konva.Layer();
+    stage.add(layer);
+
+    const rect = new Konva.Rect({
+      x: 20,
+      y: 20,
+      width: 100,
+      height: 100,
+      fill: 'green',
+      draggable: true,
+    });
+    layer.add(rect);
+
+    layer.draw();
+  }, []);
 
   useResize(() => {
-    setDimensions({ width: window.innerWidth, height: window.innerHeight - 64 });
+    setDimensions({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
   });
 
   const handleButtonClick = async (id, action) => {
@@ -60,6 +89,14 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     const interval = setInterval(fetchPipelineState, 1000); // Fetch the pipeline state every 1000ms
     return () => clearInterval(interval); // Cleanup the interval on component unmount
   }, []);
+  
+  useEffect(() => {
+    if (stageInstance) {
+      stageInstance.width(dimensions.width);
+      stageInstance.height(dimensions.height);
+      stageInstance.batchDraw();
+    }
+  }, [dimensions, stageInstance]);
 
   return e(
     React.Fragment,
@@ -99,8 +136,8 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     ),
     e(
       "div",
-      { style: { width: "100%", height: "calc(100% - 64px)", position: "relative" } },
-      "Add a canvas here."
+      { style: { width: "100%", height: "calc(100% - 64px)", position: "relative" },
+        ref: stageRef },
     )
   );
 }
