@@ -2,6 +2,8 @@ const { useState, createElement: e, useEffect, useRef, useLayoutEffect } = React
 const { Typography, Box, Button, TextField, Toolbar, IconButton, makeStyles } = MaterialUI;
 const { Stage, Layer, Rect } = Konva;
 
+import { ContextMenu } from './ContextMenu.js';
+
 const useStyles = makeStyles((theme) => ({
   toolbar: {
     display: "flex",
@@ -16,11 +18,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const useResize = (callback) => {
-  const onResize = () => {
+const onResize = () => {
     callback();
-  };
+};
 
+const useResize = (callback) => {
   useEffect(() => {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -71,6 +73,9 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const [dragging, setDragging] = useState(false);
   const [lastDragPoint, setLastDragPoint] = useState({ x: 0, y: 0 });
 
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+
   const stageRef = useRef(null);
   const gridLayerRef = useRef(null);
   const borderLayerRef = useRef(null);
@@ -117,6 +122,11 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         setDragging(true);
         draggingRef.current = true;
         lastDragPointRef.current = stage.getPointerPosition();
+      } else if (e.evt.button === 2) {
+        e.evt.preventDefault();
+        const position = stage.getPointerPosition();
+        setContextMenuPosition({ x: position.x, y: position.y });
+        setShowContextMenu(true);
       }
     });
 
@@ -279,6 +289,12 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       "div",
       { style: { width: "100%", height: "calc(100% - 64px)", position: "relative" },
         ref: stageRef },
-    )
+      e(ContextMenu, {
+        show: showContextMenu,
+        position: contextMenuPosition,
+        onClose: () => setShowContextMenu(false),
+        menuItems: ["Item 1", "Item 2", "Item 3"],
+      })
+    ),
   );
 }
