@@ -121,8 +121,9 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
 
     // Set up a listener for dimension changes
     const onDimensionsChange = () => {
-      stage.width(dimensions.width);
-      stage.height(dimensions.height);
+      if (!stageInstance) return;
+      stageInstance.width(dimensions.width);
+      stageInstance.height(dimensions.height);
       updateGridAndBorder();
     };
 
