@@ -7,6 +7,7 @@
 // Internal
 #include <beast/cpu_virtual_machine.hpp>
 #include <beast/evaluator.hpp>
+#include <beast/filesystem_helper.hpp>
 #include <beast/opcodes.hpp>
 #include <beast/pipe.hpp>
 #include <beast/pipeline.hpp>
