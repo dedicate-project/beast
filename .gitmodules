@@ -20,3 +20,7 @@
 	path = 3rdparty/asio
 	url = https://github.com/chriskohlhoff/asio.git
 	branch = asio-1-12-2
+[submodule "3rdparty/json"]
+	path = 3rdparty/json
+	url = https://github.com/nlohmann/json.git
+	branch = v3.11.2
