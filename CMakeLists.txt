@@ -111,7 +111,8 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/3rdparty/galib
   ${CMAKE_SOURCE_DIR}/3rdparty/Crow/include
   ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/asio/asio/include)
+  ${CMAKE_SOURCE_DIR}/3rdparty/asio/asio/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/json/include)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
