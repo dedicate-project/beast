@@ -4,9 +4,6 @@
 #include <filesystem>
 #include <fstream>
 
-// nlohmann
-#include <nlohmann/json.hpp>
-
 // BEAST
 #include <beast/beast.hpp>
 
@@ -19,6 +16,7 @@ TEST_CASE("FilesystemHelper") {
   SECTION("Save and load a model") {
     const std::string model_id = "test_model";
     nlohmann::json model = {{"test_key", "test_value"}};
+    nlohmann::json wrapped_model = {{"name", model_id}, {"model", model}};
 
     const std::string filename = fs_helper.saveModel(model_id, model);
 
@@ -27,7 +25,7 @@ TEST_CASE("FilesystemHelper") {
     const std::vector<nlohmann::json> loaded_models = fs_helper.loadModels();
     REQUIRE(loaded_models.size() == 1);
     REQUIRE(loaded_models[0]["filename"] == filename);
-    REQUIRE(loaded_models[0]["content"] == model);
+    REQUIRE(loaded_models[0]["content"] == wrapped_model);
   }
 
   SECTION("Save and delete a model") {
@@ -51,6 +49,9 @@ TEST_CASE("FilesystemHelper") {
     const std::string model_id2 = "test_model2";
     nlohmann::json model2 = {{"test_key", "test_value2"}};
     const std::string filename2 = fs_helper.saveModel(model_id2, model2);
+    
+    nlohmann::json wrapped_model1 = {{"name", model_id1}, {"model", model1}};
+    nlohmann::json wrapped_model2 = {{"name", model_id2}, {"model", model2}};
 
     const std::vector<nlohmann::json> loaded_models = fs_helper.loadModels();
     REQUIRE(loaded_models.size() == 2);
@@ -59,10 +60,10 @@ TEST_CASE("FilesystemHelper") {
     bool found_model2 = false;
 
     for (const auto& loaded_model : loaded_models) {
-      if (loaded_model["filename"] == filename1 && loaded_model["content"] == model1) {
+      if (loaded_model["filename"] == filename1 && loaded_model["content"] == wrapped_model1) {
         found_model1 = true;
       }
-      if (loaded_model["filename"] == filename2 && loaded_model["content"] == model2) {
+      if (loaded_model["filename"] == filename2 && loaded_model["content"] == wrapped_model2) {
         found_model2 = true;
       }
     }
