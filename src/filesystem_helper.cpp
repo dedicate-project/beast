@@ -16,7 +16,8 @@ FilesystemHelper::FilesystemHelper(const std::string& model_path) {
   }
 }
 
-std::string FilesystemHelper::saveModel(const std::string& model_identifier, const nlohmann::json& model) {
+std::string FilesystemHelper::saveModel(
+    const std::string& model_identifier, const nlohmann::json& model) {
   std::string filename = cleanFilename(model_identifier) + ".json";
   std::string filepath = (m_model_path / filename).string();
 
@@ -25,7 +26,11 @@ std::string FilesystemHelper::saveModel(const std::string& model_identifier, con
     throw std::runtime_error("Could not open file for writing.");
   }
 
-  file << model.dump(4);
+  nlohmann::json wrapper;
+  wrapper["name"] = model_identifier;
+  wrapper["model"] = model;
+
+  file << wrapper.dump(4);
   file.close();
 
   return filename;
