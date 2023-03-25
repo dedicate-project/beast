@@ -11,6 +11,7 @@
 #include <beast/opcodes.hpp>
 #include <beast/pipe.hpp>
 #include <beast/pipeline.hpp>
+#include <beast/pipeline_manager.hpp>
 #include <beast/program.hpp>
 #include <beast/random_program_factory.hpp>
 #include <beast/time_functions.hpp>

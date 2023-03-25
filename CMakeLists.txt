@@ -78,6 +78,7 @@ add_library(${PROJECT_NAME}
   src/filesystem_helper.cpp
   src/pipe.cpp
   src/pipeline.cpp
+  src/pipeline_manager.cpp
   src/program.cpp
   src/random_program_factory.cpp
   src/time_functions.cpp
