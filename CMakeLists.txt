@@ -75,6 +75,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 add_library(${PROJECT_NAME}
   src/beast.cpp
   src/cpu_virtual_machine.cpp
+  src/filesystem_helper.cpp
   src/pipe.cpp
   src/pipeline.cpp
   src/program.cpp
@@ -181,6 +182,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(bit_manipulation)
   declare_test(cpu_vm)
   declare_test(evaluators)
+  declare_test(filesystem_helper)
   declare_test(io)
   declare_test(jumps)
   declare_test(math)
