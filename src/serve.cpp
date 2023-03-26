@@ -92,7 +92,8 @@ int main(int argc, char** argv) {
            return value;
          });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>")
-        ([&pipeline_manager](const crow::request& /*req*/, int32_t id, const std::string& path) {
+    .methods("POST"_method, "GET"_method)
+        ([&pipeline_manager](const crow::request& req, int32_t id, const std::string& path) {
            crow::json::wvalue value;
            value["id"] = id;
            try {
@@ -125,6 +126,32 @@ int main(int argc, char** argv) {
                  value["status"] = "failed";
                  value["error"] = "not_running";
                }
+             } else if (path == "update") {
+               if (req.get_header_value("Content-Type") == "application/json") {
+                 // Parse the JSON data in the request body
+                 try {
+                   const auto req_body = crow::json::load(req.body);
+                   const std::string action = static_cast<std::string>(req_body["action"]);
+
+                   if (action == "change_name") {
+                     const std::string new_name = static_cast<std::string>(req_body["name"]);
+                     pipeline_manager.updatePipelineName(pipeline.id, new_name);
+                   } else {
+                     value["status"] = "failed";
+                     value["action"] = action;
+                     value["error"] = "invalid_action";
+                   }
+                 } catch(...) {
+                   value["status"] = "failed";
+                   value["error"] = "invalid_request";
+                 }
+               } else {
+                 value["status"] = "failed";
+                 value["error"] = "invalid_request";
+               }
+             } else if (path == "delete") {
+               pipeline.pipeline.stop();
+               pipeline_manager.deletePipeline(pipeline.id);
              } else {
                value["status"] = "failed";
                value["error"] = "invalid_command";
