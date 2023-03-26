@@ -2,6 +2,7 @@ const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContent
 const { useContext, useState, useEffect, createElement: e } = React;
 import { StateContext } from './context.js';
 import { PipelineCanvas } from './PipelineCanvas.js';
+import { ConfirmationDialog } from './ConfirmationDialog.js';
 
 export function PipelineList() {
   const { connected } = useContext(StateContext);
@@ -15,6 +16,8 @@ export function PipelineList() {
   const [hoveredPipelineId, setHoveredPipelineId] = useState(null);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [renamingPipeline, setRenamingPipeline] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingPipeline, setDeletingPipeline] = useState(null);
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -22,6 +25,11 @@ export function PipelineList() {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+  };
+  
+  const handleDeleteButtonClick = (pipeline) => {
+    setDeletingPipeline(pipeline);
+    setDeleteDialogOpen(true);
   };
 
   function showPipelineDetails(pipeline) {
@@ -33,6 +41,18 @@ export function PipelineList() {
     setRenamingPipeline(pipeline);
     setRenameDialogOpen(true);
   };
+  
+  const handleDeletePipeline = async () => {
+    try {
+      const response = await fetch(`/api/v1/pipelines/${deletingPipeline.id}/delete`, {
+        method: "GET",
+      });
+      // Handle response if necessary
+    } catch (error) {
+      // Handle error if necessary
+    }
+    setDeleteDialogOpen(false);
+  };
 
   const handleCloseRenameDialog = () => {
     setRenameDialogOpen(false);
@@ -40,7 +60,7 @@ export function PipelineList() {
 
   const handleSaveRenameDialog = async () => {
     try {
-      const response = await fetch(`/api/v1/pipeline/${renamingPipeline.id}/update`, {
+      const response = await fetch(`/api/v1/pipelines/${renamingPipeline.id}/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -186,7 +206,24 @@ export function PipelineList() {
                               },
                             },
                             pipeline.state === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow")
-                          )
+                          ),
+                          e(
+            Button,
+            {
+              variant: "contained",
+              style: {
+                backgroundColor: "red",
+                color: "white",
+                marginLeft: 4,
+              },
+              color: "secondary",
+              onClick: (event) => {
+                event.stopPropagation();
+                handleDeleteButtonClick(pipeline);
+              },
+            },
+            e("i", { className: "material-icons" }, "delete")
+          ),
                         )
                        )
         ),
@@ -251,7 +288,14 @@ export function PipelineList() {
               disabled: !pipelineName.trim() || pipelineName === renamingPipeline?.name,
             }, "Save")
            )
-        ),)
+        ),
+        e(ConfirmationDialog, {
+      open: deleteDialogOpen,
+      onClose: () => setDeleteDialogOpen(false),
+      onConfirm: handleDeletePipeline,
+      title: "Delete Pipeline",
+      content: "Are you sure you want to delete this pipeline?",
+    }),)
       : e(PipelineCanvas, {
         pipeline: selectedPipeline,
         onBackButtonClick: () => setSelectedPipeline(null),

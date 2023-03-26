@@ -255,7 +255,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
 
   const handleSaveRenameDialog = async () => {
     try {
-      const response = await fetch(`/api/v1/pipeline/${pipeline.id}/update`, {
+      const response = await fetch(`/api/v1/pipelines/${pipeline.id}/update`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +268,6 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     }
     setRenameDialogOpen(false);
   };
-
 
   return e(
     React.Fragment,

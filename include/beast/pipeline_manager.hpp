@@ -4,6 +4,7 @@
 // Standard
 #include <string>
 #include <list>
+#include <mutex>
 
 // Internal
 #include <beast/filesystem_helper.hpp>
@@ -55,6 +56,18 @@ class PipelineManager {
    */
   const std::list<PipelineDescriptor>& getPipelines() const;
 
+  /**
+   * @brief Updates the name of the given pipeline.
+   * @throws std::invalid_argument if the pipeline with the given ID is not found.
+   */
+  void updatePipelineName(uint32_t id, const std::string& new_name);
+
+  /**
+   * @brief Deletes the given pipeline.
+   * @throws std::invalid_argument if the pipeline with the given ID is not found.
+   */
+  void deletePipeline(uint32_t id);
+
  private:
   static Pipeline constructPipelineFromJson(const nlohmann::json& json);
 
@@ -63,6 +76,8 @@ class PipelineManager {
   FilesystemHelper filesystem_; //!< Filesystem helper for managing model storage.
 
   std::list<PipelineDescriptor> pipelines_; //!< Collection of pipelines.
+
+  std::mutex pipelines_mutex_;
 };
 
 }  // namespace beast
