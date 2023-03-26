@@ -12,6 +12,9 @@ export function PipelineList() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [hoveredPipelineId, setHoveredPipelineId] = useState(null);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renamingPipeline, setRenamingPipeline] = useState(null);
 
   const handleOpenDialog = () => {
     setOpenDialog(true);
@@ -24,6 +27,32 @@ export function PipelineList() {
   function showPipelineDetails(pipeline) {
     setSelectedPipeline(pipeline);
   }
+
+  const handleOpenRenameDialog = (pipeline) => {
+    setPipelineName(pipeline.name);
+    setRenamingPipeline(pipeline);
+    setRenameDialogOpen(true);
+  };
+
+  const handleCloseRenameDialog = () => {
+    setRenameDialogOpen(false);
+  };
+
+  const handleSaveRenameDialog = async () => {
+    try {
+      const response = await fetch(`/api/v1/pipeline/${renamingPipeline.id}/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "change_name", name: pipelineName }),
+      });
+      // Handle response if necessary
+    } catch (error) {
+      // Handle error if necessary
+    }
+    setRenameDialogOpen(false);
+  };
 
   const [selectedPipeline, setSelectedPipeline] = useState(null);
 
@@ -114,9 +143,34 @@ export function PipelineList() {
                             key: pipeline.id,
                             button: true,
                             onClick: () => showPipelineDetails(pipeline),
+                            onMouseEnter: () => setHoveredPipelineId(pipeline.id),
+                            onMouseLeave: () => setHoveredPipelineId(null),
                           },
                           e(ListItemIcon, null, e("i", { className: "material-icons" }, "lan")),
-                          e(ListItemText, { primary: pipeline.name }),
+                          e(
+                            ListItemText,
+                            {
+                              primary: e(
+                                React.Fragment,
+                                null,
+                                pipeline.name,
+                                hoveredPipelineId === pipeline.id &&
+                                  e(
+                                    IconButton,
+                                    {
+                                      edge: "end",
+                                      color: "inherit",
+                                      onClick: (event) => {
+                                        event.stopPropagation();
+                                        handleOpenRenameDialog(pipeline);
+                                      },
+                                      style: { padding: 3, marginLeft: 4 },
+                                    },
+                                    e("i", { className: "material-icons", style: { fontSize: 18 } }, "create")
+                                  )
+                              ),
+                            }
+                          ),
                           e(
                             Button,
                             {
@@ -136,6 +190,7 @@ export function PipelineList() {
                         )
                        )
         ),
+
         pipelines.length === 0 &&
           e(
             Typography,
@@ -169,7 +224,34 @@ export function PipelineList() {
             e(Button, { onClick: handleCloseDialog, color: "primary" }, "Cancel"),
             e(Button, { onClick: handleSaveDialog, color: "primary", disabled: !pipelineName.trim() }, "Save") // Disable the Save button if pipelineName is empty or contains only spaces
            )
-        ))
+        ),
+        e(
+          Dialog,
+          {
+            open: renameDialogOpen,
+            onClose: handleCloseRenameDialog,
+          },
+          e(DialogTitle, null, "Rename Pipeline"),
+          e(DialogContent, null,
+            e(DialogContentText, null, "Enter the new name for the pipeline."),
+            e(TextField, {
+              autoFocus: true,
+              margin: "dense",
+              label: "Pipeline Name",
+              fullWidth: true,
+              value: pipelineName,
+              onChange: (event) => setPipelineName(event.target.value),
+            })
+           ),
+          e(DialogActions, null,
+            e(Button, { onClick: handleCloseRenameDialog, color: "primary" }, "Cancel"),
+            e(Button, {
+              onClick: handleSaveRenameDialog,
+              color: "primary",
+              disabled: !pipelineName.trim() || pipelineName === renamingPipeline?.name,
+            }, "Save")
+           )
+        ),)
       : e(PipelineCanvas, {
         pipeline: selectedPipeline,
         onBackButtonClick: () => setSelectedPipeline(null),
