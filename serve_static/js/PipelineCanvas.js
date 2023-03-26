@@ -1,5 +1,5 @@
 const { useState, createElement: e, useEffect, useRef, useLayoutEffect } = React;
-const { Typography, Box, Button, TextField, Toolbar, IconButton, makeStyles } = MaterialUI;
+const { Typography, Box, Button, TextField, Toolbar, IconButton, makeStyles, Dialog, DialogTitle, DialogContent, DialogActions } = MaterialUI;
 const { Stage, Layer, Rect } = Konva;
 
 import { ContextMenu } from './ContextMenu.js';
@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const onResize = () => {
-    callback();
+  callback();
 };
 
 const useResize = (callback) => {
@@ -75,6 +75,10 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
 
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [newPipelineName, setNewPipelineName] = useState(pipeline.name);
+  const [showEditButton, setShowEditButton] = useState(false);
 
   const stageRef = useRef(null);
   const gridLayerRef = useRef(null);
@@ -244,6 +248,28 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     elementLayerRef.current.y(0);
   };
 
+  const handleOpenRenameDialog = () => {
+    setNewPipelineName(pipeline.name);
+    setRenameDialogOpen(true);
+  };
+
+  const handleSaveRenameDialog = async () => {
+    try {
+      const response = await fetch(`/api/v1/pipeline/${pipeline.id}/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "change_name", name: newPipelineName.trim() }),
+      });
+      // Handle response if necessary
+    } catch (error) {
+      // Handle error if necessary
+    }
+    setRenameDialogOpen(false);
+  };
+
+
   return e(
     React.Fragment,
     null,
@@ -260,12 +286,29 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         e("i", { className: "material-icons" }, "arrow_back")
       ),
       e(
-        Typography,
+        Box,
         {
           className: classes.pipelineName,
           style: { flexGrow: 1 },
+          onMouseEnter: () => setShowEditButton(true),
+          onMouseLeave: () => setShowEditButton(false),
         },
-        pipeline.name
+        e(
+          Typography,
+          { display: "inline" },
+          pipeline.name
+        ),
+        showEditButton &&
+          e(
+            IconButton,
+            {
+              edge: "end",
+              color: "inherit",
+              onClick: handleOpenRenameDialog,
+              style: { padding: 3, marginLeft: 4 },
+            },
+            e("i", { className: "material-icons", style: { fontSize: 18 } }, "create")
+          )
       ),
       e(
         "div",
@@ -295,6 +338,40 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         onClose: () => setShowContextMenu(false),
         menuItems: ["Item 1", "Item 2", "Item 3"],
       })
+    ),
+    e(
+      Dialog,
+      { open: renameDialogOpen, onClose: () => setRenameDialogOpen(false) },
+      e(DialogTitle, null, "Edit Pipeline Title"),
+      e(
+        DialogContent,
+        null,
+        e(TextField, {
+          autoFocus: true,
+          margin: "dense",
+          label: "Pipeline Title",
+          value: newPipelineName,
+          onChange: (event) => setNewPipelineName(event.target.value),
+          fullWidth: true,
+        })
+      ),
+      e(
+        DialogActions,
+        null,
+        e(
+          Button,
+          { onClick: () => setRenameDialogOpen(false) },
+          "Cancel"
+        ),
+        e(
+          Button,
+          {
+            onClick: handleSaveRenameDialog,
+            disabled: !newPipelineName.trim() || newPipelineName.trim() === pipeline.name,
+          },
+          "Save"
+        )
+      )
     ),
   );
 }
