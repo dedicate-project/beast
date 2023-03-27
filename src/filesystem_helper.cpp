@@ -9,15 +9,14 @@ namespace beast {
 FilesystemHelper::FilesystemHelper(const std::string& model_path) {
   m_model_path = std::filesystem::absolute(model_path);
 
-  if (!std::filesystem::is_directory(m_model_path)) {
-    if (!std::filesystem::create_directory(m_model_path)) {
-      throw std::runtime_error("Could not create model directory.");
-    }
+  if (!std::filesystem::is_directory(m_model_path) &&
+      !std::filesystem::create_directory(m_model_path)) {
+    throw std::runtime_error("Could not create model directory.");
   }
 }
 
 std::string FilesystemHelper::saveModel(
-    const std::string& model_identifier, const nlohmann::json& model) {
+    const std::string& model_identifier, const nlohmann::json& model) const {
   std::string filename = cleanFilename(model_identifier) + ".json";
   std::string filepath = (m_model_path / filename).string();
 
@@ -90,7 +89,7 @@ std::vector<nlohmann::json> FilesystemHelper::loadModels() const {
   return models;
 }
 
-void FilesystemHelper::deleteModel(const std::string& filename) {
+void FilesystemHelper::deleteModel(const std::string& filename) const {
   std::filesystem::path filepath = m_model_path / filename;
   if (!std::filesystem::exists(filepath)) {
     throw std::runtime_error("Could not delete model - file does not exist.");
