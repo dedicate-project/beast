@@ -48,7 +48,7 @@ class PipelineManager {
    * @return A reference to the pipeline descriptor with the given ID.
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
-  PipelineDescriptor& getPipelineById(uint32_t id);
+  PipelineDescriptor& getPipelineById(uint32_t pipeline_id);
 
   /**
    * @brief Gets a const reference to the list of pipeline descriptors.
@@ -60,13 +60,13 @@ class PipelineManager {
    * @brief Updates the name of the given pipeline.
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
-  void updatePipelineName(uint32_t id, const std::string& new_name);
+  void updatePipelineName(uint32_t pipeline_id, const std::string& new_name);
 
   /**
    * @brief Deletes the given pipeline.
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
-  void deletePipeline(uint32_t id);
+  void deletePipeline(uint32_t pipeline_id);
 
  private:
   static Pipeline constructPipelineFromJson(const nlohmann::json& json);
