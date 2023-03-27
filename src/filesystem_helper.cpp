@@ -39,9 +39,11 @@ std::string FilesystemHelper::saveModel(
 std::string FilesystemHelper::cleanFilename(const std::string& filename) {
   std::string result;
   bool last_char_was_underscore = false;
-  for (char c : filename) {
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
-      result += c;
+  for (char current : filename) {
+    if ((current >= 'a' && current <= 'z') ||
+        (current >= 'A' && current <= 'Z') ||
+        (current >= '0' && current <= '9')) {
+      result += current;
       last_char_was_underscore = false;
     } else if (!last_char_was_underscore && !result.empty()) {
       result += "_";
