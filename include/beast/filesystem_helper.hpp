@@ -30,7 +30,7 @@ class FilesystemHelper {
    * @param model The model to save.
    * @return The filename used to save the model.
    */
-  std::string saveModel(const std::string& model_identifier, const nlohmann::json& model);
+  std::string saveModel(const std::string& model_identifier, const nlohmann::json& model) const;
 
   /**
    * @brief Loads all JSON files from the model path and returns their contents.
@@ -45,7 +45,7 @@ class FilesystemHelper {
    * @param filename The filename of the model to delete.
    * @throws std::runtime_error If the specified file does not exist.
    */
-  void deleteModel(const std::string& filename);
+  void deleteModel(const std::string& filename) const;
 
   /**
    * @brief Checks if a model file exists with the specified filename.
