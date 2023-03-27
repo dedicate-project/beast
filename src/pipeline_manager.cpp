@@ -26,34 +26,34 @@ uint32_t PipelineManager::createPipeline(const std::string& name) {
   return new_id;
 }
 
-PipelineManager::PipelineDescriptor& PipelineManager::getPipelineById(uint32_t id) {
+PipelineManager::PipelineDescriptor& PipelineManager::getPipelineById(uint32_t pipeline_id) {
   for (PipelineDescriptor& descriptor : pipelines_) {
-    if (descriptor.id == id) {
+    if (descriptor.id == pipeline_id) {
       return descriptor;
     }
   }
-  throw std::invalid_argument("Pipeline with this ID not found: " + std::to_string(id));
+  throw std::invalid_argument("Pipeline with this ID not found: " + std::to_string(pipeline_id));
 }
 
 const std::list<PipelineManager::PipelineDescriptor>& PipelineManager::getPipelines() const {
   return pipelines_;
 }
 
-void PipelineManager::updatePipelineName(uint32_t id, const std::string& new_name) {
+void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string& new_name) {
   std::lock_guard<std::mutex> lock(pipelines_mutex_);
-  PipelineDescriptor& descriptor = getPipelineById(id);
+  PipelineDescriptor& descriptor = getPipelineById(pipeline_id);
   descriptor.name = new_name;
 }
 
-void PipelineManager::deletePipeline(uint32_t id) {
+void PipelineManager::deletePipeline(uint32_t pipeline_id) {
   std::lock_guard<std::mutex> lock(pipelines_mutex_);
-  pipelines_.remove_if([id](auto pipeline) { return pipeline.id == id; });
+  pipelines_.remove_if([pipeline_id](auto pipeline) { return pipeline.id == pipeline_id; });
 }
 
 Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& /*json*/) {
   // TODO(fairlight1337): Actually construct the pipeline from the data in the json object. For now,
   // only an empty pipeline object is returned until the pipeline description in json is defined.
-  return Pipeline();
+  return {};
 }
 
 uint32_t PipelineManager::getFreeId() const {
