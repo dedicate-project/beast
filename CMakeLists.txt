@@ -12,6 +12,10 @@ option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
+# Add utilities used for evaluations. This needs to be placed before the clang-tidy configuration to
+# not impose clang rules into 3rdparty components.
+add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/maze)
+
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-warnings-as-errors=*;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-altera-id-dependent-backward-branch,-readability-function-cognitive-complexity,-altera-unroll-loops,-bugprone-easily-swappable-parameters,-misc-no-recursion,-altera-struct-pack-align")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -86,6 +90,7 @@ add_library(${PROJECT_NAME}
   src/vm_session.cpp
   src/virtual_machine.cpp
   src/evaluators/aggregation_evaluator.cpp
+  src/evaluators/maze_evaluator.cpp
   src/evaluators/random_serial_data_passthrough_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
   src/evaluators/operator_usage_evaluator.cpp
@@ -113,7 +118,8 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/3rdparty/Crow/include
   ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include
   ${CMAKE_SOURCE_DIR}/3rdparty/asio/asio/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/json/include)
+  ${CMAKE_SOURCE_DIR}/3rdparty/json/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/maze/include)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 

@@ -24,3 +24,6 @@
 	path = 3rdparty/json
 	url = https://github.com/nlohmann/json.git
 	branch = v3.11.2
+[submodule "3rdparty/maze"]
+	path = 3rdparty/maze
+	url = https://github.com/dedicate-project/maze
