@@ -47,6 +47,8 @@ void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string
 
 void PipelineManager::deletePipeline(uint32_t pipeline_id) {
   std::scoped_lock lock{pipelines_mutex_};
+  PipelineDescriptor descriptor = getPipelineById(pipeline_id);
+  filesystem_.deleteModel(descriptor.filename);
   pipelines_.remove_if([pipeline_id](auto pipeline) { return pipeline.id == pipeline_id; });
 }
 
