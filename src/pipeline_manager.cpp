@@ -4,7 +4,7 @@ namespace beast {
 
 PipelineManager::PipelineManager(const std::string& storage_path)
   : filesystem_(storage_path) {
-  std::lock_guard<std::mutex> lock(pipelines_mutex_);
+  std::scoped_lock lock{pipelines_mutex_};
   for (const auto& model : filesystem_.loadModels()) {
     PipelineDescriptor descriptor;
     descriptor.id = getFreeId();
@@ -16,7 +16,7 @@ PipelineManager::PipelineManager(const std::string& storage_path)
 }
 
 uint32_t PipelineManager::createPipeline(const std::string& name) {
-  std::lock_guard<std::mutex> lock(pipelines_mutex_);
+  std::scoped_lock lock{pipelines_mutex_};
   nlohmann::json model;
   // TODO(fairlight1337): Add more data to the model.
   const std::string filename = filesystem_.saveModel(name, model);
@@ -39,14 +39,14 @@ const std::list<PipelineManager::PipelineDescriptor>& PipelineManager::getPipeli
   return pipelines_;
 }
 
-void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string& new_name) {
-  std::lock_guard<std::mutex> lock(pipelines_mutex_);
+void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string_view new_name) {
+  std::scoped_lock lock{pipelines_mutex_};
   PipelineDescriptor& descriptor = getPipelineById(pipeline_id);
   descriptor.name = new_name;
 }
 
 void PipelineManager::deletePipeline(uint32_t pipeline_id) {
-  std::lock_guard<std::mutex> lock(pipelines_mutex_);
+  std::scoped_lock lock{pipelines_mutex_};
   pipelines_.remove_if([pipeline_id](auto pipeline) { return pipeline.id == pipeline_id; });
 }
 

@@ -54,7 +54,7 @@ const std::list<Pipeline::Connection>& Pipeline::getConnections() const {
 void Pipeline::start() {
   // TODO(fairlight1337): Implement actual pipeline start, with worker threads setup.
   if (is_running_) {
-    throw std::logic_error("Pipeline is already running, cannot start it.");
+    throw std::invalid_argument("Pipeline is already running, cannot start it.");
   }
   is_running_ = true;
 }
@@ -62,7 +62,7 @@ void Pipeline::start() {
 void Pipeline::stop() {
   // TODO(fairlight1337): Implement actual pipeline teardown, with worker threads setup.
   if (!is_running_) {
-    throw std::logic_error("Pipeline is not running, cannot stop it.");
+    throw std::invalid_argument("Pipeline is not running, cannot stop it.");
   }
   is_running_ = false;
 }
