@@ -34,7 +34,7 @@ class MazeEvaluator : public Evaluator {
    * @param max_steps The total number of steps programs are allows during evaluation
    */
   explicit MazeEvaluator(
-      uint32_t rows, uint32_t cols, float difficulty, uint32_t max_steps);
+      uint32_t rows, uint32_t cols, double difficulty, uint32_t max_steps);
 
   /**
    * @fn MazeEvaluator::evaluate
@@ -68,7 +68,7 @@ class MazeEvaluator : public Evaluator {
    * @var MazeEvaluator::difficulty_
    * @brief The difficulty used for the maze
    */
-  const float difficulty_;
+  const double difficulty_;
 
   /**
    * @var MazeEvaluator::max_steps_
