@@ -132,6 +132,10 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/3rdparty/json/include
   ${CMAKE_SOURCE_DIR}/3rdparty/maze/include)
 
+link_directories(
+  ${CMAKE_BINARY_DIR}/lib)
+
+
 configure_file(include/beast/version.h.in include/beast/version.h)
 
 # Pipelines
