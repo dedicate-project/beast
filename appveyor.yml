@@ -13,10 +13,10 @@ install:
  - git submodule update --init --recursive
 
 before_build:
+ - powershell Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
  - cmake -G "Visual Studio 16 2019" -A x64 .
- - Get-Content beast.vcxproj
- - Get-Content galib.vcxproj
- - Get-Content maze.vcxproj
+ - powershell Get-Content beast.vcxproj
+
 
 artifacts:
  - path: '**/*'
