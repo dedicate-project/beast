@@ -54,7 +54,7 @@ if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
 else()
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   target_compile_options(galib PRIVATE /wd4996 /wd5033 /wd4244 /wd4267)
-  set_source_files_properties(${CMAKE_SOURCE_DIR}/3rdparty/galib/VERSION PROPERTIES HEADER_FILE_ONLY TRUE)
+  set_source_files_properties(version PROPERTIES HEADER_FILE_ONLY TRUE)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
