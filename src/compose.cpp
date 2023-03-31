@@ -14,6 +14,11 @@
 // CLI11
 #include <CLI/CLI.hpp>
 
+/**
+ * Serve a JSON response containing the version of the application.
+ * 
+ * @return JSON response containing version information.
+ */
 crow::json::wvalue serveStatus() {
   crow::json::wvalue value;
   const auto version = beast::getVersion();
@@ -24,6 +29,13 @@ crow::json::wvalue serveStatus() {
   return value;
 }
 
+/**
+ * Serve a JSON response for creating a new pipeline.
+ * 
+ * @param req Request object.
+ * @param pipeline_manager Pointer to the PipelineManager instance.
+ * @return JSON response containing pipeline creation status.
+ */
 crow::json::wvalue serveNewPipeline(
     const crow::request& req, beast::PipelineManager* pipeline_manager) {
   crow::json::wvalue value;
@@ -45,6 +57,13 @@ crow::json::wvalue serveNewPipeline(
   return value;
 }
 
+/**
+ * Serve a JSON response for getting pipeline status by ID.
+ * 
+ * @param pipeline_manager Pointer to the PipelineManager instance.
+ * @param pipeline_id ID of the pipeline.
+ * @return JSON response containing pipeline status.
+ */
 crow::json::wvalue servePipelineById(
     beast::PipelineManager* pipeline_manager, int32_t pipeline_id) {
   crow::json::wvalue value;
@@ -60,6 +79,23 @@ crow::json::wvalue servePipelineById(
   return value;
 }
 
+/**
+ * Serve a JSON response for handling pipeline actions.
+ * 
+ * Supported JSON request actions:
+ *  - "start": start the pipeline. Returns "already_running" error if pipeline is already running.
+ *  - "stop": stop the pipeline. Returns "not_running" error if pipeline is not running.
+ *  - "update": update the pipeline. Expects a JSON payload with "action" and "name" fields.
+ *    Supported update actions:
+ *     - "change_name": changes the name of the pipeline.
+ *  - "delete": delete the pipeline.
+ *
+ * @param req Request object.
+ * @param pipeline_manager Pointer to the PipelineManager instance.
+ * @param pipeline_id ID of the pipeline.
+ * @param path Path of the action.
+ * @return JSON response containing pipeline action status.
+ */
 crow::json::wvalue servePipelineAction(
     const crow::request& req, beast::PipelineManager* pipeline_manager, int32_t pipeline_id,
     const std::string_view path) {
@@ -133,6 +169,12 @@ crow::json::wvalue servePipelineAction(
   return value;
 }
 
+/**
+ * Serve a JSON response containing all pipelines and their status.
+ * 
+ * @param pipeline_manager Pointer to the PipelineManager instance.
+ * @return JSON response containing all pipeline status.
+ */
 crow::json::wvalue serveAllPipelines(beast::PipelineManager* pipeline_manager) {
   crow::json::wvalue value = crow::json::wvalue::list();
   uint32_t idx = 0;
@@ -148,6 +190,13 @@ crow::json::wvalue serveAllPipelines(beast::PipelineManager* pipeline_manager) {
   return value;
 }
 
+/**
+ * Serve a static file.
+ * 
+ * @param res Response object.
+ * @param html_root HTML root directory.
+ * @param path Path of the file.
+ */
 void serveStaticFile(
     crow::response* res, const std::string_view html_root, const std::string_view path) {
   const std::string full_path = std::string(html_root) + "/" + std::string(path);
