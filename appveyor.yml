@@ -17,8 +17,6 @@ before_build:
  - cmake -G "Visual Studio 16 2019" -A x64 .
  - powershell Get-Content beast.vcxproj
  - powershell Get-Content galib.vcxproj
- - powershell Get-Content maze.vcxproj
-
 
 artifacts:
  - path: '**/*'
