@@ -10,7 +10,7 @@
 namespace beast {
 
 MazeEvaluator::MazeEvaluator(
-    uint32_t rows, uint32_t cols, float difficulty, uint32_t max_steps)
+    uint32_t rows, uint32_t cols, double difficulty, uint32_t max_steps)
   : rows_{rows}, cols_{cols}, difficulty_{difficulty}, max_steps_{max_steps} {
 }
 
