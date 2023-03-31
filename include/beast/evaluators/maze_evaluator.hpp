@@ -10,10 +10,14 @@
 namespace beast {
 
 /**
- * @class Maze Evaluator
+ * @class MazeEvaluator
  * @brief Evaluates the ability of a program to find a path through a maze
  *
- * TODO(fairlight1337): Document this class.
+ * MazeEvaluator is a derived class of the Evaluator base class that specializes
+ * in evaluating the performance of a given program to find a path through a maze.
+ * The maze is represented by the custom Maze class, and the evaluation takes into
+ * account various factors, such as maze size, difficulty, and the player's food
+ * level during navigation.
  *
  * @author Jan Winkler
  * @date 2023-03-30
@@ -36,7 +40,11 @@ class MazeEvaluator : public Evaluator {
    * @fn MazeEvaluator::evaluate
    * @brief Evaluates the program for whether it can find a path through a maze
    *
-   * TODO(fairlight1337): Document this function.
+   * This function evaluates the given session based on its ability to navigate through
+   * a maze. The maze is created using the given rows, columns, and difficulty parameters.
+   * The evaluation takes into account the program's ability to maintain a food level,
+   * find food in the maze, and the total number of steps taken. The score is computed
+   * based on these factors, with a higher score representing better performance.
    *
    * @param session The program session to evaluate
    * @return The final score resulting from the program evaluation
@@ -45,19 +53,19 @@ class MazeEvaluator : public Evaluator {
 
  private:
   /**
-   * @var MazeEvaluator::data_count_
+   * @var MazeEvaluator::rows_
    * @brief The rows used for the maze
    */
   const uint32_t rows_;
 
   /**
-   * @var MazeEvaluator::repeats_
-   * @brief The columns used or the maze
+   * @var MazeEvaluator::cols_
+   * @brief The columns used for the maze
    */
   const uint32_t cols_;
 
   /**
-   * @var MazeEvaluator::repeats_
+   * @var MazeEvaluator::difficulty_
    * @brief The difficulty used for the maze
    */
   const float difficulty_;

@@ -33,7 +33,7 @@ class PipelineManager {
    * @brief Constructor that initializes the PipelineManager with a storage path.
    * @param storage_path Path to the storage directory.
    */
-  PipelineManager(const std::string& storage_path);
+  explicit PipelineManager(const std::string& storage_path);
 
   /**
    * @brief Creates a new pipeline and adds it to the collection.
