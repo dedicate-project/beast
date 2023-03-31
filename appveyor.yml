@@ -15,5 +15,9 @@ install:
 before_build:
  - cmake -G "Visual Studio 16 2019" -A x64 .
 
+artifacts:
+ - path: beast.vcxproj
+   name: GeneratedVcxproj
+
 build:
   project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
