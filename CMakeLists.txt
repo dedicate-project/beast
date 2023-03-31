@@ -109,7 +109,7 @@ add_library(${PROJECT_NAME}
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME} galib Threads::Threads)
+target_link_libraries(${PROJECT_NAME} galib Threads::Threads maze)
 
 add_executable(${PROJECT_NAME}-compose
   src/compose.cpp)
@@ -134,7 +134,6 @@ include_directories(
 
 link_directories(
   ${CMAKE_BINARY_DIR}/lib)
-
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
