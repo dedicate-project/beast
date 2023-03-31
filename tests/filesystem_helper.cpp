@@ -11,7 +11,7 @@ TEST_CASE("FilesystemHelper") {
   const std::filesystem::path model_path =
       std::filesystem::temp_directory_path() / "beast_test_models";
   std::filesystem::create_directory(model_path);
-  beast::FilesystemHelper fs_helper(model_path);
+  beast::FilesystemHelper fs_helper{model_path.u8string()};
 
   SECTION("Save and load a model") {
     const std::string model_id = "test_model";
