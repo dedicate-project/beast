@@ -52,7 +52,7 @@ if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
   target_compile_options(galib PRIVATE -Wno-register -Wno-write-strings -Wno-permissive)
 else()
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-  target_compile_options(galib PRIVATE /wd4996)
+  target_compile_options(galib PRIVATE /wd4996 /wd5033 /wd4244 /wd4267)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
