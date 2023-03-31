@@ -13,15 +13,10 @@ install:
  - git submodule update --init --recursive
 
 before_build:
- - powershell Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
  - cmake -G "Visual Studio 16 2019" -A x64 .
- - powershell Get-Content beast.vcxproj
- - powershell Get-Content galib.vcxproj
 
-artifacts:
- - path: '**/*'
-   name: AllFiles
+skip_branch_with_pr: true
+max_jobs: 1
 
 build:
   project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
-
