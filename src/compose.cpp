@@ -41,11 +41,11 @@ crow::json::wvalue serveNewPipeline(
   crow::json::wvalue value;
   const auto req_body = crow::json::load(req.body);
   if (req_body && req_body.has("name")) {
-    const std::string name = static_cast<std::string>(req_body["name"]);
+    const auto name = static_cast<std::string>(req_body["name"]);
     try {
-      const int32_t id = pipeline_manager->createPipeline(name);
+      const int32_t pipeline_id = pipeline_manager->createPipeline(name);
       value["status"] = "success";
-      value["id"] = id;
+      value["id"] = pipeline_id;
     } catch (const std::runtime_error& exception) {
       value["status"] = "failed";
       value["error"] = exception.what();
@@ -175,10 +175,10 @@ crow::json::wvalue servePipelineAction(
  * @param pipeline_manager Pointer to the PipelineManager instance.
  * @return JSON response containing all pipeline status.
  */
-crow::json::wvalue serveAllPipelines(beast::PipelineManager* pipeline_manager) {
+crow::json::wvalue serveAllPipelines(const beast::PipelineManager& pipeline_manager) {
   crow::json::wvalue value = crow::json::wvalue::list();
   uint32_t idx = 0;
-  for (const auto& pipeline : pipeline_manager->getPipelines()) {
+  for (const auto& pipeline : pipeline_manager.getPipelines()) {
     crow::json::wvalue pipeline_item;
     pipeline_item["id"] = pipeline.id;
     pipeline_item["name"] = pipeline.name;
@@ -257,7 +257,7 @@ int main(int argc, char** argv) {
         });
     CROW_ROUTE(app, "/api/v1/pipelines").methods("GET"_method)(
         [&](const crow::request& /*req*/) {
-          return serveAllPipelines(&pipeline_manager);
+          return serveAllPipelines(pipeline_manager);
         });
     CROW_ROUTE(app, "/<path>").methods("GET"_method)(
         [&](const crow::request& /*req*/, crow::response& res, const std::string_view path) {
