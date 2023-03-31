@@ -49,7 +49,7 @@ TEST_CASE("FilesystemHelper") {
     const std::string model_id2 = "test_model2";
     nlohmann::json model2 = {{"test_key", "test_value2"}};
     const std::string filename2 = fs_helper.saveModel(model_id2, model2);
-    
+
     nlohmann::json wrapped_model1 = {{"name", model_id1}, {"model", model1}};
     nlohmann::json wrapped_model2 = {{"name", model_id2}, {"model", model2}};
 
@@ -73,7 +73,7 @@ TEST_CASE("FilesystemHelper") {
   }
 
   SECTION("Delete non-existent model") {
-    REQUIRE_THROWS_AS(fs_helper.deleteModel("non_existent_model.json"), std::runtime_error);
+    REQUIRE_THROWS_AS(fs_helper.deleteModel("non_existent_model.json"), std::invalid_argument);
   }
 
   std::filesystem::remove_all(model_path);
