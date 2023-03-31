@@ -59,7 +59,7 @@ crow::json::wvalue serveNewPipeline(
 
 /**
  * Serve a JSON response for getting pipeline status by ID.
- * 
+ *
  * @param pipeline_manager Pointer to the PipelineManager instance.
  * @param pipeline_id ID of the pipeline.
  * @return JSON response containing pipeline status.
@@ -81,7 +81,7 @@ crow::json::wvalue servePipelineById(
 
 /**
  * Serve a JSON response for handling pipeline actions.
- * 
+ *
  * Supported JSON request actions:
  *  - "start": start the pipeline. Returns "already_running" error if pipeline is already running.
  *  - "stop": stop the pipeline. Returns "not_running" error if pipeline is not running.
@@ -154,7 +154,9 @@ crow::json::wvalue servePipelineAction(
         value["error"] = "invalid_request";
       }
     } else if (path == "delete") {
-      pipeline.pipeline.stop();
+      if (pipeline.pipeline.isRunning()) {
+        pipeline.pipeline.stop();
+      }
       pipeline_manager->deletePipeline(pipeline.id);
       value["status"] = "success";
     } else {
@@ -171,7 +173,7 @@ crow::json::wvalue servePipelineAction(
 
 /**
  * Serve a JSON response containing all pipelines and their status.
- * 
+ *
  * @param pipeline_manager Pointer to the PipelineManager instance.
  * @return JSON response containing all pipeline status.
  */
@@ -192,7 +194,7 @@ crow::json::wvalue serveAllPipelines(const beast::PipelineManager& pipeline_mana
 
 /**
  * Serve a static file.
- * 
+ *
  * @param res Response object.
  * @param html_root HTML root directory.
  * @param path Path of the file.
@@ -240,32 +242,34 @@ int main(int argc, char** argv) {
   // Set up serving routes
   try {
     CROW_ROUTE(app, "/api/v1/status").methods("GET"_method)(
-        [&](const crow::request& /*req*/) {
+        [](const crow::request& /*req*/) {
           return serveStatus();
         });
     CROW_ROUTE(app, "/api/v1/pipelines/new").methods("POST"_method)(
-        [&](const crow::request& req) {
+        [&pipeline_manager](const crow::request& req) {
           return serveNewPipeline(req, &pipeline_manager);
         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>").methods("GET"_method)(
-        [&](const crow::request& /*req*/, int32_t pipeline_id) {
+        [&pipeline_manager](const crow::request& /*req*/, int32_t pipeline_id) {
           return servePipelineById(&pipeline_manager, static_cast<uint32_t>(pipeline_id));
         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>").methods("GET"_method, "POST"_method)(
-        [&](const crow::request& req, int32_t pipeline_id, const std::string_view path) {
+        [&pipeline_manager](
+            const crow::request& req, int32_t pipeline_id, const std::string_view path) {
           return servePipelineAction(
               req, &pipeline_manager, static_cast<uint32_t>(pipeline_id), path);
         });
     CROW_ROUTE(app, "/api/v1/pipelines").methods("GET"_method)(
-        [&](const crow::request& /*req*/) {
+        [&pipeline_manager](const crow::request& /*req*/) {
           return serveAllPipelines(pipeline_manager);
         });
     CROW_ROUTE(app, "/<path>").methods("GET"_method)(
-        [&](const crow::request& /*req*/, crow::response& res, const std::string_view path) {
+        [&html_root](
+            const crow::request& /*req*/, crow::response& res, const std::string_view path) {
           serveStaticFile(&res, html_root, path);
         });
     CROW_ROUTE(app, "/").methods("GET"_method)(
-        [&](const crow::request& /*req*/, crow::response& res) {
+        [&html_root](const crow::request& /*req*/, crow::response& res) {
           serveStaticFile(&res, html_root, "index.html");
         });
   } catch (const std::runtime_error& exception) {
