@@ -32,6 +32,12 @@ if(BEAST_BUILD_DOCS)
   add_subdirectory(docs)
 endif()
 
+# Create a list of all .h files in the "ga" subdirectory of the galib source directory
+file(GLOB GALIB_HEADERS ${CMAKE_SOURCE_DIR}/3rdparty/galib/ga/*.h)
+
+# Copy the .h files to the galib_src/ga subdirectory of the build directory
+file(COPY ${GALIB_HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/galib_src/ga/)
+
 set(GALIB_SRCS
   garandom.C gaerror.C GAParameter.C GAStatistics.C GABaseGA.C GASStateGA.C
   GASimpleGA.C GAIncGA.C GADemeGA.C GADCrowdingGA.C GASelector.C GAScaling.C
@@ -47,7 +53,8 @@ set(GALIB_SRCS_FULL)
 foreach(file ${GALIB_SRCS})
   list(APPEND GALIB_SRCS_FULL ${CMAKE_SOURCE_DIR}/3rdparty/galib/ga/${file})
 endforeach()
-set_source_files_properties(${CMAKE_SOURCE_DIR}/3rdparty/galib/version PROPERTIES HEADER_FILE_ONLY TRUE)
+# Copy all files in GALIB_SRCS_FULL to the build directory's galib_src subdirectory
+file(COPY ${GALIB_SRCS_FULL} DESTINATION ${CMAKE_BINARY_DIR}/galib_src/ga)
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
@@ -118,7 +125,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(
   include
   ${CMAKE_BINARY_DIR}/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/galib
+  ${CMAKE_BINARY_DIR}/galib_src
   ${CMAKE_SOURCE_DIR}/3rdparty/Crow/include
   ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include
   ${CMAKE_SOURCE_DIR}/3rdparty/asio/asio/include
