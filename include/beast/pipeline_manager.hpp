@@ -60,7 +60,7 @@ class PipelineManager {
    * @brief Updates the name of the given pipeline.
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
-  void updatePipelineName(uint32_t pipeline_id, const std::string& new_name);
+  void updatePipelineName(uint32_t pipeline_id, const std::string_view new_name);
 
   /**
    * @brief Deletes the given pipeline.

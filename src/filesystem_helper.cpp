@@ -11,7 +11,7 @@ FilesystemHelper::FilesystemHelper(const std::string& model_path) {
 
   if (!std::filesystem::is_directory(m_model_path) &&
       !std::filesystem::create_directory(m_model_path)) {
-    throw std::runtime_error("Could not create model directory.");
+    throw std::invalid_argument("Could not create model directory.");
   }
 }
 
@@ -22,7 +22,7 @@ std::string FilesystemHelper::saveModel(
 
   std::ofstream file(filepath);
   if (!file.is_open()) {
-    throw std::runtime_error("Could not open file for writing.");
+    throw std::invalid_argument("Could not open file for writing.");
   }
 
   nlohmann::json wrapper;
@@ -73,7 +73,7 @@ std::vector<nlohmann::json> FilesystemHelper::loadModels() const {
     if (file.path().extension() == ".json") {
       std::ifstream input(file.path());
       if (!input.is_open()) {
-        throw std::runtime_error("Could not open file for reading.");
+        throw std::invalid_argument("Could not open file for reading.");
       }
 
       nlohmann::json model;
@@ -92,7 +92,7 @@ std::vector<nlohmann::json> FilesystemHelper::loadModels() const {
 void FilesystemHelper::deleteModel(const std::string& filename) const {
   std::filesystem::path filepath = m_model_path / filename;
   if (!std::filesystem::exists(filepath)) {
-    throw std::runtime_error("Could not delete model - file does not exist.");
+    throw std::invalid_argument("Could not delete model - file does not exist.");
   }
   std::filesystem::remove(filepath);
 }
