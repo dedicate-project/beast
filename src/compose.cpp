@@ -16,7 +16,7 @@
 
 /**
  * Serve a JSON response containing the version of the application.
- * 
+ *
  * @return JSON response containing version information.
  */
 crow::json::wvalue serveStatus() {
@@ -31,7 +31,7 @@ crow::json::wvalue serveStatus() {
 
 /**
  * Serve a JSON response for creating a new pipeline.
- * 
+ *
  * @param req Request object.
  * @param pipeline_manager Pointer to the PipelineManager instance.
  * @return JSON response containing pipeline creation status.
@@ -43,7 +43,7 @@ crow::json::wvalue serveNewPipeline(
   if (req_body && req_body.has("name")) {
     const auto name = static_cast<std::string>(req_body["name"]);
     try {
-      const int32_t pipeline_id = pipeline_manager->createPipeline(name);
+      const auto pipeline_id = pipeline_manager->createPipeline(name);
       value["status"] = "success";
       value["id"] = pipeline_id;
     } catch (const std::runtime_error& exception) {
@@ -65,7 +65,7 @@ crow::json::wvalue serveNewPipeline(
  * @return JSON response containing pipeline status.
  */
 crow::json::wvalue servePipelineById(
-    beast::PipelineManager* pipeline_manager, int32_t pipeline_id) {
+    beast::PipelineManager* pipeline_manager, uint32_t pipeline_id) {
   crow::json::wvalue value;
   value["id"] = pipeline_id;
   try {
@@ -97,7 +97,7 @@ crow::json::wvalue servePipelineById(
  * @return JSON response containing pipeline action status.
  */
 crow::json::wvalue servePipelineAction(
-    const crow::request& req, beast::PipelineManager* pipeline_manager, int32_t pipeline_id,
+    const crow::request& req, beast::PipelineManager* pipeline_manager, uint32_t pipeline_id,
     const std::string_view path) {
   crow::json::wvalue value;
   value["id"] = pipeline_id;
@@ -249,11 +249,12 @@ int main(int argc, char** argv) {
         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>").methods("GET"_method)(
         [&](const crow::request& /*req*/, int32_t pipeline_id) {
-          return servePipelineById(&pipeline_manager, pipeline_id);
+          return servePipelineById(&pipeline_manager, static_cast<uint32_t>(pipeline_id));
         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>").methods("GET"_method, "POST"_method)(
         [&](const crow::request& req, int32_t pipeline_id, const std::string_view path) {
-          return servePipelineAction(req, &pipeline_manager, pipeline_id, path);
+          return servePipelineAction(
+              req, &pipeline_manager, static_cast<uint32_t>(pipeline_id), path);
         });
     CROW_ROUTE(app, "/api/v1/pipelines").methods("GET"_method)(
         [&](const crow::request& /*req*/) {
