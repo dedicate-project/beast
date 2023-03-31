@@ -64,7 +64,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
     BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/* asio/* ${CMAKE_SOURCE_DIR}/src/serve.cpp
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/* asio/* ${CMAKE_SOURCE_DIR}/src/compose.cpp
     SONARQUBE)
 else()
   if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -100,14 +100,14 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} galib Threads::Threads)
 
-add_executable(${PROJECT_NAME}-serve
-  src/serve.cpp)
+add_executable(${PROJECT_NAME}-compose
+  src/compose.cpp)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  target_link_libraries(${PROJECT_NAME}-serve PUBLIC gcov)
+  target_link_libraries(${PROJECT_NAME}-compose PUBLIC gcov)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
-target_link_libraries(${PROJECT_NAME}-serve PUBLIC ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}-compose PUBLIC ${PROJECT_NAME})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
