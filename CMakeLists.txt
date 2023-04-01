@@ -99,6 +99,7 @@ add_library(${PROJECT_NAME}
   src/random_program_factory.cpp
   src/time_functions.cpp
   src/vm_session.cpp
+  src/version.cpp
   src/virtual_machine.cpp
   src/evaluators/aggregation_evaluator.cpp
   src/evaluators/maze_evaluator.cpp
