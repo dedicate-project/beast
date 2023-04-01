@@ -75,7 +75,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
     BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/* asio/* ${CMAKE_SOURCE_DIR}/src/compose.cpp
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/* asio/* ${CMAKE_SOURCE_DIR}/src/compose.cpp ${CMAKE_BINARY_DIR}/* ${CMAKE_BINARY_DIR}/galib_src/*
     SONARQUBE)
 else()
   if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
