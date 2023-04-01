@@ -89,18 +89,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Main BEAST library
 add_library(${PROJECT_NAME}
-  src/beast.cpp
   src/cpu_virtual_machine.cpp
   src/filesystem_helper.cpp
   src/pipe.cpp
   src/pipeline.cpp
   src/pipeline_manager.cpp
+  src/pipeline_server.cpp
   src/program.cpp
   src/random_program_factory.cpp
   src/time_functions.cpp
-  src/vm_session.cpp
   src/version.cpp
   src/virtual_machine.cpp
+  src/vm_session.cpp
   src/evaluators/aggregation_evaluator.cpp
   src/evaluators/maze_evaluator.cpp
   src/evaluators/random_serial_data_passthrough_evaluator.cpp

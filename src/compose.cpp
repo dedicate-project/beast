@@ -15,184 +15,6 @@
 #include <CLI/CLI.hpp>
 
 /**
- * Serve a JSON response containing the version of the application.
- *
- * @return JSON response containing version information.
- */
-crow::json::wvalue serveStatus() {
-  crow::json::wvalue value;
-  const auto version = beast::getVersion();
-  value["version"] =
-      std::to_string(version[0]) + "." +
-      std::to_string(version[1]) + "." +
-      std::to_string(version[2]);
-  return value;
-}
-
-/**
- * Serve a JSON response for creating a new pipeline.
- *
- * @param req Request object.
- * @param pipeline_manager Pointer to the PipelineManager instance.
- * @return JSON response containing pipeline creation status.
- */
-crow::json::wvalue serveNewPipeline(
-    const crow::request& req, beast::PipelineManager* pipeline_manager) {
-  crow::json::wvalue value;
-  const auto req_body = crow::json::load(req.body);
-  if (req_body && req_body.has("name")) {
-    const auto name = static_cast<std::string>(req_body["name"]);
-    try {
-      const auto pipeline_id = pipeline_manager->createPipeline(name);
-      value["status"] = "success";
-      value["id"] = pipeline_id;
-    } catch (const std::runtime_error& exception) {
-      value["status"] = "failed";
-      value["error"] = exception.what();
-    }
-  } else {
-    value["status"] = "failed";
-    value["error"] = "Missing 'name' in request body";
-  }
-  return value;
-}
-
-/**
- * Serve a JSON response for getting pipeline status by ID.
- *
- * @param pipeline_manager Pointer to the PipelineManager instance.
- * @param pipeline_id ID of the pipeline.
- * @return JSON response containing pipeline status.
- */
-crow::json::wvalue servePipelineById(
-    beast::PipelineManager* pipeline_manager, uint32_t pipeline_id) {
-  crow::json::wvalue value;
-  value["id"] = pipeline_id;
-  try {
-    const auto& descriptor = pipeline_manager->getPipelineById(pipeline_id);
-    value["state"] =
-        descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
-  } catch (const std::runtime_error& exception) {
-    value["status"] = "failed";
-    value["error"] = exception.what();
-  }
-  return value;
-}
-
-/**
- * Serve a JSON response for handling pipeline actions.
- *
- * Supported JSON request actions:
- *  - "start": start the pipeline. Returns "already_running" error if pipeline is already running.
- *  - "stop": stop the pipeline. Returns "not_running" error if pipeline is not running.
- *  - "update": update the pipeline. Expects a JSON payload with "action" and "name" fields.
- *    Supported update actions:
- *     - "change_name": changes the name of the pipeline.
- *  - "delete": delete the pipeline.
- *
- * @param req Request object.
- * @param pipeline_manager Pointer to the PipelineManager instance.
- * @param pipeline_id ID of the pipeline.
- * @param path Path of the action.
- * @return JSON response containing pipeline action status.
- */
-crow::json::wvalue servePipelineAction(
-    const crow::request& req, beast::PipelineManager* pipeline_manager, uint32_t pipeline_id,
-    const std::string_view path) {
-  crow::json::wvalue value;
-  value["id"] = pipeline_id;
-  try {
-    auto& pipeline = pipeline_manager->getPipelineById(pipeline_id);
-    const bool running = pipeline.pipeline.isRunning();
-    if (path == "start") {
-      if (running) {
-        value["status"] = "failed";
-        value["error"] = "already_running";
-      } else {
-        try {
-          pipeline.pipeline.start();
-          value["status"] = "success";
-        } catch (const std::runtime_error& exception) {
-          value["status"] = "failed";
-          value["error"] = exception.what();
-        }
-      }
-    } else if (path == "stop") {
-      if (running) {
-        try {
-          pipeline.pipeline.stop();
-          value["status"] = "success";
-        } catch (const std::runtime_error& exception) {
-          value["status"] = "failed";
-          value["error"] = exception.what();
-        }
-      } else {
-        value["status"] = "failed";
-        value["error"] = "not_running";
-      }
-    } else if (path == "update") {
-      if (req.get_header_value("Content-Type") == "application/json") {
-        try {
-          const auto req_body = crow::json::load(req.body);
-          const auto action = static_cast<std::string>(req_body["action"]);
-
-          if (action == "change_name") {
-            const auto new_name = static_cast<std::string>(req_body["name"]);
-            pipeline_manager->updatePipelineName(pipeline.id, new_name);
-            value["status"] = "success";
-          } else {
-            value["status"] = "failed";
-            value["action"] = action;
-            value["error"] = "invalid_action";
-          }
-        } catch (const std::runtime_error& exception) {
-          value["status"] = "failed";
-          value["error"] = exception.what();
-        }
-      } else {
-        value["status"] = "failed";
-        value["error"] = "invalid_request";
-      }
-    } else if (path == "delete") {
-      if (pipeline.pipeline.isRunning()) {
-        pipeline.pipeline.stop();
-      }
-      pipeline_manager->deletePipeline(pipeline.id);
-      value["status"] = "success";
-    } else {
-      value["status"] = "failed";
-      value["error"] = "invalid_command";
-      value["command"] = std::string(path);
-    }
-  } catch (const std::runtime_error& exception) {
-    value["status"] = "failed";
-    value["error"] = exception.what();
-  }
-  return value;
-}
-
-/**
- * Serve a JSON response containing all pipelines and their status.
- *
- * @param pipeline_manager Pointer to the PipelineManager instance.
- * @return JSON response containing all pipeline status.
- */
-crow::json::wvalue serveAllPipelines(const beast::PipelineManager& pipeline_manager) {
-  crow::json::wvalue value = crow::json::wvalue::list();
-  uint32_t idx = 0;
-  for (const auto& pipeline : pipeline_manager.getPipelines()) {
-    crow::json::wvalue pipeline_item;
-    pipeline_item["id"] = pipeline.id;
-    pipeline_item["name"] = pipeline.name;
-    pipeline_item["state"] =
-        pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
-    value[idx] = std::move(pipeline_item);
-    idx++;
-  }
-  return value;
-}
-
-/**
  * Serve a static file.
  *
  * @param res Response object.
@@ -235,7 +57,7 @@ int main(int argc, char** argv) {
   }
 
   // Set up BEAST environment
-  beast::PipelineManager pipeline_manager(storage_folder);
+  beast::PipelineServer pipeline_server(storage_folder);
 
   // Set up web serving environment
   crow::SimpleApp app;
@@ -243,25 +65,25 @@ int main(int argc, char** argv) {
   try {
     CROW_ROUTE(app, "/api/v1/status").methods("GET"_method)(
         [](const crow::request& /*req*/) {
-          return serveStatus();
+          return beast::PipelineServer::serveStatus();
         });
     CROW_ROUTE(app, "/api/v1/pipelines/new").methods("POST"_method)(
-        [&pipeline_manager](const crow::request& req) {
-          return serveNewPipeline(req, &pipeline_manager);
+        [&pipeline_server](const crow::request& req) {
+          return pipeline_server.serveNewPipeline(req);
         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>").methods("GET"_method)(
-        [&pipeline_manager](const crow::request& /*req*/, int32_t pipeline_id) {
-          return servePipelineById(&pipeline_manager, static_cast<uint32_t>(pipeline_id));
+        [&pipeline_server](const crow::request& /*req*/, int32_t pipeline_id) {
+          return pipeline_server.servePipelineById(static_cast<uint32_t>(pipeline_id));
         });
     CROW_ROUTE(app, "/api/v1/pipelines/<int>/<path>").methods("GET"_method, "POST"_method)(
-        [&pipeline_manager](
+        [&pipeline_server](
             const crow::request& req, int32_t pipeline_id, const std::string_view path) {
-          return servePipelineAction(
-              req, &pipeline_manager, static_cast<uint32_t>(pipeline_id), path);
+          return pipeline_server.servePipelineAction(
+              req, static_cast<uint32_t>(pipeline_id), path);
         });
     CROW_ROUTE(app, "/api/v1/pipelines").methods("GET"_method)(
-        [&pipeline_manager](const crow::request& /*req*/) {
-          return serveAllPipelines(pipeline_manager);
+        [&pipeline_server](const crow::request& /*req*/) {
+          return pipeline_server.serveAllPipelines();
         });
     CROW_ROUTE(app, "/<path>").methods("GET"_method)(
         [&html_root](
