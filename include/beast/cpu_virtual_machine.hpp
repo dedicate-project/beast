@@ -19,12 +19,6 @@ namespace beast {
  */
 class CpuVirtualMachine : public VirtualMachine {
  public:
-  /**
-   * @fn CpuVirtualMachine::~CpuVirtualMachine
-   * @brief Virtual destructor performing no operation to ensure vtable consistency
-   */
-  ~CpuVirtualMachine() override = default;
-
   [[nodiscard]] bool step(VmSession& session, bool dry_run) override;
 
  protected:
