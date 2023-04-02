@@ -47,14 +47,6 @@ class Pipe {
   explicit Pipe(uint32_t max_candidates);
 
   /**
-   * @class Pipe::~Pipe
-   * @brief Deconstructs this instance
-   *
-   * Required for vtable consistency.
-   */
-  virtual ~Pipe() = default;
-
-  /**
    * @class Pipe::addInput
    * @brief Add a candidate program code to the input pool
    *

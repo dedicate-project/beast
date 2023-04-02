@@ -17,14 +17,6 @@ namespace beast {
 class ProgramFactoryBase {
  public:
   /**
-   * @fn ProgramFactoryBase::~ProgramFactoryBase
-   * @brief Default virtual destructor
-   *
-   * Ensures vtable consistency.
-   */
-  virtual ~ProgramFactoryBase() = default;
-
-  /**
    * @fn ProgramFactoryBase::generate
    * @brief Generates a program based on the factory's semantics
    *
