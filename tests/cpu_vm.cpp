@@ -25,9 +25,9 @@ TEST_CASE("stepping_beyond_end_of_program_causes_abnormal_exit", "cpu_vm") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  (void)virtual_machine.step(session, false);
-  (void)virtual_machine.step(session, false);
-  (void)virtual_machine.step(session, false);
+  static_cast<void>(virtual_machine.step(session, false));
+  static_cast<void>(virtual_machine.step(session, false));
+  static_cast<void>(virtual_machine.step(session, false));
 
   REQUIRE(session.getRuntimeStatistics().abnormal_exit == true);
 }
@@ -38,12 +38,7 @@ TEST_CASE("when_invalid_opcode_is_encoutered_vm_throws", "cpu_vm") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  bool threw = false;
-  try {
-    (void)virtual_machine.step(session, false);
-  } catch(...) {
-    threw = true;
-  }
 
-  REQUIRE(threw == true);
+  REQUIRE_THROWS_AS(
+      static_cast<void>(virtual_machine.step(session, false)), std::invalid_argument);
 }
