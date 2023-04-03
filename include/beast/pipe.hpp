@@ -71,6 +71,10 @@ class Pipe {
    */
   [[nodiscard]] OutputItem drawOutput(uint32_t slot_index);
 
+  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index) { return output_.size(); }
+
+  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index) { return input_.size(); }
+
   virtual uint32_t getInputSlotCount() const { return 1; }
 
   virtual uint32_t getOutputSlotCount() const { return 1; }
@@ -92,7 +96,6 @@ class Pipe {
    */
   std::deque<OutputItem> output_;
 
- private:
   /**
    * @var Pipe::max_candidates_
    * @brief Denotes the population size of this pipe

@@ -107,7 +107,8 @@ add_library(${PROJECT_NAME}
   src/evaluators/runtime_statistics_evaluator.cpp
   src/evaluators/operator_usage_evaluator.cpp
   src/pipes/evaluator_pipe.cpp
-  src/pipes/evolution_pipe.cpp)
+  src/pipes/evolution_pipe.cpp
+  src/pipes/program_factory_pipe.cpp)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -220,6 +221,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(pipelines)
   declare_test(printing_and_string_table)
   declare_test(program)
+  declare_test(program_factory_pipe)
   declare_test(programs)
   declare_test(random_program_factory)
   declare_test(stacks)
