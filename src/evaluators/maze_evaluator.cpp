@@ -9,10 +9,8 @@
 
 namespace beast {
 
-MazeEvaluator::MazeEvaluator(
-    uint32_t rows, uint32_t cols, double difficulty, uint32_t max_steps)
-  : rows_{rows}, cols_{cols}, difficulty_{difficulty}, max_steps_{max_steps} {
-}
+MazeEvaluator::MazeEvaluator(uint32_t rows, uint32_t cols, double difficulty, uint32_t max_steps)
+    : rows_{rows}, cols_{cols}, difficulty_{difficulty}, max_steps_{max_steps} {}
 
 double MazeEvaluator::evaluate(const VmSession& /*session*/) {
   // TODO(fairlight1337): Implement this evaluation function.
@@ -20,4 +18,4 @@ double MazeEvaluator::evaluate(const VmSession& /*session*/) {
   return 0.0;
 }
 
-}  // namespace beast
+} // namespace beast

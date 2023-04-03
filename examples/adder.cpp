@@ -11,24 +11,18 @@ struct Calculation {
   int32_t result;
 };
 
-enum class CalculationState {
-  WaitingForPrgReady,
-  SettingOperands,
-  WaitingForResult,
-  WaitingForQuit
-};
+enum class CalculationState { WaitingForPrgReady, SettingOperands, WaitingForResult, WaitingForQuit };
 
 int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
-  std::cout << "Using BEAST library version "
-            << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "."
-            << static_cast<uint32_t>(version[2]) << "." << std::endl;
+  std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
 
-  /* These `+` calculations are supposed to be performed (operands and expected result) */
-  const std::vector<Calculation> add_calculations
-      {{1, 1, 2}, {7, 2, 9}, {100, 1000, 1100}, {1, -1, 0}, {-10000, -81, -10081}};
+  /* These `+` calculations are supposed to be performed (operands and expected
+   * result) */
+  const std::vector<Calculation> add_calculations{
+      {1, 1, 2}, {7, 2, 9}, {100, 1000, 1100}, {1, -1, 0}, {-10000, -81, -10081}};
 
   /* Declare the variable indices and values to use in this program. */
   /* These are the I/O variables */
@@ -42,10 +36,12 @@ int main(int /*argc*/, char** /*argv*/) {
   const int32_t calc_triggered_variable = 6;
   const int32_t quit_triggered_variable = 7;
 
-  /* The individual program parts are defined separately here in order to know their size. This is
-     used to perform relative jumps based on conditions and allows to calculate jump addresses
-     without knowledge of the exact operator sizes. The main program `prg` further down then
-     includes the `add_prg` and `quit_prg` programs using the `insertProgram` method. */
+  /* The individual program parts are defined separately here in order to know
+     their size. This is used to perform relative jumps based on conditions and
+     allows to calculate jump addresses without knowledge of the exact operator
+     sizes. The main program `prg` further down then
+     includes the `add_prg` and `quit_prg` programs using the `insertProgram`
+     method. */
 
   /* Define the actual addition program part */
   beast::Program add_prg;
@@ -70,15 +66,15 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.relativeJumpToAddressIfVariableEqualsZero(
       quit_triggered_variable, true, static_cast<int32_t>(quit_prg.getSize()));
   prg.insertProgram(quit_prg);
-  prg.relativeJumpToAddressIfVariableEqualsZero(
-      calc_triggered_variable, true, static_cast<int32_t>(add_prg.getSize()));
+  prg.relativeJumpToAddressIfVariableEqualsZero(calc_triggered_variable, true, static_cast<int32_t>(add_prg.getSize()));
   prg.insertProgram(add_prg);
   prg.unconditionalJumpToAbsoluteAddress(loop_start_address);
 
-  /* Several I/O variables are registered here, used for feeding operands into the program and
-     triggering the calculation, or an intentional program quit. The interesting part in this
-     program is that it is not invoked for each operand pair separately, but stays active and
-     receives a stream of input, providing results for each once the add operation is complete. */
+  /* Several I/O variables are registered here, used for feeding operands into
+     the program and triggering the calculation, or an intentional program quit.
+     The interesting part in this program is that it is not invoked for each
+     operand pair separately, but stays active and receives a stream of input,
+     providing results for each once the add operation is complete. */
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setVariableBehavior(operand_variable_a, beast::VmSession::VariableIoBehavior::Input);
   session.setVariableBehavior(operand_variable_b, beast::VmSession::VariableIoBehavior::Input);
@@ -99,10 +95,8 @@ int main(int /*argc*/, char** /*argv*/) {
     } break;
 
     case CalculationState::SettingOperands: {
-      std::cout << "Setting operands for calculation " << calculation_index
-                << " of " << add_calculations.size()
-                << ": " << add_calculations[calculation_index].op_a
-                << ", " << add_calculations[calculation_index].op_b
+      std::cout << "Setting operands for calculation " << calculation_index << " of " << add_calculations.size() << ": "
+                << add_calculations[calculation_index].op_a << ", " << add_calculations[calculation_index].op_b
                 << std::endl;
       session.setVariableValue(operand_variable_a, true, add_calculations[calculation_index].op_a);
       session.setVariableValue(operand_variable_b, true, add_calculations[calculation_index].op_b);
@@ -115,9 +109,8 @@ int main(int /*argc*/, char** /*argv*/) {
     case CalculationState::WaitingForResult: {
       if (session.hasOutputDataAvailable(result_variable, true)) {
         const int32_t result = session.getVariableValue(result_variable, true);
-        std::cout << "Got result: " << result
-                  << " (expected: " << add_calculations[calculation_index].result
-                  << ")" << std::endl;
+        std::cout << "Got result: " << result << " (expected: " << add_calculations[calculation_index].result << ")"
+                  << std::endl;
 
         calculation_index++;
         if (calculation_index >= add_calculations.size()) {

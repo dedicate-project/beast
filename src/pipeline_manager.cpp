@@ -2,8 +2,7 @@
 
 namespace beast {
 
-PipelineManager::PipelineManager(const std::string& storage_path)
-  : filesystem_(storage_path) {
+PipelineManager::PipelineManager(const std::string& storage_path) : filesystem_(storage_path) {
   std::scoped_lock lock{pipelines_mutex_};
   for (const auto& model : filesystem_.loadModels()) {
     PipelineDescriptor descriptor;
@@ -35,9 +34,7 @@ PipelineManager::PipelineDescriptor& PipelineManager::getPipelineById(uint32_t p
   throw std::invalid_argument("Pipeline with this ID not found: " + std::to_string(pipeline_id));
 }
 
-const std::list<PipelineManager::PipelineDescriptor>& PipelineManager::getPipelines() const {
-  return pipelines_;
-}
+const std::list<PipelineManager::PipelineDescriptor>& PipelineManager::getPipelines() const { return pipelines_; }
 
 void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string_view new_name) {
   std::scoped_lock lock{pipelines_mutex_};
@@ -53,8 +50,9 @@ void PipelineManager::deletePipeline(uint32_t pipeline_id) {
 }
 
 Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& /*json*/) {
-  // TODO(fairlight1337): Actually construct the pipeline from the data in the json object. For now,
-  // only an empty pipeline object is returned until the pipeline description in json is defined.
+  // TODO(fairlight1337): Actually construct the pipeline from the data in the
+  // json object. For now, only an empty pipeline object is returned until the
+  // pipeline description in json is defined.
   return {};
 }
 
@@ -63,10 +61,10 @@ uint32_t PipelineManager::getFreeId() const {
   std::list<PipelineDescriptor>::const_iterator iter;
   do {
     new_id++;
-    iter = std::find_if(pipelines_.begin(), pipelines_.end(),
-                        [new_id](const auto& pipeline) { return pipeline.id == new_id; });
-  } while(iter != pipelines_.end());
+    iter = std::find_if(
+        pipelines_.begin(), pipelines_.end(), [new_id](const auto& pipeline) { return pipeline.id == new_id; });
+  } while (iter != pipelines_.end());
   return new_id;
 }
 
-}  // namespace beast
+} // namespace beast

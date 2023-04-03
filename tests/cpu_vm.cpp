@@ -39,6 +39,5 @@ TEST_CASE("when_invalid_opcode_is_encoutered_vm_throws", "cpu_vm") {
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
 
-  REQUIRE_THROWS_AS(
-      static_cast<void>(virtual_machine.step(session, false)), std::invalid_argument);
+  REQUIRE_THROWS_AS(static_cast<void>(virtual_machine.step(session, false)), std::invalid_argument);
 }

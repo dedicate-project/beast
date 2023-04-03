@@ -9,14 +9,12 @@ namespace beast {
 FilesystemHelper::FilesystemHelper(const std::string& model_path) {
   m_model_path = std::filesystem::absolute(model_path);
 
-  if (!std::filesystem::is_directory(m_model_path) &&
-      !std::filesystem::create_directory(m_model_path)) {
+  if (!std::filesystem::is_directory(m_model_path) && !std::filesystem::create_directory(m_model_path)) {
     throw std::invalid_argument("Could not create model directory.");
   }
 }
 
-std::string FilesystemHelper::saveModel(
-    const std::string& model_identifier, const nlohmann::json& model) const {
+std::string FilesystemHelper::saveModel(const std::string& model_identifier, const nlohmann::json& model) const {
   std::string filename = cleanFilename(model_identifier) + ".json";
   std::string filepath = (m_model_path / filename).string();
 
@@ -39,8 +37,7 @@ std::string FilesystemHelper::cleanFilename(const std::string& filename) {
   std::string result;
   bool last_char_was_underscore = false;
   for (char current : filename) {
-    if ((current >= 'a' && current <= 'z') ||
-        (current >= 'A' && current <= 'Z') ||
+    if ((current >= 'a' && current <= 'z') || (current >= 'A' && current <= 'Z') ||
         (current >= '0' && current <= '9')) {
       result += current;
       last_char_was_underscore = false;
@@ -79,10 +76,7 @@ std::vector<nlohmann::json> FilesystemHelper::loadModels() const {
       nlohmann::json model;
       input >> model;
 
-      models.push_back({
-        {"filename", file.path().filename().string()},
-        {"content", model}
-      });
+      models.push_back({{"filename", file.path().filename().string()}, {"content", model}});
     }
   }
 
@@ -101,4 +95,4 @@ bool FilesystemHelper::modelExists(const std::string& filename) const {
   return std::filesystem::exists(m_model_path / filename);
 }
 
-}  // namespace beast
+} // namespace beast

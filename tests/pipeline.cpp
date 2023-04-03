@@ -12,11 +12,9 @@ class MockPipe : public beast::EvolutionPipe {
  public:
   MockPipe() : EvolutionPipe(1) {}
 
-  [[nodiscard]] double evaluate(const std::vector<unsigned char>& /*program_data*/) override {
-    return 0.0;
-  }
+  [[nodiscard]] double evaluate(const std::vector<unsigned char>& /*program_data*/) override { return 0.0; }
 };
-}  // namespace
+} // namespace
 
 TEST_CASE("adding_pipes_to_pipelines_and_retrieving_them_works_correctly", "pipeline") {
   beast::Pipeline pipeline;
@@ -40,7 +38,7 @@ TEST_CASE("adding_a_pipe_to_a_pipeline_twice_throws", "pipeline") {
   bool threw = false;
   try {
     pipeline.addPipe(pipe);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -56,7 +54,7 @@ TEST_CASE("adding_a_connection_with_source_pipe_not_in_pipeline_throws", "pipeli
   bool threw = false;
   try {
     pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -72,7 +70,7 @@ TEST_CASE("adding_a_connection_with_destination_pipe_not_in_pipeline_throws", "p
   bool threw = false;
   try {
     pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -87,7 +85,7 @@ TEST_CASE("adding_a_connection_with_either_pipe_not_in_pipeline_throws", "pipeli
   bool threw = false;
   try {
     pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -108,7 +106,7 @@ TEST_CASE("adding_connections_with_the_same_source_throws", "pipeline") {
   bool threw = false;
   try {
     pipeline.connectPipes(pipe0, 0, pipe2, 2, 1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -129,7 +127,7 @@ TEST_CASE("adding_connections_with_the_same_destination_throws", "pipeline") {
   bool threw = false;
   try {
     pipeline.connectPipes(pipe1, 1, pipe2, 2, 1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -148,7 +146,7 @@ TEST_CASE("adding_the_same_connection_twice_throws", "pipeline") {
   bool threw = false;
   try {
     pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 

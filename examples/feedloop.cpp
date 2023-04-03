@@ -10,10 +10,8 @@
 int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
-  std::cout << "Using BEAST library version "
-            << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "."
-            << static_cast<uint32_t>(version[2]) << "." << std::endl;
+  std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
 
   /* Declare the variable indices and values to use in this program. */
   const int32_t input_variable = 0;
@@ -25,11 +23,12 @@ int main(int /*argc*/, char** /*argv*/) {
   /* Declare the actual program.
 
      The main function of this program is the following:
-     1. Declare and initialize a set of variables, used for input, output, counting, and status.
+     1. Declare and initialize a set of variables, used for input, output,
+     counting, and status.
      2. Check in a loop whether the input was set from outside.
-     3. For each change of the input from outside, decrease the counting variable by 1. If that
-        happens, print the new value and copy it to an output variable. This gets printed from
-        outside the program.
+     3. For each change of the input from outside, decrease the counting
+     variable by 1. If that happens, print the new value and copy it to an
+     output variable. This gets printed from outside the program.
      4. Once the counting variable reaches 0, terminate the program.
   */
   beast::Program prg;
@@ -58,7 +57,7 @@ int main(int /*argc*/, char** /*argv*/) {
   while (virtual_machine.step(session, false)) {
     const auto now = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double, std::milli> elapsed = now - last_timepoint;
-    if (elapsed.count() > 1000) {  // 1s has passed
+    if (elapsed.count() > 1000) { // 1s has passed
       session.setVariableValue(input_variable, true, 0x0);
       last_timepoint = now;
     }
@@ -72,8 +71,7 @@ int main(int /*argc*/, char** /*argv*/) {
     }
 
     if (session.hasOutputDataAvailable(output_variable, true)) {
-      std::cout << "From output variable: " << session.getVariableValue(output_variable, true)
-                << std::endl;
+      std::cout << "From output variable: " << session.getVariableValue(output_variable, true) << std::endl;
     }
   }
 

@@ -4,8 +4,9 @@
 #include <stdexcept>
 
 // GAlib
-// NOTE: For these includes, the `register` error needs to be ignored as this 3rdparty library uses
-// outdated code. This is not an issue for the library using it though.
+// NOTE: For these includes, the `register` error needs to be ignored as this
+// 3rdparty library uses outdated code. This is not an issue for the library
+// using it though.
 #ifndef _MSC_VER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wregister"
@@ -22,12 +23,14 @@ namespace {
 /**
  * @brief Intermediary function to trigger evaluation of Genomes
  *
- * The evolution pipe object is dereferences from the genome's user data to trigger the instance's
- * evaluation function. The resulting score value is then returned to the GAlib mechanism.
+ * The evolution pipe object is dereferences from the genome's user data to
+ * trigger the instance's evaluation function. The resulting score value is then
+ * returned to the GAlib mechanism.
  *
- * The function needs to be excluded from the clang-tidy linting process because the parameter would
- * need to be made const, which does not match GAlib's evaluator signature. Ignoring it does no harm
- * here as the function is not used anywhere else.
+ * The function needs to be excluded from the clang-tidy linting process because
+ * the parameter would need to be made const, which does not match GAlib's
+ * evaluator signature. Ignoring it does no harm here as the function is not
+ * used anywhere else.
  *
  * @param genome The GAlib genome to evaluate
  * @return The score value resulting from the evaluation
@@ -48,12 +51,14 @@ float staticEvaluatorWrapper(GAGenome& genome) {
 /**
  * @brief Intermediary function to initialize Genomes
  *
- * The evolution pipe object is dereferences from the genome's user data to draw from the instance's
- * initial population candidates. The GAlib genomes are then initialized with that data.
+ * The evolution pipe object is dereferences from the genome's user data to draw
+ * from the instance's initial population candidates. The GAlib genomes are then
+ * initialized with that data.
  *
- * The function needs to be excluded from the clang-tidy linting process because the parameter would
- * need to be made const, which does not match GAlib's evaluator signature. Ignoring it does no harm
- * here as the function is not used anywhere else.
+ * The function needs to be excluded from the clang-tidy linting process because
+ * the parameter would need to be made const, which does not match GAlib's
+ * evaluator signature. Ignoring it does no harm here as the function is not
+ * used anywhere else.
  *
  * @param genome The GAlib genome to initialize
  */
@@ -66,11 +71,9 @@ void staticInitializerWrapper(GAGenome& genome) {
     list_genome.insert(value);
   }
 }
-}  // namespace
+} // namespace
 
-EvolutionPipe::EvolutionPipe(uint32_t max_candidates)
-  : Pipe(max_candidates) {
-}
+EvolutionPipe::EvolutionPipe(uint32_t max_candidates) : Pipe(max_candidates) {}
 
 void EvolutionPipe::execute() {
   GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
@@ -102,12 +105,10 @@ void EvolutionPipe::execute() {
   }
 }
 
-void EvolutionPipe::setCutOffScore(double cut_off_score) {
-  cut_off_score_ = cut_off_score;
-}
+void EvolutionPipe::setCutOffScore(double cut_off_score) { cut_off_score_ = cut_off_score; }
 
 void EvolutionPipe::storeFinalist(const std::vector<unsigned char>& finalist, float score) {
   output_.push_back({finalist, static_cast<double>(score)});
 }
 
-}  // namespace beast
+} // namespace beast

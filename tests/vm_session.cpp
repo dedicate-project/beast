@@ -30,7 +30,7 @@ TEST_CASE("getting_variable_behavior_of_non_existent_variable_index_throws", "vm
   bool threw = false;
   try {
     static_cast<void>(session.getVariableBehavior(0, false));
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -44,7 +44,7 @@ TEST_CASE("checking_for_output_on_non_existent_variable_index_throws", "vm_sessi
   bool threw = false;
   try {
     static_cast<void>(session.hasOutputDataAvailable(0, false));
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -79,7 +79,7 @@ TEST_CASE("setting_a_too_long_string_table_entry_throws", "vm_session") {
   bool threw = false;
   try {
     session.setVariableStringTableEntry(variable_index, true, test_string);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -98,12 +98,9 @@ TEST_CASE("set_io_behaviors_can_be_retrieved", "vm_session") {
   session.setVariableBehavior(variable_index_input, beast::VmSession::VariableIoBehavior::Input);
   session.setVariableBehavior(variable_index_output, beast::VmSession::VariableIoBehavior::Output);
 
-  REQUIRE(session.getVariableBehavior(variable_index_store, true)
-          == beast::VmSession::VariableIoBehavior::Store);
-  REQUIRE(session.getVariableBehavior(variable_index_input, true)
-          == beast::VmSession::VariableIoBehavior::Input);
-  REQUIRE(session.getVariableBehavior(variable_index_output, true)
-          == beast::VmSession::VariableIoBehavior::Output);
+  REQUIRE(session.getVariableBehavior(variable_index_store, true) == beast::VmSession::VariableIoBehavior::Store);
+  REQUIRE(session.getVariableBehavior(variable_index_input, true) == beast::VmSession::VariableIoBehavior::Input);
+  REQUIRE(session.getVariableBehavior(variable_index_output, true) == beast::VmSession::VariableIoBehavior::Output);
 }
 
 TEST_CASE("getting_io_behavior_for_not_registered_variable_throws", "vm_session") {
@@ -115,7 +112,7 @@ TEST_CASE("getting_io_behavior_for_not_registered_variable_throws", "vm_session"
   bool threw = false;
   try {
     (void)session.getVariableBehavior(variable_index, true);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -146,7 +143,7 @@ TEST_CASE("retrieving_output_data_availability_for_invalid_index_throws", "vm_se
   bool threw = false;
   try {
     (void)session.hasOutputDataAvailable(variable_index_output, true);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -163,12 +160,12 @@ TEST_CASE("retrieving_output_data_availability_for_input_variable_throws", "vm_s
   bool threw = false;
   try {
     (void)session.hasOutputDataAvailable(variable_index, true);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
   REQUIRE(threw == true);
-}  
+}
 
 TEST_CASE("retrieving_output_data_availability_for_store_variable_throws", "vm_session") {
   const int32_t variable_index = 0;
@@ -180,12 +177,12 @@ TEST_CASE("retrieving_output_data_availability_for_store_variable_throws", "vm_s
   bool threw = false;
   try {
     (void)session.hasOutputDataAvailable(variable_index, true);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
   REQUIRE(threw == true);
-}  
+}
 
 TEST_CASE("appending_to_print_buffer_beyond_buffer_limit_throws", "vm_session") {
   const int32_t string_table_index = 0;
@@ -202,7 +199,7 @@ TEST_CASE("appending_to_print_buffer_beyond_buffer_limit_throws", "vm_session") 
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -223,7 +220,7 @@ TEST_CASE("double_registering_variable_throws", "vm_session") {
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -242,7 +239,7 @@ TEST_CASE("registering_a_negative_variable_index_throws", "vm_session") {
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -261,7 +258,7 @@ TEST_CASE("registering_a_variable_beyond_memory_limit_throws", "vm_session") {
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
