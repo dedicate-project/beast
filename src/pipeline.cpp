@@ -3,6 +3,7 @@
 // Standard
 #include <algorithm>
 #include <stdexcept>
+#include <thread>
 
 namespace beast {
 
@@ -11,9 +12,9 @@ void Pipeline::addPipe(const std::shared_ptr<Pipe>& pipe) {
     throw std::invalid_argument("Pipe already in this pipeline.");
   }
 
-  ManagedPipe managed_pipe;
-  managed_pipe.pipe = pipe;
-  managed_pipe.should_run = false;
+  std::shared_ptr<ManagedPipe> managed_pipe = std::make_shared<ManagedPipe>();
+  managed_pipe->pipe = pipe;
+  managed_pipe->should_run = false;
   pipes_.push_back(std::move(managed_pipe));
 }
 
@@ -45,59 +46,77 @@ void Pipeline::connectPipes(const std::shared_ptr<Pipe>& source_pipe, uint32_t s
   Connection connection{
       source_pipe, source_slot_index, destination_pipe, destination_slot_index, {}};
   connection.buffer.reserve(buffer_size);
-  connections_.push_back(connection);
+  connections_.push_back(std::move(connection));
 }
 
-const std::list<Pipeline::ManagedPipe>& Pipeline::getPipes() const { return pipes_; }
+const std::list<std::shared_ptr<Pipeline::ManagedPipe>>& Pipeline::getPipes() const {
+  return pipes_;
+}
 
 const std::list<Pipeline::Connection>& Pipeline::getConnections() const { return connections_; }
 
 void Pipeline::start() {
-  // TODO(fairlight1337): Implement actual pipeline start, with worker threads
-  // setup.
   if (is_running_) {
     throw std::invalid_argument("Pipeline is already running, cannot start it.");
+  }
+
+  for (std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
+    if (!managed_pipe->is_running) {
+      managed_pipe->should_run = true;
+      std::thread thread(&Pipeline::pipelineWorker, this, std::ref(managed_pipe));
+      std::swap(managed_pipe->thread, thread);
+      managed_pipe->is_running = true;
+    }
   }
 
   is_running_ = true;
 }
 
 void Pipeline::stop() {
-  // TODO(fairlight1337): Implement actual pipeline teardown, with worker
-  // threads setup.
   if (!is_running_) {
     throw std::invalid_argument("Pipeline is not running, cannot stop it.");
   }
+
+  for (std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
+    if (managed_pipe->is_running) {
+      managed_pipe->should_run = false;
+      managed_pipe->thread.join();
+      managed_pipe->is_running = false;
+    }
+  }
+
   is_running_ = false;
 }
 
 bool Pipeline::isRunning() const { return is_running_; }
 
 bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
-  return std::find_if(pipes_.begin(), pipes_.end(), [&pipe](const ManagedPipe& managed_pipe) {
-           return managed_pipe.pipe == pipe;
-         }) != pipes_.end();
+  return std::find_if(pipes_.begin(),
+                      pipes_.end(),
+                      [&pipe](const std::shared_ptr<ManagedPipe>& managed_pipe) {
+                        return managed_pipe->pipe == pipe;
+                      }) != pipes_.end();
 }
 
-void Pipeline::pipelineWorker(ManagedPipe& managed_pipe) {
+void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
   // Get all source and destination connections involving this pipe
   std::vector<Connection*> source_connections;
   std::vector<Connection*> destination_connections;
   for (Connection& connection : connections_) {
-    if (connection.destination_pipe == managed_pipe.pipe) {
+    if (connection.destination_pipe == managed_pipe->pipe) {
       source_connections.push_back(&connection);
     }
-    if (connection.source_pipe == managed_pipe.pipe) {
+    if (connection.source_pipe == managed_pipe->pipe) {
       destination_connections.push_back(&connection);
     }
   }
 
-  while (managed_pipe.should_run) {
+  while (managed_pipe->should_run) {
     // Iterate through all output slots for this pipe.
-    for (uint32_t slot_index = 0; slot_index < managed_pipe.pipe->getOutputSlotCount();
+    for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
          ++slot_index) {
-      // Skip this output slot if we dont' have any output.
-      if (!managed_pipe.pipe->hasOutput(slot_index)) {
+      // Skip this output slot if we don't have any output.
+      if (!managed_pipe->pipe->hasOutput(slot_index)) {
         continue;
       }
       // Get the destination connections for this slot.
@@ -114,13 +133,54 @@ void Pipeline::pipelineWorker(ManagedPipe& managed_pipe) {
       // Found a destination connection for this slot.
       Connection* destination_slot_connection = *destination_slot_connection_iter;
       // While we have output data, add it to the buffer if it has space.
-      while (managed_pipe.pipe->hasOutput(slot_index) &&
+      while (managed_pipe->pipe->hasOutput(slot_index) &&
              (destination_slot_connection->buffer.size() <
               destination_slot_connection->buffer.capacity())) {
-        auto data = managed_pipe.pipe->drawOutput(slot_index);
+        auto data = managed_pipe->pipe->drawOutput(slot_index);
         destination_slot_connection->buffer.push_back(std::move(data));
       }
     }
+
+    // Iterate through all input slots for this pipe.
+    for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
+         ++slot_index) {
+      // Get the destination connections for this slot.
+      auto source_slot_connection_iter =
+          std::find_if(source_connections.begin(),
+                       source_connections.end(),
+                       [slot_index](const Connection* connection) {
+                         return connection->source_slot_index == slot_index;
+                       });
+      if (source_slot_connection_iter == source_connections.end()) {
+        // This slot doesn't seem to be connected. Ignore it.
+        continue;
+      }
+      // Found a source connection for this slot.
+      Connection* source_slot_connection = *source_slot_connection_iter;
+      if (source_slot_connection->buffer.empty()) {
+        // No new input data available. Skip this.
+        continue;
+      }
+      // Move all buffer data into the slot until it is full.
+      while (managed_pipe->pipe->hasSpace() && !source_slot_connection->buffer.empty()) {
+        auto data = source_slot_connection->buffer.back();
+        source_slot_connection->buffer.pop_back();
+        managed_pipe->pipe->addInput(data.data);
+      }
+    }
+
+    // Does it have space for more output?
+    const bool output_has_space =
+        managed_pipe->pipe->getOutputSlotCount() == 0 || !managed_pipe->pipe->outputsAreSaturated();
+    // Does it have enough data?
+    const bool inputs_have_enough_data = managed_pipe->pipe->inputsAreSaturated();
+
+    if (inputs_have_enough_data && output_has_space) {
+      managed_pipe->pipe->execute();
+    }
+
+    // Limit cycle time.
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }
 

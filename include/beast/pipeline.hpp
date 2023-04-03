@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 // BEAST
 #include <beast/pipe.hpp>
@@ -43,7 +44,9 @@ class Pipeline {
 
   struct ManagedPipe {
     std::shared_ptr<Pipe> pipe;
+    std::thread thread;
     bool should_run;
+    bool is_running;
   };
  
   /**
@@ -95,7 +98,7 @@ class Pipeline {
    *
    * @return Constant reference to the list of Pipe instances in this Pipeline
    */
-  const std::list<ManagedPipe>& getPipes() const;
+  const std::list<std::shared_ptr<ManagedPipe>>& getPipes() const;
 
   /**
    * @fn Pipeline::getConnections
@@ -132,13 +135,13 @@ class Pipeline {
  private:
   bool pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const;
 
-  void pipelineWorker(ManagedPipe& managed_pipe);
+  void pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe);
 
   /**
    * @var Pipeline::pipes_
    * @brief Holds this Pipeline's registered Pipe instances
    */
-  std::list<ManagedPipe> pipes_;
+  std::list<std::shared_ptr<ManagedPipe>> pipes_;
 
   /**
    * @var Pipeline::connections_

@@ -30,6 +30,8 @@ class ProgramFactoryPipe : public Pipe {
 
   void execute() override;
 
+  uint32_t getInputSlotCount() const override { return 0; }
+
  private:
   const std::shared_ptr<ProgramFactoryBase> factory_;
 

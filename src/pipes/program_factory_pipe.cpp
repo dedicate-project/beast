@@ -1,5 +1,7 @@
 #include <beast/pipes/program_factory_pipe.hpp>
 
+#include <iostream>
+
 namespace beast {
 
 ProgramFactoryPipe::ProgramFactoryPipe(uint32_t max_candidates, uint32_t max_size,
