@@ -5,7 +5,8 @@
 
 namespace beast {
 
-PipelineServer::PipelineServer(const std::string& storage_folder) : pipeline_manager_{storage_folder} {}
+PipelineServer::PipelineServer(const std::string& storage_folder)
+    : pipeline_manager_{storage_folder} {}
 
 crow::json::wvalue PipelineServer::serveStatus() {
   crow::json::wvalue value;
@@ -37,7 +38,8 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
   value["id"] = pipeline_id;
   try {
     const auto& descriptor = pipeline_manager_.getPipelineById(pipeline_id);
-    value["state"] = descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
+    value["state"] =
+        descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
   } catch (const std::runtime_error& exception) {
     value["status"] = "failed";
     value["error"] = exception.what();
@@ -45,7 +47,8 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
   return value;
 }
 
-crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req, uint32_t pipeline_id,
+crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
+                                                       uint32_t pipeline_id,
                                                        const std::string_view path) {
   crow::json::wvalue value;
   value["id"] = pipeline_id;
@@ -126,7 +129,8 @@ crow::json::wvalue PipelineServer::serveAllPipelines() const {
     crow::json::wvalue pipeline_item;
     pipeline_item["id"] = pipeline.id;
     pipeline_item["name"] = pipeline.name;
-    pipeline_item["state"] = pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
+    pipeline_item["state"] =
+        pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
     value[idx] = std::move(pipeline_item);
     idx++;
   }

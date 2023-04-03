@@ -9,7 +9,8 @@
 namespace beast {
 
 TEST_CASE("PipelineManager") {
-  std::filesystem::path temp_storage_path = std::filesystem::temp_directory_path() / "test_pipelines";
+  std::filesystem::path temp_storage_path =
+      std::filesystem::temp_directory_path() / "test_pipelines";
   PipelineManager manager(temp_storage_path.string());
 
   SECTION("Create and get pipeline") {
@@ -22,7 +23,9 @@ TEST_CASE("PipelineManager") {
     REQUIRE(pipeline.filename == "Test_pipeline.json");
   }
 
-  SECTION("Get non-existent pipeline") { REQUIRE_THROWS_AS(manager.getPipelineById(100), std::invalid_argument); }
+  SECTION("Get non-existent pipeline") {
+    REQUIRE_THROWS_AS(manager.getPipelineById(100), std::invalid_argument);
+  }
 
   SECTION("Get all pipelines") {
     const uint32_t id1 = manager.createPipeline("Test Pipeline 1");

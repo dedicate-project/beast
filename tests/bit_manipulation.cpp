@@ -151,8 +151,8 @@ TEST_CASE("variables_can_be_bit_wise_anded", "bit_manipulation") {
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 52766103;
   const int32_t variable_value_b = 99021920;
-  const auto expected_result =
-      static_cast<int32_t>(static_cast<uint32_t>(variable_value_a) & static_cast<uint32_t>(variable_value_b));
+  const auto expected_result = static_cast<int32_t>(static_cast<uint32_t>(variable_value_a) &
+                                                    static_cast<uint32_t>(variable_value_b));
 
   beast::Program prg;
   prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
@@ -174,8 +174,8 @@ TEST_CASE("variables_can_be_bit_wise_ored", "bit_manipulation") {
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 52766103;
   const int32_t variable_value_b = 99021920;
-  const auto expected_result =
-      static_cast<int32_t>(static_cast<uint32_t>(variable_value_a) | static_cast<uint32_t>(variable_value_b));
+  const auto expected_result = static_cast<int32_t>(static_cast<uint32_t>(variable_value_a) |
+                                                    static_cast<uint32_t>(variable_value_b));
 
   beast::Program prg;
   prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);
@@ -197,8 +197,8 @@ TEST_CASE("variables_can_be_bit_wise_xored", "bit_manipulation") {
   const int32_t variable_index_b = 1;
   const int32_t variable_value_a = 52766103;
   const int32_t variable_value_b = 99021920;
-  const auto expected_result =
-      static_cast<int32_t>(static_cast<uint32_t>(variable_value_a) ^ static_cast<uint32_t>(variable_value_b));
+  const auto expected_result = static_cast<int32_t>(static_cast<uint32_t>(variable_value_a) ^
+                                                    static_cast<uint32_t>(variable_value_b));
 
   beast::Program prg;
   prg.declareVariable(variable_index_a, beast::Program::VariableType::Int32);

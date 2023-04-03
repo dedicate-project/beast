@@ -52,7 +52,8 @@ TEST_CASE("variable_string_table_item_can_be_loaded_into_variables", "printing_a
     prg.setVariable(start_variable_index + idx, 0, true);
   }
   prg.setStringTableEntry(string_table_index, entry);
-  prg.loadVariableStringItemIntoVariables(string_table_variable_index, true, start_variable_index, true);
+  prg.loadVariableStringItemIntoVariables(
+      string_table_variable_index, true, start_variable_index, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;

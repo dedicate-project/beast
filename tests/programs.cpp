@@ -55,7 +55,8 @@ TEST_CASE("bubblesort_correctly_sorts_10_numbers", "programs") {
   prg.compareIfVariableGtVariable(var_l1, true, var_l2, true, var_temp, true);
   beast::Program swap;
   swap.swapVariables(var_l1, true, var_l2, true);
-  prg.relativeJumpToAddressIfVariableEqualsZero(var_temp, true, static_cast<int32_t>(swap.getSize()));
+  prg.relativeJumpToAddressIfVariableEqualsZero(
+      var_temp, true, static_cast<int32_t>(swap.getSize()));
   prg.insertProgram(swap);
 
   /* The next two blocks are the cascaded loop tails; `var_j` controls the inner
@@ -112,7 +113,8 @@ TEST_CASE("static_and_dynamic_operator_counts_yield_correct_result", "programs")
   beast::VmSession session_dynamic(prg, 0, 1, 50);
   while (virtual_machine.step(session_dynamic, false)) {
   }
-  beast::VmSession::RuntimeStatistics dynamic_analysis_data = session_dynamic.getRuntimeStatistics();
+  beast::VmSession::RuntimeStatistics dynamic_analysis_data =
+      session_dynamic.getRuntimeStatistics();
 
   beast::OperatorUsageEvaluator noop_evaluator(beast::OpCode::NoOp);
   const double static_noop_ratio = noop_evaluator.evaluate(session_static);

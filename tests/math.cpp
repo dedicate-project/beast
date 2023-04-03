@@ -95,8 +95,10 @@ TEST_CASE("variable_can_be_compared_for_gt_against_constant", "math") {
   prg.setVariable(target_variable_index_1, 0, true);
   prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index_2, 0, true);
-  prg.compareIfVariableGtConstant(variable_index, true, comparison_value_1, target_variable_index_1, true);
-  prg.compareIfVariableGtConstant(variable_index, true, comparison_value_2, target_variable_index_2, true);
+  prg.compareIfVariableGtConstant(
+      variable_index, true, comparison_value_1, target_variable_index_1, true);
+  prg.compareIfVariableGtConstant(
+      variable_index, true, comparison_value_2, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -122,8 +124,10 @@ TEST_CASE("variable_can_be_compared_for_lt_against_constant", "math") {
   prg.setVariable(target_variable_index_1, 0, true);
   prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index_2, 0, true);
-  prg.compareIfVariableLtConstant(variable_index, true, comparison_value_1, target_variable_index_1, true);
-  prg.compareIfVariableLtConstant(variable_index, true, comparison_value_2, target_variable_index_2, true);
+  prg.compareIfVariableLtConstant(
+      variable_index, true, comparison_value_1, target_variable_index_1, true);
+  prg.compareIfVariableLtConstant(
+      variable_index, true, comparison_value_2, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -149,8 +153,10 @@ TEST_CASE("variable_can_be_compared_for_eq_against_constant", "math") {
   prg.setVariable(target_variable_index_1, 0, true);
   prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index_2, 0, true);
-  prg.compareIfVariableEqConstant(variable_index, true, comparison_value_1, target_variable_index_1, true);
-  prg.compareIfVariableEqConstant(variable_index, true, comparison_value_2, target_variable_index_2, true);
+  prg.compareIfVariableEqConstant(
+      variable_index, true, comparison_value_1, target_variable_index_1, true);
+  prg.compareIfVariableEqConstant(
+      variable_index, true, comparison_value_2, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -184,8 +190,10 @@ TEST_CASE("variable_can_be_compared_for_gt_against_variable", "math") {
   prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index_2, 0, true);
 
-  prg.compareIfVariableGtVariable(variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
-  prg.compareIfVariableGtVariable(variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
+  prg.compareIfVariableGtVariable(
+      variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
+  prg.compareIfVariableGtVariable(
+      variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -219,8 +227,10 @@ TEST_CASE("variable_can_be_compared_for_lt_against_variable", "math") {
   prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index_2, 0, true);
 
-  prg.compareIfVariableLtVariable(variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
-  prg.compareIfVariableLtVariable(variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
+  prg.compareIfVariableLtVariable(
+      variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
+  prg.compareIfVariableLtVariable(
+      variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -254,8 +264,10 @@ TEST_CASE("variable_can_be_compared_for_eq_against_variable", "math") {
   prg.declareVariable(target_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index_2, 0, true);
 
-  prg.compareIfVariableEqVariable(variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
-  prg.compareIfVariableEqVariable(variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
+  prg.compareIfVariableEqVariable(
+      variable_index_a, true, variable_index_b, true, target_variable_index_1, true);
+  prg.compareIfVariableEqVariable(
+      variable_index_a, true, variable_index_c, true, target_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -363,7 +375,8 @@ TEST_CASE("max_can_be_acquired_from_variable_and_variable", "math") {
   prg.setVariable(variable_index_b, variable_value_b, true);
   prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index, 0, true);
-  prg.getMaxOfVariableAndVariable(variable_index_a, true, variable_index_b, true, target_variable_index, true);
+  prg.getMaxOfVariableAndVariable(
+      variable_index_a, true, variable_index_b, true, target_variable_index, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
@@ -387,7 +400,8 @@ TEST_CASE("min_can_be_acquired_from_variable_and_variable", "math") {
   prg.setVariable(variable_index_b, variable_value_b, true);
   prg.declareVariable(target_variable_index, beast::Program::VariableType::Int32);
   prg.setVariable(target_variable_index, 0, true);
-  prg.getMinOfVariableAndVariable(variable_index_a, true, variable_index_b, true, target_variable_index, true);
+  prg.getMinOfVariableAndVariable(
+      variable_index_a, true, variable_index_b, true, target_variable_index, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
