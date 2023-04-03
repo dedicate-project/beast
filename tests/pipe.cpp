@@ -9,26 +9,52 @@ class MockPipe : public beast::Pipe {
   void execute() override {}
 };
 
-TEST_CASE("pipe_has_space_until_max_input_population_reached", "pipe") {
-  const std::vector<unsigned char> candidate = {};
-  const int32_t max_population = 10;
+TEST_CASE("pipe") {
+  SECTION("pipe_has_space_until_max_input_population_reached") {
+    const std::vector<unsigned char> candidate = {};
+    const int32_t max_population = 10;
 
-  MockPipe pipe(max_population);
+    MockPipe pipe(max_population);
 
-  for (uint32_t idx = 0; idx < max_population; ++idx) {
-    REQUIRE(pipe.hasSpace() == true);
-    pipe.addInput(candidate);
+    for (uint32_t idx = 0; idx < max_population; ++idx) {
+      REQUIRE(pipe.hasSpace() == true);
+      pipe.addInput(candidate);
+    }
+
+    REQUIRE(pipe.hasSpace() == false);
   }
 
-  REQUIRE(pipe.hasSpace() == false);
-}
+  SECTION("drawing_input_from_pipe_without_candidates_throws") {
+    MockPipe pipe(1);
+    REQUIRE_THROWS_AS(pipe.drawInput(0), std::underflow_error);
+  }
 
-TEST_CASE("drawing_input_from_pipe_without_candidates_throws", "pipe") {
-  MockPipe pipe(1);
-  REQUIRE_THROWS_AS(pipe.drawInput(0), std::underflow_error);
-}
+  SECTION("drawing_output_from_pipe_without_candidates_throws") {
+    MockPipe pipe(1);
+    REQUIRE_THROWS_AS(pipe.drawOutput(0), std::underflow_error);
+  }
 
-TEST_CASE("drawing_output_from_pipe_without_candidates_throws", "pipe") {
-  MockPipe pipe(1);
-  REQUIRE_THROWS_AS(pipe.drawOutput(0), std::underflow_error);
+  SECTION("default_input_slot_count_is_one") {
+    MockPipe pipe(1);
+    REQUIRE(pipe.getInputSlotCount() == 1);
+  }
+
+  SECTION("default_output_slot_count_is_one") {
+    MockPipe pipe(1);
+    REQUIRE(pipe.getOutputSlotCount() == 1);
+  }
+
+  SECTION("input_slot_amount_equals_added_candidates") {
+    const uint32_t max_population = 12;
+    const uint32_t population = 7;
+
+    MockPipe pipe(max_population);
+    const std::vector<unsigned char> candidate = {};
+
+    for (uint32_t idx = 0; idx < population; ++idx) {
+      pipe.addInput(candidate);
+    }
+
+    REQUIRE(pipe.getInputSlotAmount(0) == population);
+  }
 }

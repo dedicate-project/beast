@@ -123,6 +123,25 @@ TEST_CASE("dyn_focused_rs_eval_yields_zero_score_for_only_noop_programs", "evalu
   REQUIRE(std::abs(evaluator.evaluate(session)) < std::numeric_limits<double>::epsilon());
 }
 
+TEST_CASE("rs_eval_yields_zero_score_for_no_executed_steps", "evaluators") {
+  beast::Program prg;
+  prg.terminate(0);
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::RuntimeStatisticsEvaluator evaluator(0.5, 0.5);
+
+  REQUIRE(std::abs(evaluator.evaluate(session)) < std::numeric_limits<double>::epsilon());
+}
+
+TEST_CASE("rs_eval_yields_zero_score_for_no_steps_present", "evaluators") {
+  beast::Program prg;
+  beast::VmSession session(std::move(prg), 0, 0, 0);
+
+  beast::RuntimeStatisticsEvaluator evaluator(0.5, 0.5);
+
+  REQUIRE(std::abs(evaluator.evaluate(session)) < std::numeric_limits<double>::epsilon());
+}
+
 TEST_CASE("stat_focused_rs_eval_yields_one_score_for_only_noop_programs", "evaluators") {
   beast::Program prg;
   prg.noop();
