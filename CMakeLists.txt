@@ -150,7 +150,8 @@ file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/include/*.h)
 
 add_custom_target(format
-  COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${ALL_SOURCE_FILES}
+  COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
+          -fallback-style=none ${ALL_SOURCE_FILES}
   COMMENT "Running clang-format on all source files"
   VERBATIM)
 
