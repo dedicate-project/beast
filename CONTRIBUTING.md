@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-We welcome contributions from everyone, whether you're a seasoned developer or a first-time contributor. 
+We welcome contributions from everyone, whether you're a seasoned developer or a first-time contributor.
 
 ## How to Contribute
 
@@ -18,10 +18,11 @@ We welcome contributions from everyone, whether you're a seasoned developer or a
 
 ## Code Quality
 
-- Make sure your code compiles without warnings and new features should be covered by tests.
+- Make sure your code compiles without warnings and new features should be covered by tests and proper documentation (inline Doxygen, and .rst docs as required).
 - Make sure all tests pass before submitting your pull request.
 - Code lines should be wrapped after 100 characters.
 - Function and class/structure names need to be written in camel case. Names must be concise, but should express the general intent.
+- Run `make format` to apply our code style. Changes not adhering to the style defined in the `.clang-format` config will be rejected.
 
 ## Code of Conduct
 
