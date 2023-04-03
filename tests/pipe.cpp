@@ -6,15 +6,7 @@ class MockPipe : public beast::Pipe {
  public:
   explicit MockPipe(uint32_t max_candidates) : beast::Pipe(max_candidates) {}
 
-  [[nodiscard]] double evaluate(const std::vector<unsigned char>& /*program_data*/) override {
-    evaluate_call_count_++;
-    return 1.0;
-  }
-
-  [[nodiscard]] uint32_t getEvaluateCallCount() const { return evaluate_call_count_; }
-
- private:
-  uint32_t evaluate_call_count_ = 0;
+  void execute() override {}
 };
 
 TEST_CASE("pipe_has_space_until_max_input_population_reached", "pipe") {
@@ -31,42 +23,12 @@ TEST_CASE("pipe_has_space_until_max_input_population_reached", "pipe") {
   REQUIRE(pipe.hasSpace() == false);
 }
 
-TEST_CASE("pipe_calls_evaluate_on_evolve", "pipe") {
-  const std::vector<unsigned char> candidate = {};
-  const int32_t max_population = 10;
-
-  MockPipe pipe(max_population);
-  for (uint32_t idx = 0; idx < max_population; ++idx) {
-    pipe.addInput(candidate);
-  }
-
-  pipe.evolve();
-
-  REQUIRE(pipe.getEvaluateCallCount() > 0);
-}
-
 TEST_CASE("drawing_input_from_pipe_without_candidates_throws", "pipe") {
   MockPipe pipe(1);
-
-  bool threw = false;
-  try {
-    static_cast<void>(pipe.drawInput());
-  } catch(...) {
-    threw = true;
-  }
-
-  REQUIRE(threw == true);
+  REQUIRE_THROWS_AS(pipe.drawInput(0), std::underflow_error);
 }
 
 TEST_CASE("drawing_output_from_pipe_without_candidates_throws", "pipe") {
   MockPipe pipe(1);
-
-  bool threw = false;
-  try {
-    static_cast<void>(pipe.drawOutput());
-  } catch(...) {
-    threw = true;
-  }
-
-  REQUIRE(threw == true);
+  REQUIRE_THROWS_AS(pipe.drawOutput(0), std::underflow_error);
 }

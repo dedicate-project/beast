@@ -5,8 +5,8 @@ namespace beast {
 EvaluatorPipe::EvaluatorPipe(
     uint32_t max_candidates, size_t variable_count, size_t string_table_count,
     size_t max_string_size)
-  : Pipe(max_candidates), variable_count_{variable_count}, string_table_count_{string_table_count}
-  , max_string_size_{max_string_size} {
+  : EvolutionPipe(max_candidates), variable_count_{variable_count}
+  , string_table_count_{string_table_count}, max_string_size_{max_string_size} {
 }
 
 void EvaluatorPipe::addEvaluator(

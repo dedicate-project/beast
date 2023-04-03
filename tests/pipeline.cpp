@@ -8,9 +8,9 @@
 #include <beast/beast.hpp>
 
 namespace {
-class MockPipe : public beast::Pipe {
+class MockPipe : public beast::EvolutionPipe {
  public:
-  MockPipe() : Pipe(1) {}
+  MockPipe() : EvolutionPipe(1) {}
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& /*program_data*/) override {
     return 0.0;
@@ -27,9 +27,9 @@ TEST_CASE("adding_pipes_to_pipelines_and_retrieving_them_works_correctly", "pipe
 
   const auto& pipes = pipeline.getPipes();
   auto iter = pipes.begin();
-  REQUIRE(*iter == pipe0);
+  REQUIRE(iter->pipe == pipe0);
   iter++;
-  REQUIRE(*iter == pipe1);
+  REQUIRE(iter->pipe == pipe1);
 }
 
 TEST_CASE("adding_a_pipe_to_a_pipeline_twice_throws", "pipeline") {
@@ -55,7 +55,7 @@ TEST_CASE("adding_a_connection_with_source_pipe_not_in_pipeline_throws", "pipeli
 
   bool threw = false;
   try {
-    pipeline.connectPipes(pipe0, 0, pipe1, 0);
+    pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
   } catch(...) {
     threw = true;
   }
@@ -71,7 +71,7 @@ TEST_CASE("adding_a_connection_with_destination_pipe_not_in_pipeline_throws", "p
 
   bool threw = false;
   try {
-    pipeline.connectPipes(pipe0, 0, pipe1, 0);
+    pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
   } catch(...) {
     threw = true;
   }
@@ -86,7 +86,7 @@ TEST_CASE("adding_a_connection_with_either_pipe_not_in_pipeline_throws", "pipeli
 
   bool threw = false;
   try {
-    pipeline.connectPipes(pipe0, 0, pipe1, 0);
+    pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
   } catch(...) {
     threw = true;
   }
@@ -103,11 +103,11 @@ TEST_CASE("adding_connections_with_the_same_source_throws", "pipeline") {
   std::shared_ptr<beast::Pipe> pipe2 = std::make_shared<MockPipe>();
   pipeline.addPipe(pipe2);
 
-  pipeline.connectPipes(pipe0, 0, pipe1, 1);
+  pipeline.connectPipes(pipe0, 0, pipe1, 1, 1);
 
   bool threw = false;
   try {
-    pipeline.connectPipes(pipe0, 0, pipe2, 2);
+    pipeline.connectPipes(pipe0, 0, pipe2, 2, 1);
   } catch(...) {
     threw = true;
   }
@@ -124,11 +124,11 @@ TEST_CASE("adding_connections_with_the_same_destination_throws", "pipeline") {
   std::shared_ptr<beast::Pipe> pipe2 = std::make_shared<MockPipe>();
   pipeline.addPipe(pipe2);
 
-  pipeline.connectPipes(pipe0, 0, pipe2, 2);
+  pipeline.connectPipes(pipe0, 0, pipe2, 2, 1);
 
   bool threw = false;
   try {
-    pipeline.connectPipes(pipe1, 1, pipe2, 2);
+    pipeline.connectPipes(pipe1, 1, pipe2, 2, 1);
   } catch(...) {
     threw = true;
   }
@@ -143,11 +143,11 @@ TEST_CASE("adding_the_same_connection_twice_throws", "pipeline") {
   std::shared_ptr<beast::Pipe> pipe1 = std::make_shared<MockPipe>();
   pipeline.addPipe(pipe1);
 
-  pipeline.connectPipes(pipe0, 0, pipe1, 0);
+  pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
 
   bool threw = false;
   try {
-    pipeline.connectPipes(pipe0, 0, pipe1, 0);
+    pipeline.connectPipes(pipe0, 0, pipe1, 0, 1);
   } catch(...) {
     threw = true;
   }
@@ -162,7 +162,7 @@ TEST_CASE("adding_a_connection_and_retrieving_it_works", "pipeline") {
   std::shared_ptr<beast::Pipe> pipe1 = std::make_shared<MockPipe>();
   pipeline.addPipe(pipe1);
 
-  pipeline.connectPipes(pipe0, 0, pipe1, 1);
+  pipeline.connectPipes(pipe0, 0, pipe1, 1, 1);
 
   const auto& connections = pipeline.getConnections();
   REQUIRE(connections.size() == 1);

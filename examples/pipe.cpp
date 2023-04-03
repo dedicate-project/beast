@@ -5,11 +5,11 @@
 // BEAST
 #include <beast/beast.hpp>
 
-class SimplePipe : public beast::Pipe {
+class SimplePipe : public beast::EvolutionPipe {
  public:
   SimplePipe(
       uint32_t max_candidates, uint32_t mem_size, uint32_t st_size, uint32_t sti_size)
-    : Pipe(max_candidates), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {
+    : EvolutionPipe(max_candidates), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {
   }
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override {
@@ -69,11 +69,11 @@ int main(int /*argc*/, char** /*argv*/) {
     pipe.addInput(prg.getData());
   }
 
-  pipe.evolve();
+  pipe.execute();
 
   std::vector<std::vector<unsigned char>> finalists;
-  while (pipe.hasOutput()) {
-    const beast::Pipe::OutputItem item = pipe.drawOutput();
+  while (pipe.hasOutput(0)) {
+    const beast::Pipe::OutputItem item = pipe.drawOutput(0);
     finalists.push_back(item.data);
     std::cout << "Finalist: size = " << item.data.size() << " bytes, score = " << item.score
               << std::endl;

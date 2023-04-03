@@ -6,16 +6,17 @@
 #include <beast/beast.hpp>
 
 std::vector<std::vector<unsigned char>> runPipe(
-    const std::shared_ptr<beast::Pipe>& pipe, std::vector<std::vector<unsigned char>> init_pop) {
+    const std::shared_ptr<beast::Pipe>& pipe,
+    std::vector<std::vector<unsigned char>> init_pop) {
   for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->hasSpace(); ++pop_idx) {
     pipe->addInput(init_pop[pop_idx]);
   }
 
-  pipe->evolve();
+  pipe->execute();
 
   std::vector<std::vector<unsigned char>> finalists;
-  while (pipe->hasOutput()) {
-    const beast::Pipe::OutputItem item = pipe->drawOutput();
+  while (pipe->hasOutput(0)) {
+    const beast::Pipe::OutputItem item = pipe->drawOutput(0);
     finalists.push_back(item.data);
   }
 

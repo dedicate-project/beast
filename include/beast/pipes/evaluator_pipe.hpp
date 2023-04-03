@@ -3,7 +3,7 @@
 
 // BEAST
 #include <beast/evaluators/aggregation_evaluator.hpp>
-#include <beast/pipe.hpp>
+#include <beast/pipes/evolution_pipe.hpp>
 
 namespace beast {
 
@@ -24,7 +24,7 @@ namespace beast {
  * @author Jan Winkler
  * @date 2023-03-05
  */
-class EvaluatorPipe : public Pipe {
+class EvaluatorPipe : public EvolutionPipe {
  public:
   /**
    * @fn EvaluatorPipe::EvaluatorPipe
