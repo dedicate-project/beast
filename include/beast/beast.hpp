@@ -27,6 +27,7 @@
 
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
+#include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
 
 #endif  // BEAST_BEAST_HPP_

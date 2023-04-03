@@ -48,7 +48,7 @@ void PipelineManager::deletePipeline(uint32_t pipeline_id) {
   std::scoped_lock lock{pipelines_mutex_};
   PipelineDescriptor descriptor = getPipelineById(pipeline_id);
   filesystem_.deleteModel(descriptor.filename);
-  pipelines_.remove_if([pipeline_id](auto pipeline) { return pipeline.id == pipeline_id; });
+  pipelines_.remove_if([pipeline_id](const auto& pipeline) { return pipeline.id == pipeline_id; });
 }
 
 Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& /*json*/) {

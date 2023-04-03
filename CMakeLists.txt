@@ -110,6 +110,7 @@ add_library(${PROJECT_NAME}
   src/evaluators/operator_usage_evaluator.cpp
   src/pipes/evaluator_pipe.cpp
   src/pipes/evolution_pipe.cpp
+  src/pipes/null_sink_pipe.cpp
   src/pipes/program_factory_pipe.cpp)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -170,6 +171,7 @@ if(BEAST_BUILD_PIPELINES)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
   endmacro()
 
+  declare_pipeline(factory)
   declare_pipeline(sorter)
 endif()
 

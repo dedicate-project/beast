@@ -28,9 +28,9 @@ TEST_CASE("pipeline") {
 
     const auto& pipes = pipeline.getPipes();
     auto iter = pipes.begin();
-    REQUIRE(iter->pipe == pipe0);
+    REQUIRE((*iter)->pipe == pipe0);
     iter++;
-    REQUIRE(iter->pipe == pipe1);
+    REQUIRE((*iter)->pipe == pipe1);
   }
 
   SECTION("adding_a_pipe_to_a_pipeline_twice_throws") {

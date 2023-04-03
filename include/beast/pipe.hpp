@@ -73,9 +73,11 @@ class Pipe {
    */
   [[nodiscard]] OutputItem drawOutput(uint32_t slot_index);
 
-  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index) { return output_.size(); }
+  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t /*slot_index*/) const { return input_.size(); }
 
-  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index) { return input_.size(); }
+  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t /*slot_index*/) const {
+    return output_.size();
+  }
 
   virtual uint32_t getInputSlotCount() const { return 1; }
 
@@ -84,6 +86,22 @@ class Pipe {
   uint32_t getMaxCandidates() const { return max_candidates_; }
 
   virtual void execute() = 0;
+
+  virtual bool inputsAreSaturated() const {
+    bool saturated = true;
+    for (uint32_t idx = 0; idx < getInputSlotCount() && saturated; ++idx) {
+      saturated &= getInputSlotAmount(idx) >= max_candidates_;
+    }
+    return saturated;
+  }
+
+  virtual bool outputsAreSaturated() const {
+    bool saturated = true;
+    for (uint32_t idx = 0; idx < getOutputSlotCount() && saturated; ++idx) {
+      saturated &= getOutputSlotAmount(idx) >= max_candidates_;
+    }
+    return saturated;
+  }
 
  protected:
   /**
