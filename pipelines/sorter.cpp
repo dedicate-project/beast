@@ -25,7 +25,8 @@ std::vector<std::vector<unsigned char>> runPipe(const std::shared_ptr<beast::Pip
 int main(int /*argc*/, char** /*argv*/) {
   const auto version = beast::getVersion();
   std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
+            << std::endl;
 
   /*
     The sorter pipeline consists of n consecutive steps that ultimately evolve
@@ -57,7 +58,8 @@ int main(int /*argc*/, char** /*argv*/) {
     std::vector<std::vector<unsigned char>> staged0;
     uint32_t last_staged0 = 0;
     while (staged0.size() < pop_size) {
-      std::shared_ptr<beast::EvaluatorPipe> pipe0 = std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+      std::shared_ptr<beast::EvaluatorPipe> pipe0 =
+          std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
       const auto eval0 = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(1, 5, 100);
       pipe0->addEvaluator(eval0, 1.0, false);
       pipe0->setCutOffScore(1.0);
@@ -78,7 +80,8 @@ int main(int /*argc*/, char** /*argv*/) {
       }
     }
 
-    std::shared_ptr<beast::EvaluatorPipe> pipe1 = std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+    std::shared_ptr<beast::EvaluatorPipe> pipe1 =
+        std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
     const auto eval1 = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(10, 2, 2000);
     pipe1->addEvaluator(eval1, 1.0, false);
     pipe1->setCutOffScore(1.0);

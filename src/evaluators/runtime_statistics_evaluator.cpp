@@ -8,9 +8,10 @@
 
 namespace beast {
 
-RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(double dyn_noop_weight, double stat_noop_weight)
-    : dyn_noop_weight_{dyn_noop_weight}, stat_noop_weight_{stat_noop_weight}, prg_exec_weight_{1.0 - dyn_noop_weight -
-                                                                                               stat_noop_weight} {
+RuntimeStatisticsEvaluator::RuntimeStatisticsEvaluator(double dyn_noop_weight,
+                                                       double stat_noop_weight)
+    : dyn_noop_weight_{dyn_noop_weight}, stat_noop_weight_{stat_noop_weight},
+      prg_exec_weight_{1.0 - dyn_noop_weight - stat_noop_weight} {
   if (dyn_noop_weight + stat_noop_weight > 1.0) {
     throw std::invalid_argument("dyn_noop_weight + stat_noop_weight must be <= 1.0");
   }
@@ -55,13 +56,15 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) {
   const uint32_t total_steps_noop = static_statistics.operator_executions[OpCode::NoOp];
   /* The fraction of noop vs. all steps present in the program. We want this to
    * be high. */
-  const double total_steps_noop_fraction = static_cast<double>(total_steps_noop) / static_cast<double>(total_steps);
+  const double total_steps_noop_fraction =
+      static_cast<double>(total_steps_noop) / static_cast<double>(total_steps);
 
   /* The fraction of individual static operators actually executed vs. actually
      present. Here, every statically present operator is only counted once. We
      want this to be high. */
-  const double program_executed_fraction = static_cast<double>(dynamic_statistics.executed_indices.size()) /
-                                           static_cast<double>(static_statistics.executed_indices.size());
+  const double program_executed_fraction =
+      static_cast<double>(dynamic_statistics.executed_indices.size()) /
+      static_cast<double>(static_statistics.executed_indices.size());
 
   /*
     In order to get to a good measure of efficiency in both, static program
@@ -97,7 +100,8 @@ double RuntimeStatisticsEvaluator::evaluate(const VmSession& session) {
     runtime and static structure efficiency.
    */
 
-  return dyn_noop_weight_ * (1.0 - steps_executed_noop_fraction) + stat_noop_weight_ * total_steps_noop_fraction +
+  return dyn_noop_weight_ * (1.0 - steps_executed_noop_fraction) +
+         stat_noop_weight_ * total_steps_noop_fraction +
          prg_exec_weight_ * (1.0 - program_executed_fraction);
 }
 

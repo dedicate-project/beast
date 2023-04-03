@@ -58,8 +58,10 @@ TEST_CASE("add_variable_to_variable", "variables") {
   const bool follow_destination_links = true;
 
   beast::Program prg(11);
-  prg.addVariableToVariable(
-      source_variable_index, follow_source_links, destination_variable_index, follow_destination_links);
+  prg.addVariableToVariable(source_variable_index,
+                            follow_source_links,
+                            destination_variable_index,
+                            follow_destination_links);
 
   REQUIRE(prg.getData1(0) == static_cast<int8_t>(beast::OpCode::AddVariableToVariable));
   REQUIRE(prg.getData4(1) == source_variable_index);

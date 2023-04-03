@@ -8,7 +8,8 @@
 class SimplePipe : public beast::EvolutionPipe {
  public:
   SimplePipe(uint32_t max_candidates, uint32_t mem_size, uint32_t st_size, uint32_t sti_size)
-      : EvolutionPipe(max_candidates), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {}
+      : EvolutionPipe(max_candidates), mem_size_{mem_size}, st_size_{st_size}, sti_size_{sti_size} {
+  }
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override {
     if (program_data.empty()) {
@@ -43,7 +44,8 @@ int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
   std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
+            << std::endl;
 
   // Evolution parameters
   const uint32_t pop_size = 10;
@@ -60,7 +62,8 @@ int main(int /*argc*/, char** /*argv*/) {
   beast::RandomProgramFactory factory;
 
   while (pipe.hasSpace()) {
-    beast::Program prg = factory.generate(prg_size, mem_size, string_table_size, string_table_item_length);
+    beast::Program prg =
+        factory.generate(prg_size, mem_size, string_table_size, string_table_item_length);
     pipe.addInput(prg.getData());
   }
 
@@ -70,7 +73,8 @@ int main(int /*argc*/, char** /*argv*/) {
   while (pipe.hasOutput(0)) {
     const beast::Pipe::OutputItem item = pipe.drawOutput(0);
     finalists.push_back(item.data);
-    std::cout << "Finalist: size = " << item.data.size() << " bytes, score = " << item.score << std::endl;
+    std::cout << "Finalist: size = " << item.data.size() << " bytes, score = " << item.score
+              << std::endl;
   }
 
   std::cout << "Got " << finalists.size() << " finalists." << std::endl;

@@ -23,7 +23,8 @@ class MockVirtualMachine : public beast::VirtualMachine {
   bool step(beast::VmSession& /*session*/, bool /*dry_run*/) override { return true; }
 
  protected:
-  void message(beast::VirtualMachine::MessageSeverity severity, const std::string& message) noexcept override {
+  void message(beast::VirtualMachine::MessageSeverity severity,
+               const std::string& message) noexcept override {
     cache_[severity] = message;
   }
 
@@ -50,7 +51,8 @@ TEST_CASE("when_message_severity_set_to_debug_all_messages_are_printed", "virtua
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug) == debug_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info) == info_message);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) == warning_message);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) ==
+          warning_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -72,7 +74,8 @@ TEST_CASE("when_message_severity_set_to_info_the_right_messages_are_printed", "v
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info) == info_message);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) == warning_message);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) ==
+          warning_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -94,7 +97,8 @@ TEST_CASE("when_message_severity_set_to_warn_the_right_messages_are_printed", "v
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info).empty() == true);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) == warning_message);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) ==
+          warning_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -116,7 +120,8 @@ TEST_CASE("when_message_severity_set_to_error_the_right_messages_are_printed", "
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info).empty() == true);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty() == true);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty() ==
+          true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -138,7 +143,8 @@ TEST_CASE("when_message_severity_set_to_panic_the_right_messages_are_printed", "
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info).empty() == true);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty() == true);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty() ==
+          true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }

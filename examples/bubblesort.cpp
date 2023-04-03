@@ -12,7 +12,8 @@ int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
   std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
+            << std::endl;
 
   /* This program illustrates how to implement the bubblesort algorithm using a
    * BEAST program. */
@@ -25,7 +26,9 @@ int main(int /*argc*/, char** /*argv*/) {
   std::mt19937 mersenne_engine{random_device()};
   std::uniform_int_distribution<int32_t> distribution{1, 100};
 
-  const auto generator = [&distribution, &mersenne_engine]() { return distribution(mersenne_engine); };
+  const auto generator = [&distribution, &mersenne_engine]() {
+    return distribution(mersenne_engine);
+  };
 
   /* The input/output variables, but also the algorithm itself can be scaled to
      any number of numbers to sort. In this example, we're sorting 10 random
@@ -86,7 +89,8 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.compareIfVariableGtVariable(var_l1, true, var_l2, true, var_temp, true);
   beast::Program swap;
   swap.swapVariables(var_l1, true, var_l2, true);
-  prg.relativeJumpToAddressIfVariableEqualsZero(var_temp, true, static_cast<int32_t>(swap.getSize()));
+  prg.relativeJumpToAddressIfVariableEqualsZero(
+      var_temp, true, static_cast<int32_t>(swap.getSize()));
   prg.insertProgram(swap);
 
   /* The next two blocks are the cascaded loop tails; `var_j` controls the inner

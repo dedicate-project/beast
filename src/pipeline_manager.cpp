@@ -34,7 +34,9 @@ PipelineManager::PipelineDescriptor& PipelineManager::getPipelineById(uint32_t p
   throw std::invalid_argument("Pipeline with this ID not found: " + std::to_string(pipeline_id));
 }
 
-const std::list<PipelineManager::PipelineDescriptor>& PipelineManager::getPipelines() const { return pipelines_; }
+const std::list<PipelineManager::PipelineDescriptor>& PipelineManager::getPipelines() const {
+  return pipelines_;
+}
 
 void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string_view new_name) {
   std::scoped_lock lock{pipelines_mutex_};
@@ -61,8 +63,9 @@ uint32_t PipelineManager::getFreeId() const {
   std::list<PipelineDescriptor>::const_iterator iter;
   do {
     new_id++;
-    iter = std::find_if(
-        pipelines_.begin(), pipelines_.end(), [new_id](const auto& pipeline) { return pipeline.id == new_id; });
+    iter = std::find_if(pipelines_.begin(), pipelines_.end(), [new_id](const auto& pipeline) {
+      return pipeline.id == new_id;
+    });
   } while (iter != pipelines_.end());
   return new_id;
 }

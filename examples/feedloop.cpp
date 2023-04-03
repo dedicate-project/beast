@@ -11,7 +11,8 @@ int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
   std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
+            << std::endl;
 
   /* Declare the variable indices and values to use in this program. */
   const int32_t input_variable = 0;
@@ -71,7 +72,8 @@ int main(int /*argc*/, char** /*argv*/) {
     }
 
     if (session.hasOutputDataAvailable(output_variable, true)) {
-      std::cout << "From output variable: " << session.getVariableValue(output_variable, true) << std::endl;
+      std::cout << "From output variable: " << session.getVariableValue(output_variable, true)
+                << std::endl;
     }
   }
 

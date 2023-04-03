@@ -13,7 +13,8 @@ double OperatorUsageEvaluator::evaluate(const VmSession& session) {
   }
 
   // score = specific operator executions / total operator executions
-  return static_cast<double>(statistics.operator_executions[opcode_]) / static_cast<double>(statistics.steps_executed);
+  return static_cast<double>(statistics.operator_executions[opcode_]) /
+         static_cast<double>(statistics.steps_executed);
 }
 
 } // namespace beast

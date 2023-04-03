@@ -11,13 +11,19 @@ struct Calculation {
   int32_t result;
 };
 
-enum class CalculationState { WaitingForPrgReady, SettingOperands, WaitingForResult, WaitingForQuit };
+enum class CalculationState {
+  WaitingForPrgReady,
+  SettingOperands,
+  WaitingForResult,
+  WaitingForQuit
+};
 
 int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
   std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
+            << std::endl;
 
   /* These `+` calculations are supposed to be performed (operands and expected
    * result) */
@@ -66,7 +72,8 @@ int main(int /*argc*/, char** /*argv*/) {
   prg.relativeJumpToAddressIfVariableEqualsZero(
       quit_triggered_variable, true, static_cast<int32_t>(quit_prg.getSize()));
   prg.insertProgram(quit_prg);
-  prg.relativeJumpToAddressIfVariableEqualsZero(calc_triggered_variable, true, static_cast<int32_t>(add_prg.getSize()));
+  prg.relativeJumpToAddressIfVariableEqualsZero(
+      calc_triggered_variable, true, static_cast<int32_t>(add_prg.getSize()));
   prg.insertProgram(add_prg);
   prg.unconditionalJumpToAbsoluteAddress(loop_start_address);
 
@@ -95,9 +102,9 @@ int main(int /*argc*/, char** /*argv*/) {
     } break;
 
     case CalculationState::SettingOperands: {
-      std::cout << "Setting operands for calculation " << calculation_index << " of " << add_calculations.size() << ": "
-                << add_calculations[calculation_index].op_a << ", " << add_calculations[calculation_index].op_b
-                << std::endl;
+      std::cout << "Setting operands for calculation " << calculation_index << " of "
+                << add_calculations.size() << ": " << add_calculations[calculation_index].op_a
+                << ", " << add_calculations[calculation_index].op_b << std::endl;
       session.setVariableValue(operand_variable_a, true, add_calculations[calculation_index].op_a);
       session.setVariableValue(operand_variable_b, true, add_calculations[calculation_index].op_b);
       std::cout << "Triggering calculation" << std::endl;
@@ -109,7 +116,8 @@ int main(int /*argc*/, char** /*argv*/) {
     case CalculationState::WaitingForResult: {
       if (session.hasOutputDataAvailable(result_variable, true)) {
         const int32_t result = session.getVariableValue(result_variable, true);
-        std::cout << "Got result: " << result << " (expected: " << add_calculations[calculation_index].result << ")"
+        std::cout << "Got result: " << result
+                  << " (expected: " << add_calculations[calculation_index].result << ")"
                   << std::endl;
 
         calculation_index++;

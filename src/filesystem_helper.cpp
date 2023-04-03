@@ -9,12 +9,14 @@ namespace beast {
 FilesystemHelper::FilesystemHelper(const std::string& model_path) {
   m_model_path = std::filesystem::absolute(model_path);
 
-  if (!std::filesystem::is_directory(m_model_path) && !std::filesystem::create_directory(m_model_path)) {
+  if (!std::filesystem::is_directory(m_model_path) &&
+      !std::filesystem::create_directory(m_model_path)) {
     throw std::invalid_argument("Could not create model directory.");
   }
 }
 
-std::string FilesystemHelper::saveModel(const std::string& model_identifier, const nlohmann::json& model) const {
+std::string FilesystemHelper::saveModel(const std::string& model_identifier,
+                                        const nlohmann::json& model) const {
   std::string filename = cleanFilename(model_identifier) + ".json";
   std::string filepath = (m_model_path / filename).string();
 

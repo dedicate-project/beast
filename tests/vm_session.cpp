@@ -98,9 +98,12 @@ TEST_CASE("set_io_behaviors_can_be_retrieved", "vm_session") {
   session.setVariableBehavior(variable_index_input, beast::VmSession::VariableIoBehavior::Input);
   session.setVariableBehavior(variable_index_output, beast::VmSession::VariableIoBehavior::Output);
 
-  REQUIRE(session.getVariableBehavior(variable_index_store, true) == beast::VmSession::VariableIoBehavior::Store);
-  REQUIRE(session.getVariableBehavior(variable_index_input, true) == beast::VmSession::VariableIoBehavior::Input);
-  REQUIRE(session.getVariableBehavior(variable_index_output, true) == beast::VmSession::VariableIoBehavior::Output);
+  REQUIRE(session.getVariableBehavior(variable_index_store, true) ==
+          beast::VmSession::VariableIoBehavior::Store);
+  REQUIRE(session.getVariableBehavior(variable_index_input, true) ==
+          beast::VmSession::VariableIoBehavior::Input);
+  REQUIRE(session.getVariableBehavior(variable_index_output, true) ==
+          beast::VmSession::VariableIoBehavior::Output);
 }
 
 TEST_CASE("getting_io_behavior_for_not_registered_variable_throws", "vm_session") {

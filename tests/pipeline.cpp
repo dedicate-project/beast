@@ -12,7 +12,9 @@ class MockPipe : public beast::EvolutionPipe {
  public:
   MockPipe() : EvolutionPipe(1) {}
 
-  [[nodiscard]] double evaluate(const std::vector<unsigned char>& /*program_data*/) override { return 0.0; }
+  [[nodiscard]] double evaluate(const std::vector<unsigned char>& /*program_data*/) override {
+    return 0.0;
+  }
 };
 } // namespace
 

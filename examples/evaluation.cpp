@@ -8,7 +8,8 @@ int main(int /*argc*/, char** /*argv*/) {
   /* Print BEAST library version. */
   const auto version = beast::getVersion();
   std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
+            << std::endl;
 
   /* This example shows how to use program evaluations to generate metrics. */
   const std::string message = "Some message.";
@@ -30,7 +31,8 @@ int main(int /*argc*/, char** /*argv*/) {
   beast::VmSession session_dynamic(prg, 0, 1, 50);
   while (virtual_machine.step(session_dynamic, false)) {
   }
-  beast::VmSession::RuntimeStatistics dynamic_analysis_data = session_dynamic.getRuntimeStatistics();
+  beast::VmSession::RuntimeStatistics dynamic_analysis_data =
+      session_dynamic.getRuntimeStatistics();
 
   beast::OperatorUsageEvaluator noop_evaluator(beast::OpCode::NoOp);
   const double static_noop_ratio = noop_evaluator.evaluate(session_static);
