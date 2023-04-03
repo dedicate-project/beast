@@ -124,7 +124,7 @@ crow::json::wvalue PipelineServer::servePipelineAction(
   return value;
 }
 
-crow::json::wvalue PipelineServer::serveAllPipelines() {
+crow::json::wvalue PipelineServer::serveAllPipelines() const {
   crow::json::wvalue value = crow::json::wvalue::list();
   uint32_t idx = 0;
   for (const auto& pipeline : pipeline_manager_.getPipelines()) {

@@ -26,5 +26,6 @@
 #include <beast/evaluators/runtime_statistics_evaluator.hpp>
 
 #include <beast/pipes/evaluator_pipe.hpp>
+#include <beast/pipes/evolution_pipe.hpp>
 
 #endif  // BEAST_BEAST_HPP_

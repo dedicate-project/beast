@@ -14,11 +14,11 @@ std::vector<std::vector<unsigned char>> runPipe(
     pipe->addInput(init_pop[pop_idx]);
   }
 
-  pipe->evolve();
+  pipe->execute();
 
   std::vector<std::vector<unsigned char>> finalists;
-  while (pipe->hasOutput()) {
-    const beast::Pipe::OutputItem item = pipe->drawOutput();
+  while (pipe->hasOutput(0)) {
+    const beast::Pipe::OutputItem item = pipe->drawOutput(0);
     finalists.push_back(item.data);
   }
 

@@ -16,7 +16,7 @@ namespace beast {
  */
 class PipelineServer {
  public:
-  PipelineServer(const std::string& storage_folder);
+  explicit PipelineServer(const std::string& storage_folder);
 
   /**
    * Serve a JSON response containing the version of the application.
@@ -69,7 +69,7 @@ class PipelineServer {
    * @param pipeline_manager Pointer to the PipelineManager instance.
    * @return JSON response containing all pipeline status.
    */
-  crow::json::wvalue serveAllPipelines();
+  crow::json::wvalue serveAllPipelines() const;
 
  private:
   beast::PipelineManager pipeline_manager_;

@@ -106,7 +106,8 @@ add_library(${PROJECT_NAME}
   src/evaluators/random_serial_data_passthrough_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
   src/evaluators/operator_usage_evaluator.cpp
-  src/pipes/evaluator_pipe.cpp)
+  src/pipes/evaluator_pipe.cpp
+  src/pipes/evolution_pipe.cpp)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -206,6 +207,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(bit_manipulation)
   declare_test(cpu_vm)
   declare_test(evaluators)
+  declare_test(evolution_pipe)
   declare_test(filesystem_helper)
   declare_test(io)
   declare_test(jumps)

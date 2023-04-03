@@ -2,8 +2,10 @@
 #define BEAST_PIPELINE_HPP_
 
 // Standard
+#include <condition_variable>
 #include <list>
 #include <memory>
+#include <mutex>
 
 // BEAST
 #include <beast/pipe.hpp>
@@ -35,8 +37,15 @@ class Pipeline {
 
     std::shared_ptr<Pipe> destination_pipe;  ///< Pipe that receives the connection on an input slot
     uint32_t destination_slot_index;         ///< Index of the input slot of the destination Pipe
+
+    std::vector<Pipe::OutputItem> buffer;    ///< Data buffer from source to destination
   };
 
+  struct ManagedPipe {
+    std::shared_ptr<Pipe> pipe;
+    bool should_run;
+  };
+ 
   /**
    * @fn Pipeline::addPipe
    * @brief Adds a Pipe instance to this Pipeline
@@ -63,14 +72,22 @@ class Pipeline {
    * if the respective input or output ports of the Pipe instances are already occupied by other
    * connections in this Pipeline (an exception will be thrown if this is the case).
    *
+   * During operation, incoming candidate programs from the source pipe will be stored in the
+   * internal buffer. Its size is defined by the buffer_size parameter. Source pipes are halted when
+   * the buffer reaches its limit until there is more space available. Destination pipes draw
+   * candidates from the buffer as their own input and will be halted if not enough data is
+   * available.
+   *
    * @param source_pipe Shared pointer to the source Pipe instance
    * @param source_slot_index Index of the output slot on the source Pipe
    * @param destination_pipe Shared pointer to the destination Pipe instance
    * @param destination_slot_index Index of the input slot on the destination Pipe
+   * @param buffer_size The size of the pipe's buffer space
    */
   void connectPipes(
       const std::shared_ptr<Pipe>& source_pipe, uint32_t source_slot_index,
-      const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index);
+      const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index,
+      uint32_t buffer_size);
 
   /**
    * @fn Pipeline::getPipes
@@ -78,7 +95,7 @@ class Pipeline {
    *
    * @return Constant reference to the list of Pipe instances in this Pipeline
    */
-  const std::list<std::shared_ptr<Pipe>>& getPipes() const;
+  const std::list<ManagedPipe>& getPipes() const;
 
   /**
    * @fn Pipeline::getConnections
@@ -113,11 +130,15 @@ class Pipeline {
   bool isRunning() const;
 
  private:
+  bool pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const;
+
+  void pipelineWorker(ManagedPipe& managed_pipe);
+
   /**
    * @var Pipeline::pipes_
    * @brief Holds this Pipeline's registered Pipe instances
    */
-  std::list<std::shared_ptr<Pipe>> pipes_;
+  std::list<ManagedPipe> pipes_;
 
   /**
    * @var Pipeline::connections_
