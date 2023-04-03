@@ -4,9 +4,8 @@
 
 class MockFactory : public beast::ProgramFactoryBase {
  public:
-  [[nodiscard]] beast::Program generate(
-      uint32_t size, uint32_t /*memory_size*/, uint32_t /*string_table_size*/,
-      uint32_t /*string_table_item_length*/) override {
+  [[nodiscard]] beast::Program generate(uint32_t size, uint32_t /*memory_size*/, uint32_t /*string_table_size*/,
+                                        uint32_t /*string_table_item_length*/) override {
     return beast::Program(size);
   }
 };

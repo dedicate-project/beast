@@ -9,16 +9,15 @@
 
 namespace beast {
 
-RandomSerialDataPassthroughEvaluator::RandomSerialDataPassthroughEvaluator(
-    uint32_t data_count, uint32_t repeats, uint32_t max_steps)
-  : data_count_{data_count}, repeats_{repeats}, max_steps_{max_steps} {
-}
+RandomSerialDataPassthroughEvaluator::RandomSerialDataPassthroughEvaluator(uint32_t data_count, uint32_t repeats,
+                                                                           uint32_t max_steps)
+    : data_count_{data_count}, repeats_{repeats}, max_steps_{max_steps} {}
 
 double RandomSerialDataPassthroughEvaluator::evaluate(const VmSession& session) {
   std::random_device random_device;
   std::mt19937 mersenne_twister(random_device());
-  std::uniform_int_distribution<> distribution(
-      std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
+  std::uniform_int_distribution<> distribution(std::numeric_limits<int32_t>::min(),
+                                               std::numeric_limits<int32_t>::max());
 
   double worst_result = 1.0;
   for (uint32_t repeat = 0; repeat < repeats_; ++repeat) {
@@ -38,22 +37,21 @@ double RandomSerialDataPassthroughEvaluator::evaluate(const VmSession& session) 
 
     try {
       correct_forwards = runProgram(work_session, values);
-    } catch(...) {
+    } catch (...) {
       return 0.0;
     }
 
-    const double result =
-        std::min(1.0,
-                 (static_cast<double>(correct_forwards) / static_cast<double>(values.size()))
-                 + (correct_forwards == 0 ? static_cast<double>(values.size()) * 0.1 : 0.0));
+    const double result = std::min(1.0,
+                                   (static_cast<double>(correct_forwards) / static_cast<double>(values.size())) +
+                                       (correct_forwards == 0 ? static_cast<double>(values.size()) * 0.1 : 0.0));
     worst_result = std::min(worst_result, result);
   }
 
   return worst_result;
 }
 
-uint32_t RandomSerialDataPassthroughEvaluator::runProgram(
-    VmSession& work_session, const std::vector<int32_t>& values) const {
+uint32_t RandomSerialDataPassthroughEvaluator::runProgram(VmSession& work_session,
+                                                          const std::vector<int32_t>& values) const {
   beast::CpuVirtualMachine virtual_machine;
   virtual_machine.setSilent(true);
 
@@ -72,11 +70,9 @@ uint32_t RandomSerialDataPassthroughEvaluator::runProgram(
       }
     }
     step_count++;
-  } while(value_index < values.size() &&
-          step_count < max_steps_ &&
-          virtual_machine.step(work_session, false));
+  } while (value_index < values.size() && step_count < max_steps_ && virtual_machine.step(work_session, false));
 
   return correct_forwards;
 }
 
-}  // namespace beast
+} // namespace beast

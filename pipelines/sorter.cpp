@@ -5,9 +5,8 @@
 // BEAST
 #include <beast/beast.hpp>
 
-std::vector<std::vector<unsigned char>> runPipe(
-    const std::shared_ptr<beast::Pipe>& pipe,
-    std::vector<std::vector<unsigned char>> init_pop) {
+std::vector<std::vector<unsigned char>> runPipe(const std::shared_ptr<beast::Pipe>& pipe,
+                                                std::vector<std::vector<unsigned char>> init_pop) {
   for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->hasSpace(); ++pop_idx) {
     pipe->addInput(init_pop[pop_idx]);
   }
@@ -25,23 +24,24 @@ std::vector<std::vector<unsigned char>> runPipe(
 
 int main(int /*argc*/, char** /*argv*/) {
   const auto version = beast::getVersion();
-  std::cout << "Using BEAST library version "
-            << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "."
-            << static_cast<uint32_t>(version[2]) << "." << std::endl;
+  std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
+            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "." << std::endl;
 
   /*
-    The sorter pipeline consists of n consecutive steps that ultimately evolve programs that can
-    sort arrays of arbitrary lengths (as much as the available VM memory allows):
+    The sorter pipeline consists of n consecutive steps that ultimately evolve
+    programs that can sort arrays of arbitrary lengths (as much as the available
+    VM memory allows):
 
-    1. Input forwarding, single step: A program is able to receive a numeric value on an input
-       variable, and assigns this value to an output variable. The program ends either when the
-       output variable was assigned the correct value, or after at most 100 steps (which indicates
-       failure if the value was not assigned to the designated output variable at that point).
+    1. Input forwarding, single step: A program is able to receive a numeric
+    value on an input variable, and assigns this value to an output variable.
+    The program ends either when the output variable was assigned the correct
+    value, or after at most 100 steps (which indicates failure if the value was
+    not assigned to the designated output variable at that point).
 
-    2. Input forwarding, continuously: Within a maximum number of steps, whenever a new value was
-       set on the input variable, it should be forwarded to the output variable. The candidate
-       programs will be rated based on how many values they got right.
+    2. Input forwarding, continuously: Within a maximum number of steps,
+    whenever a new value was set on the input variable, it should be forwarded
+    to the output variable. The candidate programs will be rated based on how
+    many values they got right.
    */
 
   // Evolution parameters
@@ -57,8 +57,7 @@ int main(int /*argc*/, char** /*argv*/) {
     std::vector<std::vector<unsigned char>> staged0;
     uint32_t last_staged0 = 0;
     while (staged0.size() < pop_size) {
-      std::shared_ptr<beast::EvaluatorPipe> pipe0 =
-          std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+      std::shared_ptr<beast::EvaluatorPipe> pipe0 = std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
       const auto eval0 = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(1, 5, 100);
       pipe0->addEvaluator(eval0, 1.0, false);
       pipe0->setCutOffScore(1.0);
@@ -79,8 +78,7 @@ int main(int /*argc*/, char** /*argv*/) {
       }
     }
 
-    std::shared_ptr<beast::EvaluatorPipe> pipe1 =
-        std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+    std::shared_ptr<beast::EvaluatorPipe> pipe1 = std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
     const auto eval1 = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(10, 2, 2000);
     pipe1->addEvaluator(eval1, 1.0, false);
     pipe1->setCutOffScore(1.0);
@@ -98,7 +96,7 @@ int main(int /*argc*/, char** /*argv*/) {
 
   std::cout << "Finalists:" << std::endl;
   for (const auto& staged : staged1) {
-    std::cout << "* Size = " << staged.size() << " bytes" << std::endl;    
+    std::cout << "* Size = " << staged.size() << " bytes" << std::endl;
   }
 
   return EXIT_SUCCESS;

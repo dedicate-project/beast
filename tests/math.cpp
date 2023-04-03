@@ -14,7 +14,8 @@ TEST_CASE("add_constant_to_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index, true) == value + added_constant);
 }
@@ -34,7 +35,8 @@ TEST_CASE("add_variable_to_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index_b, true) == value_a + value_b);
 }
@@ -51,7 +53,8 @@ TEST_CASE("subtract_constant_from_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index, true) == value - subtracted_constant);
 }
@@ -71,7 +74,8 @@ TEST_CASE("subtract_variable_from_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index_b, true) == value_b - value_a);
 }
@@ -96,7 +100,8 @@ TEST_CASE("variable_can_be_compared_for_gt_against_constant", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
@@ -122,7 +127,8 @@ TEST_CASE("variable_can_be_compared_for_lt_against_constant", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x0);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
@@ -148,7 +154,8 @@ TEST_CASE("variable_can_be_compared_for_eq_against_constant", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x0);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
@@ -182,7 +189,8 @@ TEST_CASE("variable_can_be_compared_for_gt_against_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
@@ -216,7 +224,8 @@ TEST_CASE("variable_can_be_compared_for_lt_against_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x0);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x1);
@@ -250,7 +259,8 @@ TEST_CASE("variable_can_be_compared_for_eq_against_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index_1, true) == 0x1);
   REQUIRE(session.getVariableValue(target_variable_index_2, true) == 0x0);
@@ -269,7 +279,8 @@ TEST_CASE("variables_can_be_moduloed_by_constant", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
 }
@@ -290,7 +301,8 @@ TEST_CASE("variables_can_be_moduloed_by_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(variable_index, true) == expected_result);
 }
@@ -310,7 +322,8 @@ TEST_CASE("max_can_be_acquired_from_variable_and_constant", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index, true) == variable_value);
 }
@@ -330,7 +343,8 @@ TEST_CASE("min_can_be_acquired_from_variable_and_constant", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index, true) == constant);
 }
@@ -353,7 +367,8 @@ TEST_CASE("max_can_be_acquired_from_variable_and_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index, true) == variable_value_b);
 }
@@ -376,7 +391,8 @@ TEST_CASE("min_can_be_acquired_from_variable_and_variable", "math") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(target_variable_index, true) == variable_value_a);
 }

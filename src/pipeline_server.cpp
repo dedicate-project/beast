@@ -5,9 +5,7 @@
 
 namespace beast {
 
-PipelineServer::PipelineServer(const std::string& storage_folder)
-  : pipeline_manager_{storage_folder} {
-}
+PipelineServer::PipelineServer(const std::string& storage_folder) : pipeline_manager_{storage_folder} {}
 
 crow::json::wvalue PipelineServer::serveStatus() {
   crow::json::wvalue value;
@@ -15,8 +13,7 @@ crow::json::wvalue PipelineServer::serveStatus() {
   return value;
 }
 
-crow::json::wvalue PipelineServer::serveNewPipeline(
-    const crow::request& req) {
+crow::json::wvalue PipelineServer::serveNewPipeline(const crow::request& req) {
   crow::json::wvalue value;
   if (const auto req_body = crow::json::load(req.body); req_body && req_body.has("name")) {
     const auto name = static_cast<std::string>(req_body["name"]);
@@ -40,8 +37,7 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
   value["id"] = pipeline_id;
   try {
     const auto& descriptor = pipeline_manager_.getPipelineById(pipeline_id);
-    value["state"] =
-        descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
+    value["state"] = descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
   } catch (const std::runtime_error& exception) {
     value["status"] = "failed";
     value["error"] = exception.what();
@@ -49,9 +45,8 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
   return value;
 }
 
-crow::json::wvalue PipelineServer::servePipelineAction(
-    const crow::request& req, uint32_t pipeline_id,
-    const std::string_view path) {
+crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req, uint32_t pipeline_id,
+                                                       const std::string_view path) {
   crow::json::wvalue value;
   value["id"] = pipeline_id;
   try {
@@ -131,12 +126,11 @@ crow::json::wvalue PipelineServer::serveAllPipelines() const {
     crow::json::wvalue pipeline_item;
     pipeline_item["id"] = pipeline.id;
     pipeline_item["name"] = pipeline.name;
-    pipeline_item["state"] =
-        pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
+    pipeline_item["state"] = pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
     value[idx] = std::move(pipeline_item);
     idx++;
   }
   return value;
 }
 
-}  // namespace beast
+} // namespace beast

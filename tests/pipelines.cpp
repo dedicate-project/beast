@@ -8,8 +8,8 @@
 #include <beast/beast.hpp>
 
 namespace {
-std::vector<std::vector<unsigned char>> runPipe(
-    const std::shared_ptr<beast::Pipe>& pipe, std::vector<std::vector<unsigned char>> init_pop) {
+std::vector<std::vector<unsigned char>> runPipe(const std::shared_ptr<beast::Pipe>& pipe,
+                                                std::vector<std::vector<unsigned char>> init_pop) {
   for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->hasSpace(); ++pop_idx) {
     pipe->addInput(init_pop[pop_idx]);
   }
@@ -24,7 +24,7 @@ std::vector<std::vector<unsigned char>> runPipe(
 
   return finalists;
 }
-}  // namespace
+} // namespace
 
 TEST_CASE("random_serial_passthrough_generates_50_valid_programs_within_10s", "pipelines") {
   using namespace std::chrono_literals;
@@ -37,18 +37,15 @@ TEST_CASE("random_serial_passthrough_generates_50_valid_programs_within_10s", "p
   const uint32_t prg_size = 200;
   const uint32_t mem_size = 3;
 
-  const std::chrono::time_point<std::chrono::system_clock> start_time =
-      std::chrono::system_clock::now();
+  const std::chrono::time_point<std::chrono::system_clock> start_time = std::chrono::system_clock::now();
 
   std::vector<std::vector<unsigned char>> staged;
   uint32_t last_staged = 0;
   while (staged.size() < pop_size) {
-    const std::chrono::time_point<std::chrono::system_clock> current_time =
-        std::chrono::system_clock::now();
+    const std::chrono::time_point<std::chrono::system_clock> current_time = std::chrono::system_clock::now();
     REQUIRE(current_time - start_time < max_runtime);
 
-    std::shared_ptr<beast::EvaluatorPipe> pipe =
-        std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
+    std::shared_ptr<beast::EvaluatorPipe> pipe = std::make_shared<beast::EvaluatorPipe>(pop_size, mem_size, 0, 0);
     const auto eval = std::make_shared<beast::RandomSerialDataPassthroughEvaluator>(1, 5, 100);
     pipe->addEvaluator(eval, 1.0, false);
     pipe->setCutOffScore(1.0);

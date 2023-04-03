@@ -18,18 +18,21 @@ TEST_CASE("variable_string_table_item_length_can_be_determined", "printing_and_s
   prg.declareVariable(storage_variable_index_2, beast::Program::VariableType::Int32);
   prg.setVariable(storage_variable_index_2, 0, true);
   prg.declareVariable(string_table_index_variable_index_1, beast::Program::VariableType::Int32);
-  prg.setVariable(string_table_index_variable_index_1, string_table_index_1, true);
   prg.declareVariable(string_table_index_variable_index_2, beast::Program::VariableType::Int32);
+  prg.setVariable(string_table_index_variable_index_1, string_table_index_1, true);
   prg.setVariable(string_table_index_variable_index_2, string_table_index_2, true);
   prg.setStringTableEntry(string_table_index_1, entry1);
   prg.setStringTableEntry(string_table_index_2, entry2);
 
-  prg.loadVariableStringItemLengthIntoVariable(string_table_index_variable_index_1, true, storage_variable_index_1, true);
-  prg.loadVariableStringItemLengthIntoVariable(string_table_index_variable_index_2, true, storage_variable_index_2, true);
+  prg.loadVariableStringItemLengthIntoVariable(
+      string_table_index_variable_index_1, true, storage_variable_index_1, true);
+  prg.loadVariableStringItemLengthIntoVariable(
+      string_table_index_variable_index_2, true, storage_variable_index_2, true);
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(storage_variable_index_1, true) == entry1.size());
   REQUIRE(session.getVariableValue(storage_variable_index_2, true) == entry2.size());
@@ -53,7 +56,8 @@ TEST_CASE("variable_string_table_item_can_be_loaded_into_variables", "printing_a
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   for (int32_t idx = 0; idx < entry.size(); ++idx) {
     const int32_t value = session.getVariableValue(start_variable_index + idx, true);
@@ -74,7 +78,8 @@ TEST_CASE("print_variable_index_from_string_table", "printing_and_string_table")
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -96,7 +101,8 @@ TEST_CASE("string_table_item_can_be_set_at_variable_index", "printing_and_string
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   for (int32_t idx = 0; idx < entry.size(); ++idx) {
     const int32_t value = session.getVariableValue(idx + 1, true);
@@ -121,7 +127,8 @@ TEST_CASE("string_table_item_length_can_be_determined", "printing_and_string_tab
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == entry1.size());
   REQUIRE(session.getVariableValue(1, true) == entry2.size());
@@ -138,7 +145,7 @@ TEST_CASE("getting_invalid_string_table_item_length_throws", "printing_and_strin
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -158,7 +165,8 @@ TEST_CASE("string_table_item_can_be_loaded_into_variables", "printing_and_string
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   for (int32_t idx = 0; idx < entry.size(); ++idx) {
     const int32_t value = session.getVariableValue(idx, true);
@@ -177,7 +185,8 @@ TEST_CASE("string_table_limit_can_be_determined", "printing_and_string_table") {
 
   beast::VmSession session(std::move(prg), 500, string_table_limit, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index, true) == string_table_limit);
 }
@@ -193,7 +202,8 @@ TEST_CASE("string_table_item_length_limit_can_be_determined", "printing_and_stri
 
   beast::VmSession session(std::move(prg), 500, 100, string_table_item_length_limit);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index, true) == string_table_item_length_limit);
 }
@@ -219,7 +229,8 @@ TEST_CASE("print_conditionally_if_var_gt_0_with_fixed_rel_addr", "printing_and_s
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -245,7 +256,8 @@ TEST_CASE("print_conditionally_if_var_lt_0_with_fixed_rel_addr", "printing_and_s
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -271,7 +283,8 @@ TEST_CASE("print_conditionally_if_var_eq_0_with_fixed_rel_addr", "printing_and_s
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -285,7 +298,8 @@ TEST_CASE("print_from_string_table", "printing_and_string_table") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -295,15 +309,15 @@ TEST_CASE("print_chars_from_variables", "printing_and_string_table") {
 
   beast::Program prg(150);
   prg.declareVariable(10, beast::Program::VariableType::Int32);
-  prg.setVariable(10, 0x48, true);  // H
+  prg.setVariable(10, 0x48, true); // H
   prg.declareVariable(11, beast::Program::VariableType::Int32);
-  prg.setVariable(11, 0x65, true);  // e
+  prg.setVariable(11, 0x65, true); // e
   prg.declareVariable(12, beast::Program::VariableType::Int32);
-  prg.setVariable(12, 0x6c, true);  // l
+  prg.setVariable(12, 0x6c, true); // l
   prg.declareVariable(13, beast::Program::VariableType::Int32);
-  prg.setVariable(13, 0x6c, true);  // l
+  prg.setVariable(13, 0x6c, true); // l
   prg.declareVariable(14, beast::Program::VariableType::Int32);
-  prg.setVariable(14, 0x6f, true);  // o
+  prg.setVariable(14, 0x6f, true); // o
   prg.printVariable(10, true, true);
   prg.printVariable(11, true, true);
   prg.printVariable(12, true, true);
@@ -312,7 +326,8 @@ TEST_CASE("print_chars_from_variables", "printing_and_string_table") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -340,7 +355,8 @@ TEST_CASE("print_conditionally_if_var_not_gt_0", "printing_and_string_table") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -368,7 +384,8 @@ TEST_CASE("print_conditionally_if_var_not_lt_0", "printing_and_string_table") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -396,7 +413,8 @@ TEST_CASE("print_conditionally_if_var_not_eq_0", "printing_and_string_table") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getPrintBuffer() == output);
 }
@@ -413,7 +431,7 @@ TEST_CASE("set_string_table_entry_outside_bounds_throws", "printing_and_string_t
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -437,7 +455,7 @@ TEST_CASE("set_variable_string_table_entry_outside_bounds_throws", "printing_and
   bool threw = false;
   try {
     (void)virtual_machine.step(session, false);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 

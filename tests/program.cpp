@@ -7,7 +7,7 @@ TEST_CASE("retrieving_1_byte_too_many_from_program_throws", "program") {
   bool threw = false;
   try {
     (void)prg.getData1(0);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -19,7 +19,7 @@ TEST_CASE("retrieving_2_bytes_too_many_from_program_throws", "program") {
   bool threw = false;
   try {
     (void)prg.getData2(0);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -31,7 +31,7 @@ TEST_CASE("retrieving_4_bytes_too_many_from_program_throws", "program") {
   bool threw = false;
   try {
     (void)prg.getData4(0);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -44,7 +44,7 @@ TEST_CASE("adding_too_large_string_table_entry_instruction_throws", "program") {
   bool threw = false;
   try {
     prg.setStringTableEntry(0, entry);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -68,7 +68,7 @@ TEST_CASE("inserting_a_too_large_program_throws", "program") {
   bool threw = false;
   try {
     prg2.insertProgram(prg1);
-  } catch(...) {
+  } catch (...) {
     threw = true;
   }
 
@@ -93,7 +93,8 @@ TEST_CASE("inserted_programs_work_as_intended", "program") {
 
   beast::VmSession session(std::move(prg3), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(index, true) == value2);
 }

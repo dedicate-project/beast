@@ -17,7 +17,8 @@ TEST_CASE("store_variable_memory_size_into_variable", "misc") {
 
   beast::VmSession session(std::move(prg), 128, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 128);
 }
@@ -32,7 +33,8 @@ TEST_CASE("termination_prevents_further_execution_and_sets_return_code", "misc")
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 0);
   REQUIRE(session.getRuntimeStatistics().return_code == return_code);
@@ -46,7 +48,8 @@ TEST_CASE("current_address_can_be_determined", "misc") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 22);
 }
@@ -65,7 +68,8 @@ TEST_CASE("termination_prevents_further_execution_and_sets_variable_return_code"
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 0);
   REQUIRE(session.getRuntimeStatistics().return_code == return_code);

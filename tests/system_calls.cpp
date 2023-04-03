@@ -7,20 +7,20 @@ TEST_CASE("system_calls_provide_datetime_data", "system_calls") {
   const int32_t variable_value_tz_h = -100;
   const int32_t variable_index_tz_m = 1;
   const int32_t variable_value_tz_m = -100;
-  const int32_t variable_index_sec  = 2;
-  const int32_t variable_value_sec  = -1;
-  const int32_t variable_index_min  = 3;
-  const int32_t variable_value_min  = -1;
-  const int32_t variable_index_hr   = 4;
-  const int32_t variable_value_hr   = -1;
-  const int32_t variable_index_day  = 5;
-  const int32_t variable_value_day  = -1;
-  const int32_t variable_index_mon  = 6;
-  const int32_t variable_value_mon  = -1;
-  const int32_t variable_index_yr   = 7;
-  const int32_t variable_value_yr   = -1;
-  const int32_t variable_index_wk   = 8;
-  const int32_t variable_value_wk   = -1;
+  const int32_t variable_index_sec = 2;
+  const int32_t variable_value_sec = -1;
+  const int32_t variable_index_min = 3;
+  const int32_t variable_value_min = -1;
+  const int32_t variable_index_hr = 4;
+  const int32_t variable_value_hr = -1;
+  const int32_t variable_index_day = 5;
+  const int32_t variable_value_day = -1;
+  const int32_t variable_index_mon = 6;
+  const int32_t variable_value_mon = -1;
+  const int32_t variable_index_yr = 7;
+  const int32_t variable_value_yr = -1;
+  const int32_t variable_index_wk = 8;
+  const int32_t variable_value_wk = -1;
 
   beast::Program prg;
   prg.declareVariable(variable_index_tz_h, beast::Program::VariableType::Int32);
@@ -62,7 +62,8 @@ TEST_CASE("system_calls_provide_datetime_data", "system_calls") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   beast::CpuVirtualMachine virtual_machine;
-  while (virtual_machine.step(session, false)) {}
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(variable_index_tz_h, true) != variable_value_tz_h);
   REQUIRE(session.getVariableValue(variable_index_tz_m, true) != variable_value_tz_m);

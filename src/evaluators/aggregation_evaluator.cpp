@@ -5,8 +5,7 @@
 
 namespace beast {
 
-void AggregationEvaluator::addEvaluator(
-    const std::shared_ptr<Evaluator>& evaluator, double weight, bool invert_logic) {
+void AggregationEvaluator::addEvaluator(const std::shared_ptr<Evaluator>& evaluator, double weight, bool invert_logic) {
   if (evaluator == nullptr) {
     throw std::invalid_argument("Null operator not allowed");
   }
@@ -42,4 +41,4 @@ double AggregationEvaluator::evaluate(const VmSession& session) {
   return total_score;
 }
 
-}  // namespace beast
+} // namespace beast
