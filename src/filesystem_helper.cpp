@@ -17,7 +17,7 @@ FilesystemHelper::FilesystemHelper(const std::string& model_path) {
 
 std::string FilesystemHelper::saveModel(const std::string& model_identifier,
                                         const nlohmann::json& model) const {
-  std::string filename = cleanFilename(model_identifier) + ".json";
+  std::string filename = getUniqueFilename(model_identifier);
   std::string filepath = (m_model_path / filename).string();
 
   std::ofstream file(filepath);

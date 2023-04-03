@@ -76,5 +76,25 @@ TEST_CASE("FilesystemHelper") {
     REQUIRE_THROWS_AS(fs_helper.deleteModel("non_existent_model.json"), std::invalid_argument);
   }
 
+  SECTION("Odd filenames are correctly reformatted") {
+    const std::string model_id = "some filename__";
+    const nlohmann::json model = {{"test_key", "test_value"}};
+
+    const std::string filename = fs_helper.saveModel(model_id, model);
+
+    REQUIRE(filename == "some_filename.json");
+  }
+
+  SECTION("Double filenames are correctly enumerated") {
+    const std::string model_id = "some filename";
+    const nlohmann::json model = {{"test_key", "test_value"}};
+
+    const std::string filename_1 = fs_helper.saveModel(model_id, model);
+    const std::string filename_2 = fs_helper.saveModel(model_id, model);
+
+    REQUIRE(filename_1 == "some_filename.json");
+    REQUIRE(filename_2 == "some_filename_1.json");
+  }
+
   std::filesystem::remove_all(model_path);
 }

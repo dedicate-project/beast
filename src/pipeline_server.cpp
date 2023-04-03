@@ -40,7 +40,8 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
     const auto& descriptor = pipeline_manager_.getPipelineById(pipeline_id);
     value["state"] =
         descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
-  } catch (const std::runtime_error& exception) {
+    value["name"] = descriptor.name;
+  } catch (const std::invalid_argument& exception) {
     value["status"] = "failed";
     value["error"] = exception.what();
   }
@@ -115,7 +116,7 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
       value["error"] = "invalid_command";
       value["command"] = std::string(path);
     }
-  } catch (const std::runtime_error& exception) {
+  } catch (const std::invalid_argument& exception) {
     value["status"] = "failed";
     value["error"] = exception.what();
   }
