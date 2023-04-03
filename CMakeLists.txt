@@ -18,6 +18,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/maze)
 
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-warnings-as-errors=*;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-altera-id-dependent-backward-branch,-readability-function-cognitive-complexity,-altera-unroll-loops,-bugprone-easily-swappable-parameters,-misc-no-recursion,-altera-struct-pack-align")
 
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format clang-format-12 clang-format-11 clang-format-10 clang-format-9)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -139,6 +141,18 @@ link_directories(
   ${CMAKE_BINARY_DIR}/lib)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
+
+file(GLOB_RECURSE ALL_SOURCE_FILES
+  ${CMAKE_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_SOURCE_DIR}/examples/*.cpp
+  ${CMAKE_SOURCE_DIR}/pipelines/*.cpp
+  ${CMAKE_SOURCE_DIR}/tests/*.cpp
+  ${CMAKE_SOURCE_DIR}/include/*.h)
+
+add_custom_target(format
+  COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file ${ALL_SOURCE_FILES}
+  COMMENT "Running clang-format on all source files"
+  VERBATIM)
 
 # Pipelines
 if(BEAST_BUILD_PIPELINES)
