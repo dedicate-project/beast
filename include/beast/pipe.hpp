@@ -12,6 +12,8 @@ class Pipe {
  public:
   Pipe(uint32_t max_candidates);
 
+  virtual ~Pipe() = default;
+
   /**
    * @brief Holds information about finalist programs
    *
