@@ -145,14 +145,10 @@ configure_file(include/beast/version.h.in include/beast/version.h)
 
 file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/src/*.cpp
-  ${CMAKE_SOURCE_DIR}/src/pipes/*.cpp
-  ${CMAKE_SOURCE_DIR}/src/evaluators/*.cpp
   ${CMAKE_SOURCE_DIR}/examples/*.cpp
   ${CMAKE_SOURCE_DIR}/pipelines/*.cpp
   ${CMAKE_SOURCE_DIR}/tests/*.cpp
-  ${CMAKE_SOURCE_DIR}/include/*.hpp
-  ${CMAKE_SOURCE_DIR}/include/pipes/*.hpp
-  ${CMAKE_SOURCE_DIR}/include/evaluators/*.hpp)
+  ${CMAKE_SOURCE_DIR}/include/*.hpp)
 
 add_custom_target(format
   COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
