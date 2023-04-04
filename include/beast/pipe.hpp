@@ -21,8 +21,8 @@ class Pipe {
    * score in the task given. This struct holds the respective program code, as well as its score.
    */
   struct OutputItem {
-    std::vector<unsigned char> data;  ///< The program code
-    double score;                     ///< The evaluation score this code achieved
+    std::vector<unsigned char> data; ///< The program code
+    double score;                    ///< The evaluation score this code achieved
   };
 
   /**
@@ -90,6 +90,7 @@ class Pipe {
   virtual bool inputsAreSaturated() const;
 
   virtual bool outputsAreSaturated() const;
+
  protected:
   /**
    * @var Pipe::input_

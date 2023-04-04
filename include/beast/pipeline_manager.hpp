@@ -2,9 +2,9 @@
 #define BEAST_PIPELINE_MANAGER_HPP_
 
 // Standard
-#include <string>
 #include <list>
 #include <mutex>
+#include <string>
 
 // Internal
 #include <beast/filesystem_helper.hpp>
@@ -80,6 +80,6 @@ class PipelineManager {
   std::mutex pipelines_mutex_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PIPELINE_MANAGER_HPP_
+#endif // BEAST_PIPELINE_MANAGER_HPP_

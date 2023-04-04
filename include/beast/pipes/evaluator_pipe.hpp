@@ -35,9 +35,8 @@ class EvaluatorPipe : public EvolutionPipe {
    * @param string_table_count The number of allowed string table entries
    * @param max_string_size The maximum allowed length of string table entries
    */
-  EvaluatorPipe(
-      uint32_t max_candidates, size_t variable_count, size_t string_table_count,
-      size_t max_string_size);
+  EvaluatorPipe(uint32_t max_candidates, size_t variable_count, size_t string_table_count,
+                size_t max_string_size);
 
   /**
    * @fn EvaluatorPipe::addEvaluator
@@ -80,6 +79,6 @@ class EvaluatorPipe : public EvolutionPipe {
   AggregationEvaluator evaluator_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PIPES_EVALUATOR_PIPE_HPP_
+#endif // BEAST_PIPES_EVALUATOR_PIPE_HPP_

@@ -32,11 +32,10 @@ class RandomProgramFactory : public ProgramFactoryBase {
    *        executed with
    * @return A randomly generated, but valid program
    */
-  [[nodiscard]] Program generate(
-      uint32_t size, uint32_t memory_size, uint32_t string_table_size,
-      uint32_t string_table_item_length) override;
+  [[nodiscard]] Program generate(uint32_t size, uint32_t memory_size, uint32_t string_table_size,
+                                 uint32_t string_table_item_length) override;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_RANDOM_PROGRAM_FACTORY_HPP_
+#endif // BEAST_RANDOM_PROGRAM_FACTORY_HPP_

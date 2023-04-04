@@ -2,8 +2,8 @@
 #define BEAST_FILESYSTEM_HELPER_HPP_
 
 // Standard
-#include <string>
 #include <filesystem>
+#include <string>
 
 // nlohmann
 #include <nlohmann/json.hpp>
@@ -61,7 +61,8 @@ class FilesystemHelper {
   /**
    * @brief Cleans the given filename by replacing non-alphanumeric characters with underscores.
    *
-   * Consecutive underscores are removed, and underscores at the beginning or end of the filename are removed.
+   * Consecutive underscores are removed, and underscores at the beginning or end of the filename
+   * are removed.
    *
    * @param filename The filename to clean.
    * @return The cleaned filename.
@@ -77,6 +78,6 @@ class FilesystemHelper {
   std::string getUniqueFilename(const std::string& original_filename) const;
 };
 
-}  // namespace beast
+} // namespace beast
 
 #endif // BEAST_FILESYSTEM_HELPER_HPP_

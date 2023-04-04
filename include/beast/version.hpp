@@ -23,6 +23,6 @@ namespace beast {
 
 [[nodiscard]] std::string getVersionString() noexcept;
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_VERSION_HPP_
+#endif // BEAST_VERSION_HPP_

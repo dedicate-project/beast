@@ -30,6 +30,6 @@ class NullSinkPipe : public Pipe {
   uint32_t getOutputSlotCount() const override { return 0; }
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_NULL_SINK_PIPE_HPP_
+#endif // BEAST_NULL_SINK_PIPE_HPP_

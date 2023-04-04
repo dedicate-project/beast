@@ -35,6 +35,6 @@ class Evaluator {
   [[nodiscard]] virtual double evaluate(const VmSession& session) = 0;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_EVALUATOR_HPP_
+#endif // BEAST_EVALUATOR_HPP_

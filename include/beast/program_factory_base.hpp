@@ -34,11 +34,11 @@ class ProgramFactoryBase {
    *        executed with
    * @return The generated Program instance
    */
-  [[nodiscard]] virtual Program generate(
-      uint32_t size, uint32_t memory_size, uint32_t string_table_size,
-      uint32_t string_table_item_length) = 0;
+  [[nodiscard]] virtual Program generate(uint32_t size, uint32_t memory_size,
+                                         uint32_t string_table_size,
+                                         uint32_t string_table_item_length) = 0;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PROGRAM_FACTORY_BASE_HPP_
+#endif // BEAST_PROGRAM_FACTORY_BASE_HPP_
