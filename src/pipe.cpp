@@ -35,4 +35,23 @@ Pipe::OutputItem Pipe::drawOutput(uint32_t /*slot_index*/) {
   return item;
 }
 
+bool Pipe::inputsAreSaturated() const {
+  bool saturated = true;
+  for (uint32_t idx = 0; idx < getInputSlotCount() && saturated; ++idx) {
+    saturated &= getInputSlotAmount(idx) >= max_candidates_;
+  }
+  return saturated;
+}
+
+bool Pipe::outputsAreSaturated() const {
+  if (getOutputSlotCount() == 0) {
+    return false;
+  }
+  bool saturated = true;
+  for (uint32_t idx = 0; idx < getOutputSlotCount() && saturated; ++idx) {
+    saturated &= getOutputSlotAmount(idx) >= max_candidates_;
+  }
+  return saturated;
+}
+
 } // namespace beast

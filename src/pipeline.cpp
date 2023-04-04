@@ -98,10 +98,9 @@ bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
                       }) != pipes_.end();
 }
 
-void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
-  // Get all source and destination connections involving this pipe
-  std::vector<Connection*> source_connections;
-  std::vector<Connection*> destination_connections;
+void Pipeline::findConnections(std::shared_ptr<ManagedPipe>& managed_pipe,
+                               std::vector<Connection*>& source_connections,
+                               std::vector<Connection*>& destination_connections) {
   for (Connection& connection : connections_) {
     if (connection.destination_pipe == managed_pipe->pipe) {
       source_connections.push_back(&connection);
@@ -110,72 +109,77 @@ void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
       destination_connections.push_back(&connection);
     }
   }
+}
+
+void Pipeline::processOutputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+                                  const std::vector<Connection*>& destination_connections) {
+  for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
+       ++slot_index) {
+    if (!managed_pipe->pipe->hasOutput(slot_index)) {
+      continue;
+    }
+    auto destination_slot_connection_iter =
+        std::find_if(destination_connections.begin(),
+                     destination_connections.end(),
+                     [slot_index](const Connection* connection) {
+                       return connection->destination_slot_index == slot_index;
+                     });
+
+    if (destination_slot_connection_iter == destination_connections.end()) {
+      continue;
+    }
+
+    Connection* destination_slot_connection = *destination_slot_connection_iter;
+    while (managed_pipe->pipe->hasOutput(slot_index) &&
+           (destination_slot_connection->buffer.size() <
+            destination_slot_connection->buffer.capacity())) {
+      auto data = managed_pipe->pipe->drawOutput(slot_index);
+      destination_slot_connection->buffer.push_back(std::move(data));
+    }
+  }
+}
+
+void Pipeline::processInputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+                                 const std::vector<Connection*>& source_connections) {
+  for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
+       ++slot_index) {
+    auto source_slot_connection_iter =
+        std::find_if(source_connections.begin(),
+                     source_connections.end(),
+                     [slot_index](const Connection* connection) {
+                       return connection->source_slot_index == slot_index;
+                     });
+
+    if (source_slot_connection_iter == source_connections.end()) {
+      continue;
+    }
+
+    Connection* source_slot_connection = *source_slot_connection_iter;
+    if (source_slot_connection->buffer.empty()) {
+      continue;
+    }
+
+    while (managed_pipe->pipe->hasSpace() && !source_slot_connection->buffer.empty()) {
+      auto data = source_slot_connection->buffer.back();
+      source_slot_connection->buffer.pop_back();
+      managed_pipe->pipe->addInput(data.data);
+    }
+  }
+}
+
+void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
+  std::vector<Connection*> source_connections;
+  std::vector<Connection*> destination_connections;
+  findConnections(managed_pipe, source_connections, destination_connections);
 
   while (managed_pipe->should_run) {
-    // Iterate through all output slots for this pipe.
-    for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
-         ++slot_index) {
-      // Skip this output slot if we don't have any output.
-      if (!managed_pipe->pipe->hasOutput(slot_index)) {
-        continue;
-      }
-      // Get the destination connections for this slot.
-      auto destination_slot_connection_iter =
-          std::find_if(destination_connections.begin(),
-                       destination_connections.end(),
-                       [slot_index](const Connection* connection) {
-                         return connection->destination_slot_index == slot_index;
-                       });
-      if (destination_slot_connection_iter == destination_connections.end()) {
-        // This slot doesn't seem to be connected. Ignore it.
-        continue;
-      }
-      // Found a destination connection for this slot.
-      Connection* destination_slot_connection = *destination_slot_connection_iter;
-      // While we have output data, add it to the buffer if it has space.
-      while (managed_pipe->pipe->hasOutput(slot_index) &&
-             (destination_slot_connection->buffer.size() <
-              destination_slot_connection->buffer.capacity())) {
-        auto data = managed_pipe->pipe->drawOutput(slot_index);
-        destination_slot_connection->buffer.push_back(std::move(data));
-      }
-    }
+    processOutputSlots(managed_pipe, destination_connections);
+    processInputSlots(managed_pipe, source_connections);
 
-    // Iterate through all input slots for this pipe.
-    for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
-         ++slot_index) {
-      // Get the destination connections for this slot.
-      auto source_slot_connection_iter =
-          std::find_if(source_connections.begin(),
-                       source_connections.end(),
-                       [slot_index](const Connection* connection) {
-                         return connection->source_slot_index == slot_index;
-                       });
-      if (source_slot_connection_iter == source_connections.end()) {
-        // This slot doesn't seem to be connected. Ignore it.
-        continue;
-      }
-      // Found a source connection for this slot.
-      Connection* source_slot_connection = *source_slot_connection_iter;
-      if (source_slot_connection->buffer.empty()) {
-        // No new input data available. Skip this.
-        continue;
-      }
-      // Move all buffer data into the slot until it is full.
-      while (managed_pipe->pipe->hasSpace() && !source_slot_connection->buffer.empty()) {
-        auto data = source_slot_connection->buffer.back();
-        source_slot_connection->buffer.pop_back();
-        managed_pipe->pipe->addInput(data.data);
-      }
-    }
-
-    // Does it have space for more output?
-    const bool output_has_space =
-        managed_pipe->pipe->getOutputSlotCount() == 0 || !managed_pipe->pipe->outputsAreSaturated();
-    // Does it have enough data?
+    const bool outputs_have_enough_space = !managed_pipe->pipe->outputsAreSaturated();
     const bool inputs_have_enough_data = managed_pipe->pipe->inputsAreSaturated();
 
-    if (inputs_have_enough_data && output_has_space) {
+    if (inputs_have_enough_data && outputs_have_enough_space) {
       managed_pipe->pipe->execute();
     }
 

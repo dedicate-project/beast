@@ -87,22 +87,9 @@ class Pipe {
 
   virtual void execute() = 0;
 
-  virtual bool inputsAreSaturated() const {
-    bool saturated = true;
-    for (uint32_t idx = 0; idx < getInputSlotCount() && saturated; ++idx) {
-      saturated &= getInputSlotAmount(idx) >= max_candidates_;
-    }
-    return saturated;
-  }
+  virtual bool inputsAreSaturated() const;
 
-  virtual bool outputsAreSaturated() const {
-    bool saturated = true;
-    for (uint32_t idx = 0; idx < getOutputSlotCount() && saturated; ++idx) {
-      saturated &= getOutputSlotAmount(idx) >= max_candidates_;
-    }
-    return saturated;
-  }
-
+  virtual bool outputsAreSaturated() const;
  protected:
   /**
    * @var Pipe::input_

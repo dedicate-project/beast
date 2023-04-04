@@ -48,7 +48,7 @@ class Pipeline {
     bool should_run;
     bool is_running;
   };
- 
+
   /**
    * @fn Pipeline::addPipe
    * @brief Adds a Pipe instance to this Pipeline
@@ -133,8 +133,53 @@ class Pipeline {
   bool isRunning() const;
 
  private:
+  /**
+   * @fn Pipeline::pipeIsInPipeline
+   * @brief Checks if the given pipe is already part of this pipeline
+   *
+   * @param pipe Shared pointer to the Pipe instance to be checked
+   * @return Boolean value indicating whether the pipe is part of this pipeline
+   */
   bool pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const;
 
+  /**
+   * @fn Pipeline::findConnections
+   * @brief Populates source and destination connection lists for a given managed pipe
+   *
+   * @param managed_pipe Shared pointer to the ManagedPipe instance
+   * @param source_connections Vector of source connections to be populated
+   * @param destination_connections Vector of destination connections to be populated
+   */
+  void findConnections(std::shared_ptr<ManagedPipe>& managed_pipe,
+                       std::vector<Connection*>& source_connections,
+                       std::vector<Connection*>& destination_connections);
+
+  /**
+   * @fn Pipeline::processOutputSlots
+   * @brief Processes output slots for a given managed pipe
+   *
+   * @param managed_pipe Shared pointer to the ManagedPipe instance
+   * @param destination_connections Vector of destination connections for the managed pipe
+   */
+  static void processOutputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+                                 const std::vector<Connection*>& destination_connections);
+
+  /**
+   * @fn Pipeline::processInputSlots
+   * @brief Processes input slots for a given managed pipe
+   *
+   * @param managed_pipe Shared pointer to the ManagedPipe instance
+   * @param source_connections Vector of source connections for the managed pipe
+   */
+  static void processInputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+                                const std::vector<Connection*>& source_connections);
+
+  /**
+   * @fn Pipeline::pipelineWorker
+   * @brief Worker function responsible for processing input and output slots for a managed pipe
+   *
+   * @param managed_pipe Shared pointer to the ManagedPipe instance
+   */
   void pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe);
 
   /**
