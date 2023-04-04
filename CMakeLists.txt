@@ -154,8 +154,6 @@ file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/include/pipes/*.hpp
   ${CMAKE_SOURCE_DIR}/include/evaluators/*.hpp)
 
-message(STATUS ${ALL_SOURCE_FILES})
-
 add_custom_target(format
   COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
           -fallback-style=none ${ALL_SOURCE_FILES}
