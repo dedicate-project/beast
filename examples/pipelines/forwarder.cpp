@@ -5,10 +5,11 @@
 // BEAST
 #include <beast/beast.hpp>
 
-std::vector<std::vector<unsigned char>> runPipe(const std::shared_ptr<beast::Pipe>& pipe,
-                                                std::vector<std::vector<unsigned char>> init_pop) {
-  for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->hasSpace(); ++pop_idx) {
-    pipe->addInput(init_pop[pop_idx]);
+std::vector<std::vector<unsigned char>>
+runPipe(const std::shared_ptr<beast::Pipe>& pipe,
+        const std::vector<std::vector<unsigned char>>& init_pop) {
+  for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->inputHasSpace(0); ++pop_idx) {
+    pipe->addInput(0, init_pop[pop_idx]);
   }
 
   pipe->execute();
@@ -23,10 +24,7 @@ std::vector<std::vector<unsigned char>> runPipe(const std::shared_ptr<beast::Pip
 }
 
 int main(int /*argc*/, char** /*argv*/) {
-  const auto version = beast::getVersion();
-  std::cout << "Using BEAST library version " << static_cast<uint32_t>(version[0]) << "."
-            << static_cast<uint32_t>(version[1]) << "." << static_cast<uint32_t>(version[2]) << "."
-            << std::endl;
+  std::cout << "Using BEAST library version " << beast::getVersionString() << std::endl;
 
   /*
     The sorter pipeline consists of n consecutive steps that ultimately evolve

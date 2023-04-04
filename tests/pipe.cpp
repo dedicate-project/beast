@@ -4,7 +4,7 @@
 
 class MockPipe : public beast::Pipe {
  public:
-  explicit MockPipe(uint32_t max_candidates) : beast::Pipe(max_candidates) {}
+  explicit MockPipe(uint32_t max_candidates) : beast::Pipe(max_candidates, 1, 1) {}
 
   void execute() override {}
 };
@@ -17,11 +17,11 @@ TEST_CASE("pipe") {
     MockPipe pipe(max_population);
 
     for (uint32_t idx = 0; idx < max_population; ++idx) {
-      REQUIRE(pipe.hasSpace() == true);
-      pipe.addInput(candidate);
+      REQUIRE(pipe.inputHasSpace(0) == true);
+      pipe.addInput(0, candidate);
     }
 
-    REQUIRE(pipe.hasSpace() == false);
+    REQUIRE(pipe.inputHasSpace(0) == false);
   }
 
   SECTION("drawing_input_from_pipe_without_candidates_throws") {
@@ -52,7 +52,7 @@ TEST_CASE("pipe") {
     const std::vector<unsigned char> candidate = {};
 
     for (uint32_t idx = 0; idx < population; ++idx) {
-      pipe.addInput(candidate);
+      pipe.addInput(0, candidate);
     }
 
     REQUIRE(pipe.getInputSlotAmount(0) == population);

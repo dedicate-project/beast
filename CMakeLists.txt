@@ -145,10 +145,15 @@ configure_file(include/beast/version.h.in include/beast/version.h)
 
 file(GLOB_RECURSE ALL_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/src/*.cpp
+  ${CMAKE_SOURCE_DIR}/src/pipes/*.cpp
+  ${CMAKE_SOURCE_DIR}/src/evaluators/*.cpp
   ${CMAKE_SOURCE_DIR}/examples/*.cpp
   ${CMAKE_SOURCE_DIR}/pipelines/*.cpp
   ${CMAKE_SOURCE_DIR}/tests/*.cpp
-  ${CMAKE_SOURCE_DIR}/include/*.hpp)
+  ${CMAKE_SOURCE_DIR}/include/*.hpp
+  ${CMAKE_SOURCE_DIR}/include/beast/*.hpp
+  ${CMAKE_SOURCE_DIR}/include/beast/pipes/*.hpp
+  ${CMAKE_SOURCE_DIR}/include/beast/evaluators/*.hpp)
 
 add_custom_target(format
   COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
@@ -159,12 +164,12 @@ add_custom_target(format
 # Pipelines
 if(BEAST_BUILD_PIPELINES)
   macro(declare_pipeline name)
-    add_executable(pipeline_${name} pipelines/${name}.cpp)
+    add_executable(pipeline_${name} examples/pipelines/${name}.cpp)
     target_link_libraries(pipeline_${name} PUBLIC ${PROJECT_NAME})
 
     set_target_properties(pipeline_${name}
       PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/pipelines)
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples/pipelines)
 
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
       target_link_libraries(pipeline_${name} PUBLIC gcov)
@@ -172,30 +177,30 @@ if(BEAST_BUILD_PIPELINES)
   endmacro()
 
   declare_pipeline(factory)
-  declare_pipeline(sorter)
+  declare_pipeline(forwarder)
 endif()
 
 # Examples
-if(BEAST_BUILD_EXAMPLES)
-  macro(declare_example name)
-    add_executable(example_${name} examples/${name}.cpp)
-    target_link_libraries(example_${name} PUBLIC ${PROJECT_NAME})
+if(BEAST_BUILD_PROGRAMS)
+  macro(declare_program name)
+    add_executable(program_${name} examples/programs/${name}.cpp)
+    target_link_libraries(program_${name} PUBLIC ${PROJECT_NAME})
 
-    set_target_properties(example_${name}
+    set_target_properties(program_${name}
       PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples/programs)
 
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
-      target_link_libraries(example_${name} PUBLIC gcov)
+      target_link_libraries(program_${name} PUBLIC gcov)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
   endmacro()
 
-  declare_example(adder)
-  declare_example(bubblesort)
-  declare_example(evaluation)
-  declare_example(feedloop)
-  declare_example(hello_world)
-  declare_example(pipe)
+  declare_program(adder)
+  declare_program(bubblesort)
+  declare_program(evaluation)
+  declare_program(feedloop)
+  declare_program(hello_world)
+  declare_program(pipe)
 endif()
 
 # Testing

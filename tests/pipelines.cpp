@@ -8,10 +8,11 @@
 #include <beast/beast.hpp>
 
 namespace {
-std::vector<std::vector<unsigned char>> runPipe(const std::shared_ptr<beast::Pipe>& pipe,
-                                                std::vector<std::vector<unsigned char>> init_pop) {
-  for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->hasSpace(); ++pop_idx) {
-    pipe->addInput(init_pop[pop_idx]);
+std::vector<std::vector<unsigned char>>
+runPipe(const std::shared_ptr<beast::Pipe>& pipe,
+        const std::vector<std::vector<unsigned char>>& init_pop) {
+  for (uint32_t pop_idx = 0; pop_idx < init_pop.size() && pipe->inputHasSpace(0); ++pop_idx) {
+    pipe->addInput(0, init_pop[pop_idx]);
   }
 
   pipe->execute();

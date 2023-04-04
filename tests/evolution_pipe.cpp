@@ -23,7 +23,7 @@ TEST_CASE("pipe_calls_evaluate_on_evolve", "pipe") {
 
   MockPipe pipe(max_population);
   for (uint32_t idx = 0; idx < max_population; ++idx) {
-    pipe.addInput(candidate);
+    pipe.addInput(0, candidate);
   }
 
   pipe.execute();

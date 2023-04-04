@@ -159,10 +159,11 @@ void Pipeline::processInputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
       continue;
     }
 
-    while (managed_pipe->pipe->hasSpace() && !source_slot_connection->buffer.empty()) {
+    while (managed_pipe->pipe->inputHasSpace(slot_index) &&
+           !source_slot_connection->buffer.empty()) {
       auto data = source_slot_connection->buffer.back();
       source_slot_connection->buffer.pop_back();
-      managed_pipe->pipe->addInput(data.data);
+      managed_pipe->pipe->addInput(slot_index, data.data);
     }
   }
 }

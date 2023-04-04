@@ -126,7 +126,7 @@ jobs:
             sudo apt-get install -y valgrind
       - run:
           name: Run Valgrind on example_adder
-          command: valgrind ./build/bin/examples/example_adder
+          command: valgrind ./build/bin/examples/programs/example_adder
 
 workflows:
   build-and-test:

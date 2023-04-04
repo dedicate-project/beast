@@ -10,7 +10,7 @@ namespace beast {
 
 class Pipe {
  public:
-  Pipe(uint32_t max_candidates);
+  Pipe(uint32_t max_candidates, uint32_t input_slots, uint32_t output_slots);
 
   virtual ~Pipe() = default;
 
@@ -26,13 +26,13 @@ class Pipe {
   };
 
   /**
-   * @class Pipe::hasSpace
+   * @class Pipe::inputHasSpace
    * @brief Denote whether space is left in the input pool
    *
    * @return `true` if the number of candidates in the input pool is less than the population size,
    *         `false` otherwise.
    */
-  bool hasSpace() const;
+  bool inputHasSpace(uint32_t slot_index) const;
 
   /**
    * @class Pipe::addInput
@@ -43,7 +43,7 @@ class Pipe {
    *
    * @param candidate The candidate program code to add to the input pool
    */
-  void addInput(const std::vector<unsigned char>& candidate);
+  void addInput(uint32_t slot_index, const std::vector<unsigned char>& candidate);
 
   /**
    * @class Pipe::drawInput
@@ -73,36 +73,34 @@ class Pipe {
    */
   [[nodiscard]] OutputItem drawOutput(uint32_t slot_index);
 
-  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t /*slot_index*/) const { return input_.size(); }
+  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index) const;
 
-  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t /*slot_index*/) const {
-    return output_.size();
-  }
+  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index) const;
 
-  virtual uint32_t getInputSlotCount() const { return 1; }
+  [[nodiscard]] uint32_t getInputSlotCount() const { return inputs_.size(); }
 
-  virtual uint32_t getOutputSlotCount() const { return 1; }
+  [[nodiscard]] uint32_t getOutputSlotCount() const { return outputs_.size(); }
 
-  uint32_t getMaxCandidates() const { return max_candidates_; }
+  [[nodiscard]] uint32_t getMaxCandidates() const { return max_candidates_; }
+
+  [[nodiscard]] virtual bool inputsAreSaturated() const;
+
+  [[nodiscard]] virtual bool outputsAreSaturated() const;
 
   virtual void execute() = 0;
-
-  virtual bool inputsAreSaturated() const;
-
-  virtual bool outputsAreSaturated() const;
 
  protected:
   /**
    * @var Pipe::input_
    * @brief Holds the input candidate programs
    */
-  std::deque<std::vector<unsigned char>> input_;
+  std::vector<std::deque<std::vector<unsigned char>>> inputs_;
 
   /**
    * @var Pipe::output_
    * @brief Holds the finalist output buffer
    */
-  std::deque<OutputItem> output_;
+  std::vector<std::deque<OutputItem>> outputs_;
 
   /**
    * @var Pipe::max_candidates_
