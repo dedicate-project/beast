@@ -24,9 +24,9 @@ namespace beast {
  */
 class ProgramFactoryPipe : public Pipe {
  public:
-  explicit ProgramFactoryPipe(
-      uint32_t max_candidates, uint32_t max_size, uint32_t memory_size, uint32_t string_table_size,
-      uint32_t string_table_item_length, std::shared_ptr<ProgramFactoryBase> factory);
+  explicit ProgramFactoryPipe(uint32_t max_candidates, uint32_t max_size, uint32_t memory_size,
+                              uint32_t string_table_size, uint32_t string_table_item_length,
+                              std::shared_ptr<ProgramFactoryBase> factory);
 
   void execute() override;
 
@@ -44,6 +44,6 @@ class ProgramFactoryPipe : public Pipe {
   uint32_t string_table_item_length_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PROGRAM_FACTORY_PIPE_HPP_
+#endif // BEAST_PROGRAM_FACTORY_PIPE_HPP_

@@ -25,6 +25,6 @@ class CpuVirtualMachine : public VirtualMachine {
   void message(MessageSeverity severity, const std::string& message) noexcept override;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_CPU_VIRTUAL_MACHINE_HPP_
+#endif // BEAST_CPU_VIRTUAL_MACHINE_HPP_

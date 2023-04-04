@@ -133,6 +133,6 @@ class VirtualMachine {
   bool silent_ = false;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_VIRTUAL_MACHINE_HPP_
+#endif // BEAST_VIRTUAL_MACHINE_HPP_

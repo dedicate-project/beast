@@ -33,8 +33,7 @@ class MazeEvaluator : public Evaluator {
    * @param difficulty The difficulty used for the maze (0.0-1.0)
    * @param max_steps The total number of steps programs are allows during evaluation
    */
-  explicit MazeEvaluator(
-      uint32_t rows, uint32_t cols, double difficulty, uint32_t max_steps);
+  explicit MazeEvaluator(uint32_t rows, uint32_t cols, double difficulty, uint32_t max_steps);
 
   /**
    * @fn MazeEvaluator::evaluate
@@ -77,6 +76,6 @@ class MazeEvaluator : public Evaluator {
   const uint32_t max_steps_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_EVALUATORS_MAZE_EVALUATOR_HPP_
+#endif // BEAST_EVALUATORS_MAZE_EVALUATOR_HPP_

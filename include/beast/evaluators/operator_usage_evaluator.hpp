@@ -47,6 +47,6 @@ class OperatorUsageEvaluator : public Evaluator {
   OpCode opcode_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_OPERATOR_USAGE_EVALUATOR_HPP_
+#endif // BEAST_OPERATOR_USAGE_EVALUATOR_HPP_

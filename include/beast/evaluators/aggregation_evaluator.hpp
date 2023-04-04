@@ -63,9 +63,9 @@ class AggregationEvaluator : public Evaluator {
    * @brief Describes an evaluator instance with weight and inversion flag
    */
   struct EvaluatorDescription {
-    const std::shared_ptr<Evaluator> evaluator;  ///< The evaluator to use for scoring
-    double weight;                               ///< The weight to use for this evaluator's score
-    bool invert_logic;                           ///< Whether to invert the scoring logic
+    const std::shared_ptr<Evaluator> evaluator; ///< The evaluator to use for scoring
+    double weight;                              ///< The weight to use for this evaluator's score
+    bool invert_logic;                          ///< Whether to invert the scoring logic
   };
 
   /**
@@ -75,6 +75,6 @@ class AggregationEvaluator : public Evaluator {
   std::vector<EvaluatorDescription> evaluators_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_AGGREGATION_EVALUATOR_HPP_
+#endif // BEAST_AGGREGATION_EVALUATOR_HPP_

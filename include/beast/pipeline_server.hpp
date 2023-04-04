@@ -60,8 +60,8 @@ class PipelineServer {
    * @param path Path of the action.
    * @return JSON response containing pipeline action status.
    */
-  crow::json::wvalue servePipelineAction(
-      const crow::request& req, uint32_t pipeline_id, const std::string_view path);
+  crow::json::wvalue servePipelineAction(const crow::request& req, uint32_t pipeline_id,
+                                         const std::string_view path);
 
   /**
    * Serve a JSON response containing all pipelines and their status.
@@ -75,6 +75,6 @@ class PipelineServer {
   beast::PipelineManager pipeline_manager_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PIPELINE_SERVER_HPP_
+#endif // BEAST_PIPELINE_SERVER_HPP_

@@ -33,13 +33,13 @@ class Pipeline {
    * between Pipes in terms of slot interconnection are described.
    */
   struct Connection {
-    std::shared_ptr<Pipe> source_pipe;       ///< Pipe that provides output data to the connection
-    uint32_t source_slot_index;              ///< Index of the output slot of the source Pipe
+    std::shared_ptr<Pipe> source_pipe; ///< Pipe that provides output data to the connection
+    uint32_t source_slot_index;        ///< Index of the output slot of the source Pipe
 
-    std::shared_ptr<Pipe> destination_pipe;  ///< Pipe that receives the connection on an input slot
-    uint32_t destination_slot_index;         ///< Index of the input slot of the destination Pipe
+    std::shared_ptr<Pipe> destination_pipe; ///< Pipe that receives the connection on an input slot
+    uint32_t destination_slot_index;        ///< Index of the input slot of the destination Pipe
 
-    std::vector<Pipe::OutputItem> buffer;    ///< Data buffer from source to destination
+    std::vector<Pipe::OutputItem> buffer; ///< Data buffer from source to destination
   };
 
   struct ManagedPipe {
@@ -87,10 +87,9 @@ class Pipeline {
    * @param destination_slot_index Index of the input slot on the destination Pipe
    * @param buffer_size The size of the pipe's buffer space
    */
-  void connectPipes(
-      const std::shared_ptr<Pipe>& source_pipe, uint32_t source_slot_index,
-      const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index,
-      uint32_t buffer_size);
+  void connectPipes(const std::shared_ptr<Pipe>& source_pipe, uint32_t source_slot_index,
+                    const std::shared_ptr<Pipe>& destination_pipe, uint32_t destination_slot_index,
+                    uint32_t buffer_size);
 
   /**
    * @fn Pipeline::getPipes
@@ -201,6 +200,6 @@ class Pipeline {
   bool is_running_ = false;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PIPELINE_HPP_
+#endif // BEAST_PIPELINE_HPP_

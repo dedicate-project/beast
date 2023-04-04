@@ -109,6 +109,6 @@ class EvolutionPipe : public Pipe {
   float crossover_probability_ = 0.5f;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_EVOLUTION_PIPE_HPP_
+#endif // BEAST_EVOLUTION_PIPE_HPP_

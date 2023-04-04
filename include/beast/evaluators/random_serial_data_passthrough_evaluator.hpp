@@ -32,8 +32,8 @@ class RandomSerialDataPassthroughEvaluator : public Evaluator {
    * @param repeats The number of repetitions to perform
    * @param max_steps The total number of steps programs are allows during evaluation
    */
-  explicit RandomSerialDataPassthroughEvaluator(
-      uint32_t data_count, uint32_t repeats, uint32_t max_steps);
+  explicit RandomSerialDataPassthroughEvaluator(uint32_t data_count, uint32_t repeats,
+                                                uint32_t max_steps);
 
   /**
    * @fn RandomSerialDataPassthroughEvaluator::evaluate
@@ -60,8 +60,8 @@ class RandomSerialDataPassthroughEvaluator : public Evaluator {
    * @param values The input values to provide to the program for forwarding
    * @return The number of correct input forwards
    */
-  [[nodiscard]] uint32_t runProgram(
-      VmSession& work_session, const std::vector<int32_t>& values) const;
+  [[nodiscard]] uint32_t runProgram(VmSession& work_session,
+                                    const std::vector<int32_t>& values) const;
 
   /**
    * @var RandomSerialDataPassthroughEvaluator::data_count_
@@ -82,6 +82,6 @@ class RandomSerialDataPassthroughEvaluator : public Evaluator {
   const uint32_t max_steps_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_EVALUATORS_RANDOM_SERIAL_DATA_PASSTHROUGH_EVALUATOR_HPP_
+#endif // BEAST_EVALUATORS_RANDOM_SERIAL_DATA_PASSTHROUGH_EVALUATOR_HPP_

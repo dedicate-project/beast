@@ -16,4 +16,4 @@
 [[nodiscard]] struct tm* localtime_r(const time_t* _clock, struct tm* _result) noexcept;
 #endif
 
-#endif  // BEAST_TIME_FUNCTIONS_HPP_
+#endif // BEAST_TIME_FUNCTIONS_HPP_

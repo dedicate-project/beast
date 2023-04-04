@@ -65,6 +65,6 @@ class RuntimeStatisticsEvaluator : public Evaluator {
   double prg_exec_weight_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
+#endif // BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
