@@ -26,6 +26,14 @@ namespace beast {
  */
 class Pipeline {
  public:
+  struct ManagedPipe {
+    std::string name;
+    std::shared_ptr<Pipe> pipe;
+    std::thread thread;
+    bool should_run;
+    bool is_running;
+  };
+
   /**
    * @brief Holds information about how Pipe instances are connected to each other in this Pipeline
    *
@@ -33,20 +41,14 @@ class Pipeline {
    * between Pipes in terms of slot interconnection are described.
    */
   struct Connection {
-    std::shared_ptr<Pipe> source_pipe; ///< Pipe that provides output data to the connection
-    uint32_t source_slot_index;        ///< Index of the output slot of the source Pipe
+    std::shared_ptr<ManagedPipe> source_pipe; ///< Pipe that provides output data to the connection
+    uint32_t source_slot_index;               ///< Index of the output slot of the source Pipe
 
-    std::shared_ptr<Pipe> destination_pipe; ///< Pipe that receives the connection on an input slot
-    uint32_t destination_slot_index;        ///< Index of the input slot of the destination Pipe
+    std::shared_ptr<ManagedPipe>
+        destination_pipe;            ///< Pipe that receives the connection on an input slot
+    uint32_t destination_slot_index; ///< Index of the input slot of the destination Pipe
 
     std::vector<Pipe::OutputItem> buffer; ///< Data buffer from source to destination
-  };
-
-  struct ManagedPipe {
-    std::shared_ptr<Pipe> pipe;
-    std::thread thread;
-    bool should_run;
-    bool is_running;
   };
 
   /**
@@ -57,9 +59,10 @@ class Pipeline {
    * Pipe may only be added to a Pipeline once. Any Pipe should be part of only one Pipeline at any
    * point in time to avoid undefined behavior.
    *
+   * @param name A unique string identifier for this pipe
    * @param pipe Shared pointer to the Pipe that will be added to this Pipeline instance
    */
-  void addPipe(const std::shared_ptr<Pipe>& pipe);
+  void addPipe(const std::string& name, const std::shared_ptr<Pipe>& pipe);
 
   /**
    * @fn Pipeline::connectPipes
@@ -180,6 +183,10 @@ class Pipeline {
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    */
   void pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe);
+
+  std::shared_ptr<ManagedPipe> getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe);
+
+  std::shared_ptr<ManagedPipe> getManagedPipeByName(const std::string& name);
 
   /**
    * @var Pipeline::pipes_

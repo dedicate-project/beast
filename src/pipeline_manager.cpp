@@ -120,10 +120,10 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
                                                                         string_table_items,
                                                                         string_table_item_length,
                                                                         factory);
-        pipeline.addPipe(created_pipes[pipe_name]);
+        pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "NullSinkPipe") {
         created_pipes[pipe_name] = std::make_shared<NullSinkPipe>();
-        pipeline.addPipe(created_pipes[pipe_name]);
+        pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
       }
     }
   }

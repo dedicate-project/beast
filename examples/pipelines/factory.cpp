@@ -17,11 +17,11 @@ int main(int /*argc*/, char** /*argv*/) {
   std::shared_ptr<beast::ProgramFactoryPipe> factory_pipe =
       std::make_shared<beast::ProgramFactoryPipe>(10, 50, 5, 10, 25, factory);
 
-  pipeline.addPipe(factory_pipe);
+  pipeline.addPipe("factory", factory_pipe);
 
   std::shared_ptr<beast::NullSinkPipe> sink_pipe = std::make_shared<beast::NullSinkPipe>();
 
-  pipeline.addPipe(sink_pipe);
+  pipeline.addPipe("sink", sink_pipe);
 
   pipeline.connectPipes(factory_pipe, 0, sink_pipe, 0, 10);
 

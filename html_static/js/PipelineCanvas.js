@@ -217,6 +217,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         throw new Error('Network response was not ok');
       }
       const jsonData = await response.json();
+      console.log(jsonData)
       setPipelineState(jsonData.state);
     } catch (error) {
       console.error('Error fetching pipeline state:', error);
