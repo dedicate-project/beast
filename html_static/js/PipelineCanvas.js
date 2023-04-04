@@ -65,6 +65,17 @@ function drawBorder(layer, width, height) {
   layer.add(border);
 }
 
+function loadImage(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.src = src;
+    image.crossOrigin = "anonymous";
+    image.onload = () => {
+      resolve(image);
+    };
+  });
+}
+
 export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
@@ -79,6 +90,9 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [newPipelineName, setNewPipelineName] = useState(pipeline.name);
   const [showEditButton, setShowEditButton] = useState(false);
+  
+  const [oldModel, setOldModel] = useState({});
+  const [model, setModel] = useState({});
 
   const stageRef = useRef(null);
   const gridLayerRef = useRef(null);
@@ -86,6 +100,8 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const elementLayerRef = useRef(null);
   const draggingRef = useRef(false);
   const lastDragPointRef = useRef({ x: 0, y: 0 });
+  
+  var pipes = {};
 
   useEffect(() => {
     const stage = new Konva.Stage({
@@ -104,17 +120,6 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
 
     elementLayerRef.current = new Konva.Layer();
     stage.add(elementLayerRef.current);
-
-    const rect = new Konva.Rect({
-      x: 20,
-      y: 20,
-      width: 100,
-      height: 100,
-      fill: "green",
-      draggable: true,
-    });
-    elementLayerRef.current.add(rect);
-    elementLayerRef.current.draw();
 
     borderLayerRef.current = new Konva.Layer({ listening: false });
     drawBorder(borderLayerRef.current, dimensions.width, dimensions.height);
@@ -160,6 +165,83 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       draggingRef.current = false;
     });
   }, []);
+  
+  useEffect(() => {
+    // Load an image and create a draggable and resizable Konva.Image object
+    const createDraggableImage = async (src, x, y) => {
+      const image = await loadImage(src);
+
+      const konvaImage = new Konva.Image({
+        image,
+        x,
+        y,
+        draggable: true,
+        scale: {x: 0.3, y: 0.3},
+      });
+
+      // Ignore clicks on transparent parts
+      konvaImage.on("dragstart", (e) => {
+        const pointerPosition = stageInstance.getPointerPosition();
+        const pixel = e.target.getLayer().getContext().getImageData(pointerPosition.x, pointerPosition.y, 1, 1).data;
+        if (pixel[3] === 0) {
+          e.target.stopDrag();
+        }
+      });
+
+      elementLayerRef.current.add(konvaImage);
+      elementLayerRef.current.batchDraw();
+      
+      return konvaImage;
+    };
+    
+    // Compare oldModel to model and only update the pipes that changed!
+    var added_pipes = {};
+    var updated_pipes = {};
+    var removed_pipes = {};
+    for (let key in model["pipes"]) {
+      // Check if in old model
+      if ("pipes" in oldModel) {
+        if (key in oldModel["pipes"]) {
+          // Was in old model
+          if (model["pipes"][key] != oldModel["pipes"][key]) {
+            // Update
+            updated_pipes[key] = model["pipes"][key];
+          } else {
+            // Ignore
+          }
+        } else {
+          // Was not in old model
+          added_pipes[key] = model["pipes"][key];
+        }
+      } else {
+        added_pipes[key] = model["pipes"][key];
+      }
+    }
+    for (let key in oldModel["pipes"]) {
+      // Check if in new model
+      if (key in model["pipes"]) {
+        // Is in new model. Ignore.
+      } else {
+        // Is not in new model. This was removed.
+        removed_pipes[key] = model["pipes"][key];
+      }
+    }
+    setOldModel(model);
+
+    for (let key in added_pipes) {    
+      createDraggableImage("/img/regular_pipe.png", 50, 50)
+        .then((konvaImage) => {
+          pipes[key] = konvaImage;
+        });
+    }
+    for (let key in removed_pipes) {
+      pipes[key].remove();
+      delete pipes[key];
+    }
+    for (let key in updated_pipes) {
+      // TODO(fairlight1337): Figure out what to update exactly once that is implemented in the backend.
+    }
+  }, [model]);
 
   // Update the grid and border when dimensions change
   const updateGridAndBorder = () => {
@@ -217,8 +299,9 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         throw new Error('Network response was not ok');
       }
       const jsonData = await response.json();
-      console.log(jsonData)
+      console.log(jsonData);
       setPipelineState(jsonData.state);
+      setModel(jsonData.model);
     } catch (error) {
       console.error('Error fetching pipeline state:', error);
     }
