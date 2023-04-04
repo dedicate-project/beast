@@ -157,6 +157,17 @@ make
 make coverage
 ```
 
+## Running BEAST Compose
+
+Compose is a web frontend/backend combination that allows intuitive interaction with evolutionary
+pipelines using BEAST. To run it, from the root directory of the project, run:
+```bash
+./build/bin/beast-compose --html_root html_static/ --storage_folder models
+```
+
+This will start a web server that exposes the BEAST interface at the address http://0.0.0.0:9192
+. Any pipeline models will be read from and stored to the folder given as `storage_folder`, the
+served HTML content will be served from the folder given as `html_root`.
 
 ## Defined Operators
 
