@@ -1,6 +1,10 @@
 #include <beast/pipeline_server.hpp>
 
 // Internal
+#include <beast/pipes/evaluator_pipe.hpp>
+#include <beast/pipes/evolution_pipe.hpp>
+#include <beast/pipes/null_sink_pipe.hpp>
+#include <beast/pipes/program_factory_pipe.hpp>
 #include <beast/version.hpp>
 
 namespace beast {
@@ -41,6 +45,39 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
     value["state"] =
         descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
     value["name"] = descriptor.name;
+
+    for (const auto& pipe : descriptor.pipeline.getPipes()) {
+      crow::json::wvalue pipe_json;
+      if (std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
+        pipe_json["type"] = "EvaluatorPipe";
+      } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
+        pipe_json["type"] = "EvolutionPipe";
+      } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {
+        pipe_json["type"] = "NullSinkPipe";
+      } else if (std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
+        pipe_json["type"] = "ProgramFactoryPipe";
+      } else {
+        pipe_json["type"] = "Unknown";
+      }
+
+      value["model"]["pipes"][pipe->name] = std::move(pipe_json);
+    }
+
+    crow::json::wvalue connections_json = crow::json::wvalue::list();
+    uint32_t connection_idx = 0;
+    for (const auto& connection : descriptor.pipeline.getConnections()) {
+      crow::json::wvalue connection_json;
+      connection_json["source_pipe"] = connection.source_pipe->name;
+      connection_json["source_slot"] = connection.source_slot_index;
+      connection_json["destination_pipe"] = connection.destination_pipe->name;
+      connection_json["destination_slot"] = connection.destination_slot_index;
+
+      connections_json[connection_idx] = std::move(connection_json);
+      connection_idx++;
+    }
+    value["model"]["connections"] = std::move(connections_json);
+
+    value["status"] = "success";
   } catch (const std::invalid_argument& exception) {
     value["status"] = "failed";
     value["error"] = exception.what();

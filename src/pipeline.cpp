@@ -7,12 +7,17 @@
 
 namespace beast {
 
-void Pipeline::addPipe(const std::shared_ptr<Pipe>& pipe) {
+void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pipe) {
   if (pipeIsInPipeline(pipe)) {
     throw std::invalid_argument("Pipe already in this pipeline.");
   }
 
+  if (getManagedPipeByName(name)) {
+    throw std::invalid_argument("Pipe name already exists in this pipeline");
+  }
+
   std::shared_ptr<ManagedPipe> managed_pipe = std::make_shared<ManagedPipe>();
+  managed_pipe->name = name;
   managed_pipe->pipe = pipe;
   managed_pipe->should_run = false;
   pipes_.push_back(std::move(managed_pipe));
@@ -30,21 +35,24 @@ void Pipeline::connectPipes(const std::shared_ptr<Pipe>& source_pipe, uint32_t s
     throw std::invalid_argument("Destination Pipe not in this Pipeline.");
   }
 
+  auto managed_source_pipe = getManagedPipeForPipe(source_pipe);
+  auto managed_destination_pipe = getManagedPipeForPipe(destination_pipe);
+
   // Ensure this connection doesn't exist yet.
   for (const Connection& connection : connections_) {
-    if (connection.source_pipe == source_pipe &&
+    if (connection.source_pipe == managed_source_pipe &&
         connection.source_slot_index == source_slot_index) {
       throw std::invalid_argument("Source port already occupied on Pipe.");
     }
 
-    if (connection.destination_pipe == destination_pipe &&
+    if (connection.destination_pipe == managed_destination_pipe &&
         connection.destination_slot_index == destination_slot_index) {
       throw std::invalid_argument("Destination port already occupied on Pipe.");
     }
   }
 
   Connection connection{
-      source_pipe, source_slot_index, destination_pipe, destination_slot_index, {}};
+      managed_source_pipe, source_slot_index, managed_destination_pipe, destination_slot_index, {}};
   connection.buffer.reserve(buffer_size);
   connections_.push_back(std::move(connection));
 }
@@ -102,10 +110,10 @@ void Pipeline::findConnections(std::shared_ptr<ManagedPipe>& managed_pipe,
                                std::vector<Connection*>& source_connections,
                                std::vector<Connection*>& destination_connections) {
   for (Connection& connection : connections_) {
-    if (connection.destination_pipe == managed_pipe->pipe) {
+    if (connection.destination_pipe == managed_pipe) {
       source_connections.push_back(&connection);
     }
-    if (connection.source_pipe == managed_pipe->pipe) {
+    if (connection.source_pipe == managed_pipe) {
       destination_connections.push_back(&connection);
     }
   }
@@ -189,4 +197,22 @@ void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
   }
 }
 
+std::shared_ptr<Pipeline::ManagedPipe>
+Pipeline::getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) {
+  for (const auto& managed_pipe : pipes_) {
+    if (managed_pipe->pipe == pipe) {
+      return managed_pipe;
+    }
+  }
+  return nullptr;
+}
+
+std::shared_ptr<Pipeline::ManagedPipe> Pipeline::getManagedPipeByName(const std::string& name) {
+  for (auto& managed_pipe : pipes_) {
+    if (managed_pipe->name == name) {
+      return managed_pipe;
+    }
+  }
+  return nullptr;
+}
 } // namespace beast
