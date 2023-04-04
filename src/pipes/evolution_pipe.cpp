@@ -73,7 +73,7 @@ void staticInitializerWrapper(GAGenome& genome) {
 }
 } // namespace
 
-EvolutionPipe::EvolutionPipe(uint32_t max_candidates) : Pipe(max_candidates) {}
+EvolutionPipe::EvolutionPipe(uint32_t max_candidates) : Pipe(max_candidates, 1, 1) {}
 
 void EvolutionPipe::execute() {
   GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
@@ -108,7 +108,7 @@ void EvolutionPipe::execute() {
 void EvolutionPipe::setCutOffScore(double cut_off_score) { cut_off_score_ = cut_off_score; }
 
 void EvolutionPipe::storeFinalist(const std::vector<unsigned char>& finalist, float score) {
-  output_.push_back({finalist, static_cast<double>(score)});
+  outputs_[0].push_back({finalist, static_cast<double>(score)});
 }
 
 } // namespace beast

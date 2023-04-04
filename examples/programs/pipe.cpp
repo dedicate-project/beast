@@ -61,10 +61,10 @@ int main(int /*argc*/, char** /*argv*/) {
   // pipe.setCutOffScore(0.9);
   beast::RandomProgramFactory factory;
 
-  while (pipe.hasSpace()) {
+  while (pipe.inputHasSpace(0)) {
     beast::Program prg =
         factory.generate(prg_size, mem_size, string_table_size, string_table_item_length);
-    pipe.addInput(prg.getData());
+    pipe.addInput(0, prg.getData());
   }
 
   pipe.execute();

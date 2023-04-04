@@ -2,7 +2,7 @@
 
 namespace beast {
 
-NullSinkPipe::NullSinkPipe() : Pipe(1) {}
+NullSinkPipe::NullSinkPipe() : Pipe(1, 1, 0) {}
 
 void NullSinkPipe::execute() {
   while (getInputSlotAmount(0) > 0) {

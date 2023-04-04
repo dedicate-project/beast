@@ -26,8 +26,6 @@ class NullSinkPipe : public Pipe {
   explicit NullSinkPipe();
 
   void execute() override;
-
-  uint32_t getOutputSlotCount() const override { return 0; }
 };
 
 } // namespace beast
