@@ -1,5 +1,7 @@
+// Catch2
 #include <catch2/catch.hpp>
 
+// BEAST
 #include <beast/beast.hpp>
 
 class MockPipe : public beast::Pipe {
@@ -7,6 +9,10 @@ class MockPipe : public beast::Pipe {
   explicit MockPipe(uint32_t max_candidates) : beast::Pipe(max_candidates, 1, 1) {}
 
   void execute() override {}
+
+  void addOutput(uint32_t slot_index, const std::vector<unsigned char>& candidate) {
+    outputs_[slot_index].push_back({candidate, 0.0});
+  }
 };
 
 TEST_CASE("pipe") {
@@ -56,5 +62,39 @@ TEST_CASE("pipe") {
     }
 
     REQUIRE(pipe.getInputSlotAmount(0) == population);
+  }
+
+  SECTION("Having max population input candidates means inputs are saturated") {
+    const uint32_t max_population = 12;
+
+    MockPipe pipe(max_population);
+    REQUIRE(pipe.getInputSlotAmount(0) == 0);
+    REQUIRE(pipe.inputsAreSaturated() == false);
+
+    const std::vector<unsigned char> candidate = {};
+
+    for (uint32_t idx = 0; idx < max_population; ++idx) {
+      pipe.addInput(0, candidate);
+    }
+
+    REQUIRE(pipe.getInputSlotAmount(0) == max_population);
+    REQUIRE(pipe.inputsAreSaturated() == true);
+  }
+
+  SECTION("Having max population output candidates means outputs are saturated") {
+    const uint32_t max_population = 15;
+
+    MockPipe pipe(max_population);
+    REQUIRE(pipe.getOutputSlotAmount(0) == 0);
+    REQUIRE(pipe.outputsAreSaturated() == false);
+
+    const std::vector<unsigned char> candidate = {};
+
+    for (uint32_t idx = 0; idx < max_population; ++idx) {
+      pipe.addOutput(0, candidate);
+    }
+
+    REQUIRE(pipe.getOutputSlotAmount(0) == max_population);
+    REQUIRE(pipe.outputsAreSaturated() == true);
   }
 }
