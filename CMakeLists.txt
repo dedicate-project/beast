@@ -6,8 +6,8 @@ project(beast
   HOMEPAGE_URL "https://github.com/dedicate-project/beast/")
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
-option(BEAST_BUILD_PIPELINES "Whether to build pipelines or not" YES)
-option(BEAST_BUILD_EXAMPLES "Whether to build examples or not" YES)
+option(BEAST_BUILD_PIPELINES "Whether to build example pipelines or not" YES)
+option(BEAST_BUILD_PROGRAMS "Whether to build example programs or not" YES)
 option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
