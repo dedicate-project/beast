@@ -228,8 +228,14 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     }
     setOldModel(model);
 
-    for (let key in added_pipes) {    
-      createDraggableImage("/img/regular_pipe.png", 50, 50)
+    for (let key in added_pipes) {
+      let image_file = "/img/regular_pipe.png";
+      if (added_pipes[key]["type"] == "ProgramFactoryPipe") {
+        image_file = "/img/factory_pipe.png";
+      } else if (added_pipes[key]["type"] == "NullSinkPipe") {
+        image_file = "/img/null_sink_pipe.png";
+      }
+      createDraggableImage(image_file, 50, 50)
         .then((konvaImage) => {
           pipes[key] = konvaImage;
         });
