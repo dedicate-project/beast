@@ -90,9 +90,11 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [newPipelineName, setNewPipelineName] = useState(pipeline.name);
   const [showEditButton, setShowEditButton] = useState(false);
-  
+
   const [oldModel, setOldModel] = useState({});
   const [model, setModel] = useState({});
+
+  const [pipelineName, setPipelineName] = useState(pipeline.name);
 
   const stageRef = useRef(null);
   const gridLayerRef = useRef(null);
@@ -100,7 +102,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const elementLayerRef = useRef(null);
   const draggingRef = useRef(false);
   const lastDragPointRef = useRef({ x: 0, y: 0 });
-  
+
   var pipes = {};
 
   useEffect(() => {
@@ -165,7 +167,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       draggingRef.current = false;
     });
   }, []);
-  
+
   useEffect(() => {
     // Load an image and create a draggable and resizable Konva.Image object
     const createDraggableImage = async (src, x, y) => {
@@ -190,10 +192,10 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
 
       elementLayerRef.current.add(konvaImage);
       elementLayerRef.current.batchDraw();
-      
+
       return konvaImage;
     };
-    
+
     // Compare oldModel to model and only update the pipes that changed!
     var added_pipes = {};
     var updated_pipes = {};
@@ -357,6 +359,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       // Handle error if necessary
     }
     setRenameDialogOpen(false);
+    setPipelineName(newPipelineName.trim());
   };
 
   return e(
@@ -385,7 +388,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         e(
           Typography,
           { display: "inline" },
-          pipeline.name
+          pipelineName
         ),
         showEditButton &&
           e(
