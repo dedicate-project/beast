@@ -168,6 +168,30 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     });
   }, []);
 
+  function getPipeNameForKonvaImage(konvaImage) {
+    for (const key in pipes) {
+      if (pipes[key] == konvaImage) {
+        return key;
+      }
+    }
+    return null;
+  }
+
+  function handlePipeDragEnded(konvaImage) {
+    const pipe_name = getPipeNameForKonvaImage(konvaImage);
+    if (pipe_name == null) {
+      console.log('Pipe not found for image');
+      return;
+    }
+    fetch(`/api/v1/pipelines/${pipeline.id}/update`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action: "move_pipe", name: pipe_name, x: konvaImage.getX(), y: konvaImage.getY() }),
+    });
+  }
+
   useEffect(() => {
     // Load an image and create a draggable and resizable Konva.Image object
     const createDraggableImage = async (src, x, y) => {
@@ -181,6 +205,13 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         scale: {x: 0.3, y: 0.3},
       });
 
+      konvaImage.on("mousedown", (e) => {
+  if (e.evt.button !== 0) {
+    e.target.stopDrag();
+  }
+});
+
+
       // Ignore clicks on transparent parts
       konvaImage.on("dragstart", (e) => {
         const pointerPosition = stageInstance.getPointerPosition();
@@ -188,6 +219,10 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         if (pixel[3] === 0) {
           e.target.stopDrag();
         }
+      });
+      
+      konvaImage.on("dragend", (e) => {
+        handlePipeDragEnded(konvaImage);
       });
 
       elementLayerRef.current.add(konvaImage);

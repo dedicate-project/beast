@@ -129,6 +129,13 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
             const auto new_name = static_cast<std::string>(req_body["name"]);
             pipeline_manager_.updatePipelineName(pipeline.id, new_name);
             value["status"] = "success";
+          } else if (action == "move_pipe") {
+            const auto pipe_name = static_cast<std::string>(req_body["name"]);
+            const auto pos_x = static_cast<int32_t>(req_body["x"]);
+            const auto pos_y = static_cast<int32_t>(req_body["y"]);
+            // TODO(fairlight1337): Implement storing moved pipes' position.
+            std::cout << "Move pipe '" << pipe_name << "' to (" << pos_x << ", " << pos_y << ")"
+                      << std::endl;
           } else {
             value["status"] = "failed";
             value["action"] = action;
