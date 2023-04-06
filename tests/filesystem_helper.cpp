@@ -16,7 +16,8 @@ TEST_CASE("FilesystemHelper") {
   SECTION("Save and load a model") {
     const std::string model_id = "test_model";
     nlohmann::json model = {{"test_key", "test_value"}};
-    nlohmann::json wrapped_model = {{"name", model_id}, {"model", model}};
+    nlohmann::json metadata = nlohmann::json::object();
+    nlohmann::json wrapped_model = {{"metadata", metadata}, {"name", model_id}, {"model", model}};
 
     const std::string filename = fs_helper.saveModel(model_id, model);
 
@@ -42,6 +43,8 @@ TEST_CASE("FilesystemHelper") {
   }
 
   SECTION("Load all models") {
+    nlohmann::json metadata = nlohmann::json::object();
+
     const std::string model_id1 = "test_model1";
     nlohmann::json model1 = {{"test_key", "test_value1"}};
     const std::string filename1 = fs_helper.saveModel(model_id1, model1);
@@ -50,8 +53,10 @@ TEST_CASE("FilesystemHelper") {
     nlohmann::json model2 = {{"test_key", "test_value2"}};
     const std::string filename2 = fs_helper.saveModel(model_id2, model2);
 
-    nlohmann::json wrapped_model1 = {{"name", model_id1}, {"model", model1}};
-    nlohmann::json wrapped_model2 = {{"name", model_id2}, {"model", model2}};
+    nlohmann::json wrapped_model1 = {
+        {"metadata", metadata}, {"name", model_id1}, {"model", model1}};
+    nlohmann::json wrapped_model2 = {
+        {"metadata", metadata}, {"name", model_id2}, {"model", model2}};
 
     const std::vector<nlohmann::json> loaded_models = fs_helper.loadModels();
     REQUIRE(loaded_models.size() == 2);

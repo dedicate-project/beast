@@ -30,6 +30,16 @@ class ProgramFactoryPipe : public Pipe {
 
   void execute() override;
 
+  uint32_t getMaxSize() const;
+
+  uint32_t getMemorySize() const;
+
+  uint32_t getStringTableSize() const;
+
+  uint32_t getStringTableItemLength() const;
+
+  std::shared_ptr<ProgramFactoryBase> getFactory() const;
+
  private:
   const std::shared_ptr<ProgramFactoryBase> factory_;
 

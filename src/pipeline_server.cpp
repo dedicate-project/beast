@@ -1,10 +1,6 @@
 #include <beast/pipeline_server.hpp>
 
 // Internal
-#include <beast/pipes/evaluator_pipe.hpp>
-#include <beast/pipes/evolution_pipe.hpp>
-#include <beast/pipes/null_sink_pipe.hpp>
-#include <beast/pipes/program_factory_pipe.hpp>
 #include <beast/version.hpp>
 
 namespace beast {
@@ -45,37 +41,8 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
     value["state"] =
         descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
     value["name"] = descriptor.name;
-
-    for (const auto& pipe : descriptor.pipeline.getPipes()) {
-      crow::json::wvalue pipe_json;
-      if (std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
-        pipe_json["type"] = "EvaluatorPipe";
-      } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
-        pipe_json["type"] = "EvolutionPipe";
-      } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {
-        pipe_json["type"] = "NullSinkPipe";
-      } else if (std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
-        pipe_json["type"] = "ProgramFactoryPipe";
-      } else {
-        pipe_json["type"] = "Unknown";
-      }
-
-      value["model"]["pipes"][pipe->name] = std::move(pipe_json);
-    }
-
-    crow::json::wvalue connections_json = crow::json::wvalue::list();
-    uint32_t connection_idx = 0;
-    for (const auto& connection : descriptor.pipeline.getConnections()) {
-      crow::json::wvalue connection_json;
-      connection_json["source_pipe"] = connection.source_pipe->name;
-      connection_json["source_slot"] = connection.source_slot_index;
-      connection_json["destination_pipe"] = connection.destination_pipe->name;
-      connection_json["destination_slot"] = connection.destination_slot_index;
-
-      connections_json[connection_idx] = std::move(connection_json);
-      connection_idx++;
-    }
-    value["model"]["connections"] = std::move(connections_json);
+    value["metadata"] = crow::json::load(descriptor.metadata.dump());
+    value["model"] = crow::json::load(pipeline_manager_.getJsonForPipeline(pipeline_id).dump());
 
     value["status"] = "success";
   } catch (const std::invalid_argument& exception) {
@@ -130,12 +97,13 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
             pipeline_manager_.updatePipelineName(pipeline.id, new_name);
             value["status"] = "success";
           } else if (action == "move_pipe") {
+            auto& descriptor = pipeline_manager_.getPipelineById(pipeline.id);
             const auto pipe_name = static_cast<std::string>(req_body["name"]);
-            const auto pos_x = static_cast<int32_t>(req_body["x"]);
-            const auto pos_y = static_cast<int32_t>(req_body["y"]);
-            // TODO(fairlight1337): Implement storing moved pipes' position.
-            std::cout << "Move pipe '" << pipe_name << "' to (" << pos_x << ", " << pos_y << ")"
-                      << std::endl;
+            descriptor.metadata["pipes"][pipe_name]["position"]["x"] =
+                static_cast<int32_t>(req_body["x"]);
+            descriptor.metadata["pipes"][pipe_name]["position"]["y"] =
+                static_cast<int32_t>(req_body["y"]);
+            pipeline_manager_.savePipeline(pipeline.id);
           } else {
             value["status"] = "failed";
             value["action"] = action;

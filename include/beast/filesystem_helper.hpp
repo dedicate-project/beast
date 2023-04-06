@@ -32,6 +32,9 @@ class FilesystemHelper {
    */
   std::string saveModel(const std::string& model_identifier, const nlohmann::json& model) const;
 
+  void updateModel(const std::string& filename, const std::string& model_identifier,
+                   const nlohmann::json& model, const nlohmann::json& metadata) const;
+
   /**
    * @brief Loads all JSON files from the model path and returns their contents.
    *

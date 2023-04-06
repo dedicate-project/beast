@@ -18,7 +18,15 @@ FilesystemHelper::FilesystemHelper(const std::string& model_path) {
 std::string FilesystemHelper::saveModel(const std::string& model_identifier,
                                         const nlohmann::json& model) const {
   std::string filename = getUniqueFilename(model_identifier);
-  std::string filepath = (m_model_path / filename).string();
+  updateModel(filename, model_identifier, model, nlohmann::json::object());
+
+  return filename;
+}
+
+void FilesystemHelper::updateModel(const std::string& filename, const std::string& model_identifier,
+                                   const nlohmann::json& model,
+                                   const nlohmann::json& metadata) const {
+  const std::string filepath = (m_model_path / filename).string();
 
   std::ofstream file(filepath);
   if (!file.is_open()) {
@@ -28,11 +36,10 @@ std::string FilesystemHelper::saveModel(const std::string& model_identifier,
   nlohmann::json wrapper;
   wrapper["name"] = model_identifier;
   wrapper["model"] = model;
+  wrapper["metadata"] = metadata;
 
-  file << wrapper.dump(4);
+  file << wrapper.dump(2);
   file.close();
-
-  return filename;
 }
 
 std::string FilesystemHelper::cleanFilename(const std::string& filename) {

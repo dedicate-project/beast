@@ -23,4 +23,14 @@ void ProgramFactoryPipe::execute() {
   }
 }
 
+uint32_t ProgramFactoryPipe::getMaxSize() const { return max_size_; }
+
+uint32_t ProgramFactoryPipe::getMemorySize() const { return memory_size_; }
+
+uint32_t ProgramFactoryPipe::getStringTableSize() const { return string_table_size_; }
+
+uint32_t ProgramFactoryPipe::getStringTableItemLength() const { return string_table_item_length_; }
+
+std::shared_ptr<ProgramFactoryBase> ProgramFactoryPipe::getFactory() const { return factory_; }
+
 } // namespace beast
