@@ -143,23 +143,43 @@ link_directories(
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
-file(GLOB_RECURSE ALL_SOURCE_FILES
-  ${CMAKE_SOURCE_DIR}/src/*.cpp
-  ${CMAKE_SOURCE_DIR}/src/pipes/*.cpp
-  ${CMAKE_SOURCE_DIR}/src/evaluators/*.cpp
-  ${CMAKE_SOURCE_DIR}/examples/*.cpp
-  ${CMAKE_SOURCE_DIR}/pipelines/*.cpp
-  ${CMAKE_SOURCE_DIR}/tests/*.cpp
-  ${CMAKE_SOURCE_DIR}/include/*.hpp
-  ${CMAKE_SOURCE_DIR}/include/beast/*.hpp
-  ${CMAKE_SOURCE_DIR}/include/beast/pipes/*.hpp
-  ${CMAKE_SOURCE_DIR}/include/beast/evaluators/*.hpp)
+# Check if clang-format is available
+if (CLANG_FORMAT_EXECUTABLE)
+  # Format C++ files target
+  file(GLOB_RECURSE ALL_CPP_FILES
+    ${CMAKE_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/pipes/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/evaluators/*.cpp
+    ${CMAKE_SOURCE_DIR}/examples/pipelines/*.cpp
+    ${CMAKE_SOURCE_DIR}/examples/programs/*.cpp
+    ${CMAKE_SOURCE_DIR}/tests/*.cpp
+    ${CMAKE_SOURCE_DIR}/include/*.hpp
+    ${CMAKE_SOURCE_DIR}/include/beast/*.hpp
+    ${CMAKE_SOURCE_DIR}/include/beast/pipes/*.hpp
+    ${CMAKE_SOURCE_DIR}/include/beast/evaluators/*.hpp)
 
-add_custom_target(format
-  COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
-          -fallback-style=none ${ALL_SOURCE_FILES}
-  COMMENT "Running clang-format on all source files"
-  VERBATIM)
+  # Format JavaScript files target
+  file(GLOB_RECURSE ALL_JS_FILES
+    ${CMAKE_SOURCE_DIR}/html_static/js/*.js)
+
+  # Exclude 3rdparty JS libs
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/konva*")
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/react*")
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/react-dom*")
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/material-ui*")
+
+  set(ALL_SOURCE_FILES ${ALL_CPP_FILES})
+  list(APPEND ALL_SOURCE_FILES ${ALL_JS_FILES})
+
+  # Format all files
+  add_custom_target(format
+    COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
+            -fallback-style=none ${ALL_SOURCE_FILES}
+    COMMENT "Running clang-format on all source files"
+    VERBATIM)
+else()
+  message(WARNING "clang-format not found, format targets are not available.")
+endif()
 
 # Pipelines
 if(BEAST_BUILD_PIPELINES)
