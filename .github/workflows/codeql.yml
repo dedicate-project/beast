@@ -32,16 +32,24 @@ jobs:
           html_static/js/konva*
           html_static/js/react*
           html_static/js/material-ui*
+          # Exclude JavaScript files if analyzing C++
+          ${{ matrix.language == 'cpp' && 'html_static/**/*.js' || '' }}
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
         languages: ${{matrix.language}}
+
     - name: Install dependencies
-      run: sudo apt-get install -y clang-tidy lcov ccache
-    - name: Build
       run: |
+        # Install C++ dependencies if analyzing C++
+        ${{ matrix.language == 'cpp' && 'sudo apt-get install -y clang-tidy lcov ccache' || '' }}
+
+    - name: Build C++
+      if: matrix.language == 'cpp'
+      run: |
+        # Build C++ code if analyzing C++
         git submodule update --init --recursive
         mkdir build
         cd build
@@ -52,3 +60,6 @@ jobs:
       uses: github/codeql-action/analyze@v2
       with:
         category: "/language:${{matrix.language}}"
+        # Use the javascript/sarif-query to scan only .js files
+        queries: ${{ matrix.language == 'javascript' && 'javascript/sarif-query' || '' }}
+
