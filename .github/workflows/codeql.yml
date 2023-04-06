@@ -25,6 +25,13 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+        ref: ${{ github.head_ref }}
+        exclude: |
+          html_static/js/konva*
+          html_static/js/react*
+          html_static/js/material-ui*
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
