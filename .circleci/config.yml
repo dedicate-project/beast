@@ -23,6 +23,28 @@ jobs:
           root: .
           paths:
             - "."
+  format:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y clang-format
+      - run:
+          name: Setup cmake
+          command: |
+            cd build
+            cmake ..
+      - run:
+          name: Run clang-format
+          command: |
+            cd build
+            make format
   build_release:
     docker:
       - image: cimg/base:stable
@@ -34,7 +56,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y clang-tidy lcov ccache libasio-dev
+            sudo apt-get install -y clang-tidy lcov ccache
       - run:
           name: Setup cmake
           command: |
@@ -60,7 +82,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y clang-tidy lcov ccache gcovr libasio-dev
+            sudo apt-get install -y clang-tidy lcov ccache gcovr
       - run:
           name: Setup cmake
           command: |
@@ -132,12 +154,15 @@ workflows:
   build-and-test:
     jobs:
       - prepare_environment
+      - format:
+          requires:
+            - prepare_environment
       - build_release:
           requires:
-            - prepare_environment
+            - format
       - build_debug:
           requires:
-            - prepare_environment
+            - format
       - test:
           requires:
             - build_debug
