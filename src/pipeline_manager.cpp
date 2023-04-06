@@ -1,15 +1,13 @@
 #include <beast/pipeline_manager.hpp>
 
 // Internal
-#include <beast/pipes/null_sink_pipe.hpp>
-#include <beast/pipes/program_factory_pipe.hpp>
-#include <beast/program_factory_base.hpp>
-#include <beast/random_program_factory.hpp>
-
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
+
+#include <beast/program_factory_base.hpp>
+#include <beast/random_program_factory.hpp>
 
 namespace beast {
 
