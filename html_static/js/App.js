@@ -1,35 +1,56 @@
-const { AppBar, Drawer, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, Snackbar, List, ListItem, ListItemIcon, ListItemText, makeStyles, Toolbar, Typography, IconButton, Button, Divider } = MaterialUI;
-const { render } = ReactDOM;
-const { useState, useEffect, createElement: e } = React;
-import { PipelineList } from './PipelineList.js';
-import { StateContext } from './context.js';
+const {
+  AppBar,
+  Drawer,
+  Fab,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  Snackbar,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  makeStyles,
+  Toolbar,
+  Typography,
+  IconButton,
+  Button,
+  Divider
+} = MaterialUI;
+const {render} = ReactDOM;
+const {useState, useEffect, createElement : e} = React;
+import {PipelineList} from './PipelineList.js';
+import {StateContext} from './context.js';
 
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
-  root: { display: 'flex' },
-  appBar: { zIndex: 1 },
-  drawer: { width: drawerWidth, flexShrink: 0 },
-  drawerPaper: { width: drawerWidth },
-  content: { flexGrow: 1, padding: 20, marginTop: 50 },
-  connectionStatus: {
-    flexGrow: 1,
-    textAlign: "center",
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 150,
-    height: 30,
-    paddingTop: 14,
-    border: "1px solid black",
-    fontFamily: 'Roboto',
-    fontSize: '14px',
-    borderRadius: '5px',
-    boxShadow: 'inset 2px 2px 4px rgba(0, 0, 0, 0.3)',
-  },
-  connected: { backgroundColor: "green" },
-  disconnected: { backgroundColor: "red" },
-}));
+                               root : {display : 'flex'},
+                               appBar : {zIndex : 1},
+                               drawer : {width : drawerWidth, flexShrink : 0},
+                               drawerPaper : {width : drawerWidth},
+                               content : {flexGrow : 1, padding : 20, marginTop : 50},
+                               connectionStatus : {
+                                 flexGrow : 1,
+                                 textAlign : "center",
+                                 position : "absolute",
+                                 top : 10,
+                                 right : 10,
+                                 width : 150,
+                                 height : 30,
+                                 paddingTop : 14,
+                                 border : "1px solid black",
+                                 fontFamily : 'Roboto',
+                                 fontSize : '14px',
+                                 borderRadius : '5px',
+                                 boxShadow : 'inset 2px 2px 4px rgba(0, 0, 0, 0.3)',
+                               },
+                               connected : {backgroundColor : "green"},
+                               disconnected : {backgroundColor : "red"},
+                             }));
 
 export default function App() {
   const classes = useStyles();
@@ -64,77 +85,88 @@ export default function App() {
       }
     };
     fetchData();
-    const interval = setInterval(() => {
-      fetchData();
-    }, 1000); // Fetch data every 5 seconds
+    const interval = setInterval(() => { fetchData(); }, 1000); // Fetch data every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
   const menuItems = [
-    { label: "Home", key: "home", icon: "home",
-      onClick: () => {
+    {
+      label : "Home",
+      key : "home",
+      icon : "home",
+      onClick : () => {
         setTitle('Home');
         setContent('Welcome Home!');
-        setSelectedDrawerItem("home"); }, },
-    { label: "Pipelines", key: "pipelines", icon: "lan",
-      onClick: () => {
+        setSelectedDrawerItem("home");
+      },
+    },
+    {
+      label : "Pipelines",
+      key : "pipelines",
+      icon : "lan",
+      onClick : () => {
         setTitle('Pipelines');
         setContent(e(PipelineList));
-        setSelectedDrawerItem("pipelines"); }, },
-    { label: "Program Collection", key: "program-collection", icon: "hive",
-      onClick: () => {
+        setSelectedDrawerItem("pipelines");
+      },
+    },
+    {
+      label : "Program Collection",
+      key : "program-collection",
+      icon : "hive",
+      onClick : () => {
         setTitle('Program Collection');
         setContent('You have no program collection');
-        setSelectedDrawerItem("program-collection"); }, },
+        setSelectedDrawerItem("program-collection");
+      },
+    },
   ];
 
-  const menuItemsElements =
-        menuItems.map((item) =>
-                      e(ListItem, {
-                        button: true, selected: selectedDrawerItem === item.key,
-                        onClick: item.onClick,key: item.key,
-                      },
-                        e(ListItemIcon, null,
-                          e("i", { className: "material-icons" }, item.icon)
-                         ),
-                        e(ListItemText, { primary: item.label })
-                       )
-                     );
+  const menuItemsElements = menuItems.map(
+      (item) => e(ListItem, {
+        button : true,
+        selected : selectedDrawerItem === item.key,
+        onClick : item.onClick,
+        key : item.key,
+      },
+                  e(ListItemIcon, null, e("i", {className : "material-icons"}, item.icon)),
+                  e(ListItemText, {primary : item.label})));
 
-  return (
-    e(StateContext.Provider,
-      { value: { connected, setConnected } },
-      e("div", { className: classes.root },
-        e(AppBar, { position: "fixed", className: classes.appBar },
-          e(Toolbar, { style: { marginLeft: `${drawerWidth + 10}px` } },
-            e(Typography, { variant: "h6" }, title),
-            e(Typography, { variant: "h8",
-                            className: classes.connectionStatus + " " +
-                            (connected ? classes.connected : classes.disconnected)},
-              connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected')
-           )
-         ),
-        e(Drawer, {
-          className: classes.drawer,
-          variant: "permanent",
-          classes: {
-            paper: classes.drawerPaper,
-          }
-        },
-          e(List, null,
-            e(
-              'div',
-              { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' } },
-              e("img", { src: "img/beast_head_logo_small.png", alt: "The BEAST logo", style: { width: '80%', objectFit: 'cover' } }),
-            ),
-            e(Divider),
-            ...menuItemsElements
-           )
-         ),
-        e("main", { className: classes.content },
-          e("div", null, content)
-         )
-       )
-     )
-  );
+  return (e(StateContext.Provider, {value : {connected, setConnected}},
+            e("div", {className : classes.root},
+              e(AppBar, {position : "fixed", className : classes.appBar},
+                e(Toolbar, {style : {marginLeft : `${drawerWidth + 10}px`}},
+                  e(Typography, {variant : "h6"}, title),
+                  e(Typography, {
+                    variant : "h8",
+                    className : classes.connectionStatus + " " +
+                                    (connected ? classes.connected : classes.disconnected)
+                  },
+                    connected ? ('Connected (v' + status["version"] + ')') : 'Disconnected'))),
+              e(Drawer, {
+                className : classes.drawer,
+                variant : "permanent",
+                classes : {
+                  paper : classes.drawerPaper,
+                }
+              },
+                e(List, null,
+                  e(
+                      'div',
+                      {
+                        style : {
+                          display : 'flex',
+                          justifyContent : 'center',
+                          alignItems : 'center',
+                          width : '100%'
+                        }
+                      },
+                      e("img", {
+                        src : "img/beast_head_logo_small.png",
+                        alt : "The BEAST logo",
+                        style : {width : '80%', objectFit : 'cover'}
+                      }),
+                      ),
+                  e(Divider), ...menuItemsElements)),
+              e("main", {className : classes.content}, e("div", null, content)))));
 }

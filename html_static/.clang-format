@@ -15,6 +15,5 @@ BreakStringLiterals: true
 KeepEmptyLinesAtTheStartOfBlocks: true
 SpaceBeforeAssignmentOperators: true
 SpacesBeforeTrailingComments: 1
-
 ...
 

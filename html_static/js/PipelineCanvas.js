@@ -1,26 +1,36 @@
-const { useState, createElement: e, useEffect, useRef, useLayoutEffect } = React;
-const { Typography, Box, Button, TextField, Toolbar, IconButton, makeStyles, Dialog, DialogTitle, DialogContent, DialogActions } = MaterialUI;
-const { Stage, Layer, Rect } = Konva;
+const {useState, createElement : e, useEffect, useRef, useLayoutEffect} = React;
+const {
+  Typography,
+  Box,
+  Button,
+  TextField,
+  Toolbar,
+  IconButton,
+  makeStyles,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} = MaterialUI;
+const {Stage, Layer, Rect} = Konva;
 
-import { ContextMenu } from './ContextMenu.js';
+import {ContextMenu} from './ContextMenu.js';
 
 const useStyles = makeStyles((theme) => ({
-  toolbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing(2),
-    alignItems: "center",
-  },
-  pipelineName: {
-    fontWeight: "bold",
-    fontSize: "1.5rem",
-    marginLeft: theme.spacing(1),
-  },
-}));
+                               toolbar : {
+                                 display : "flex",
+                                 justifyContent : "space-between",
+                                 marginBottom : theme.spacing(2),
+                                 alignItems : "center",
+                               },
+                               pipelineName : {
+                                 fontWeight : "bold",
+                                 fontSize : "1.5rem",
+                                 marginLeft : theme.spacing(1),
+                               },
+                             }));
 
-const onResize = () => {
-  callback();
-};
+const onResize = () => { callback(); };
 
 const useResize = (callback) => {
   useEffect(() => {
@@ -35,18 +45,18 @@ function drawGrid(layer, width, height, gridSize, gridSizeMultiplier) {
 
   for (let i = 0; i < extendedWidth; i += gridSize) {
     const verticalLine = new Konva.Line({
-      points: [i, 0, i, extendedHeight],
-      stroke: "lightgrey",
-      strokeWidth: 1,
+      points : [ i, 0, i, extendedHeight ],
+      stroke : "lightgrey",
+      strokeWidth : 1,
     });
     layer.add(verticalLine);
   }
 
   for (let i = 0; i < extendedHeight; i += gridSize) {
     const horizontalLine = new Konva.Line({
-      points: [0, i, extendedWidth, i],
-      stroke: "lightgrey",
-      strokeWidth: 1,
+      points : [ 0, i, extendedWidth, i ],
+      stroke : "lightgrey",
+      strokeWidth : 1,
     });
     layer.add(horizontalLine);
   }
@@ -54,12 +64,12 @@ function drawGrid(layer, width, height, gridSize, gridSizeMultiplier) {
 
 function drawBorder(layer, width, height) {
   const border = new Konva.Rect({
-    x: 0,
-    y: 0,
-    width: width,
-    height: height,
-    stroke: "black",
-    strokeWidth: 1,
+    x : 0,
+    y : 0,
+    width : width,
+    height : height,
+    stroke : "black",
+    strokeWidth : 1,
   });
 
   layer.add(border);
@@ -70,22 +80,21 @@ function loadImage(src) {
     const image = new Image();
     image.src = src;
     image.crossOrigin = "anonymous";
-    image.onload = () => {
-      resolve(image);
-    };
+    image.onload = () => { resolve(image); };
   });
 }
 
-export function PipelineCanvas({ pipeline, onBackButtonClick }) {
+export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
-  const [dimensions, setDimensions] = useState({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
+  const [dimensions, setDimensions] =
+      useState({width : window.innerWidth - 320, height : window.innerHeight - 200});
   const [stageInstance, setStageInstance] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [lastDragPoint, setLastDragPoint] = useState({ x: 0, y: 0 });
+  const [lastDragPoint, setLastDragPoint] = useState({x : 0, y : 0});
 
   const [showContextMenu, setShowContextMenu] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuPosition, setContextMenuPosition] = useState({x : 0, y : 0});
 
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [newPipelineName, setNewPipelineName] = useState(pipeline.name);
@@ -101,29 +110,30 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const borderLayerRef = useRef(null);
   const elementLayerRef = useRef(null);
   const draggingRef = useRef(false);
-  const lastDragPointRef = useRef({ x: 0, y: 0 });
+  const lastDragPointRef = useRef({x : 0, y : 0});
 
   var pipes = {};
 
   useEffect(() => {
     const stage = new Konva.Stage({
-      container: stageRef.current,
-      width: dimensions.width,
-      height: dimensions.height,
+      container : stageRef.current,
+      width : dimensions.width,
+      height : dimensions.height,
     });
     setStageInstance(stage);
 
     gridLayerRef.current = new Konva.Layer({
-      x: -dimensions.width, // Negative offset by half of the width
-      y: -dimensions.height, // Negative offset by half of the height
+      x : -dimensions.width,  // Negative offset by half of the width
+      y : -dimensions.height, // Negative offset by half of the height
     });
-    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20, 3); // Grid size = 20, gridSizeMultiplier = 3
+    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20,
+             3); // Grid size = 20, gridSizeMultiplier = 3
     stage.add(gridLayerRef.current);
 
     elementLayerRef.current = new Konva.Layer();
     stage.add(elementLayerRef.current);
 
-    borderLayerRef.current = new Konva.Layer({ listening: false });
+    borderLayerRef.current = new Konva.Layer({listening : false});
     drawBorder(borderLayerRef.current, dimensions.width, dimensions.height);
     stage.add(borderLayerRef.current);
 
@@ -136,7 +146,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       } else if (e.evt.button === 2) {
         e.evt.preventDefault();
         const position = stage.getPointerPosition();
-        setContextMenuPosition({ x: position.x, y: position.y });
+        setContextMenuPosition({x : position.x, y : position.y});
         setShowContextMenu(true);
       }
     });
@@ -159,13 +169,9 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       }
     });
 
-    stage.on("mouseup", () => {
-      draggingRef.current = false;
-    });
+    stage.on("mouseup", () => { draggingRef.current = false; });
 
-    stage.on("mouseout", () => {
-      draggingRef.current = false;
-    });
+    stage.on("mouseout", () => { draggingRef.current = false; });
   }, []);
 
   function getPipeNameForKonvaImage(konvaImage) {
@@ -184,11 +190,12 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       return;
     }
     fetch(`/api/v1/pipelines/${pipeline.id}/update`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+      method : "POST",
+      headers : {
+        "Content-Type" : "application/json",
       },
-      body: JSON.stringify({ action: "move_pipe", name: pipe_name, x: konvaImage.getX(), y: konvaImage.getY() }),
+      body : JSON.stringify(
+          {action : "move_pipe", name : pipe_name, x : konvaImage.getX(), y : konvaImage.getY()}),
     });
   }
 
@@ -201,29 +208,29 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
         image,
         x,
         y,
-        draggable: true,
-        scale: {x: 0.3, y: 0.3},
+        draggable : true,
+        scale : {x : 0.3, y : 0.3},
       });
 
       konvaImage.on("mousedown", (e) => {
-  if (e.evt.button !== 0) {
-    e.target.stopDrag();
-  }
-});
-
+        if (e.evt.button !== 0) {
+          e.target.stopDrag();
+        }
+      });
 
       // Ignore clicks on transparent parts
       konvaImage.on("dragstart", (e) => {
         const pointerPosition = stageInstance.getPointerPosition();
-        const pixel = e.target.getLayer().getContext().getImageData(pointerPosition.x, pointerPosition.y, 1, 1).data;
+        const pixel = e.target.getLayer()
+                          .getContext()
+                          .getImageData(pointerPosition.x, pointerPosition.y, 1, 1)
+                          .data;
         if (pixel[3] === 0) {
           e.target.stopDrag();
         }
       });
-      
-      konvaImage.on("dragend", (e) => {
-        handlePipeDragEnded(konvaImage);
-      });
+
+      konvaImage.on("dragend", (e) => { handlePipeDragEnded(konvaImage); });
 
       elementLayerRef.current.add(konvaImage);
       elementLayerRef.current.batchDraw();
@@ -272,24 +279,23 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       } else if (added_pipes[key]["type"] == "NullSinkPipe") {
         image_file = "/img/null_sink_pipe.png";
       }
-      createDraggableImage(image_file, 50, 50)
-        .then((konvaImage) => {
-          pipes[key] = konvaImage;
-        });
+      createDraggableImage(image_file, 50, 50).then((konvaImage) => { pipes[key] = konvaImage; });
     }
     for (let key in removed_pipes) {
       pipes[key].remove();
       delete pipes[key];
     }
     for (let key in updated_pipes) {
-      // TODO(fairlight1337): Figure out what to update exactly once that is implemented in the backend.
+      // TODO(fairlight1337): Figure out what to update exactly once that is implemented in the
+      // backend.
     }
-  }, [model]);
+  }, [ model ]);
 
   // Update the grid and border when dimensions change
   const updateGridAndBorder = () => {
     gridLayerRef.current.destroyChildren();
-    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20, 3); // Grid size = 20, gridSizeMultiplier = 3
+    drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20,
+             3); // Grid size = 20, gridSizeMultiplier = 3
     gridLayerRef.current.batchDraw();
 
     borderLayerRef.current.destroyChildren();
@@ -306,7 +312,8 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
 
     // Set up a listener for dimension changes
     const onDimensionsChange = () => {
-      if (!stageInstance) return;
+      if (!stageInstance)
+        return;
       stageInstance.width(dimensions.width);
       stageInstance.height(dimensions.height);
       updateGridAndBorder();
@@ -319,18 +326,16 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
     const dimensionsObserver = new ResizeObserver(onDimensionsChange);
     dimensionsObserver.observe(stageRef.current);
 
-    return () => {
-      dimensionsObserver.disconnect();
-    };
-  }, [dimensions]);
+    return () => { dimensionsObserver.disconnect(); };
+  }, [ dimensions ]);
 
   useResize(() => {
-    setDimensions({ width: window.innerWidth - 320, height: window.innerHeight - 200 });
+    setDimensions({width : window.innerWidth - 320, height : window.innerHeight - 200});
   });
 
   const handleButtonClick = async (id, action) => {
     const response = await fetch(`/api/v1/pipelines/${id}/${action}`, {
-      method: "GET",
+      method : "GET",
     });
     // Handle response if necessary
   };
@@ -351,7 +356,7 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   };
 
   useEffect(() => {
-    fetchPipelineState(); // Fetch the pipeline state initially
+    fetchPipelineState();                                   // Fetch the pipeline state initially
     const interval = setInterval(fetchPipelineState, 1000); // Fetch the pipeline state every 1000ms
     return () => clearInterval(interval); // Cleanup the interval on component unmount
   }, []);
@@ -362,11 +367,11 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
       stageInstance.height(dimensions.height);
       stageInstance.batchDraw();
     }
-  }, [dimensions, stageInstance]);
+  }, [ dimensions, stageInstance ]);
 
   const resetGridPosition = () => {
     if (gridLayerRef.current) {
-      gridLayerRef.current.x(-dimensions.width); // Reset X position
+      gridLayerRef.current.x(-dimensions.width);  // Reset X position
       gridLayerRef.current.y(-dimensions.height); // Reset Y position
       gridLayerRef.current.batchDraw();
     }
@@ -383,11 +388,11 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   const handleSaveRenameDialog = async () => {
     try {
       const response = await fetch(`/api/v1/pipelines/${pipeline.id}/update`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+        method : "POST",
+        headers : {
+          "Content-Type" : "application/json",
         },
-        body: JSON.stringify({ action: "change_name", name: newPipelineName.trim() }),
+        body : JSON.stringify({action : "change_name", name : newPipelineName.trim()}),
       });
       // Handle response if necessary
     } catch (error) {
@@ -398,107 +403,76 @@ export function PipelineCanvas({ pipeline, onBackButtonClick }) {
   };
 
   return e(
-    React.Fragment,
-    null,
-    e(
-      Toolbar,
-      { className: classes.toolbar },
-      e(
-        IconButton,
-        {
-          edge: "start",
-          color: "inherit",
-          onClick: onBackButtonClick,
+      React.Fragment,
+      null,
+      e(Toolbar, {className : classes.toolbar},
+        e(IconButton, {
+          edge : "start",
+          color : "inherit",
+          onClick : onBackButtonClick,
         },
-        e("i", { className: "material-icons" }, "arrow_back")
-      ),
-      e(
-        Box,
-        {
-          className: classes.pipelineName,
-          style: { flexGrow: 1 },
-          onMouseEnter: () => setShowEditButton(true),
-          onMouseLeave: () => setShowEditButton(false),
+          e("i", {className : "material-icons"}, "arrow_back")),
+        e(Box, {
+          className : classes.pipelineName,
+          style : {flexGrow : 1},
+          onMouseEnter : () => setShowEditButton(true),
+          onMouseLeave : () => setShowEditButton(false),
         },
+          e(Typography, {display : "inline"}, pipelineName),
+          showEditButton &&
+              e(IconButton, {
+                edge : "end",
+                color : "inherit",
+                onClick : handleOpenRenameDialog,
+                style : {padding : 3, marginLeft : 4},
+              },
+                e("i", {className : "material-icons", style : {fontSize : 18}}, "create"))),
         e(
-          Typography,
-          { display: "inline" },
-          pipelineName
-        ),
-        showEditButton &&
-          e(
-            IconButton,
-            {
-              edge: "end",
-              color: "inherit",
-              onClick: handleOpenRenameDialog,
-              style: { padding: 3, marginLeft: 4 },
+            "div",
+            null,
+            e(Button, {
+              variant : "contained",
+              color : "default",
+              onClick : resetGridPosition,
             },
-            e("i", { className: "material-icons", style: { fontSize: 18 } }, "create")
-          )
-      ),
-      e(
-        "div",
-        null,
-        e(Button, {
-          variant: "contained",
-          color: "default",
-          onClick: resetGridPosition,
-        }, e("i", { className: "material-icons" }, "home")),
-        e(Button, {
-          variant: "contained",
-          style: {
-            backgroundColor: pipelineState === "running" ? "red" : "green",
-            color: "white",
+              e("i", {className : "material-icons"}, "home")),
+            e(Button, {
+              variant : "contained",
+              style : {
+                backgroundColor : pipelineState === "running" ? "red" : "green",
+                color : "white",
+              },
+              onClick : () =>
+                  handleButtonClick(pipeline.id, pipelineState === "running" ? "stop" : "start"),
+            },
+              pipelineState === "running" ? e("i", {className : "material-icons"}, "stop")
+                                          : e("i", {className : "material-icons"}, "play_arrow")),
+            )),
+      e("div", {
+        style : {width : "100%", height : "calc(100% - 64px)", position : "relative"},
+        ref : stageRef
+      },
+        e(ContextMenu, {
+          show : showContextMenu,
+          position : contextMenuPosition,
+          onClose : () => setShowContextMenu(false),
+          menuItems : [ "Item 1", "Item 2", "Item 3" ],
+        })),
+      e(Dialog, {open : renameDialogOpen, onClose : () => setRenameDialogOpen(false)},
+        e(DialogTitle, null, "Edit Pipeline Title"),
+        e(DialogContent, null, e(TextField, {
+            autoFocus : true,
+            margin : "dense",
+            label : "Pipeline Title",
+            value : newPipelineName,
+            onChange : (event) => setNewPipelineName(event.target.value),
+            fullWidth : true,
+          })),
+        e(DialogActions, null, e(Button, {onClick : () => setRenameDialogOpen(false)}, "Cancel"),
+          e(Button, {
+            onClick : handleSaveRenameDialog,
+            disabled : !newPipelineName.trim() || newPipelineName.trim() === pipeline.name,
           },
-          onClick: () => handleButtonClick(pipeline.id, pipelineState === "running" ? "stop" : "start"),
-        }, pipelineState === "running" ? e("i", { className: "material-icons" }, "stop") : e("i", { className: "material-icons" }, "play_arrow")),
-      )
-    ),
-    e(
-      "div",
-      { style: { width: "100%", height: "calc(100% - 64px)", position: "relative" },
-        ref: stageRef },
-      e(ContextMenu, {
-        show: showContextMenu,
-        position: contextMenuPosition,
-        onClose: () => setShowContextMenu(false),
-        menuItems: ["Item 1", "Item 2", "Item 3"],
-      })
-    ),
-    e(
-      Dialog,
-      { open: renameDialogOpen, onClose: () => setRenameDialogOpen(false) },
-      e(DialogTitle, null, "Edit Pipeline Title"),
-      e(
-        DialogContent,
-        null,
-        e(TextField, {
-          autoFocus: true,
-          margin: "dense",
-          label: "Pipeline Title",
-          value: newPipelineName,
-          onChange: (event) => setNewPipelineName(event.target.value),
-          fullWidth: true,
-        })
-      ),
-      e(
-        DialogActions,
-        null,
-        e(
-          Button,
-          { onClick: () => setRenameDialogOpen(false) },
-          "Cancel"
-        ),
-        e(
-          Button,
-          {
-            onClick: handleSaveRenameDialog,
-            disabled: !newPipelineName.trim() || newPipelineName.trim() === pipeline.name,
-          },
-          "Save"
-        )
-      )
-    ),
+            "Save"))),
   );
 }

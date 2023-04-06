@@ -1,15 +1,15 @@
-const { createElement: e } = React;
-const { Menu, MenuItem } = MaterialUI;
+const {createElement : e} = React;
+const {Menu, MenuItem} = MaterialUI;
 
-export function ContextMenu({ show, position, onClose, menuItems }) {
+export function ContextMenu({show, position, onClose, menuItems}) {
   const menuRef = React.useRef(null);
 
   React.useEffect(() => {
     if (show && menuRef.current) {
-      const { x, y } = position;
+      const {x, y} = position;
       menuRef.current.style.transform = `translate(${x}px, ${y}px)`;
     }
-  }, [show, position]);
+  }, [ show, position ]);
 
   const handleClose = (e) => {
     e.stopPropagation();
@@ -17,20 +17,19 @@ export function ContextMenu({ show, position, onClose, menuItems }) {
   };
 
   return e(
-    Menu,
-    {
-      anchorEl: menuRef.current,
-      open: show,
-      onClose: onClose,
-      style: { zIndex: 1500 },
-      transformOrigin: {
-        vertical: 'top',
-        horizontal: 'left',
+      Menu,
+      {
+        anchorEl : menuRef.current,
+        open : show,
+        onClose : onClose,
+        style : {zIndex : 1500},
+        transformOrigin : {
+          vertical : 'top',
+          horizontal : 'left',
+        },
       },
-    },
-    menuItems.map((item, index) =>
-      e(MenuItem, { key: index, onClick: onClose }, item),
-    ),
+      menuItems.map(
+          (item, index) => e(MenuItem, {key : index, onClick : onClose}, item),
+          ),
   );
 }
-

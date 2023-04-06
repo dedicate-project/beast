@@ -1,2 +1,2 @@
 const StateContext = React.createContext();
-export { StateContext };
+export {StateContext};
