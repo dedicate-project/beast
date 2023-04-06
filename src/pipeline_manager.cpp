@@ -6,6 +6,11 @@
 #include <beast/program_factory_base.hpp>
 #include <beast/random_program_factory.hpp>
 
+#include <beast/pipes/evaluator_pipe.hpp>
+#include <beast/pipes/evolution_pipe.hpp>
+#include <beast/pipes/null_sink_pipe.hpp>
+#include <beast/pipes/program_factory_pipe.hpp>
+
 namespace beast {
 
 PipelineManager::PipelineManager(const std::string& storage_path) : filesystem_(storage_path) {
@@ -16,6 +21,7 @@ PipelineManager::PipelineManager(const std::string& storage_path) : filesystem_(
     descriptor.name = model["content"]["name"];
     descriptor.filename = model["filename"];
     descriptor.pipeline = constructPipelineFromJson(model["content"]["model"]);
+    descriptor.metadata = model["content"]["metadata"];
     pipelines_.push_back(std::move(descriptor));
   }
 }
@@ -31,6 +37,12 @@ uint32_t PipelineManager::createPipeline(const std::string& name) {
   pipelines_.push_back({new_id, name, filename, beast::Pipeline()});
 
   return new_id;
+}
+
+void PipelineManager::savePipeline(uint32_t pipeline_id) {
+  const auto& descriptor = getPipelineById(pipeline_id);
+  const auto model = deconstructPipelineToJson(descriptor.pipeline);
+  filesystem_.updateModel(descriptor.filename, descriptor.name, model, descriptor.metadata);
 }
 
 PipelineManager::PipelineDescriptor& PipelineManager::getPipelineById(uint32_t pipeline_id) {
@@ -59,6 +71,37 @@ void PipelineManager::deletePipeline(uint32_t pipeline_id) {
   pipelines_.remove_if([pipeline_id](const auto& pipeline) { return pipeline.id == pipeline_id; });
 }
 
+nlohmann::json PipelineManager::getJsonForPipeline(uint32_t pipeline_id) {
+  std::scoped_lock lock{pipelines_mutex_};
+  PipelineDescriptor descriptor = getPipelineById(pipeline_id);
+  return deconstructPipelineToJson(descriptor.pipeline);
+}
+
+void PipelineManager::checkForParameterPresenceInPipeJson(
+    const nlohmann::detail::iteration_proxy_value<nlohmann::json::basic_json::const_iterator>& json,
+    const std::vector<std::string>& parameters) {
+  if (parameters.empty()) {
+    return;
+  }
+  const std::string& pipe_name = json.key();
+  if (!json.value().contains("parameters")) {
+    std::string error = "Parameters not defined in model configuration for pipe '";
+    error += pipe_name;
+    error += "'";
+    throw std::invalid_argument(error);
+  }
+  for (const std::string& parameter : parameters) {
+    if (!json.value()["parameters"].contains(parameter)) {
+      std::string error = "Required parameter '";
+      error += parameter;
+      error += "' not defined in model configuration for pipe '";
+      error += pipe_name;
+      error += "'";
+      throw std::invalid_argument(error);
+    }
+  }
+}
+
 Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) {
   Pipeline pipeline;
   std::map<std::string, std::shared_ptr<Pipe>> created_pipes;
@@ -71,32 +114,13 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
       const std::string& pipe_type = pipe.value()["type"].get<std::string>();
 
       if (pipe_type == "ProgramFactoryPipe") {
-        if (!pipe.value().contains("parameters")) {
-          throw std::invalid_argument("Parameters not defined for pipe '" + pipe_name + "'");
-        }
-        if (!pipe.value()["parameters"].contains("factory")) {
-          throw std::invalid_argument("factory parameter not defined for pipe '" + pipe_name + "'");
-        }
-        if (!pipe.value()["parameters"].contains("max_candidates")) {
-          throw std::invalid_argument("max_candidates parameter not defined for pipe '" +
-                                      pipe_name + "'");
-        }
-        if (!pipe.value()["parameters"].contains("max_size")) {
-          throw std::invalid_argument("max_size parameter not defined for pipe '" + pipe_name +
-                                      "'");
-        }
-        if (!pipe.value()["parameters"].contains("memory_variables")) {
-          throw std::invalid_argument("memory_variables parameter not defined for pipe '" +
-                                      pipe_name + "'");
-        }
-        if (!pipe.value()["parameters"].contains("string_table_items")) {
-          throw std::invalid_argument("string_table_items parameter not defined for pipe '" +
-                                      pipe_name + "'");
-        }
-        if (!pipe.value()["parameters"].contains("string_table_item_length")) {
-          throw std::invalid_argument("string_table_item_length parameter not defined for pipe '" +
-                                      pipe_name + "'");
-        }
+        checkForParameterPresenceInPipeJson(pipe,
+                                            {"factory",
+                                             "max_candidates",
+                                             "max_size",
+                                             "memory_variables",
+                                             "string_table_items",
+                                             "string_table_item_length"});
         const std::string factory_type = pipe.value()["parameters"]["factory"].get<std::string>();
         std::shared_ptr<ProgramFactoryBase> factory = nullptr;
         if (factory_type == "RandomProgramFactory") {
@@ -166,6 +190,55 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
     }
   }
   return pipeline;
+}
+
+nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeline) {
+  nlohmann::json value;
+
+  for (const auto& pipe : pipeline.getPipes()) {
+    nlohmann::json pipe_json;
+
+    if (std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
+      pipe_json["type"] = "EvaluatorPipe";
+    } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
+      pipe_json["type"] = "EvolutionPipe";
+    } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {
+      pipe_json["type"] = "NullSinkPipe";
+    } else if (auto spec_pipe = std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
+      pipe_json["type"] = "ProgramFactoryPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["max_size"] = spec_pipe->getMaxSize();
+      pipe_json["parameters"]["memory_variables"] = spec_pipe->getMemorySize();
+      pipe_json["parameters"]["string_table_item_length"] = spec_pipe->getStringTableItemLength();
+      pipe_json["parameters"]["string_table_items"] = spec_pipe->getStringTableSize();
+
+      const auto factory = spec_pipe->getFactory();
+      if (std::dynamic_pointer_cast<RandomProgramFactory>(factory)) {
+        pipe_json["parameters"]["factory"] = "RandomProgramFactory";
+      } else {
+        pipe_json["parameters"]["factory"] = "Unknown";
+      }
+    } else {
+      pipe_json["type"] = "Unknown";
+    }
+
+    value["pipes"][pipe->name] = std::move(pipe_json);
+  }
+
+  nlohmann::json connections_json = {};
+  for (const auto& connection : pipeline.getConnections()) {
+    nlohmann::json connection_json;
+    connection_json["buffer_size"] = connection.buffer.capacity();
+    connection_json["destination_pipe"] = connection.destination_pipe->name;
+    connection_json["destination_slot"] = connection.destination_slot_index;
+    connection_json["source_pipe"] = connection.source_pipe->name;
+    connection_json["source_slot"] = connection.source_slot_index;
+
+    connections_json.push_back(std::move(connection_json));
+  }
+  value["connections"] = std::move(connections_json);
+
+  return value;
 }
 
 uint32_t PipelineManager::getFreeId() const {

@@ -102,6 +102,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
   const [oldModel, setOldModel] = useState({});
   const [model, setModel] = useState({});
+  const [metadata, setMetadata] = useState({});
 
   const [pipelineName, setPipelineName] = useState(pipeline.name);
 
@@ -112,7 +113,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const draggingRef = useRef(false);
   const lastDragPointRef = useRef({x : 0, y : 0});
 
-  var pipes = {};
+  const [pipes, setPipes] = useState({});
+  const [currentlyDraggedPipe, setCurrentlyDraggedPipe] = useState("");
 
   useEffect(() => {
     const stage = new Konva.Stage({
@@ -169,9 +171,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       }
     });
 
-    stage.on("mouseup", () => { draggingRef.current = false; });
+    stage.on("mouseup", () => {
+      draggingRef.current = false;
+      setCurrentlyDraggedPipe("");
+    });
 
-    stage.on("mouseout", () => { draggingRef.current = false; });
+    stage.on("mouseout", () => {
+      draggingRef.current = false;
+      setCurrentlyDraggedPipe("");
+    });
   }, []);
 
   function getPipeNameForKonvaImage(konvaImage) {
@@ -189,6 +197,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       console.log('Pipe not found for image');
       return;
     }
+    setCurrentlyDraggedPipe("");
     fetch(`/api/v1/pipelines/${pipeline.id}/update`, {
       method : "POST",
       headers : {
@@ -220,6 +229,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
       // Ignore clicks on transparent parts
       konvaImage.on("dragstart", (e) => {
+        setCurrentlyDraggedPipe(getPipeNameForKonvaImage(e.target));
         const pointerPosition = stageInstance.getPointerPosition();
         const pixel = e.target.getLayer()
                           .getContext()
@@ -279,7 +289,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       } else if (added_pipes[key]["type"] == "NullSinkPipe") {
         image_file = "/img/null_sink_pipe.png";
       }
-      createDraggableImage(image_file, 50, 50).then((konvaImage) => { pipes[key] = konvaImage; });
+      var pos_x = 50;
+      var pos_y = 50;
+      if ("pipes" in metadata && key in metadata["pipes"] && "position" in metadata["pipes"][key]) {
+        pos_x = metadata["pipes"][key]["position"]["x"];
+        pos_y = metadata["pipes"][key]["position"]["y"];
+      }
+
+      createDraggableImage(image_file, pos_x, pos_y)
+          .then((konvaImage) => { pipes[key] = konvaImage; });
     }
     for (let key in removed_pipes) {
       pipes[key].remove();
@@ -288,6 +306,17 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     for (let key in updated_pipes) {
       // TODO(fairlight1337): Figure out what to update exactly once that is implemented in the
       // backend.
+    }
+    // Process model metadata
+    if ("pipes" in metadata) {
+      for (let pipe_id in metadata["pipes"]) {
+        if ("position" in metadata["pipes"][pipe_id]) {
+          if (pipe_id in pipes && currentlyDraggedPipe != pipe_id) {
+            pipes[pipe_id].x(metadata["pipes"][pipe_id]["position"]["x"]);
+            pipes[pipe_id].y(metadata["pipes"][pipe_id]["position"]["y"]);
+          }
+        }
+      }
     }
   }, [ model ]);
 
@@ -350,6 +379,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       console.log(jsonData);
       setPipelineState(jsonData.state);
       setModel(jsonData.model);
+      setMetadata(jsonData.metadata);
     } catch (error) {
       console.error('Error fetching pipeline state:', error);
     }

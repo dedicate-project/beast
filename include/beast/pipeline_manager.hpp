@@ -20,13 +20,14 @@ class PipelineManager {
  public:
   /**
    * @struct PipelineDescriptor
-   * @brief Describes a pipeline with its ID, name, filename, and Pipeline object.
+   * @brief Describes a pipeline with its ID, name, filename, Pipeline object, and metadata.
    */
   struct PipelineDescriptor {
-    uint32_t id;          //!< Unique identifier for the pipeline.
-    std::string name;     //!< Display name of the pipeline.
-    std::string filename; //!< Filename of the pipeline's serialized data.
-    Pipeline pipeline;    //!< The Pipeline object.
+    uint32_t id;             //!< Unique identifier for the pipeline.
+    std::string name;        //!< Display name of the pipeline.
+    std::string filename;    //!< Filename of the pipeline's serialized data.
+    Pipeline pipeline;       //!< The Pipeline object.
+    nlohmann::json metadata; //!< The metadata object.
   };
 
   /**
@@ -41,6 +42,8 @@ class PipelineManager {
    * @return The unique identifier for the new pipeline.
    */
   uint32_t createPipeline(const std::string& name);
+
+  void savePipeline(uint32_t pipeline_id);
 
   /**
    * @brief Gets a reference to a pipeline by its ID.
@@ -68,8 +71,17 @@ class PipelineManager {
    */
   void deletePipeline(uint32_t pipeline_id);
 
+  nlohmann::json getJsonForPipeline(uint32_t pipeline_id);
+
  private:
+  static void checkForParameterPresenceInPipeJson(
+      const nlohmann::detail::iteration_proxy_value<nlohmann::json::basic_json::const_iterator>&
+          json,
+      const std::vector<std::string>& parameters);
+
   static Pipeline constructPipelineFromJson(const nlohmann::json& json);
+
+  static nlohmann::json deconstructPipelineToJson(const Pipeline& pipeline);
 
   uint32_t getFreeId() const;
 
