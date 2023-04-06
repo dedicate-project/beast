@@ -25,21 +25,13 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
-        ref: ${{ github.head_ref }}
-        exclude: |
-          html_static/js/konva*
-          html_static/js/react*
-          html_static/js/material-ui*
-          # Exclude JavaScript files if analyzing C++
-          ${{ matrix.language == 'cpp' && 'html_static/**/*.js' || '' }}
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
         languages: ${{matrix.language}}
+        config-file: "codeql-config.yml"
 
     - name: Install dependencies
       run: |
