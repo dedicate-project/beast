@@ -283,11 +283,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     setOldModel(model);
 
     for (let key in added_pipes) {
-      let image_file = "/img/regular_pipe.png";
+      let image_file = "/img/pipe_plain_oneinputoneoutput.png";
       if (added_pipes[key]["type"] == "ProgramFactoryPipe") {
-        image_file = "/img/factory_pipe.png";
+        image_file = "/img/pipe_factory.png";
       } else if (added_pipes[key]["type"] == "NullSinkPipe") {
-        image_file = "/img/null_sink_pipe.png";
+        image_file = "/img/pipe_nullsink.png";
+      } else if (added_pipes[key]["type"] == "EvaluatorPipe") {
+        if (added_pipes[key]["evaluator"] == "Maze") {
+          image_file = "/img/pipe_maze.png";
+        }
       }
       var pos_x = 50;
       var pos_y = 50;
