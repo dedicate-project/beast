@@ -1,7 +1,9 @@
 find_package(Doxygen)
 find_package(Sphinx)
 
-if(DOXYGEN_FOUND AND SPHINX_FOUND)
+if (DOXYGEN_FOUND)
+  set(DOXYGEN_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile")
+
   # Find the public headers
   file(GLOB_RECURSE BEAST_PUBLIC_HEADERS "../include/beast/*.h")
 
@@ -10,6 +12,9 @@ if(DOXYGEN_FOUND AND SPHINX_FOUND)
   set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/xml/index.xml)
   set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
   set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  # Enable Doxygen warnings for undocumented entities
+  set(DOXYGEN_WARN_UNDOCUMENTED YES)
 
   # Set the Doxygen input and output directories in the Doxyfile
   configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
@@ -27,7 +32,9 @@ if(DOXYGEN_FOUND AND SPHINX_FOUND)
 
   # Nice named target so we can run the job easily
   add_custom_target(Doxygen DEPENDS ${DOXYGEN_INDEX_FILE})
+endif (DOXYGEN_FOUND)
 
+if (DOXYGEN_FOUND AND SPHINX_FOUND)
   set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
   set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/sphinx)
   set(SPHINX_INDEX_FILE ${SPHINX_BUILD}/index.html)
@@ -57,4 +64,4 @@ if(DOXYGEN_FOUND AND SPHINX_FOUND)
   install(
     DIRECTORY ${SPHINX_BUILD}
     DESTINATION ${CMAKE_INSTALL_DOCDIR})
-endif(DOXYGEN_FOUND AND SPHINX_FOUND)
+endif (DOXYGEN_FOUND AND SPHINX_FOUND)
