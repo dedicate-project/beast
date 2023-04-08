@@ -17,4 +17,9 @@ double EvaluatorPipe::evaluate(const std::vector<unsigned char>& program_data) {
   return evaluator_.evaluate(session);
 }
 
+const std::vector<AggregationEvaluator::EvaluatorDescription>&
+EvaluatorPipe::getEvaluators() const {
+  return evaluator_.getEvaluators();
+}
+
 } // namespace beast

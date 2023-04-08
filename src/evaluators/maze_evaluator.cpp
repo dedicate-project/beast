@@ -18,4 +18,12 @@ double MazeEvaluator::evaluate(const VmSession& /*session*/) {
   return 0.0;
 }
 
+uint32_t MazeEvaluator::getRows() const { return rows_; }
+
+uint32_t MazeEvaluator::getCols() const { return cols_; }
+
+double MazeEvaluator::getDifficulty() const { return difficulty_; }
+
+uint32_t MazeEvaluator::getMaxSteps() const { return max_steps_; }
+
 } // namespace beast

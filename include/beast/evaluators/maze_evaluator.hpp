@@ -50,6 +50,14 @@ class MazeEvaluator : public Evaluator {
    */
   double evaluate(const VmSession& session) override;
 
+  uint32_t getRows() const;
+
+  uint32_t getCols() const;
+
+  double getDifficulty() const;
+
+  uint32_t getMaxSteps() const;
+
  private:
   /**
    * @var MazeEvaluator::rows_

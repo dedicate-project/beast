@@ -42,4 +42,9 @@ double AggregationEvaluator::evaluate(const VmSession& session) {
   return total_score;
 }
 
+const std::vector<AggregationEvaluator::EvaluatorDescription>&
+AggregationEvaluator::getEvaluators() const {
+  return evaluators_;
+}
+
 } // namespace beast

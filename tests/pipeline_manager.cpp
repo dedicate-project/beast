@@ -51,6 +51,18 @@ TEST_CASE("PipelineManager") {
     REQUIRE(pipelines.front().filename == "Some_test_pipeline.json");
   }
 
+  SECTION("NullSinkPipe pipeline is correctly constructed from JSON") {
+    const nlohmann::json json = R"({"pipes":{"pipe0":{"type":"NullSinkPipe"}}})"_json;
+
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto& pipes = pipeline.getPipes();
+
+    REQUIRE(pipes.size() == 1);
+    const auto& pipe = pipes.front();
+    REQUIRE(pipe->name == "pipe0");
+    REQUIRE(std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe) != nullptr);
+  }
+
   // Clean up temporary files
   std::filesystem::remove_all(temp_storage_path);
 }

@@ -23,6 +23,15 @@ namespace beast {
 class AggregationEvaluator : public Evaluator {
  public:
   /**
+   * @brief Describes an evaluator instance with weight and inversion flag
+   */
+  struct EvaluatorDescription {
+    const std::shared_ptr<Evaluator> evaluator; ///< The evaluator to use for scoring
+    double weight;                              ///< The weight to use for this evaluator's score
+    bool invert_logic;                          ///< Whether to invert the scoring logic
+  };
+
+  /**
    * @fn AggregationEvaluator::addEvaluator
    * @brief Adds an evaluator to this aggregation evaluator
    *
@@ -58,16 +67,9 @@ class AggregationEvaluator : public Evaluator {
    */
   double evaluate(const VmSession& session) override;
 
- private:
-  /**
-   * @brief Describes an evaluator instance with weight and inversion flag
-   */
-  struct EvaluatorDescription {
-    const std::shared_ptr<Evaluator> evaluator; ///< The evaluator to use for scoring
-    double weight;                              ///< The weight to use for this evaluator's score
-    bool invert_logic;                          ///< Whether to invert the scoring logic
-  };
+  const std::vector<EvaluatorDescription>& getEvaluators() const;
 
+ private:
   /**
    * @var Aggregation::evaluators_
    * @brief Holds the evaluators contained in this aggregation evaluator

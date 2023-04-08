@@ -53,6 +53,8 @@ class EvaluatorPipe : public EvolutionPipe {
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override;
 
+  const std::vector<AggregationEvaluator::EvaluatorDescription>& getEvaluators() const;
+
  private:
   /**
    * @var EvaluatorPipe::variable_count_
