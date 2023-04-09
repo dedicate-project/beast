@@ -9,6 +9,8 @@
 #include <beast/program_factory_base.hpp>
 #include <beast/random_program_factory.hpp>
 
+#include <beast/evaluators/maze_evaluator.hpp>
+
 namespace beast {
 
 PipelineManager::PipelineManager(const std::string& storage_path) : filesystem_(storage_path) {
@@ -100,6 +102,64 @@ void PipelineManager::checkForParameterPresenceInPipeJson(
   }
 }
 
+void PipelineManager::checkForKeyPresenceInJson(const nlohmann::json& json,
+                                                const std::vector<std::string>& keys) {
+  if (keys.empty()) {
+    return;
+  }
+  for (const std::string& key : keys) {
+    if (!json.contains(key)) {
+      std::string error = "Required key '";
+      error += key;
+      error += "' not defined";
+      throw std::invalid_argument(error);
+    }
+  }
+}
+
+std::vector<std::tuple<std::shared_ptr<Evaluator>, double, bool>>
+PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
+  std::vector<std::tuple<std::shared_ptr<Evaluator>, double, bool>> evaluators;
+  for (const auto& evaluator_json : json.items()) {
+    checkForKeyPresenceInJson(evaluator_json.value(), {"type", "weight", "invert_logic"});
+    const std::string type = evaluator_json.value()["type"].get<std::string>();
+
+    std::shared_ptr<Evaluator> evaluator = nullptr;
+    if (type == "AggregationEvaluator") {
+      evaluator = std::make_shared<AggregationEvaluator>();
+      if (evaluator_json.value().contains("parameters") and
+          evaluator_json.value()["parameters"].contains("evaluators")) {
+        const auto evaluator_triplets =
+            constructEvaluatorsFromJson(evaluator_json.value()["parameters"]["evaluators"]);
+        for (const auto& evaluator_triplet : evaluator_triplets) {
+          std::shared_ptr<Evaluator> sub_evaluator = nullptr;
+          double weight = 0.0;
+          bool invert_logic = false;
+          std::tie(evaluator, weight, invert_logic);
+          std::dynamic_pointer_cast<AggregationEvaluator>(evaluator)->addEvaluator(
+              sub_evaluator, weight, invert_logic);
+        }
+      }
+    } else if (type == "MazeEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      checkForKeyPresenceInJson(evaluator_json.value()["parameters"],
+                                {"rows", "cols", "difficulty", "max_steps"});
+      const uint32_t rows = evaluator_json.value()["parameters"]["rows"].get<uint32_t>();
+      const uint32_t cols = evaluator_json.value()["parameters"]["cols"].get<uint32_t>();
+      const double difficulty = evaluator_json.value()["parameters"]["difficulty"].get<double>();
+      const uint32_t max_steps = evaluator_json.value()["parameters"]["max_steps"].get<uint32_t>();
+      evaluator = std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
+    } else {
+      throw std::invalid_argument("Invalid evaluator type: " + type);
+    }
+
+    const uint32_t weight = evaluator_json.value()["weight"].get<uint32_t>();
+    const bool invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    evaluators.emplace_back(std::make_tuple(evaluator, weight, invert_logic));
+  }
+  return evaluators;
+}
+
 Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) {
   Pipeline pipeline;
   std::map<std::string, std::shared_ptr<Pipe>> created_pipes;
@@ -119,13 +179,6 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
                                              "memory_variables",
                                              "string_table_items",
                                              "string_table_item_length"});
-        const std::string factory_type = pipe.value()["parameters"]["factory"].get<std::string>();
-        std::shared_ptr<ProgramFactoryBase> factory = nullptr;
-        if (factory_type == "RandomProgramFactory") {
-          factory = std::make_shared<RandomProgramFactory>();
-        } else {
-          throw std::invalid_argument("Invalid program factory type '" + factory_type + "'");
-        }
         const uint32_t max_candidates =
             pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
         const uint32_t max_size = pipe.value()["parameters"]["max_size"].get<uint32_t>();
@@ -136,6 +189,14 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
         const uint32_t string_table_item_length =
             pipe.value()["parameters"]["string_table_item_length"].get<uint32_t>();
 
+        const std::string factory_type = pipe.value()["parameters"]["factory"].get<std::string>();
+        std::shared_ptr<ProgramFactoryBase> factory = nullptr;
+        if (factory_type == "RandomProgramFactory") {
+          factory = std::make_shared<RandomProgramFactory>();
+        } else {
+          throw std::invalid_argument("Invalid program factory type '" + factory_type + "'");
+        }
+
         created_pipes[pipe_name] = std::make_shared<ProgramFactoryPipe>(max_candidates,
                                                                         max_size,
                                                                         memory_variables,
@@ -145,6 +206,37 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
         pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "NullSinkPipe") {
         created_pipes[pipe_name] = std::make_shared<NullSinkPipe>();
+        pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "EvaluatorPipe") {
+        checkForParameterPresenceInPipeJson(pipe,
+                                            {"evaluators",
+                                             "max_candidates",
+                                             "memory_variables",
+                                             "string_table_items",
+                                             "string_table_item_length"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const uint32_t memory_variables =
+            pipe.value()["parameters"]["memory_variables"].get<uint32_t>();
+        const uint32_t string_table_items =
+            pipe.value()["parameters"]["string_table_items"].get<uint32_t>();
+        const uint32_t string_table_item_length =
+            pipe.value()["parameters"]["string_table_item_length"].get<uint32_t>();
+
+        auto evaluator_pipe = std::make_shared<EvaluatorPipe>(
+            max_candidates, memory_variables, string_table_items, string_table_item_length);
+        created_pipes[pipe_name] = evaluator_pipe;
+
+        const auto evaluator_triplets =
+            constructEvaluatorsFromJson(pipe.value()["parameters"]["evaluators"]);
+        for (const auto& evaluator_triplet : evaluator_triplets) {
+          std::shared_ptr<Evaluator> evaluator = nullptr;
+          double weight = 0.0;
+          bool invert_logic = false;
+          std::tie(evaluator, weight, invert_logic) = evaluator_triplet;
+          evaluator_pipe->addEvaluator(evaluator, weight, invert_logic);
+        }
+
         pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
       }
     }
@@ -190,14 +282,43 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
   return pipeline;
 }
 
+nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
+    const std::vector<AggregationEvaluator::EvaluatorDescription>& descriptions) {
+  nlohmann::json evaluators = {};
+
+  for (const auto& description : descriptions) {
+    nlohmann::json evaluator = nlohmann::json::object();
+    evaluator["weight"] = description.weight;
+    evaluator["invert_logic"] = description.invert_logic;
+
+    if (const auto aggr_eval =
+            std::dynamic_pointer_cast<AggregationEvaluator>(description.evaluator)) {
+      evaluator["type"] = "AggregationEvaluator";
+      evaluator["evaluators"] = deconstructEvaluatorsToJson(aggr_eval->getEvaluators());
+    } else if (const auto maze_eval =
+                   std::dynamic_pointer_cast<MazeEvaluator>(description.evaluator)) {
+      evaluator["type"] = "MazeEvaluator";
+      evaluator["parameters"]["rows"] = maze_eval->getRows();
+      evaluator["parameters"]["cols"] = maze_eval->getCols();
+      evaluator["parameters"]["difficulty"] = maze_eval->getDifficulty();
+      evaluator["parameters"]["max_steps"] = maze_eval->getMaxSteps();
+    }
+
+    evaluators.push_back(std::move(evaluator));
+  }
+
+  return evaluators;
+}
+
 nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeline) {
   nlohmann::json value;
 
   for (const auto& pipe : pipeline.getPipes()) {
     nlohmann::json pipe_json;
 
-    if (std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
+    if (const auto evaluator_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvaluatorPipe";
+      pipe_json["evaluators"] = deconstructEvaluatorsToJson(evaluator_pipe->getEvaluators());
     } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvolutionPipe";
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {

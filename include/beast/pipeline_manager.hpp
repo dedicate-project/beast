@@ -10,6 +10,8 @@
 #include <beast/filesystem_helper.hpp>
 #include <beast/pipeline.hpp>
 
+#include <beast/evaluators/aggregation_evaluator.hpp>
+
 namespace beast {
 
 /**
@@ -73,15 +75,24 @@ class PipelineManager {
 
   nlohmann::json getJsonForPipeline(uint32_t pipeline_id);
 
+  static std::vector<std::tuple<std::shared_ptr<Evaluator>, double, bool>>
+  constructEvaluatorsFromJson(const nlohmann::json& json);
+
+  static Pipeline constructPipelineFromJson(const nlohmann::json& json);
+
+  static nlohmann::json deconstructPipelineToJson(const Pipeline& pipeline);
+
  private:
   static void checkForParameterPresenceInPipeJson(
       const nlohmann::detail::iteration_proxy_value<nlohmann::json::basic_json::const_iterator>&
           json,
       const std::vector<std::string>& parameters);
 
-  static Pipeline constructPipelineFromJson(const nlohmann::json& json);
+  static void checkForKeyPresenceInJson(const nlohmann::json& json,
+                                        const std::vector<std::string>& keys);
 
-  static nlohmann::json deconstructPipelineToJson(const Pipeline& pipeline);
+  static nlohmann::json deconstructEvaluatorsToJson(
+      const std::vector<AggregationEvaluator::EvaluatorDescription>& descriptions);
 
   uint32_t getFreeId() const;
 

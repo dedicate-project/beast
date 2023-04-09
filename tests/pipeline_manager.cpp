@@ -52,7 +52,7 @@ TEST_CASE("PipelineManager") {
   }
 
   SECTION("NullSinkPipe pipeline is correctly constructed from JSON") {
-    const nlohmann::json json = R"({"pipes":{"pipe0":{"type":"NullSinkPipe"}}})"_json;
+    const auto json = R"({"pipes":{"pipe0":{"type":"NullSinkPipe"}}})"_json;
 
     const auto pipeline = PipelineManager::constructPipelineFromJson(json);
     const auto& pipes = pipeline.getPipes();
@@ -61,6 +61,68 @@ TEST_CASE("PipelineManager") {
     const auto& pipe = pipes.front();
     REQUIRE(pipe->name == "pipe0");
     REQUIRE(std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe) != nullptr);
+  }
+
+  SECTION("NullSinkPipe pipeline is correctly deconstructed to JSON") {
+    Pipeline pipeline;
+    std::shared_ptr<NullSinkPipe> pipe = std::make_shared<NullSinkPipe>();
+    const std::string name = "null_sink_pipe";
+    pipeline.addPipe(name, pipe);
+
+    const auto json = PipelineManager::deconstructPipelineToJson(pipeline);
+
+    REQUIRE(json.contains("pipes") == true);
+    REQUIRE(json["pipes"].size() == 1);
+    REQUIRE(json["pipes"].contains(name) == true);
+    REQUIRE(json["pipes"][name]["type"].get<std::string>() == "NullSinkPipe");
+  }
+
+  SECTION("EvaluatorPipe+MazeEvaluator pipeline is correctly constructed from JSON") {
+    const auto json = R"({
+        "pipes": {
+          "eval_pipe": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 10,
+              "memory_variables": 5,
+              "string_table_items": 2,
+              "string_table_item_length": 25,
+              "evaluators": [
+                {
+                  "type": "MazeEvaluator",
+                  "parameters": {
+                    "rows": 10,
+                    "cols": 12,
+                    "difficulty": 0.61,
+                    "max_steps": 1325
+                  },
+                  "weight": 1.0,
+                  "invert_logic": false
+                }
+              ]
+            }
+          }
+        }})"_json;
+
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto& pipes = pipeline.getPipes();
+
+    REQUIRE(pipes.size() == 1);
+    const auto& pipe = pipes.front();
+    REQUIRE(pipe->name == "eval_pipe");
+    const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe);
+    REQUIRE(eval_pipe != nullptr);
+    const auto& evaluators = eval_pipe->getEvaluators();
+    REQUIRE(evaluators.size() == 1);
+    const auto& maze_eval_desc = evaluators.front();
+    REQUIRE(maze_eval_desc.weight == 1.0);
+    REQUIRE(maze_eval_desc.invert_logic == false);
+    const auto maze_eval = std::dynamic_pointer_cast<MazeEvaluator>(maze_eval_desc.evaluator);
+    REQUIRE(maze_eval != nullptr);
+    REQUIRE(maze_eval->getRows() == 10);
+    REQUIRE(maze_eval->getCols() == 12);
+    REQUIRE(maze_eval->getDifficulty() == 0.61);
+    REQUIRE(maze_eval->getMaxSteps() == 1325);
   }
 
   // Clean up temporary files
