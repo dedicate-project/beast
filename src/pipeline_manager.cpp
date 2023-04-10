@@ -294,7 +294,8 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
     if (const auto aggr_eval =
             std::dynamic_pointer_cast<AggregationEvaluator>(description.evaluator)) {
       evaluator["type"] = "AggregationEvaluator";
-      evaluator["evaluators"] = deconstructEvaluatorsToJson(aggr_eval->getEvaluators());
+      evaluator["parameters"]["evaluators"] =
+          deconstructEvaluatorsToJson(aggr_eval->getEvaluators());
     } else if (const auto maze_eval =
                    std::dynamic_pointer_cast<MazeEvaluator>(description.evaluator)) {
       evaluator["type"] = "MazeEvaluator";
@@ -318,7 +319,13 @@ nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeli
 
     if (const auto evaluator_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvaluatorPipe";
-      pipe_json["evaluators"] = deconstructEvaluatorsToJson(evaluator_pipe->getEvaluators());
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["memory_variables"] = evaluator_pipe->getMemorySize();
+      pipe_json["parameters"]["string_table_item_length"] =
+          evaluator_pipe->getStringTableItemLength();
+      pipe_json["parameters"]["string_table_items"] = evaluator_pipe->getStringTableSize();
+      pipe_json["parameters"]["evaluators"] =
+          deconstructEvaluatorsToJson(evaluator_pipe->getEvaluators());
     } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvolutionPipe";
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {

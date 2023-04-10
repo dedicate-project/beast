@@ -53,6 +53,12 @@ class EvaluatorPipe : public EvolutionPipe {
 
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override;
 
+  uint32_t getMemorySize() const;
+
+  uint32_t getStringTableSize() const;
+
+  uint32_t getStringTableItemLength() const;
+
   const std::vector<AggregationEvaluator::EvaluatorDescription>& getEvaluators() const;
 
  private:

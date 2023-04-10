@@ -17,6 +17,12 @@ double EvaluatorPipe::evaluate(const std::vector<unsigned char>& program_data) {
   return evaluator_.evaluate(session);
 }
 
+uint32_t EvaluatorPipe::getMemorySize() const { return variable_count_; }
+
+uint32_t EvaluatorPipe::getStringTableSize() const { return string_table_count_; }
+
+uint32_t EvaluatorPipe::getStringTableItemLength() const { return max_string_size_; }
+
 const std::vector<AggregationEvaluator::EvaluatorDescription>&
 EvaluatorPipe::getEvaluators() const {
   return evaluator_.getEvaluators();

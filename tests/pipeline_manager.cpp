@@ -125,6 +125,57 @@ TEST_CASE("PipelineManager") {
     REQUIRE(maze_eval->getMaxSteps() == 1325);
   }
 
+  SECTION("EvaluatorPipe+MazeEvaluator pipeline is correctly deconstructed to JSON") {
+    // Evaluator pipe parameters
+    const uint32_t max_candidates = 128;
+    const uint32_t memory_size = 12;
+    const uint32_t string_table_items = 3;
+    const uint32_t string_table_item_length = 25;
+    const std::string name = "maze_eval_pipe";
+
+    // Maze evaluator parameters
+    const uint32_t rows = 99;
+    const uint32_t cols = 51;
+    const double difficulty = 0.73;
+    const uint32_t max_steps = 1024;
+
+    const double weight = 0.57;
+    const bool invert_logic = false;
+
+    std::shared_ptr<EvaluatorPipe> pipe = std::make_shared<EvaluatorPipe>(
+        max_candidates, memory_size, string_table_items, string_table_item_length);
+    std::shared_ptr<Evaluator> eval =
+        std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
+    pipe->addEvaluator(eval, weight, invert_logic);
+
+    Pipeline pipeline;
+    pipeline.addPipe(name, pipe);
+
+    const auto json = PipelineManager::deconstructPipelineToJson(pipeline);
+
+    std::cout << json.dump(2) << std::endl;
+
+    REQUIRE(json.contains("pipes") == true);
+    REQUIRE(json["pipes"].size() == 1);
+    REQUIRE(json["pipes"].contains(name) == true);
+    REQUIRE(json["pipes"][name]["type"].get<std::string>() == "EvaluatorPipe");
+    REQUIRE(json["pipes"][name]["parameters"]["max_candidates"] == max_candidates);
+    REQUIRE(json["pipes"][name]["parameters"]["memory_variables"] == memory_size);
+    REQUIRE(json["pipes"][name]["parameters"]["string_table_items"] == string_table_items);
+    REQUIRE(json["pipes"][name]["parameters"]["string_table_item_length"] ==
+            string_table_item_length);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"].size() == 1);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["type"] == "MazeEvaluator");
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["weight"] == weight);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["invert_logic"] == invert_logic);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["parameters"]["max_steps"] ==
+            max_steps);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["parameters"]["difficulty"] ==
+            difficulty);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["parameters"]["rows"] == rows);
+    REQUIRE(json["pipes"][name]["parameters"]["evaluators"][0]["parameters"]["cols"] == cols);
+  }
+
   // Clean up temporary files
   std::filesystem::remove_all(temp_storage_path);
 }
