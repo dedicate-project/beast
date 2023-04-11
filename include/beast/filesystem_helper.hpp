@@ -30,7 +30,8 @@ class FilesystemHelper {
    * @param model The model to save.
    * @return The filename used to save the model.
    */
-  std::string saveModel(const std::string& model_identifier, const nlohmann::json& model) const;
+  [[nodiscard]] std::string saveModel(const std::string& model_identifier,
+                                      const nlohmann::json& model) const;
 
   void updateModel(const std::string& filename, const std::string& model_identifier,
                    const nlohmann::json& model, const nlohmann::json& metadata) const;
@@ -40,7 +41,7 @@ class FilesystemHelper {
    *
    * @return A vector of JSON objects containing the filename and content of each model.
    */
-  std::vector<nlohmann::json> loadModels() const;
+  [[nodiscard]] std::vector<nlohmann::json> loadModels() const;
 
   /**
    * @brief Deletes the model with the specified filename.
@@ -56,7 +57,7 @@ class FilesystemHelper {
    * @param filename The filename to check.
    * @return true if the model file exists, false otherwise.
    */
-  bool modelExists(const std::string& filename) const;
+  [[nodiscard]] bool modelExists(const std::string& filename) const;
 
  private:
   std::filesystem::path m_model_path;
@@ -70,7 +71,7 @@ class FilesystemHelper {
    * @param filename The filename to clean.
    * @return The cleaned filename.
    */
-  static std::string cleanFilename(const std::string& filename);
+  [[nodiscard]] static std::string cleanFilename(const std::string& filename);
 
   /**
    * @brief Gets a unique filename based on the given filename, by appending a counter if necessary.
@@ -78,7 +79,7 @@ class FilesystemHelper {
    * @param original_filename The original filename to use as a base.
    * @return A unique filename based on the original filename.
    */
-  std::string getUniqueFilename(const std::string& original_filename) const;
+  [[nodiscard]] std::string getUniqueFilename(const std::string& original_filename) const;
 };
 
 } // namespace beast

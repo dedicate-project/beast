@@ -55,7 +55,7 @@ class Pipe {
    * @return `true` if the number of candidates in the input pool is less than the population size,
    *         `false` otherwise.
    */
-  bool inputHasSpace(uint32_t slot_index) const;
+  [[nodiscard]] bool inputHasSpace(uint32_t slot_index) const;
 
   /**
    * @class Pipe::addInput

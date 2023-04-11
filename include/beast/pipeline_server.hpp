@@ -23,7 +23,7 @@ class PipelineServer {
    *
    * @return JSON response containing version information.
    */
-  static crow::json::wvalue serveStatus();
+  [[nodiscard]] static crow::json::wvalue serveStatus();
 
   /**
    * Serve a JSON response for creating a new pipeline.
@@ -32,7 +32,7 @@ class PipelineServer {
    * @param pipeline_manager Pointer to the PipelineManager instance.
    * @return JSON response containing pipeline creation status.
    */
-  crow::json::wvalue serveNewPipeline(const crow::request& req);
+  [[nodiscard]] crow::json::wvalue serveNewPipeline(const crow::request& req);
 
   /**
    * Serve a JSON response for getting pipeline status by ID.
@@ -41,7 +41,7 @@ class PipelineServer {
    * @param pipeline_id ID of the pipeline.
    * @return JSON response containing pipeline status.
    */
-  crow::json::wvalue servePipelineById(uint32_t pipeline_id);
+  [[nodiscard]] crow::json::wvalue servePipelineById(uint32_t pipeline_id);
 
   /**
    * Serve a JSON response for handling pipeline actions.
@@ -60,8 +60,8 @@ class PipelineServer {
    * @param path Path of the action.
    * @return JSON response containing pipeline action status.
    */
-  crow::json::wvalue servePipelineAction(const crow::request& req, uint32_t pipeline_id,
-                                         const std::string_view path);
+  [[nodiscard]] crow::json::wvalue
+  servePipelineAction(const crow::request& req, uint32_t pipeline_id, const std::string_view path);
 
   /**
    * Serve a JSON response containing all pipelines and their status.
@@ -69,7 +69,7 @@ class PipelineServer {
    * @param pipeline_manager Pointer to the PipelineManager instance.
    * @return JSON response containing all pipeline status.
    */
-  crow::json::wvalue serveAllPipelines() const;
+  [[nodiscard]] crow::json::wvalue serveAllPipelines() const;
 
  private:
   beast::PipelineManager pipeline_manager_;

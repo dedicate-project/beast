@@ -97,14 +97,7 @@ TEST_CASE("aggregation_evaluator_throws_if_no_evaluator_added", "evaluators") {
 
   beast::AggregationEvaluator evaluator;
 
-  bool threw = false;
-  try {
-    evaluator.evaluate(session);
-  } catch (...) {
-    threw = true;
-  }
-
-  REQUIRE(threw == true);
+  REQUIRE_THROWS_AS(evaluator.evaluate(session), std::invalid_argument);
 }
 
 TEST_CASE("dyn_focused_rs_eval_yields_zero_score_for_only_noop_programs", "evaluators") {

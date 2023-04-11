@@ -46,35 +46,35 @@ class MazeEvaluator : public Evaluator {
    * @param session The program session to evaluate.
    * @return The final score resulting from the program evaluation.
    */
-  double evaluate(const VmSession& session) override;
+  [[nodiscard]] double evaluate(const VmSession& session) override;
 
   /**
    * @brief Returns the number of rows used for the maze.
    *
    * @return The number of rows used for the maze.
    */
-  uint32_t getRows() const;
+  [[nodiscard]] uint32_t getRows() const;
 
   /**
    * @brief Returns the number of columns used for the maze.
    *
    * @return The number of columns used for the maze.
    */
-  uint32_t getCols() const;
+  [[nodiscard]] uint32_t getCols() const;
 
   /**
    * @brief Returns the difficulty used for the maze.
    *
    * @return The difficulty used for the maze.
    */
-  double getDifficulty() const;
+  [[nodiscard]] double getDifficulty() const;
 
   /**
    * @brief Returns the total number of steps programs are allowed during evaluation.
    *
    * @return The total number of steps programs are allowed during evaluation.
    */
-  uint32_t getMaxSteps() const;
+  [[nodiscard]] uint32_t getMaxSteps() const;
 
  private:
   /**

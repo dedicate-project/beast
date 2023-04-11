@@ -43,7 +43,7 @@ class PipelineManager {
    * @param name The display name for the new pipeline.
    * @return The unique identifier for the new pipeline.
    */
-  uint32_t createPipeline(const std::string& name);
+  [[nodiscard]] uint32_t createPipeline(const std::string& name);
 
   void savePipeline(uint32_t pipeline_id);
 
@@ -53,13 +53,13 @@ class PipelineManager {
    * @return A reference to the pipeline descriptor with the given ID.
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
-  PipelineDescriptor& getPipelineById(uint32_t pipeline_id);
+  [[nodiscard]] PipelineDescriptor& getPipelineById(uint32_t pipeline_id);
 
   /**
    * @brief Gets a const reference to the list of pipeline descriptors.
    * @return A const reference to the list of pipeline descriptors.
    */
-  const std::list<PipelineDescriptor>& getPipelines() const;
+  [[nodiscard]] const std::list<PipelineDescriptor>& getPipelines() const;
 
   /**
    * @brief Updates the name of the given pipeline.
@@ -78,7 +78,7 @@ class PipelineManager {
    * @param pipeline_id The unique identifier of the pipeline.
    * @return The JSON representation of the pipeline.
    */
-  nlohmann::json getJsonForPipeline(uint32_t pipeline_id);
+  [[nodiscard]] nlohmann::json getJsonForPipeline(uint32_t pipeline_id);
 
   /**
    * @brief Constructs a vector of evaluator tuples from a JSON object.
@@ -86,7 +86,7 @@ class PipelineManager {
    * @return A vector of tuples, each containing a shared pointer to an Evaluator, a double weight,
    * and a bool indicating if it's a minimization evaluator.
    */
-  static std::vector<std::tuple<std::shared_ptr<Evaluator>, double, bool>>
+  [[nodiscard]] static std::vector<std::tuple<std::shared_ptr<Evaluator>, double, bool>>
   constructEvaluatorsFromJson(const nlohmann::json& json);
 
   /**
@@ -94,14 +94,14 @@ class PipelineManager {
    * @param json The JSON object containing the pipeline data.
    * @return A Pipeline object constructed from the JSON data.
    */
-  static Pipeline constructPipelineFromJson(const nlohmann::json& json);
+  [[nodiscard]] static Pipeline constructPipelineFromJson(const nlohmann::json& json);
 
   /**
    * @brief Deconstructs a Pipeline object into a JSON object.
    * @param pipeline The Pipeline object to deconstruct.
    * @return A JSON object representing the Pipeline object.
    */
-  static nlohmann::json deconstructPipelineToJson(const Pipeline& pipeline);
+  [[nodiscard]] static nlohmann::json deconstructPipelineToJson(const Pipeline& pipeline);
 
  private:
   /**
@@ -130,14 +130,14 @@ class PipelineManager {
    * deconstruct.
    * @return A JSON object representing the vector of EvaluatorDescription objects.
    */
-  static nlohmann::json deconstructEvaluatorsToJson(
+  [[nodiscard]] static nlohmann::json deconstructEvaluatorsToJson(
       const std::vector<AggregationEvaluator::EvaluatorDescription>& descriptions);
 
   /**
    * @brief Gets an unused pipeline ID.
    * @return A unique pipeline ID that is not currently in use.
    */
-  uint32_t getFreeId() const;
+  [[nodiscard]] uint32_t getFreeId() const;
 
   /**
    * @var PipelineManager::filesystem_

@@ -67,21 +67,21 @@ class EvaluatorPipe : public EvolutionPipe {
    *
    * @return The size of variable memory used for evaluation
    */
-  uint32_t getMemorySize() const;
+  [[nodiscard]] uint32_t getMemorySize() const;
 
   /**
    * @brief Returns the allowed number of string table entries during evaluation
    *
    * @return The allowed number of string table entries during evaluation
    */
-  uint32_t getStringTableSize() const;
+  [[nodiscard]] uint32_t getStringTableSize() const;
 
   /**
    * @brief Returns the maximum length of any string table item
    *
    * @return The maximum length of any string table item
    */
-  uint32_t getStringTableItemLength() const;
+  [[nodiscard]] uint32_t getStringTableItemLength() const;
 
   /**
    * @brief Returns the list of attached evaluators with their respective weights and inversion
@@ -89,7 +89,8 @@ class EvaluatorPipe : public EvolutionPipe {
    *
    * @return The list of attached evaluators with their respective weights and inversion status
    */
-  const std::vector<AggregationEvaluator::EvaluatorDescription>& getEvaluators() const;
+  [[nodiscard]] const std::vector<AggregationEvaluator::EvaluatorDescription>&
+  getEvaluators() const;
 
  private:
   /**

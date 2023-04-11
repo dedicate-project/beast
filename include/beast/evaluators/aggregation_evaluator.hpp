@@ -64,14 +64,14 @@ class AggregationEvaluator : public Evaluator {
    * @param session The session object to base the score determination on.
    * @return A score value from 0.0 to 1.0.
    */
-  double evaluate(const VmSession& session) override;
+  [[nodiscard]] double evaluate(const VmSession& session) override;
 
   /**
    * @brief Returns the list of evaluators contained in this aggregation evaluator.
    *
    * @return The list of evaluators contained in this aggregation evaluator.
    */
-  const std::vector<EvaluatorDescription>& getEvaluators() const;
+  [[nodiscard]] const std::vector<EvaluatorDescription>& getEvaluators() const;
 
  private:
   /**

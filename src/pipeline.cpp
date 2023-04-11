@@ -16,7 +16,7 @@ void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pip
     throw std::invalid_argument("Pipe name already exists in this pipeline");
   }
 
-  std::shared_ptr<ManagedPipe> managed_pipe = std::make_shared<ManagedPipe>();
+  auto managed_pipe = std::make_shared<ManagedPipe>();
   managed_pipe->name = name;
   managed_pipe->pipe = pipe;
   managed_pipe->should_run = false;
@@ -198,7 +198,7 @@ void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
 }
 
 std::shared_ptr<Pipeline::ManagedPipe>
-Pipeline::getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) {
+Pipeline::getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) const {
   for (const auto& managed_pipe : pipes_) {
     if (managed_pipe->pipe == pipe) {
       return managed_pipe;
@@ -207,8 +207,9 @@ Pipeline::getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) {
   return nullptr;
 }
 
-std::shared_ptr<Pipeline::ManagedPipe> Pipeline::getManagedPipeByName(const std::string& name) {
-  for (auto& managed_pipe : pipes_) {
+std::shared_ptr<Pipeline::ManagedPipe>
+Pipeline::getManagedPipeByName(const std::string& name) const {
+  for (const auto& managed_pipe : pipes_) {
     if (managed_pipe->name == name) {
       return managed_pipe;
     }

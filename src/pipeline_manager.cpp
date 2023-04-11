@@ -131,11 +131,7 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
           evaluator_json.value()["parameters"].contains("evaluators")) {
         const auto evaluator_triplets =
             constructEvaluatorsFromJson(evaluator_json.value()["parameters"]["evaluators"]);
-        for (const auto& evaluator_triplet : evaluator_triplets) {
-          std::shared_ptr<Evaluator> sub_evaluator = nullptr;
-          double weight = 0.0;
-          bool invert_logic = false;
-          std::tie(evaluator, weight, invert_logic);
+        for (const auto& [sub_evaluator, weight, invert_logic] : evaluator_triplets) {
           std::dynamic_pointer_cast<AggregationEvaluator>(evaluator)->addEvaluator(
               sub_evaluator, weight, invert_logic);
         }
@@ -155,7 +151,7 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
 
     const double weight = evaluator_json.value()["weight"].get<double>();
     const bool invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
-    evaluators.emplace_back(std::make_tuple(evaluator, weight, invert_logic));
+    evaluators.emplace_back(evaluator, weight, invert_logic);
   }
   return evaluators;
 }

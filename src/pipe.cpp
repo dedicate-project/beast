@@ -50,22 +50,25 @@ uint32_t Pipe::getOutputSlotAmount(uint32_t slot_index) const {
 }
 
 bool Pipe::inputsAreSaturated() const {
-  bool saturated = true;
-  for (uint32_t idx = 0; idx < getInputSlotCount() && saturated; ++idx) {
-    saturated &= getInputSlotAmount(idx) >= max_candidates_;
+  for (uint32_t idx = 0; idx < getInputSlotCount(); ++idx) {
+    if (getInputSlotAmount(idx) < max_candidates_) {
+      return false;
+    }
   }
-  return saturated;
+  return true;
 }
 
 bool Pipe::outputsAreSaturated() const {
-  if (getOutputSlotCount() == 0) {
+  const uint32_t outputSlotCount = getOutputSlotCount();
+  if (outputSlotCount == 0) {
     return false;
   }
-  bool saturated = true;
-  for (uint32_t idx = 0; idx < getOutputSlotCount() && saturated; ++idx) {
-    saturated &= getOutputSlotAmount(idx) >= max_candidates_;
+  for (uint32_t idx = 0; idx < outputSlotCount; ++idx) {
+    if (getOutputSlotAmount(idx) < max_candidates_) {
+      return false;
+    }
   }
-  return saturated;
+  return true;
 }
 
 } // namespace beast

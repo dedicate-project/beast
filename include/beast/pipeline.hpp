@@ -100,7 +100,7 @@ class Pipeline {
    *
    * @return Constant reference to the list of Pipe instances in this Pipeline
    */
-  const std::list<std::shared_ptr<ManagedPipe>>& getPipes() const;
+  [[nodiscard]] const std::list<std::shared_ptr<ManagedPipe>>& getPipes() const;
 
   /**
    * @fn Pipeline::getConnections
@@ -108,7 +108,7 @@ class Pipeline {
    *
    * @return Constant reference to the list of connections present in this Pipeline
    */
-  const std::list<Connection>& getConnections() const;
+  [[nodiscard]] const std::list<Connection>& getConnections() const;
 
   /**
    * @fn Pipeline::start
@@ -132,7 +132,7 @@ class Pipeline {
    *
    * @return Boolean value denoting whether this pipeline is currently running
    */
-  bool isRunning() const;
+  [[nodiscard]] bool isRunning() const;
 
  private:
   /**
@@ -142,7 +142,7 @@ class Pipeline {
    * @param pipe Shared pointer to the Pipe instance to be checked
    * @return Boolean value indicating whether the pipe is part of this pipeline
    */
-  bool pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const;
+  [[nodiscard]] bool pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const;
 
   /**
    * @fn Pipeline::findConnections
@@ -184,9 +184,10 @@ class Pipeline {
    */
   void pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe);
 
-  std::shared_ptr<ManagedPipe> getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe);
+  [[nodiscard]] std::shared_ptr<ManagedPipe>
+  getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) const;
 
-  std::shared_ptr<ManagedPipe> getManagedPipeByName(const std::string& name);
+  [[nodiscard]] std::shared_ptr<ManagedPipe> getManagedPipeByName(const std::string& name) const;
 
   /**
    * @var Pipeline::pipes_

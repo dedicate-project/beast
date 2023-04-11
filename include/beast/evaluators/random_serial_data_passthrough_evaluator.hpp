@@ -50,7 +50,7 @@ class RandomSerialDataPassthroughEvaluator : public Evaluator {
    * @param session The program session to evaluate
    * @return The final score resulting from the program evaluation
    */
-  double evaluate(const VmSession& session) override;
+  [[nodiscard]] double evaluate(const VmSession& session) override;
 
  private:
   /**
