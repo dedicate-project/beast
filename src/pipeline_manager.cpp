@@ -153,7 +153,7 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
       throw std::invalid_argument("Invalid evaluator type: " + type);
     }
 
-    const uint32_t weight = evaluator_json.value()["weight"].get<uint32_t>();
+    const double weight = evaluator_json.value()["weight"].get<double>();
     const bool invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     evaluators.emplace_back(std::make_tuple(evaluator, weight, invert_logic));
   }
