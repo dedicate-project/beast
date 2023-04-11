@@ -127,7 +127,7 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
     std::shared_ptr<Evaluator> evaluator = nullptr;
     if (type == "AggregationEvaluator") {
       evaluator = std::make_shared<AggregationEvaluator>();
-      if (evaluator_json.value().contains("parameters") and
+      if (evaluator_json.value().contains("parameters") &&
           evaluator_json.value()["parameters"].contains("evaluators")) {
         const auto evaluator_triplets =
             constructEvaluatorsFromJson(evaluator_json.value()["parameters"]["evaluators"]);
