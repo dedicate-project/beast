@@ -89,33 +89,46 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Main BEAST library
-add_library(${PROJECT_NAME}
-  src/cpu_virtual_machine.cpp
+# Utilities library
+add_library(${PROJECT_NAME}-utils
   src/filesystem_helper.cpp
-  src/pipe.cpp
-  src/pipeline.cpp
-  src/pipeline_manager.cpp
-  src/pipeline_server.cpp
+  src/time_functions.cpp
+  src/version.cpp)
+
+# VM library
+add_library(${PROJECT_NAME}-vm
+  src/cpu_virtual_machine.cpp
   src/program.cpp
   src/random_program_factory.cpp
-  src/time_functions.cpp
-  src/version.cpp
   src/virtual_machine.cpp
-  src/vm_session.cpp
+  src/vm_session.cpp)
+
+# Evaluators library
+add_library(${PROJECT_NAME}-evaluators
   src/evaluators/aggregation_evaluator.cpp
   src/evaluators/maze_evaluator.cpp
   src/evaluators/random_serial_data_passthrough_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
-  src/evaluators/operator_usage_evaluator.cpp
+  src/evaluators/operator_usage_evaluator.cpp)
+
+# Pipelines library
+add_library(${PROJECT_NAME}-pipelines
+  src/pipe.cpp
+  src/pipeline.cpp
+  src/pipeline_manager.cpp
+  src/pipeline_server.cpp
   src/pipes/evaluator_pipe.cpp
   src/pipes/evolution_pipe.cpp
   src/pipes/null_sink_pipe.cpp
   src/pipes/program_factory_pipe.cpp)
 
+set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm)
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME} galib Threads::Threads maze)
+
+target_link_libraries(${PROJECT_NAME}-evaluators galib)
+target_link_libraries(${PROJECT_NAME}-pipelines Threads::Threads maze)
 
 add_executable(${PROJECT_NAME}-compose
   src/compose.cpp)
@@ -124,7 +137,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   target_link_libraries(${PROJECT_NAME}-compose PUBLIC gcov)
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
-target_link_libraries(${PROJECT_NAME}-compose PUBLIC ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}-compose PUBLIC ${PROJECT_LIBS})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -185,7 +198,7 @@ endif()
 if(BEAST_BUILD_PIPELINES)
   macro(declare_pipeline name)
     add_executable(pipeline_${name} examples/pipelines/${name}.cpp)
-    target_link_libraries(pipeline_${name} PUBLIC ${PROJECT_NAME})
+    target_link_libraries(pipeline_${name} PUBLIC ${PROJECT_LIBS})
 
     set_target_properties(pipeline_${name}
       PROPERTIES
@@ -200,11 +213,11 @@ if(BEAST_BUILD_PIPELINES)
   declare_pipeline(forwarder)
 endif()
 
-# Examples
+# Programs
 if(BEAST_BUILD_PROGRAMS)
   macro(declare_program name)
     add_executable(program_${name} examples/programs/${name}.cpp)
-    target_link_libraries(program_${name} PUBLIC ${PROJECT_NAME})
+    target_link_libraries(program_${name} PUBLIC ${PROJECT_LIBS})
 
     set_target_properties(program_${name}
       PROPERTIES
@@ -229,7 +242,7 @@ if(BEAST_BUILD_TESTS)
 
   add_library(tests_main tests/tests_main.cpp)
   target_include_directories(tests_main PUBLIC 3rdparty/Catch2/single_include)
-  target_link_libraries(tests_main PUBLIC ${PROJECT_NAME})
+  target_link_libraries(tests_main PUBLIC ${PROJECT_LIBS})
 
   macro(declare_test name)
     message(STATUS "Add test: ${name}")
@@ -276,7 +289,8 @@ if(BEAST_BUILD_TESTS)
 endif(BEAST_BUILD_TESTS)
 
 # Install targets
-install(TARGETS ${PROJECT_NAME} galib
+install(
+  TARGETS ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-pipelines galib
   EXPORT ${PROJECT_NAME}-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
