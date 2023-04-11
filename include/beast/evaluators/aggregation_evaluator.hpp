@@ -11,11 +11,11 @@
 namespace beast {
 
 /**
- * @class Aggregation Evaluator
- * @brief Evaluator aggregating the results of any contained evaluators
+ * @class AggregationEvaluator
+ * @brief Evaluator aggregating the results of any contained evaluators.
  *
- * This evaluator is used to calculate aggregated score of one or more arbitrary evaluators that are
- * contained within it.
+ * This evaluator is used to calculate the aggregated score of one or more arbitrary evaluators that
+ * are contained within it.
  *
  * @author Jan Winkler
  * @date 2023-01-26
@@ -23,17 +23,17 @@ namespace beast {
 class AggregationEvaluator : public Evaluator {
  public:
   /**
-   * @brief Describes an evaluator instance with weight and inversion flag
+   * @struct EvaluatorDescription
+   * @brief Describes an evaluator instance with weight and inversion flag.
    */
   struct EvaluatorDescription {
-    const std::shared_ptr<Evaluator> evaluator; ///< The evaluator to use for scoring
-    double weight;                              ///< The weight to use for this evaluator's score
-    bool invert_logic;                          ///< Whether to invert the scoring logic
+    std::shared_ptr<Evaluator> evaluator; ///< The evaluator to use for scoring.
+    double weight;                        ///< The weight to use for this evaluator's score.
+    bool invert_logic;                    ///< Whether to invert the scoring logic.
   };
 
   /**
-   * @fn AggregationEvaluator::addEvaluator
-   * @brief Adds an evaluator to this aggregation evaluator
+   * @brief Adds an evaluator to this aggregation evaluator.
    *
    * Adds an evaluator to the aggregated list of evaluators. It can be weighted (relative; if you
    * want the same weight for all evaluators contained, give them all the same weight, e.g. 1.0) and
@@ -41,15 +41,14 @@ class AggregationEvaluator : public Evaluator {
    * specific evaluator's effect). Weights may not be negative, and `nullptr` is not accepted as an
    * evaluator pointer.
    *
-   * @param evaluator A pointer to the evaluator to add
-   * @param weight The relative weight this evaluator's score should have in the aggregated score
-   * @param invert_logic Whether to invert this evaluator's score before aggregating it
+   * @param evaluator A pointer to the evaluator to add.
+   * @param weight The relative weight this evaluator's score should have in the aggregated score.
+   * @param invert_logic Whether to invert this evaluator's score before aggregating it.
    */
   void addEvaluator(const std::shared_ptr<Evaluator>& evaluator, double weight, bool invert_logic);
 
   /**
-   * @fn AggregationEvaluator::evaluate
-   * @brief Determines the aggregated score of all contained evaluators
+   * @brief Determines the aggregated score of all contained evaluators.
    *
    * For each evaluator added, a weight and a logic inversion flag is set. When evaluating a
    * session, this evaluator will iterate through all contained evaluators and add up their weighted
@@ -62,17 +61,22 @@ class AggregationEvaluator : public Evaluator {
    * If no evaluators were added to this aggregation evaluator when calling this function, an
    * exception is thrown.
    *
-   * @param session The session object to base the score determination on
-   * @return A score value from 0.0 to 1.0
+   * @param session The session object to base the score determination on.
+   * @return A score value from 0.0 to 1.0.
    */
   double evaluate(const VmSession& session) override;
 
+  /**
+   * @brief Returns the list of evaluators contained in this aggregation evaluator.
+   *
+   * @return The list of evaluators contained in this aggregation evaluator.
+   */
   const std::vector<EvaluatorDescription>& getEvaluators() const;
 
  private:
   /**
-   * @var Aggregation::evaluators_
-   * @brief Holds the evaluators contained in this aggregation evaluator
+   * @var evaluators_
+   * @brief Holds the evaluators contained in this aggregation evaluator.
    */
   std::vector<EvaluatorDescription> evaluators_;
 };

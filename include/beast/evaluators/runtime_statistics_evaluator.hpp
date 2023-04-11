@@ -1,6 +1,7 @@
 #ifndef BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
 #define BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
 
+// Internal
 #include <beast/evaluator.hpp>
 
 namespace beast {

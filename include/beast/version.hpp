@@ -21,6 +21,11 @@ namespace beast {
  */
 [[nodiscard]] std::array<uint8_t, 3> getVersion() noexcept;
 
+/**
+ * @brief Returns the version of the BEAST library as a string in the format "MAJOR.MINOR.PATCH".
+ *
+ * @return A string representation of the version of the BEAST library.
+ */
 [[nodiscard]] std::string getVersionString() noexcept;
 
 } // namespace beast

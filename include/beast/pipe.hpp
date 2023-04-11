@@ -8,10 +8,33 @@
 
 namespace beast {
 
+/**
+ * @class Pipe
+ * @brief Provides an abstract interface for managing input and output buffers of candidate programs
+ * and finalist programs
+ *
+ * The Pipe class serves as a base class for different types of evolutionary algorithms. It manages
+ * the input and output buffers of candidate programs and finalist programs while providing methods
+ * to add, draw, and check the availability of programs in the buffers. Derived classes should
+ * implement the execute() method to define their specific behavior.
+ */
 class Pipe {
  public:
+  /**
+   * @brief Constructs a new Pipe with the specified number of candidates,
+   *        input slots, and output slots
+   *
+   * @param max_candidates The maximum number of candidates in the population
+   * @param input_slots The number of input slots for candidate programs
+   * @param output_slots The number of output slots for finalist programs
+   */
   Pipe(uint32_t max_candidates, uint32_t input_slots, uint32_t output_slots);
 
+  /**
+   * @brief Destructor
+   *
+   * Added for vtable consistency.
+   */
   virtual ~Pipe() = default;
 
   /**
@@ -73,20 +96,62 @@ class Pipe {
    */
   [[nodiscard]] OutputItem drawOutput(uint32_t slot_index);
 
+  /**
+   * @brief Get the amount of candidates in the specified input slot
+   *
+   * @param slot_index The index of the input slot
+   * @return The number of candidates in the specified input slot
+   */
   [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index) const;
 
+  /**
+   * @brief Get the amount of finalists in the specified output slot
+   *
+   * @param slot_index The index of the output slot
+   * @return The number of finalists in the specified output slot
+   */
   [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index) const;
 
+  /**
+   * @brief Get the total number of input slots
+   *
+   * @return The number of input slots
+   */
   [[nodiscard]] uint32_t getInputSlotCount() const { return inputs_.size(); }
 
+  /**
+   * @brief Get the total number of output slots
+   *
+   * @return The number of output slots
+   */
   [[nodiscard]] uint32_t getOutputSlotCount() const { return outputs_.size(); }
 
+  /**
+   * @brief Get the maximum number of candidates allowed in the population
+   *
+   * @return The maximum number of candidates
+   */
   [[nodiscard]] uint32_t getMaxCandidates() const { return max_candidates_; }
 
+  /**
+   * @brief Checks if the inputs are saturated (i.e., all input slots are full)
+   *
+   * @return `true` if all input slots are full, `false` otherwise
+   */
   [[nodiscard]] virtual bool inputsAreSaturated() const;
 
+  /**
+   * @brief Checks if the outputs are saturated (i.e., all output slots are full)
+   *
+   * @return `true` if all output slots are full, `false` otherwise
+   */
   [[nodiscard]] virtual bool outputsAreSaturated() const;
 
+  /**
+   * @brief Executes the pipe's main functionality
+   *
+   * This is a pure virtual function that should be implemented by derived classes.
+   */
   virtual void execute() = 0;
 
  protected:

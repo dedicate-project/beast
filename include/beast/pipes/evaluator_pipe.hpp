@@ -1,7 +1,7 @@
 #ifndef BEAST_PIPES_EVALUATOR_PIPE_HPP_
 #define BEAST_PIPES_EVALUATOR_PIPE_HPP_
 
-// BEAST
+// Internal
 #include <beast/evaluators/aggregation_evaluator.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
 
@@ -10,6 +10,9 @@ namespace beast {
 /**
  * @class EvaluatorPipe
  * @brief Evolves candidate programs according to attached evaluators
+ *
+ * This class represents a pipeline for evolving candidate programs using evaluators that are
+ * attached to it.
  *
  * The basis for this pipe implementation is an `AggregationEvaluator` instance that any amount of
  * evaluators can be attached to (even other aggregators). Candidate programs are wrapped into a
@@ -27,7 +30,6 @@ namespace beast {
 class EvaluatorPipe : public EvolutionPipe {
  public:
   /**
-   * @fn EvaluatorPipe::EvaluatorPipe
    * @brief Initializes this EvaluatorPipe instance
    *
    * @param max_candidates The input/output size (number of candidate programs) of this pipe
@@ -39,7 +41,6 @@ class EvaluatorPipe : public EvolutionPipe {
                 size_t max_string_size);
 
   /**
-   * @fn EvaluatorPipe::addEvaluator
    * @brief Attaches an evaluator to this pipe
    *
    * Programs that are evolved through this pipe are subject to scoring by any attached evaluator
@@ -51,14 +52,43 @@ class EvaluatorPipe : public EvolutionPipe {
    */
   void addEvaluator(const std::shared_ptr<Evaluator>& evaluator, double weight, bool invert_logic);
 
+  /**
+   * @brief Evaluates a program and returns its score
+   *
+   * This function evaluates a program and returns its score based on the attached evaluators.
+   *
+   * @param program_data The program to evaluate
+   * @return The score of the program
+   */
   [[nodiscard]] double evaluate(const std::vector<unsigned char>& program_data) override;
 
+  /**
+   * @brief Returns the size of variable memory used for evaluation
+   *
+   * @return The size of variable memory used for evaluation
+   */
   uint32_t getMemorySize() const;
 
+  /**
+   * @brief Returns the allowed number of string table entries during evaluation
+   *
+   * @return The allowed number of string table entries during evaluation
+   */
   uint32_t getStringTableSize() const;
 
+  /**
+   * @brief Returns the maximum length of any string table item
+   *
+   * @return The maximum length of any string table item
+   */
   uint32_t getStringTableItemLength() const;
 
+  /**
+   * @brief Returns the list of attached evaluators with their respective weights and inversion
+   * status
+   *
+   * @return The list of attached evaluators with their respective weights and inversion status
+   */
   const std::vector<AggregationEvaluator::EvaluatorDescription>& getEvaluators() const;
 
  private:

@@ -1,6 +1,7 @@
 #ifndef BEAST_OPERATOR_USAGE_EVALUATOR_HPP_
 #define BEAST_OPERATOR_USAGE_EVALUATOR_HPP_
 
+// Internal
 #include <beast/evaluator.hpp>
 
 namespace beast {
