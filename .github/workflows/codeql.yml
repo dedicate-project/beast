@@ -25,11 +25,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Initialize CodeQL
+    - name: Initialize CodeQL for C++
+      if: ${{ matrix.language == 'cpp' }}
       uses: github/codeql-action/init@v2
       with:
-        languages: ${{matrix.language}}
+        languages: cpp
         config-file: "codeql-config.yml"
+
+    - name: Initialize CodeQL for JavaScript
+      if: ${{ matrix.language == 'javascript' }}
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
 
     - name: Install C++ dependencies
       if: matrix.language == 'cpp'
