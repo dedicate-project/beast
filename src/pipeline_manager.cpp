@@ -146,7 +146,7 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
 
 std::shared_ptr<Evaluator>
 PipelineManager::constructAggregationEvaluatorFromJson(const nlohmann::json& json) {
-  std::shared_ptr<AggregationEvaluator> evaluator = std::make_shared<AggregationEvaluator>();
+  auto evaluator = std::make_shared<AggregationEvaluator>();
   if (json.contains("parameters") && json["parameters"].contains("evaluators")) {
     const auto evaluator_triplets = constructEvaluatorsFromJson(json["parameters"]["evaluators"]);
     for (const auto& [sub_evaluator, weight, invert_logic] : evaluator_triplets) {
@@ -362,7 +362,7 @@ nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeli
   nlohmann::json connections_json = {};
   for (const auto& connection : pipeline.getConnections()) {
     nlohmann::json connection_json;
-    connection_json["buffer_size"] = connection.buffer.capacity();
+    connection_json["buffer_size"] = connection.buffer_size;
     connection_json["destination_pipe"] = connection.destination_pipe->name;
     connection_json["destination_slot"] = connection.destination_slot_index;
     connection_json["source_pipe"] = connection.source_pipe->name;

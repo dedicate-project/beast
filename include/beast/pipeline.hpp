@@ -49,6 +49,7 @@ class Pipeline {
     uint32_t destination_slot_index; ///< Index of the input slot of the destination Pipe
 
     std::vector<Pipe::OutputItem> buffer; ///< Data buffer from source to destination
+    uint32_t buffer_size;                 ///< The size of the data buffer
   };
 
   /**

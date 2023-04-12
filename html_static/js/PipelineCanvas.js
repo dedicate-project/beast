@@ -91,7 +91,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       useState({width : window.innerWidth - 320, height : window.innerHeight - 200});
   const [stageInstance, setStageInstance] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [lastDragPoint, setLastDragPoint] = useState({x : 0, y : 0});
+  const [dragMovePoint, setDragMovePoint] = useState({x : 0, y : 0});
 
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({x : 0, y : 0});
@@ -110,6 +110,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const gridLayerRef = useRef(null);
   const borderLayerRef = useRef(null);
   const elementLayerRef = useRef(null);
+  const connectionsLayerRef = useRef(null);
   const draggingRef = useRef(false);
   const lastDragPointRef = useRef({x : 0, y : 0});
 
@@ -131,6 +132,9 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20,
              3); // Grid size = 20, gridSizeMultiplier = 3
     stage.add(gridLayerRef.current);
+
+    connectionsLayerRef.current = new Konva.Layer();
+    stage.add(connectionsLayerRef.current);
 
     elementLayerRef.current = new Konva.Layer();
     stage.add(elementLayerRef.current);
@@ -163,6 +167,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         elementLayerRef.current.y(elementLayerRef.current.y() + dy);
         gridLayerRef.current.x(gridLayerRef.current.x() + dx);
         gridLayerRef.current.y(gridLayerRef.current.y() + dy);
+        connectionsLayerRef.current.x(connectionsLayerRef.current.x() + dx);
+        connectionsLayerRef.current.y(connectionsLayerRef.current.y() + dy);
 
         elementLayerRef.current.batchDraw();
         gridLayerRef.current.batchDraw();
@@ -241,6 +247,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       });
 
       konvaImage.on("dragend", (e) => { handlePipeDragEnded(konvaImage); });
+
+      konvaImage.on("dragmove", (e) => { setDragMovePoint({x : e.target.x(), y : e.target.y()}); });
 
       elementLayerRef.current.add(konvaImage);
       elementLayerRef.current.batchDraw();
@@ -324,6 +332,37 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     }
   }, [ model ]);
 
+  useEffect(() => {
+    // Process connections
+    connectionsLayerRef.current.removeChildren();
+    if ("connections" in model) {
+      for (let connection_index in model["connections"]) {
+        const connection = model["connections"][connection_index];
+        if (!(connection.source_pipe in pipes) || !(connection.destination_pipe in pipes)) {
+          continue;
+        }
+        const source_pipe_img = pipes[connection.source_pipe];
+        const destination_pipe_img = pipes[connection.destination_pipe];
+        const line = new Konva.Line({
+          points : [
+            source_pipe_img.x() + source_pipe_img.scaleX() * source_pipe_img.width() / 2,
+            source_pipe_img.y() + source_pipe_img.scaleY() * source_pipe_img.height() / 2,
+            destination_pipe_img.x() +
+                destination_pipe_img.scaleX() * destination_pipe_img.width() / 2,
+            destination_pipe_img.y() +
+                destination_pipe_img.scaleY() * destination_pipe_img.height() / 2
+          ],
+          stroke : 'red',
+          strokeWidth : 2,
+          lineCap : 'round',
+          lineJoin : 'round'
+        });
+        connectionsLayerRef.current.add(line);
+      }
+    }
+    connectionsLayerRef.current.draw();
+  }, [ dragMovePoint, model ]);
+
   // Update the grid and border when dimensions change
   const updateGridAndBorder = () => {
     gridLayerRef.current.destroyChildren();
@@ -380,8 +419,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         throw new Error('Network response was not ok');
       }
       const jsonData = await response.json();
-      console.log(jsonData);
       setPipelineState(jsonData.state);
+      console.log(jsonData.model);
       setModel(jsonData.model);
       setMetadata(jsonData.metadata);
     } catch (error) {

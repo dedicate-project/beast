@@ -53,7 +53,7 @@ void Pipeline::connectPipes(const std::shared_ptr<Pipe>& source_pipe, uint32_t s
 
   Connection connection{
       managed_source_pipe, source_slot_index, managed_destination_pipe, destination_slot_index, {}};
-  connection.buffer.reserve(buffer_size);
+  connection.buffer_size = buffer_size;
   connections_.push_back(std::move(connection));
 }
 
@@ -138,9 +138,9 @@ void Pipeline::processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pi
     }
 
     Connection* destination_slot_connection = *destination_slot_connection_iter;
-    while (managed_pipe->pipe->hasOutput(slot_index) &&
-           (destination_slot_connection->buffer.size() <
-            destination_slot_connection->buffer.capacity())) {
+    while (
+        managed_pipe->pipe->hasOutput(slot_index) &&
+        (destination_slot_connection->buffer.size() < destination_slot_connection->buffer_size)) {
       auto data = managed_pipe->pipe->drawOutput(slot_index);
       destination_slot_connection->buffer.push_back(std::move(data));
     }
