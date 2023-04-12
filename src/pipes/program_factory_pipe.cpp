@@ -13,13 +13,13 @@ ProgramFactoryPipe::ProgramFactoryPipe(uint32_t max_candidates, uint32_t max_siz
       string_table_item_length_{string_table_item_length}, factory_{std::move(factory)} {}
 
 void ProgramFactoryPipe::execute() {
-  while (outputs_[0].size() < max_candidates_) {
+  while (getOutputSlotAmount(0) < getMaxCandidates()) {
     Pipe::OutputItem item;
     Program program =
         factory_->generate(max_size_, memory_size_, string_table_size_, string_table_item_length_);
     item.data = program.getData();
     item.score = 0.0;
-    outputs_[0].push_back(std::move(item));
+    storeOutput(0, std::move(item));
   }
 }
 

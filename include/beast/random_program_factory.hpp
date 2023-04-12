@@ -19,6 +19,11 @@ namespace beast {
 class RandomProgramFactory : public ProgramFactoryBase {
  public:
   /**
+   * @brief Destructor added for vtable consistency
+   */
+  ~RandomProgramFactory() override = default;
+
+  /**
    * @fn RandomProgramFactory::generate
    * @brief Generates a program consisting of random but valid operators and operands
    *

@@ -152,7 +152,7 @@ class Pipeline {
    * @param source_connections Vector of source connections to be populated
    * @param destination_connections Vector of destination connections to be populated
    */
-  void findConnections(std::shared_ptr<ManagedPipe>& managed_pipe,
+  void findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
                        std::vector<Connection*>& source_connections,
                        std::vector<Connection*>& destination_connections);
 
@@ -163,7 +163,7 @@ class Pipeline {
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    * @param destination_connections Vector of destination connections for the managed pipe
    */
-  static void processOutputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+  static void processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
                                  const std::vector<Connection*>& destination_connections);
 
   /**
@@ -173,7 +173,7 @@ class Pipeline {
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    * @param source_connections Vector of source connections for the managed pipe
    */
-  static void processInputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+  static void processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
                                 const std::vector<Connection*>& source_connections);
 
   /**
@@ -182,12 +182,12 @@ class Pipeline {
    *
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    */
-  void pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe);
+  void pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe);
 
   [[nodiscard]] std::shared_ptr<ManagedPipe>
   getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) const;
 
-  [[nodiscard]] std::shared_ptr<ManagedPipe> getManagedPipeByName(const std::string& name) const;
+  [[nodiscard]] std::shared_ptr<ManagedPipe> getManagedPipeByName(std::string_view name) const;
 
   /**
    * @var Pipeline::pipes_

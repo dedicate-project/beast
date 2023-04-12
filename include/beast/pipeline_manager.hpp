@@ -89,6 +89,12 @@ class PipelineManager {
   [[nodiscard]] static std::vector<std::tuple<std::shared_ptr<Evaluator>, double, bool>>
   constructEvaluatorsFromJson(const nlohmann::json& json);
 
+  [[nodiscard]] static std::shared_ptr<Evaluator>
+  constructAggregationEvaluatorFromJson(const nlohmann::json& json);
+
+  [[nodiscard]] static std::shared_ptr<Evaluator>
+  constructMazeEvaluatorFromJson(const nlohmann::json& json);
+
   /**
    * @brief Constructs a Pipeline object from a JSON object.
    * @param json The JSON object containing the pipeline data.

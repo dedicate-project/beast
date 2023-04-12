@@ -33,6 +33,11 @@ class RuntimeStatisticsEvaluator : public Evaluator {
   explicit RuntimeStatisticsEvaluator(double dyn_noop_weight, double stat_noop_weight);
 
   /**
+   * @brief Destructor added for vtable consistency
+   */
+  ~RuntimeStatisticsEvaluator() override = default;
+
+  /**
    * @fn OperatorUsageEvaluator::evaluate
    * @brief Evaluates the dynamic runtime behavior and the static structure of a session and program
    *

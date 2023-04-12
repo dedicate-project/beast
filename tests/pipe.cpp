@@ -11,7 +11,7 @@ class MockPipe : public beast::Pipe {
   void execute() override {}
 
   void addOutput(uint32_t slot_index, const std::vector<unsigned char>& candidate) {
-    outputs_[slot_index].push_back({candidate, 0.0});
+    storeOutput(slot_index, {candidate, 0.0});
   }
 };
 

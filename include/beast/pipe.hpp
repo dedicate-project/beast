@@ -117,14 +117,16 @@ class Pipe {
    *
    * @return The number of input slots
    */
-  [[nodiscard]] uint32_t getInputSlotCount() const { return inputs_.size(); }
+  [[nodiscard]] uint32_t getInputSlotCount() const { return static_cast<uint32_t>(inputs_.size()); }
 
   /**
    * @brief Get the total number of output slots
    *
    * @return The number of output slots
    */
-  [[nodiscard]] uint32_t getOutputSlotCount() const { return outputs_.size(); }
+  [[nodiscard]] uint32_t getOutputSlotCount() const {
+    return static_cast<uint32_t>(outputs_.size());
+  }
 
   /**
    * @brief Get the maximum number of candidates allowed in the population
@@ -155,6 +157,11 @@ class Pipe {
   virtual void execute() = 0;
 
  protected:
+  void storeOutput(uint32_t slot_index, const OutputItem& output);
+
+  void storeOutput(uint32_t slot_index, OutputItem&& output);
+
+ private:
   /**
    * @var Pipe::input_
    * @brief Holds the input candidate programs

@@ -19,6 +19,11 @@ namespace beast {
 class Evaluator {
  public:
   /**
+   * @brief Destructor added for vtable consistency.
+   */
+  virtual ~Evaluator() = default;
+
+  /**
    * @fn Evaluator::evaluate
    * @brief Determines the fitness score of a session object
    *

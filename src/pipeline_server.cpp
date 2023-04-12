@@ -22,7 +22,7 @@ crow::json::wvalue PipelineServer::serveNewPipeline(const crow::request& req) {
       const auto pipeline_id = pipeline_manager_.createPipeline(name);
       value["status"] = "success";
       value["id"] = pipeline_id;
-    } catch (const std::runtime_error& exception) {
+    } catch (const std::invalid_argument& exception) {
       value["status"] = "failed";
       value["error"] = exception.what();
     }
@@ -68,7 +68,7 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
         try {
           pipeline.pipeline.start();
           value["status"] = "success";
-        } catch (const std::runtime_error& exception) {
+        } catch (const std::invalid_argument& exception) {
           value["status"] = "failed";
           value["error"] = exception.what();
         }
@@ -78,7 +78,7 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
         try {
           pipeline.pipeline.stop();
           value["status"] = "success";
-        } catch (const std::runtime_error& exception) {
+        } catch (const std::invalid_argument& exception) {
           value["status"] = "failed";
           value["error"] = exception.what();
         }
@@ -109,6 +109,12 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
             value["action"] = action;
             value["error"] = "invalid_action";
           }
+        } catch (const nlohmann::detail::parse_error& exception) {
+          value["status"] = "failed";
+          value["error"] = exception.what();
+        } catch (const std::invalid_argument& exception) {
+          value["status"] = "failed";
+          value["error"] = exception.what();
         } catch (const std::runtime_error& exception) {
           value["status"] = "failed";
           value["error"] = exception.what();

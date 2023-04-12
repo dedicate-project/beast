@@ -108,7 +108,7 @@ void EvolutionPipe::execute() {
 void EvolutionPipe::setCutOffScore(double cut_off_score) { cut_off_score_ = cut_off_score; }
 
 void EvolutionPipe::storeFinalist(const std::vector<unsigned char>& finalist, float score) {
-  outputs_[0].push_back({finalist, static_cast<double>(score)});
+  storeOutput(0, {finalist, static_cast<double>(score)});
 }
 
 } // namespace beast

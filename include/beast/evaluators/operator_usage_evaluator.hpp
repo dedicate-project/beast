@@ -29,6 +29,11 @@ class OperatorUsageEvaluator : public Evaluator {
   explicit OperatorUsageEvaluator(OpCode opcode);
 
   /**
+   * @brief Destructor added for vtable consistency
+   */
+  ~OperatorUsageEvaluator() override = default;
+
+  /**
    * @fn OperatorUsageEvaluator::evaluate
    * @brief Determines the portion of specific operators during execution
    *

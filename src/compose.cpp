@@ -30,9 +30,25 @@ void serveStaticFile(crow::response* res, const std::string_view html_root,
     } else {
       res->code = 404;
     }
-  } catch (const std::runtime_error& exception) {
+  } catch (const std::ios_base::failure& ex) {
     res->code = 500;
-    res->write(exception.what());
+    res->write("Failed to open file: ");
+    res->write(ex.what());
+  } catch (const std::system_error& ex) {
+    res->code = 500;
+    res->write("System error: ");
+    res->write(ex.what());
+  } catch (const std::bad_alloc& ex) {
+    res->code = 500;
+    res->write("Memory allocation error: ");
+    res->write(ex.what());
+  } catch (const std::exception& ex) {
+    res->code = 500;
+    res->write("Exception: ");
+    res->write(ex.what());
+  } catch (...) {
+    res->code = 500;
+    res->write("Unknown exception occurred.");
   }
   res->end();
 }

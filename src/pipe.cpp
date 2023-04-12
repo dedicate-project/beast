@@ -43,10 +43,12 @@ Pipe::OutputItem Pipe::drawOutput(uint32_t slot_index) {
   return item;
 }
 
-uint32_t Pipe::getInputSlotAmount(uint32_t slot_index) const { return inputs_[slot_index].size(); }
+uint32_t Pipe::getInputSlotAmount(uint32_t slot_index) const {
+  return static_cast<uint32_t>(inputs_[slot_index].size());
+}
 
 uint32_t Pipe::getOutputSlotAmount(uint32_t slot_index) const {
-  return outputs_[slot_index].size();
+  return static_cast<uint32_t>(outputs_[slot_index].size());
 }
 
 bool Pipe::inputsAreSaturated() const {
@@ -69,6 +71,20 @@ bool Pipe::outputsAreSaturated() const {
     }
   }
   return true;
+}
+
+void Pipe::storeOutput(uint32_t slot_index, const OutputItem& output) {
+  if (slot_index >= outputs_.size()) {
+    throw std::invalid_argument("Slot index for output too large");
+  }
+  outputs_[slot_index].push_back(output);
+}
+
+void Pipe::storeOutput(uint32_t slot_index, OutputItem&& output) {
+  if (slot_index >= outputs_.size()) {
+    throw std::invalid_argument("Slot index for output too large");
+  }
+  outputs_[slot_index].push_back(std::move(output));
 }
 
 } // namespace beast

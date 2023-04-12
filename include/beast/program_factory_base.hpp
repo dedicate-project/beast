@@ -17,6 +17,11 @@ namespace beast {
 class ProgramFactoryBase {
  public:
   /**
+   * @brief Destructor added for vtable consistency.
+   */
+  virtual ~ProgramFactoryBase() = default;
+
+  /**
    * @fn ProgramFactoryBase::generate
    * @brief Generates a program based on the factory's semantics
    *

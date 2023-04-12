@@ -85,7 +85,7 @@ void Pipeline::stop() {
     throw std::invalid_argument("Pipeline is not running, cannot stop it.");
   }
 
-  for (std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
+  for (const std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
     if (managed_pipe->is_running) {
       managed_pipe->should_run = false;
       managed_pipe->thread.join();
@@ -106,7 +106,7 @@ bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
                       }) != pipes_.end();
 }
 
-void Pipeline::findConnections(std::shared_ptr<ManagedPipe>& managed_pipe,
+void Pipeline::findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
                                std::vector<Connection*>& source_connections,
                                std::vector<Connection*>& destination_connections) {
   for (Connection& connection : connections_) {
@@ -119,7 +119,7 @@ void Pipeline::findConnections(std::shared_ptr<ManagedPipe>& managed_pipe,
   }
 }
 
-void Pipeline::processOutputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+void Pipeline::processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
                                   const std::vector<Connection*>& destination_connections) {
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
        ++slot_index) {
@@ -147,7 +147,7 @@ void Pipeline::processOutputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
   }
 }
 
-void Pipeline::processInputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
+void Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
                                  const std::vector<Connection*>& source_connections) {
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
        ++slot_index) {
@@ -176,7 +176,7 @@ void Pipeline::processInputSlots(std::shared_ptr<ManagedPipe>& managed_pipe,
   }
 }
 
-void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
+void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) {
   std::vector<Connection*> source_connections;
   std::vector<Connection*> destination_connections;
   findConnections(managed_pipe, source_connections, destination_connections);
@@ -185,10 +185,7 @@ void Pipeline::pipelineWorker(std::shared_ptr<ManagedPipe>& managed_pipe) {
     processOutputSlots(managed_pipe, destination_connections);
     processInputSlots(managed_pipe, source_connections);
 
-    const bool outputs_have_enough_space = !managed_pipe->pipe->outputsAreSaturated();
-    const bool inputs_have_enough_data = managed_pipe->pipe->inputsAreSaturated();
-
-    if (inputs_have_enough_data && outputs_have_enough_space) {
+    if (!managed_pipe->pipe->outputsAreSaturated() && managed_pipe->pipe->inputsAreSaturated()) {
       managed_pipe->pipe->execute();
     }
 
@@ -207,8 +204,7 @@ Pipeline::getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) const {
   return nullptr;
 }
 
-std::shared_ptr<Pipeline::ManagedPipe>
-Pipeline::getManagedPipeByName(const std::string& name) const {
+std::shared_ptr<Pipeline::ManagedPipe> Pipeline::getManagedPipeByName(std::string_view name) const {
   for (const auto& managed_pipe : pipes_) {
     if (managed_pipe->name == name) {
       return managed_pipe;
@@ -216,4 +212,5 @@ Pipeline::getManagedPipeByName(const std::string& name) const {
   }
   return nullptr;
 }
+
 } // namespace beast

@@ -31,7 +31,6 @@ uint32_t PipelineManager::createPipeline(const std::string& name) {
   nlohmann::json model;
   model["pipes"] = nlohmann::json::array();
   model["connections"] = {};
-  // TODO(fairlight1337): Add more data to the model.
   const std::string filename = filesystem_.saveModel(name, model);
   const uint32_t new_id = getFreeId();
   pipelines_.push_back({new_id, name, filename, beast::Pipeline()});
@@ -125,40 +124,53 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
     const std::string type = evaluator_json.value()["type"].get<std::string>();
 
     std::shared_ptr<Evaluator> evaluator = nullptr;
+    double weight = 0;
+    bool invert_logic = false;
+
     if (type == "AggregationEvaluator") {
-      evaluator = std::make_shared<AggregationEvaluator>();
-      if (evaluator_json.value().contains("parameters") &&
-          evaluator_json.value()["parameters"].contains("evaluators")) {
-        const auto evaluator_triplets =
-            constructEvaluatorsFromJson(evaluator_json.value()["parameters"]["evaluators"]);
-        for (const auto& [sub_evaluator, weight, invert_logic] : evaluator_triplets) {
-          std::dynamic_pointer_cast<AggregationEvaluator>(evaluator)->addEvaluator(
-              sub_evaluator, weight, invert_logic);
-        }
-      }
+      evaluator = constructAggregationEvaluatorFromJson(evaluator_json.value());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else if (type == "MazeEvaluator") {
-      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
-      checkForKeyPresenceInJson(evaluator_json.value()["parameters"],
-                                {"rows", "cols", "difficulty", "max_steps"});
-      const uint32_t rows = evaluator_json.value()["parameters"]["rows"].get<uint32_t>();
-      const uint32_t cols = evaluator_json.value()["parameters"]["cols"].get<uint32_t>();
-      const double difficulty = evaluator_json.value()["parameters"]["difficulty"].get<double>();
-      const uint32_t max_steps = evaluator_json.value()["parameters"]["max_steps"].get<uint32_t>();
-      evaluator = std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
+      evaluator = constructMazeEvaluatorFromJson(evaluator_json.value());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else {
       throw std::invalid_argument("Invalid evaluator type: " + type);
     }
 
-    const double weight = evaluator_json.value()["weight"].get<double>();
-    const bool invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     evaluators.emplace_back(evaluator, weight, invert_logic);
   }
   return evaluators;
 }
 
+std::shared_ptr<Evaluator>
+PipelineManager::constructAggregationEvaluatorFromJson(const nlohmann::json& json) {
+  std::shared_ptr<AggregationEvaluator> evaluator = std::make_shared<AggregationEvaluator>();
+  if (json.contains("parameters") && json["parameters"].contains("evaluators")) {
+    const auto evaluator_triplets = constructEvaluatorsFromJson(json["parameters"]["evaluators"]);
+    for (const auto& [sub_evaluator, weight, invert_logic] : evaluator_triplets) {
+      std::dynamic_pointer_cast<AggregationEvaluator>(evaluator)->addEvaluator(
+          sub_evaluator, weight, invert_logic);
+    }
+  }
+  return evaluator;
+}
+
+std::shared_ptr<Evaluator>
+PipelineManager::constructMazeEvaluatorFromJson(const nlohmann::json& json) {
+  checkForKeyPresenceInJson(json, {"parameters"});
+  checkForKeyPresenceInJson(json["parameters"], {"rows", "cols", "difficulty", "max_steps"});
+  const uint32_t rows = json["parameters"]["rows"].get<uint32_t>();
+  const uint32_t cols = json["parameters"]["cols"].get<uint32_t>();
+  const double difficulty = json["parameters"]["difficulty"].get<double>();
+  const uint32_t max_steps = json["parameters"]["max_steps"].get<uint32_t>();
+  return std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
+}
+
 Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) {
   Pipeline pipeline;
-  std::map<std::string, std::shared_ptr<Pipe>> created_pipes;
+  std::map<std::string, std::shared_ptr<Pipe>, std::less<>> created_pipes;
   if (json.contains("pipes") && !json["pipes"].is_null()) {
     for (const auto& pipe : json["pipes"].items()) {
       const std::string& pipe_name = pipe.key();
