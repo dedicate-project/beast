@@ -268,11 +268,11 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       imageObj.crossOrigin = "anonymous";
       imageObj.onload = function() {
         var img = new Konva.Image({
-          x : (item.width() - 50) / 2,
-          y : (item.height() - 50) / 2,
+          x : (item.width() - 50) / 2 + 5,
+          y : (item.height() - 50) / 2 + 5,
           image : imageObj,
-          width : 50,
-          height : 50,
+          width : 40,
+          height : 40,
         });
 
         // add the Konva.Image object to the group
@@ -356,7 +356,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         inports = 1;
       } else if (added_pipes[key]["type"] == "EvaluatorPipe") {
         if (added_pipes[key]["parameters"]["evaluators"][0]["type"] == "MazeEvaluator") {
-          image_file = "/img/pipe_maze.png";
+          image_file = "/img/maze_evaluator_pipe.png";
           inports = 1;
           outports = 1;
         }
