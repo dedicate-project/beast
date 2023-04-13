@@ -108,6 +108,14 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [pipes, setPipes] = useState({});
   const [currentlyDraggedPipe, setCurrentlyDraggedPipe] = useState("");
 
+  React.useEffect(() => {
+    const handleContextMenu = (e) => { e.preventDefault(); };
+
+    window.addEventListener("contextmenu", handleContextMenu);
+
+    return () => { window.removeEventListener("contextmenu", handleContextMenu); };
+  }, []);
+
   useEffect(() => {
     const stage = new Konva.Stage({
       container : stageRef.current,
@@ -141,9 +149,22 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         draggingRef.current = true;
         lastDragPointRef.current = stage.getPointerPosition();
       } else if (e.evt.button === 2) {
-        e.evt.preventDefault();
+        e.evt.preventDefault();           // This prevents the native context menu
+        e.evt.stopPropagation();          // Add this line
+        e.evt.stopImmediatePropagation(); // Add this line
+        e.evt.cancelBubble = true;
         const position = stage.getPointerPosition();
-        setContextMenuPosition({x : position.x, y : position.y});
+
+        const container = stage.container();
+        const rect = container.getBoundingClientRect();
+
+        // Adjust the position based on the canvas offset
+        const adjustedPosition = {
+          x : position.x + rect.left - 10,
+          y : position.y - 2 * rect.top - 10
+        };
+
+        setContextMenuPosition(adjustedPosition);
         setShowContextMenu(true);
       }
     });

@@ -2,12 +2,12 @@ const {createElement : e} = React;
 const {Menu, MenuItem} = MaterialUI;
 
 export function ContextMenu({show, position, onClose, menuItems}) {
-  const menuRef = React.useRef(null);
-
-  React.useEffect(() => {
-    if (show && menuRef.current) {
-      const {x, y} = position;
-      menuRef.current.style.transform = `translate(${x}px, ${y}px)`;
+  const menuRef = React.useCallback((node) => {
+    if (node !== null) {
+      if (show) {
+        const {x, y} = position;
+        node.style.transform = `translate(${x}px, ${y}px)`;
+      }
     }
   }, [ show, position ]);
 
@@ -19,6 +19,7 @@ export function ContextMenu({show, position, onClose, menuItems}) {
   return e(
       Menu,
       {
+        ref : menuRef,
         anchorEl : menuRef.current,
         open : show,
         onClose : onClose,
