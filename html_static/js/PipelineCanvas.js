@@ -205,9 +205,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     });
   }
 
+  const dialogRoot = document.createElement('div');
+  dialogRoot.id = 'dialog-root';
+  dialogRoot.style.position = 'absolute';
+  dialogRoot.style.zIndex = 9999;
+  document.body.appendChild(dialogRoot);
+
   useEffect(() => {
     // Load an image and create a draggable object
-    const createDraggableImage = async (src, x, y, inports, outports) => {
+    const createDraggableImage = async (src, x, y, inports, outports, name, type) => {
       // create the group
       var group = new Konva.Group({x : x, y : y, draggable : true});
 
@@ -287,12 +293,62 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       elementLayerRef.current.add(group);
       elementLayerRef.current.batchDraw();
 
-      // add event listeners to the Rect object
+      const Dialog = (props) => {
+        return React.createElement('div', {
+          className : 'pipe-dialog',
+          style : {
+            position : 'absolute',
+            backgroundColor : 'white',
+            border : '1px solid black',
+            left : '0',
+            top : '0'
+          }
+        },
+                                   name + " (" + type + ")");
+      };
+
+      // add event listeners to the object
+      group.on('mouseover', () => {
+        const dialog = React.createElement(Dialog);
+        ReactDOM.render(dialog, document.getElementById('dialog-root'));
+      });
+
+      group.on('mouseout',
+               () => { ReactDOM.unmountComponentAtNode(document.getElementById('dialog-root')); });
+
+      group.on('mousemove dragmove', (event) => {
+        const dialog = document.getElementById('dialog-root');
+        const rect = event.target.getClientRect();
+
+        // Calculate the position of the dialog relative to the mouse position
+        const mouseX = event.evt.clientX;
+        const mouseY = event.evt.clientY;
+        const dialogWidth = dialog.offsetWidth;
+        const dialogHeight = dialog.offsetHeight;
+        const canvasWidth = window.innerWidth;
+        const canvasHeight = window.innerHeight;
+
+        let dialogX = mouseX + 10;
+        let dialogY = mouseY + 10;
+
+        if (dialogX + dialogWidth > canvasWidth) {
+          dialogX = canvasWidth - dialogWidth;
+        }
+        if (dialogY + dialogHeight > canvasHeight) {
+          dialogY = canvasHeight - dialogHeight;
+        }
+
+        // Set the position of the dialog
+        dialog.style.left = dialogX + 'px';
+        dialog.style.top = dialogY + 'px';
+      });
+
       group.on("mousedown", (e) => {
         if (e.evt.button !== 0) {
           e.target.stopDrag();
         }
       });
+
       group.on("dragstart", (e) => {
         setCurrentlyDraggedPipe(getPipeNameForKonvaImage(e.target));
         const pointerPosition = stageInstance.getPointerPosition();
@@ -368,7 +424,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         pos_y = metadata["pipes"][key]["position"]["y"];
       }
 
-      createDraggableImage(image_file, pos_x, pos_y, inports, outports)
+      createDraggableImage(image_file, pos_x, pos_y, inports, outports, key,
+                           added_pipes[key]["type"])
           .then((konvaImage) => { pipes[key] = konvaImage; });
     }
     for (let key in removed_pipes) {
