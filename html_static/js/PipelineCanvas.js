@@ -75,15 +75,6 @@ function drawBorder(layer, width, height) {
   layer.add(border);
 }
 
-function loadImage(src) {
-  return new Promise((resolve) => {
-    const image = new Image();
-    image.src = src;
-    image.crossOrigin = "anonymous";
-    image.onload = () => { resolve(image); };
-  });
-}
-
 export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
@@ -215,26 +206,94 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   }
 
   useEffect(() => {
-    // Load an image and create a draggable and resizable Konva.Image object
-    const createDraggableImage = async (src, x, y) => {
-      const image = await loadImage(src);
+    // Load an image and create a draggable object
+    const createDraggableImage = async (src, x, y, inports, outports) => {
+      // create the group
+      var group = new Konva.Group({x : x, y : y, draggable : true});
 
-      const konvaImage = new Konva.Image({
-        image,
-        x,
-        y,
-        draggable : true,
-        scale : {x : 0.3, y : 0.3},
+      group.ports = {inputs : [], outputs : []};
+
+      // create the Rect object
+      var item = new Konva.Rect({
+        x : 0,
+        y : 0,
+        width : 50,
+        height : 50,
+        fill : '#ccc',    // light grey fill color
+        stroke : '#333',  // dark grey border color
+        strokeWidth : 1,  // border width
+        cornerRadius : 5, // rounded corner radius
       });
 
-      konvaImage.on("mousedown", (e) => {
+      // add the Rect object to the group
+      group.add(item);
+
+      // add ports
+      const addPort = (side, slot, max_slots) => {
+        const portHeight = 10;
+        const portWidth = 3;
+        const portDistance = 5;
+        const x = (side == "input" ? -portWidth : 50);
+        const y =
+            (slot * (portHeight + portDistance) - portDistance + 25) -
+            (max_slots > 1 ? (max_slots * portHeight - (max_slots - 1) * portDistance) / 2 : 0);
+
+        var portRect = new Konva.Rect({
+          x : x,
+          y : y,
+          width : portWidth,
+          height : portHeight,
+          fill : '#ccc',
+          stroke : '#333',
+          strokeWidth : 1,
+          cornerRadius : 0,
+        });
+
+        group.add(portRect);
+
+        return portRect;
+      };
+
+      for (var inport = 0; inport < inports; inport++) {
+        var port = addPort("input", inport, inports);
+        group.ports.inputs.push(port);
+      }
+      for (var outport = 0; outport < outports; outport++) {
+        var port = addPort("output", outport, outports);
+        group.ports.outputs.push(port);
+      }
+
+      // load the image
+      var imageObj = new Image();
+      imageObj.crossOrigin = "anonymous";
+      imageObj.onload = function() {
+        var img = new Konva.Image({
+          x : (item.width() - 50) / 2,
+          y : (item.height() - 50) / 2,
+          image : imageObj,
+          width : 50,
+          height : 50,
+        });
+
+        // add the Konva.Image object to the group
+        group.add(img);
+
+        // redraw the layer to show the updated rectangle and image
+        elementLayerRef.current.draw();
+      };
+      imageObj.src = src;
+
+      // add the group to the layer
+      elementLayerRef.current.add(group);
+      elementLayerRef.current.batchDraw();
+
+      // add event listeners to the Rect object
+      group.on("mousedown", (e) => {
         if (e.evt.button !== 0) {
           e.target.stopDrag();
         }
       });
-
-      // Ignore clicks on transparent parts
-      konvaImage.on("dragstart", (e) => {
+      group.on("dragstart", (e) => {
         setCurrentlyDraggedPipe(getPipeNameForKonvaImage(e.target));
         const pointerPosition = stageInstance.getPointerPosition();
         const pixel = e.target.getLayer()
@@ -245,15 +304,10 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           e.target.stopDrag();
         }
       });
+      group.on("dragend", (e) => { handlePipeDragEnded(group); });
+      group.on("dragmove", (e) => { setDragMovePoint({x : e.target.x(), y : e.target.y()}); });
 
-      konvaImage.on("dragend", (e) => { handlePipeDragEnded(konvaImage); });
-
-      konvaImage.on("dragmove", (e) => { setDragMovePoint({x : e.target.x(), y : e.target.y()}); });
-
-      elementLayerRef.current.add(konvaImage);
-      elementLayerRef.current.batchDraw();
-
-      return konvaImage;
+      return group;
     };
 
     // Compare oldModel to model and only update the pipes that changed!
@@ -291,14 +345,20 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     setOldModel(model);
 
     for (let key in added_pipes) {
+      var inports = 0;
+      var outports = 0;
       let image_file = "/img/pipe_plain_oneinputoneoutput.png";
       if (added_pipes[key]["type"] == "ProgramFactoryPipe") {
-        image_file = "/img/pipe_factory.png";
+        image_file = "/img/factory_pipe.png";
+        outports = 1;
       } else if (added_pipes[key]["type"] == "NullSinkPipe") {
-        image_file = "/img/pipe_nullsink.png";
+        image_file = "/img/null_sink_pipe.png";
+        inports = 1;
       } else if (added_pipes[key]["type"] == "EvaluatorPipe") {
-        if (added_pipes[key]["evaluator"] == "Maze") {
+        if (added_pipes[key]["parameters"]["evaluators"][0]["type"] == "MazeEvaluator") {
           image_file = "/img/pipe_maze.png";
+          inports = 1;
+          outports = 1;
         }
       }
       var pos_x = 50;
@@ -308,7 +368,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         pos_y = metadata["pipes"][key]["position"]["y"];
       }
 
-      createDraggableImage(image_file, pos_x, pos_y)
+      createDraggableImage(image_file, pos_x, pos_y, inports, outports)
           .then((konvaImage) => { pipes[key] = konvaImage; });
     }
     for (let key in removed_pipes) {
@@ -341,16 +401,16 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         if (!(connection.source_pipe in pipes) || !(connection.destination_pipe in pipes)) {
           continue;
         }
-        const source_pipe_img = pipes[connection.source_pipe];
-        const destination_pipe_img = pipes[connection.destination_pipe];
+        const source_pipe = pipes[connection.source_pipe];
+        const destination_pipe = pipes[connection.destination_pipe];
+        const source_port = source_pipe.ports.outputs[connection.source_slot];
+        const destination_port = destination_pipe.ports.inputs[connection.destination_slot];
+
         const line = new Konva.Line({
           points : [
-            source_pipe_img.x() + source_pipe_img.scaleX() * source_pipe_img.width() / 2,
-            source_pipe_img.y() + source_pipe_img.scaleY() * source_pipe_img.height() / 2,
-            destination_pipe_img.x() +
-                destination_pipe_img.scaleX() * destination_pipe_img.width() / 2,
-            destination_pipe_img.y() +
-                destination_pipe_img.scaleY() * destination_pipe_img.height() / 2
+            source_pipe.x() + source_port.x() + 1.5, source_pipe.y() + source_port.y() + 5,
+            destination_pipe.x() + destination_port.x(),
+            destination_pipe.y() + destination_port.y() + 5
           ],
           stroke : 'red',
           strokeWidth : 2,
