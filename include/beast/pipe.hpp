@@ -4,6 +4,7 @@
 // Standard
 #include <cstdint>
 #include <deque>
+#include <mutex>
 #include <vector>
 
 namespace beast {
@@ -55,7 +56,7 @@ class Pipe {
    * @return `true` if the number of candidates in the input pool is less than the population size,
    *         `false` otherwise.
    */
-  [[nodiscard]] bool inputHasSpace(uint32_t slot_index) const;
+  [[nodiscard]] bool inputHasSpace(uint32_t slot_index);
 
   /**
    * @class Pipe::addInput
@@ -84,7 +85,7 @@ class Pipe {
    *
    * @return `true` if at least one output finalist is available, `false` otherwise
    */
-  [[nodiscard]] bool hasOutput(uint32_t slot_index) const;
+  [[nodiscard]] bool hasOutput(uint32_t slot_index);
 
   /**
    * @class Pipe::drawOutput
@@ -102,7 +103,7 @@ class Pipe {
    * @param slot_index The index of the input slot
    * @return The number of candidates in the specified input slot
    */
-  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index) const;
+  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index);
 
   /**
    * @brief Get the amount of finalists in the specified output slot
@@ -110,44 +111,42 @@ class Pipe {
    * @param slot_index The index of the output slot
    * @return The number of finalists in the specified output slot
    */
-  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index) const;
+  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index);
 
   /**
    * @brief Get the total number of input slots
    *
    * @return The number of input slots
    */
-  [[nodiscard]] uint32_t getInputSlotCount() const { return static_cast<uint32_t>(inputs_.size()); }
+  [[nodiscard]] uint32_t getInputSlotCount() const;
 
   /**
    * @brief Get the total number of output slots
    *
    * @return The number of output slots
    */
-  [[nodiscard]] uint32_t getOutputSlotCount() const {
-    return static_cast<uint32_t>(outputs_.size());
-  }
+  [[nodiscard]] uint32_t getOutputSlotCount() const;
 
   /**
    * @brief Get the maximum number of candidates allowed in the population
    *
    * @return The maximum number of candidates
    */
-  [[nodiscard]] uint32_t getMaxCandidates() const { return max_candidates_; }
+  [[nodiscard]] uint32_t getMaxCandidates() const;
 
   /**
    * @brief Checks if the inputs are saturated (i.e., all input slots are full)
    *
    * @return `true` if all input slots are full, `false` otherwise
    */
-  [[nodiscard]] virtual bool inputsAreSaturated() const;
+  [[nodiscard]] virtual bool inputsAreSaturated();
 
   /**
    * @brief Checks if the outputs are saturated (i.e., all output slots are full)
    *
    * @return `true` if all output slots are full, `false` otherwise
    */
-  [[nodiscard]] virtual bool outputsAreSaturated() const;
+  [[nodiscard]] virtual bool outputsAreSaturated();
 
   /**
    * @brief Executes the pipe's main functionality
@@ -168,11 +167,15 @@ class Pipe {
    */
   std::vector<std::deque<std::vector<unsigned char>>> inputs_;
 
+  std::mutex inputs_mutex_;
+
   /**
    * @var Pipe::output_
    * @brief Holds the finalist output buffer
    */
   std::vector<std::deque<OutputItem>> outputs_;
+
+  std::mutex outputs_mutex_;
 
   /**
    * @var Pipe::max_candidates_

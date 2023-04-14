@@ -58,6 +58,8 @@ void Program::insertProgram(const Program& other) {
 
 const std::vector<unsigned char>& Program::getData() const noexcept { return data_; }
 
+std::vector<unsigned char> Program::extractData() noexcept { return std::move(data_); }
+
 void Program::noop() { appendCode1(OpCode::NoOp); }
 
 void Program::declareVariable(int32_t variable_index, VariableType variable_type) {

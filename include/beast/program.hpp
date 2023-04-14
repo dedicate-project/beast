@@ -170,6 +170,8 @@ class Program {
    */
   [[nodiscard]] const std::vector<unsigned char>& getData() const noexcept;
 
+  [[nodiscard]] std::vector<unsigned char> extractData() noexcept;
+
   /**
    * @fn Program::noop
    * @brief Adds a NoOp operation to the program
