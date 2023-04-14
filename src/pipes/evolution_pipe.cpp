@@ -100,7 +100,7 @@ void EvolutionPipe::execute() {
         data[idx] = *list_genome[idx];
       }
 
-      storeFinalist(data, individual.score());
+      storeFinalist(std::move(data), individual.score());
     }
   }
 }
@@ -109,6 +109,10 @@ void EvolutionPipe::setCutOffScore(double cut_off_score) { cut_off_score_ = cut_
 
 void EvolutionPipe::storeFinalist(const std::vector<unsigned char>& finalist, float score) {
   storeOutput(0, {finalist, static_cast<double>(score)});
+}
+
+void EvolutionPipe::storeFinalist(std::vector<unsigned char>&& finalist, float score) {
+  storeOutput(0, {std::move(finalist), static_cast<double>(score)});
 }
 
 } // namespace beast

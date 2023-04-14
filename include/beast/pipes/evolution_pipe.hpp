@@ -81,6 +81,8 @@ class EvolutionPipe : public Pipe {
    */
   void storeFinalist(const std::vector<unsigned char>& finalist, float score);
 
+  void storeFinalist(std::vector<unsigned char>&& finalist, float score);
+
  private:
   /**
    * @var EvolutionPipe::cut_off_score_
