@@ -51,7 +51,7 @@ void Pipeline::connectPipes(const std::shared_ptr<Pipe>& source_pipe, uint32_t s
     }
   }
 
-  std::shared_ptr<Connection> connection = std::make_shared<Connection>();
+  auto connection = std::make_shared<Connection>();
   connection->source_pipe = managed_source_pipe;
   connection->source_slot_index = source_slot_index;
   connection->destination_pipe = managed_destination_pipe;
@@ -113,7 +113,7 @@ bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
 
 void Pipeline::findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
                                std::vector<std::shared_ptr<Connection>>& source_connections,
-                               std::vector<std::shared_ptr<Connection>>& destination_connections) {
+                               std::vector<std::shared_ptr<Connection>>& destination_connections) const {
   for (const std::shared_ptr<Connection>& connection : connections_) {
     if (connection->destination_pipe == managed_pipe) {
       source_connections.push_back(connection);

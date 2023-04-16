@@ -157,7 +157,7 @@ class Pipeline {
    */
   void findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
                        std::vector<std::shared_ptr<Connection>>& source_connections,
-                       std::vector<std::shared_ptr<Connection>>& destination_connections);
+                       std::vector<std::shared_ptr<Connection>>& destination_connections) const;
 
   /**
    * @fn Pipeline::processOutputSlots

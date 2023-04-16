@@ -15,7 +15,7 @@ void ProgramFactoryPipe::execute() {
     Pipe::OutputItem item;
     Program program =
         factory_->generate(max_size_, memory_size_, string_table_size_, string_table_item_length_);
-    item.data = std::move(program.extractData());
+    item.data = program.extractData();
     item.score = 0.0;
     storeOutput(0, std::move(item));
   }
