@@ -111,9 +111,10 @@ bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
                       }) != pipes_.end();
 }
 
-void Pipeline::findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                               std::vector<std::shared_ptr<Connection>>& source_connections,
-                               std::vector<std::shared_ptr<Connection>>& destination_connections) const {
+void Pipeline::findConnections(
+    const std::shared_ptr<ManagedPipe>& managed_pipe,
+    std::vector<std::shared_ptr<Connection>>& source_connections,
+    std::vector<std::shared_ptr<Connection>>& destination_connections) const {
   for (const std::shared_ptr<Connection>& connection : connections_) {
     if (connection->destination_pipe == managed_pipe) {
       source_connections.push_back(connection);
@@ -143,7 +144,8 @@ void Pipeline::processOutputSlots(
       continue;
     }
 
-    std::shared_ptr<Connection>& destination_slot_connection = *destination_slot_connection_iter;
+    const std::shared_ptr<Connection>& destination_slot_connection =
+        *destination_slot_connection_iter;
     std::scoped_lock lock(destination_slot_connection->buffer_mutex);
     while (
         managed_pipe->pipe->hasOutput(slot_index) &&
@@ -170,7 +172,7 @@ void Pipeline::processInputSlots(
       continue;
     }
 
-    std::shared_ptr<Connection>& source_slot_connection = *source_slot_connection_iter;
+    const std::shared_ptr<Connection>& source_slot_connection = *source_slot_connection_iter;
     if (source_slot_connection->buffer.empty()) {
       continue;
     }
