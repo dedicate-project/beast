@@ -3,6 +3,7 @@
 
 // Standard
 #include <condition_variable>
+#include <deque>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -48,8 +49,9 @@ class Pipeline {
         destination_pipe;            ///< Pipe that receives the connection on an input slot
     uint32_t destination_slot_index; ///< Index of the input slot of the destination Pipe
 
-    std::vector<Pipe::OutputItem> buffer; ///< Data buffer from source to destination
-    uint32_t buffer_size;                 ///< The size of the data buffer
+    std::deque<Pipe::OutputItem> buffer; ///< Data buffer from source to destination
+    uint32_t buffer_size;                ///< The size of the data buffer
+    std::mutex buffer_mutex;
   };
 
   /**
@@ -109,7 +111,7 @@ class Pipeline {
    *
    * @return Constant reference to the list of connections present in this Pipeline
    */
-  [[nodiscard]] const std::list<Connection>& getConnections() const;
+  [[nodiscard]] const std::list<std::shared_ptr<Connection>>& getConnections() const;
 
   /**
    * @fn Pipeline::start
@@ -154,8 +156,8 @@ class Pipeline {
    * @param destination_connections Vector of destination connections to be populated
    */
   void findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                       std::vector<Connection*>& source_connections,
-                       std::vector<Connection*>& destination_connections);
+                       std::vector<std::shared_ptr<Connection>>& source_connections,
+                       std::vector<std::shared_ptr<Connection>>& destination_connections);
 
   /**
    * @fn Pipeline::processOutputSlots
@@ -164,8 +166,9 @@ class Pipeline {
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    * @param destination_connections Vector of destination connections for the managed pipe
    */
-  static void processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                                 const std::vector<Connection*>& destination_connections);
+  static void
+  processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
+                     const std::vector<std::shared_ptr<Connection>>& destination_connections);
 
   /**
    * @fn Pipeline::processInputSlots
@@ -175,7 +178,7 @@ class Pipeline {
    * @param source_connections Vector of source connections for the managed pipe
    */
   static void processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                                const std::vector<Connection*>& source_connections);
+                                const std::vector<std::shared_ptr<Connection>>& source_connections);
 
   /**
    * @fn Pipeline::pipelineWorker
@@ -200,7 +203,7 @@ class Pipeline {
    * @var Pipeline::connections_
    * @brief Holds this Pipeline's connections
    */
-  std::list<Connection> connections_;
+  std::list<std::shared_ptr<Connection>> connections_;
 
   /**
    * @var Pipeline::is_running_

@@ -169,10 +169,10 @@ TEST_CASE("pipeline") {
     REQUIRE(connections.size() == 1);
 
     const auto& connection = *connections.begin();
-    REQUIRE(connection.source_pipe->pipe == pipe0);
-    REQUIRE(connection.source_slot_index == 0);
-    REQUIRE(connection.destination_pipe->pipe == pipe1);
-    REQUIRE(connection.destination_slot_index == 1);
+    REQUIRE(connection->source_pipe->pipe == pipe0);
+    REQUIRE(connection->source_slot_index == 0);
+    REQUIRE(connection->destination_pipe->pipe == pipe1);
+    REQUIRE(connection->destination_slot_index == 1);
   }
 
   SECTION("stopping_a_stopped_pipeline_throws") {

@@ -362,11 +362,11 @@ nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeli
   nlohmann::json connections_json = {};
   for (const auto& connection : pipeline.getConnections()) {
     nlohmann::json connection_json;
-    connection_json["buffer_size"] = connection.buffer_size;
-    connection_json["destination_pipe"] = connection.destination_pipe->name;
-    connection_json["destination_slot"] = connection.destination_slot_index;
-    connection_json["source_pipe"] = connection.source_pipe->name;
-    connection_json["source_slot"] = connection.source_slot_index;
+    connection_json["buffer_size"] = connection->buffer_size;
+    connection_json["destination_pipe"] = connection->destination_pipe->name;
+    connection_json["destination_slot"] = connection->destination_slot_index;
+    connection_json["source_pipe"] = connection->source_pipe->name;
+    connection_json["source_slot"] = connection->source_slot_index;
 
     connections_json.push_back(std::move(connection_json));
   }

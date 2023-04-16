@@ -39,21 +39,24 @@ void Pipeline::connectPipes(const std::shared_ptr<Pipe>& source_pipe, uint32_t s
   auto managed_destination_pipe = getManagedPipeForPipe(destination_pipe);
 
   // Ensure this connection doesn't exist yet.
-  for (const Connection& connection : connections_) {
-    if (connection.source_pipe == managed_source_pipe &&
-        connection.source_slot_index == source_slot_index) {
+  for (const std::shared_ptr<Connection>& connection : connections_) {
+    if (connection->source_pipe == managed_source_pipe &&
+        connection->source_slot_index == source_slot_index) {
       throw std::invalid_argument("Source port already occupied on Pipe.");
     }
 
-    if (connection.destination_pipe == managed_destination_pipe &&
-        connection.destination_slot_index == destination_slot_index) {
+    if (connection->destination_pipe == managed_destination_pipe &&
+        connection->destination_slot_index == destination_slot_index) {
       throw std::invalid_argument("Destination port already occupied on Pipe.");
     }
   }
 
-  Connection connection{
-      managed_source_pipe, source_slot_index, managed_destination_pipe, destination_slot_index, {}};
-  connection.buffer_size = buffer_size;
+  std::shared_ptr<Connection> connection = std::make_shared<Connection>();
+  connection->source_pipe = managed_source_pipe;
+  connection->source_slot_index = source_slot_index;
+  connection->destination_pipe = managed_destination_pipe;
+  connection->destination_slot_index = destination_slot_index;
+  connection->buffer_size = buffer_size;
   connections_.push_back(std::move(connection));
 }
 
@@ -61,7 +64,9 @@ const std::list<std::shared_ptr<Pipeline::ManagedPipe>>& Pipeline::getPipes() co
   return pipes_;
 }
 
-const std::list<Pipeline::Connection>& Pipeline::getConnections() const { return connections_; }
+const std::list<std::shared_ptr<Pipeline::Connection>>& Pipeline::getConnections() const {
+  return connections_;
+}
 
 void Pipeline::start() {
   if (is_running_) {
@@ -107,20 +112,21 @@ bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
 }
 
 void Pipeline::findConnections(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                               std::vector<Connection*>& source_connections,
-                               std::vector<Connection*>& destination_connections) {
-  for (Connection& connection : connections_) {
-    if (connection.destination_pipe == managed_pipe) {
-      source_connections.push_back(&connection);
+                               std::vector<std::shared_ptr<Connection>>& source_connections,
+                               std::vector<std::shared_ptr<Connection>>& destination_connections) {
+  for (const std::shared_ptr<Connection>& connection : connections_) {
+    if (connection->destination_pipe == managed_pipe) {
+      source_connections.push_back(connection);
     }
-    if (connection.source_pipe == managed_pipe) {
-      destination_connections.push_back(&connection);
+    if (connection->source_pipe == managed_pipe) {
+      destination_connections.push_back(connection);
     }
   }
 }
 
-void Pipeline::processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                                  const std::vector<Connection*>& destination_connections) {
+void Pipeline::processOutputSlots(
+    const std::shared_ptr<ManagedPipe>& managed_pipe,
+    const std::vector<std::shared_ptr<Connection>>& destination_connections) {
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
        ++slot_index) {
     if (!managed_pipe->pipe->hasOutput(slot_index)) {
@@ -129,7 +135,7 @@ void Pipeline::processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pi
     auto destination_slot_connection_iter =
         std::find_if(destination_connections.begin(),
                      destination_connections.end(),
-                     [slot_index](const Connection* connection) {
+                     [slot_index](const std::shared_ptr<Connection>& connection) {
                        return connection->destination_slot_index == slot_index;
                      });
 
@@ -137,7 +143,8 @@ void Pipeline::processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pi
       continue;
     }
 
-    Connection* destination_slot_connection = *destination_slot_connection_iter;
+    std::shared_ptr<Connection> destination_slot_connection = *destination_slot_connection_iter;
+    std::scoped_lock lock(destination_slot_connection->buffer_mutex);
     while (
         managed_pipe->pipe->hasOutput(slot_index) &&
         (destination_slot_connection->buffer.size() < destination_slot_connection->buffer_size)) {
@@ -147,14 +154,15 @@ void Pipeline::processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pi
   }
 }
 
-void Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                                 const std::vector<Connection*>& source_connections) {
+void Pipeline::processInputSlots(
+    const std::shared_ptr<ManagedPipe>& managed_pipe,
+    const std::vector<std::shared_ptr<Connection>>& source_connections) {
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
        ++slot_index) {
     auto source_slot_connection_iter =
         std::find_if(source_connections.begin(),
                      source_connections.end(),
-                     [slot_index](const Connection* connection) {
+                     [slot_index](const std::shared_ptr<Connection>& connection) {
                        return connection->source_slot_index == slot_index;
                      });
 
@@ -162,11 +170,12 @@ void Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pip
       continue;
     }
 
-    Connection* source_slot_connection = *source_slot_connection_iter;
+    std::shared_ptr<Connection> source_slot_connection = *source_slot_connection_iter;
     if (source_slot_connection->buffer.empty()) {
       continue;
     }
 
+    std::scoped_lock lock(source_slot_connection->buffer_mutex);
     while (managed_pipe->pipe->inputHasSpace(slot_index) &&
            !source_slot_connection->buffer.empty()) {
       auto data = source_slot_connection->buffer.back();
@@ -177,8 +186,8 @@ void Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pip
 }
 
 void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) {
-  std::vector<Connection*> source_connections;
-  std::vector<Connection*> destination_connections;
+  std::vector<std::shared_ptr<Connection>> source_connections;
+  std::vector<std::shared_ptr<Connection>> destination_connections;
   findConnections(managed_pipe, source_connections, destination_connections);
 
   while (managed_pipe->should_run) {
