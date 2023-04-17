@@ -33,7 +33,14 @@ uint32_t PipelineManager::createPipeline(const std::string& name) {
   model["connections"] = {};
   const std::string filename = filesystem_.saveModel(name, model);
   const uint32_t new_id = getFreeId();
-  pipelines_.push_back({new_id, name, filename, beast::Pipeline()});
+
+  PipelineDescriptor descriptor;
+  descriptor.id = new_id;
+  descriptor.name = name;
+  descriptor.filename = filename;
+  descriptor.pipeline = std::make_shared<Pipeline>();
+
+  pipelines_.push_back(descriptor);
 
   return new_id;
 }
@@ -68,6 +75,10 @@ void PipelineManager::deletePipeline(uint32_t pipeline_id) {
   PipelineDescriptor descriptor = getPipelineById(pipeline_id);
   filesystem_.deleteModel(descriptor.filename);
   pipelines_.remove_if([pipeline_id](const auto& pipeline) { return pipeline.id == pipeline_id; });
+}
+
+Pipeline::PipelineMetrics PipelineManager::getPipelineMetrics(uint32_t pipeline_id) {
+  return getPipelineById(pipeline_id).pipeline->getMetrics();
 }
 
 nlohmann::json PipelineManager::getJsonForPipeline(uint32_t pipeline_id) {
@@ -168,8 +179,8 @@ PipelineManager::constructMazeEvaluatorFromJson(const nlohmann::json& json) {
   return std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
 }
 
-Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) {
-  Pipeline pipeline;
+std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohmann::json& json) {
+  std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
   std::map<std::string, std::shared_ptr<Pipe>, std::less<>> created_pipes;
   if (json.contains("pipes") && !json["pipes"].is_null()) {
     for (const auto& pipe : json["pipes"].items()) {
@@ -211,10 +222,10 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
                                                                         string_table_items,
                                                                         string_table_item_length,
                                                                         factory);
-        pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "NullSinkPipe") {
         created_pipes[pipe_name] = std::make_shared<NullSinkPipe>();
-        pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "EvaluatorPipe") {
         checkForParameterPresenceInPipeJson(pipe,
                                             {"evaluators",
@@ -245,7 +256,7 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
           evaluator_pipe->addEvaluator(evaluator, weight, invert_logic);
         }
 
-        pipeline.addPipe(pipe_name, created_pipes[pipe_name]);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       }
     }
   }
@@ -280,11 +291,11 @@ Pipeline PipelineManager::constructPipelineFromJson(const nlohmann::json& json) 
         throw std::invalid_argument("Destination pipe '" + destination_pipe + "' not found");
       }
 
-      pipeline.connectPipes(created_pipes[source_pipe],
-                            source_slot,
-                            created_pipes[destination_pipe],
-                            destination_slot,
-                            buffer_size);
+      pipeline->connectPipes(created_pipes[source_pipe],
+                             source_slot,
+                             created_pipes[destination_pipe],
+                             destination_slot,
+                             buffer_size);
     }
   }
   return pipeline;
@@ -319,10 +330,11 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
   return evaluators;
 }
 
-nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeline) {
+nlohmann::json
+PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipeline) {
   nlohmann::json value;
 
-  for (const auto& pipe : pipeline.getPipes()) {
+  for (const auto& pipe : pipeline->getPipes()) {
     nlohmann::json pipe_json;
 
     if (const auto evaluator_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(pipe->pipe)) {
@@ -360,7 +372,7 @@ nlohmann::json PipelineManager::deconstructPipelineToJson(const Pipeline& pipeli
   }
 
   nlohmann::json connections_json = {};
-  for (const auto& connection : pipeline.getConnections()) {
+  for (const auto& connection : pipeline->getConnections()) {
     nlohmann::json connection_json;
     connection_json["buffer_size"] = connection->buffer_size;
     connection_json["destination_pipe"] = connection->destination_pipe->name;

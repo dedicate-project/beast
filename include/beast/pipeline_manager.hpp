@@ -25,11 +25,11 @@ class PipelineManager {
    * @brief Describes a pipeline with its ID, name, filename, Pipeline object, and metadata.
    */
   struct PipelineDescriptor {
-    uint32_t id;             //!< Unique identifier for the pipeline.
-    std::string name;        //!< Display name of the pipeline.
-    std::string filename;    //!< Filename of the pipeline's serialized data.
-    Pipeline pipeline;       //!< The Pipeline object.
-    nlohmann::json metadata; //!< The metadata object.
+    uint32_t id;                        //!< Unique identifier for the pipeline.
+    std::string name;                   //!< Display name of the pipeline.
+    std::string filename;               //!< Filename of the pipeline's serialized data.
+    std::shared_ptr<Pipeline> pipeline; //!< The Pipeline object.
+    nlohmann::json metadata;            //!< The metadata object.
   };
 
   /**
@@ -69,9 +69,19 @@ class PipelineManager {
 
   /**
    * @brief Deletes the given pipeline.
+   *
+   * @param pipeline_id The ID of the pipeline
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
   void deletePipeline(uint32_t pipeline_id);
+
+  /**
+   * @brief Returns the metrics for the given pipeline
+   *
+   * @param pipeline_id The ID of the pipeline
+   * @return The metrics object for the given pipeline
+   */
+  Pipeline::PipelineMetrics getPipelineMetrics(uint32_t pipeline_id);
 
   /**
    * @brief Gets the JSON representation of the specified pipeline.
@@ -100,14 +110,16 @@ class PipelineManager {
    * @param json The JSON object containing the pipeline data.
    * @return A Pipeline object constructed from the JSON data.
    */
-  [[nodiscard]] static Pipeline constructPipelineFromJson(const nlohmann::json& json);
+  [[nodiscard]] static std::shared_ptr<Pipeline>
+  constructPipelineFromJson(const nlohmann::json& json);
 
   /**
    * @brief Deconstructs a Pipeline object into a JSON object.
    * @param pipeline The Pipeline object to deconstruct.
    * @return A JSON object representing the Pipeline object.
    */
-  [[nodiscard]] static nlohmann::json deconstructPipelineToJson(const Pipeline& pipeline);
+  [[nodiscard]] static nlohmann::json
+  deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipeline);
 
  private:
   /**

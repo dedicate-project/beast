@@ -7,6 +7,8 @@
 
 namespace beast {
 
+Pipeline::Pipeline() { metrics_.measure_time_start = std::chrono::steady_clock::now(); }
+
 void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pipe) {
   if (pipeIsInPipeline(pipe)) {
     throw std::invalid_argument("Pipe already in this pipeline.");
@@ -103,6 +105,16 @@ void Pipeline::stop() {
 
 bool Pipeline::isRunning() const { return is_running_; }
 
+Pipeline::PipelineMetrics Pipeline::getMetrics() {
+  std::scoped_lock lock(metrics_mutex_);
+  // Cache and reset metrics object.
+  PipelineMetrics metrics = metrics_;
+  metrics_ = PipelineMetrics{};
+  metrics_.measure_time_start = std::chrono::steady_clock::now();
+
+  return metrics;
+}
+
 bool Pipeline::pipeIsInPipeline(const std::shared_ptr<Pipe>& pipe) const {
   return std::find_if(pipes_.begin(),
                       pipes_.end(),
@@ -125,11 +137,13 @@ void Pipeline::findConnections(
   }
 }
 
-void Pipeline::processOutputSlots(
+std::unordered_map<uint32_t, uint32_t> Pipeline::processOutputSlots(
     const std::shared_ptr<ManagedPipe>& managed_pipe,
     const std::vector<std::shared_ptr<Connection>>& destination_connections) {
+  std::unordered_map<uint32_t, uint32_t> metrics;
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
        ++slot_index) {
+    metrics[slot_index] = 0;
     if (!managed_pipe->pipe->hasOutput(slot_index)) {
       continue;
     }
@@ -152,15 +166,19 @@ void Pipeline::processOutputSlots(
         (destination_slot_connection->buffer.size() < destination_slot_connection->buffer_size)) {
       auto data = managed_pipe->pipe->drawOutput(slot_index);
       destination_slot_connection->buffer.push_back(std::move(data));
+      metrics[slot_index]++;
     }
   }
+  return metrics;
 }
 
-void Pipeline::processInputSlots(
-    const std::shared_ptr<ManagedPipe>& managed_pipe,
-    const std::vector<std::shared_ptr<Connection>>& source_connections) {
+std::unordered_map<uint32_t, uint32_t>
+Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
+                            const std::vector<std::shared_ptr<Connection>>& source_connections) {
+  std::unordered_map<uint32_t, uint32_t> metrics;
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
        ++slot_index) {
+    metrics[slot_index] = 0;
     auto source_slot_connection_iter =
         std::find_if(source_connections.begin(),
                      source_connections.end(),
@@ -183,8 +201,10 @@ void Pipeline::processInputSlots(
       auto data = source_slot_connection->buffer.back();
       source_slot_connection->buffer.pop_back();
       managed_pipe->pipe->addInput(slot_index, data.data);
+      metrics[slot_index]++;
     }
   }
+  return metrics;
 }
 
 void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) {
@@ -193,15 +213,21 @@ void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) 
   findConnections(managed_pipe, source_connections, destination_connections);
 
   while (managed_pipe->should_run) {
-    processOutputSlots(managed_pipe, destination_connections);
-    processInputSlots(managed_pipe, source_connections);
+    const auto input_metrics = processInputSlots(managed_pipe, source_connections);
 
+    bool executed = false;
     if (!managed_pipe->pipe->outputsAreSaturated() && managed_pipe->pipe->inputsAreSaturated()) {
       managed_pipe->pipe->execute();
+      executed = true;
     }
+
+    const auto output_metrics = processOutputSlots(managed_pipe, destination_connections);
 
     // Limit cycle time.
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Report metrics for this worker.
+    reportMetrics(managed_pipe, executed, input_metrics, output_metrics);
   }
 }
 
@@ -222,6 +248,26 @@ std::shared_ptr<Pipeline::ManagedPipe> Pipeline::getManagedPipeByName(std::strin
     }
   }
   return nullptr;
+}
+
+void Pipeline::reportMetrics(const std::shared_ptr<ManagedPipe>& managed_pipe, bool executed,
+                             const std::unordered_map<uint32_t, uint32_t>& input_metrics,
+                             const std::unordered_map<uint32_t, uint32_t>& output_metrics) {
+  const std::string& pipe_name = managed_pipe->name;
+
+  std::scoped_lock lock(metrics_mutex_);
+  PipeMetrics& pipe_metrics = metrics_.pipes[pipe_name];
+
+  if (executed) {
+    pipe_metrics.execution_count++;
+  }
+
+  for (const auto& input_pair : input_metrics) {
+    pipe_metrics.inputs_received[input_pair.first] += input_pair.second;
+  }
+  for (const auto& output_pair : output_metrics) {
+    pipe_metrics.outputs_sent[output_pair.first] += output_pair.second;
+  }
 }
 
 } // namespace beast

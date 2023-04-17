@@ -55,7 +55,7 @@ TEST_CASE("PipelineManager") {
     const auto json = R"({"pipes":{"pipe0":{"type":"NullSinkPipe"}}})"_json;
 
     const auto pipeline = PipelineManager::constructPipelineFromJson(json);
-    const auto& pipes = pipeline.getPipes();
+    const auto& pipes = pipeline->getPipes();
 
     REQUIRE(pipes.size() == 1);
     const auto& pipe = pipes.front();
@@ -64,10 +64,10 @@ TEST_CASE("PipelineManager") {
   }
 
   SECTION("NullSinkPipe pipeline is correctly deconstructed to JSON") {
-    Pipeline pipeline;
+    std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
     std::shared_ptr<NullSinkPipe> pipe = std::make_shared<NullSinkPipe>();
     const std::string name = "null_sink_pipe";
-    pipeline.addPipe(name, pipe);
+    pipeline->addPipe(name, pipe);
 
     const auto json = PipelineManager::deconstructPipelineToJson(pipeline);
 
@@ -105,7 +105,7 @@ TEST_CASE("PipelineManager") {
         }})"_json;
 
     const auto pipeline = PipelineManager::constructPipelineFromJson(json);
-    const auto& pipes = pipeline.getPipes();
+    const auto& pipes = pipeline->getPipes();
 
     REQUIRE(pipes.size() == 1);
     const auto& pipe = pipes.front();
@@ -148,8 +148,8 @@ TEST_CASE("PipelineManager") {
         std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
     pipe->addEvaluator(eval, weight, invert_logic);
 
-    Pipeline pipeline;
-    pipeline.addPipe(name, pipe);
+    std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
+    pipeline->addPipe(name, pipe);
 
     const auto json = PipelineManager::deconstructPipelineToJson(pipeline);
 
@@ -191,21 +191,21 @@ TEST_CASE("PipelineManager") {
     const double weight = 0.57;
     const bool invert_logic = false;
 
-    Pipeline pipeline;
+    std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
     {
       std::shared_ptr<EvaluatorPipe> pipe = std::make_shared<EvaluatorPipe>(
           max_candidates, memory_size, string_table_items, string_table_item_length);
       std::shared_ptr<Evaluator> eval =
           std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
       pipe->addEvaluator(eval, weight, invert_logic);
-      pipeline.addPipe(name, pipe);
+      pipeline->addPipe(name, pipe);
     }
 
     const auto json = PipelineManager::deconstructPipelineToJson(pipeline);
-    const Pipeline reconstructed_pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto reconstructed_pipeline = PipelineManager::constructPipelineFromJson(json);
 
     {
-      const auto& managed_pipes = reconstructed_pipeline.getPipes();
+      const auto& managed_pipes = reconstructed_pipeline->getPipes();
       REQUIRE(managed_pipes.size() == 1);
       const auto& managed_pipe = managed_pipes.front();
       REQUIRE(managed_pipe->name == name);
@@ -282,7 +282,7 @@ TEST_CASE("PipelineManager") {
         }})"_json;
 
     const auto pipeline = PipelineManager::constructPipelineFromJson(json);
-    const auto& pipes = pipeline.getPipes();
+    const auto& pipes = pipeline->getPipes();
 
     REQUIRE(pipes.size() == 1);
     const auto& pipe = pipes.front();

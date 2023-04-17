@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 
 // BEAST
 #include <beast/pipe.hpp>
@@ -53,6 +54,25 @@ class Pipeline {
     uint32_t buffer_size;                ///< The size of the data buffer
     std::mutex buffer_mutex;
   };
+
+  /**
+   * @brief Holds metrics describing the performance of an individual pipe
+   */
+  struct PipeMetrics {
+    uint32_t execution_count;
+    std::unordered_map<uint32_t, uint32_t> inputs_received;
+    std::unordered_map<uint32_t, uint32_t> outputs_sent;
+  };
+
+  /**
+   * @brief Holds metrics describing the performance of all pipes in this Pipeline instance
+   */
+  struct PipelineMetrics {
+    std::unordered_map<std::string, PipeMetrics> pipes;
+    std::chrono::time_point<std::chrono::steady_clock> measure_time_start;
+  };
+
+  Pipeline();
 
   /**
    * @fn Pipeline::addPipe
@@ -137,6 +157,17 @@ class Pipeline {
    */
   [[nodiscard]] bool isRunning() const;
 
+  /**
+   * @fn Pipeline::getMetrics
+   * @brief Returns the current metrics data for this pipeline
+   *
+   * This function also resets the internal metrics counter and measurement start time. Call this
+   * function in an appropriate timeframe to average consistently (e.g., every 100ms).
+   *
+   * @return The metrics object describing this pipeline's performance
+   */
+  [[nodiscard]] PipelineMetrics getMetrics();
+
  private:
   /**
    * @fn Pipeline::pipeIsInPipeline
@@ -165,8 +196,9 @@ class Pipeline {
    *
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    * @param destination_connections Vector of destination connections for the managed pipe
+   * @param Metrics describing how many items were moved per slot index
    */
-  static void
+  [[nodiscard]] static std::unordered_map<uint32_t, uint32_t>
   processOutputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
                      const std::vector<std::shared_ptr<Connection>>& destination_connections);
 
@@ -176,9 +208,11 @@ class Pipeline {
    *
    * @param managed_pipe Shared pointer to the ManagedPipe instance
    * @param source_connections Vector of source connections for the managed pipe
+   * @param Metrics describing how many items were moved per slot index
    */
-  static void processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
-                                const std::vector<std::shared_ptr<Connection>>& source_connections);
+  [[nodiscard]] static std::unordered_map<uint32_t, uint32_t>
+  processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
+                    const std::vector<std::shared_ptr<Connection>>& source_connections);
 
   /**
    * @fn Pipeline::pipelineWorker
@@ -192,6 +226,14 @@ class Pipeline {
   getManagedPipeForPipe(const std::shared_ptr<Pipe>& pipe) const;
 
   [[nodiscard]] std::shared_ptr<ManagedPipe> getManagedPipeByName(std::string_view name) const;
+
+  void reportMetrics(const std::shared_ptr<ManagedPipe>& managed_pipe, bool executed,
+                     const std::unordered_map<uint32_t, uint32_t>& input_metrics,
+                     const std::unordered_map<uint32_t, uint32_t>& output_metrics);
+
+  PipelineMetrics metrics_;
+
+  std::mutex metrics_mutex_;
 
   /**
    * @var Pipeline::pipes_

@@ -39,7 +39,7 @@ crow::json::wvalue PipelineServer::servePipelineById(uint32_t pipeline_id) {
   try {
     const auto& descriptor = pipeline_manager_.getPipelineById(pipeline_id);
     value["state"] =
-        descriptor.pipeline.isRunning() ? std::string("running") : std::string("stopped");
+        descriptor.pipeline->isRunning() ? std::string("running") : std::string("stopped");
     value["name"] = descriptor.name;
     value["metadata"] = crow::json::load(descriptor.metadata.dump());
     value["model"] = crow::json::load(pipeline_manager_.getJsonForPipeline(pipeline_id).dump());
@@ -59,14 +59,14 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
   value["id"] = pipeline_id;
   try {
     auto& pipeline = pipeline_manager_.getPipelineById(pipeline_id);
-    const bool running = pipeline.pipeline.isRunning();
+    const bool running = pipeline.pipeline->isRunning();
     if (path == "start") {
       if (running) {
         value["status"] = "failed";
         value["error"] = "already_running";
       } else {
         try {
-          pipeline.pipeline.start();
+          pipeline.pipeline->start();
           value["status"] = "success";
         } catch (const std::invalid_argument& exception) {
           value["status"] = "failed";
@@ -76,7 +76,7 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
     } else if (path == "stop") {
       if (running) {
         try {
-          pipeline.pipeline.stop();
+          pipeline.pipeline->stop();
           value["status"] = "success";
         } catch (const std::invalid_argument& exception) {
           value["status"] = "failed";
@@ -124,8 +124,8 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
         value["error"] = "invalid_request";
       }
     } else if (path == "delete") {
-      if (pipeline.pipeline.isRunning()) {
-        pipeline.pipeline.stop();
+      if (pipeline.pipeline->isRunning()) {
+        pipeline.pipeline->stop();
       }
       pipeline_manager_.deletePipeline(pipeline.id);
       value["status"] = "success";
@@ -149,7 +149,7 @@ crow::json::wvalue PipelineServer::serveAllPipelines() const {
     pipeline_item["id"] = pipeline.id;
     pipeline_item["name"] = pipeline.name;
     pipeline_item["state"] =
-        pipeline.pipeline.isRunning() ? std::string("running") : std::string("stopped");
+        pipeline.pipeline->isRunning() ? std::string("running") : std::string("stopped");
     value[idx] = std::move(pipeline_item);
     idx++;
   }
