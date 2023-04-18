@@ -1,5 +1,9 @@
 #include <beast/pipeline_manager.hpp>
 
+// Standard
+#include <chrono>
+#include <iostream>
+
 // Internal
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
@@ -13,7 +17,10 @@
 
 namespace beast {
 
-PipelineManager::PipelineManager(const std::string& storage_path) : filesystem_(storage_path) {
+PipelineManager::PipelineManager(const std::string& storage_path, uint32_t metrics_interval_time,
+                                 uint32_t metrics_window_size)
+    : filesystem_(storage_path), metrics_interval_time_{metrics_interval_time},
+      metrics_window_size_{metrics_window_size} {
   std::scoped_lock lock{pipelines_mutex_};
   for (const auto& model : filesystem_.loadModels()) {
     PipelineDescriptor descriptor;
@@ -24,6 +31,25 @@ PipelineManager::PipelineManager(const std::string& storage_path) : filesystem_(
     descriptor.metadata = model["content"]["metadata"];
     pipelines_.push_back(std::move(descriptor));
   }
+
+  if (metrics_interval_time == 0) {
+    throw std::invalid_argument("metrics_interval_time must be > 0");
+  }
+
+  if (metrics_window_size == 0) {
+    throw std::invalid_argument("metrics_window_size must be > 0");
+  }
+
+  metrics_time_constant_ =
+      static_cast<uint32_t>(std::ceil(metrics_interval_time / metrics_window_size));
+
+  should_run_metrics_collector_ = true;
+  metrics_collector_thread_ = std::thread(&PipelineManager::metricsCollectorWorker, this);
+}
+
+PipelineManager::~PipelineManager() {
+  should_run_metrics_collector_ = false;
+  metrics_collector_thread_.join();
 }
 
 uint32_t PipelineManager::createPipeline(const std::string& name) {
@@ -78,7 +104,12 @@ void PipelineManager::deletePipeline(uint32_t pipeline_id) {
 }
 
 Pipeline::PipelineMetrics PipelineManager::getPipelineMetrics(uint32_t pipeline_id) {
-  return getPipelineById(pipeline_id).pipeline->getMetrics();
+  std::scoped_lock lock(metrics_mutex_);
+  auto pipeline_metrics = metrics_.find(pipeline_id);
+  if (pipeline_metrics != metrics_.end()) {
+    return pipeline_metrics->second;
+  }
+  return Pipeline::PipelineMetrics{};
 }
 
 nlohmann::json PipelineManager::getJsonForPipeline(uint32_t pipeline_id) {
@@ -397,6 +428,106 @@ uint32_t PipelineManager::getFreeId() const {
     });
   } while (iter != pipelines_.end());
   return new_id;
+}
+
+void PipelineManager::metricsCollectorWorker() {
+  std::chrono::milliseconds interval_time(metrics_interval_time_);
+
+  std::unordered_map<uint32_t, std::deque<Pipeline::PipelineMetrics>> metrics_cache;
+  while (should_run_metrics_collector_) {
+    // Remove the oldest element from the cache for each pipeline if maximum window size is reached.
+    for (auto& metrics_pair : metrics_cache) {
+      if (metrics_pair.second.size() >= metrics_window_size_) {
+        metrics_pair.second.pop_front();
+      }
+    }
+
+    // Collect the current metrics and push them into the cache.
+    {
+      std::scoped_lock lock(pipelines_mutex_);
+      for (auto& descriptor : pipelines_) {
+        metrics_cache[descriptor.id].push_back(descriptor.pipeline->getMetrics());
+      }
+    }
+
+    // Calculate the current metrics.
+    const auto now = std::chrono::steady_clock::now();
+    std::unordered_map<uint32_t, Pipeline::PipelineMetrics> metrics;
+    for (auto& metrics_pair : metrics_cache) {
+      const uint32_t pipeline_id = metrics_pair.first;
+      const std::deque<Pipeline::PipelineMetrics>& metrics_history = metrics_pair.second;
+
+      // Calculate the weighted average for each metric in the pipeline.
+      std::unordered_map<std::string, Pipeline::PipeMetrics> pipe_metrics;
+      for (const auto& pipeline_metrics : metrics_history) {
+        std::chrono::duration<double> elapsed_time = now - pipeline_metrics.measure_time_start;
+        const double weight = std::exp(-elapsed_time.count() / metrics_time_constant_);
+
+        for (const auto& pipe_pair : pipeline_metrics.pipes) {
+          const std::string pipe_name = pipe_pair.first;
+          const Pipeline::PipeMetrics& current_pipe_metrics = pipe_pair.second;
+          Pipeline::PipeMetrics& current_weighted_metrics = pipe_metrics[pipe_name];
+
+          // Update the execution count.
+          current_weighted_metrics.execution_count += weight * current_pipe_metrics.execution_count;
+
+          // Update the input and output maps.
+          for (const auto& input_pair : current_pipe_metrics.inputs_received) {
+            const uint32_t input_id = input_pair.first;
+            const uint32_t input_count = input_pair.second;
+            current_weighted_metrics.inputs_received[input_id] += weight * input_count;
+          }
+          for (const auto& output_pair : current_pipe_metrics.outputs_sent) {
+            const uint32_t output_id = output_pair.first;
+            const uint32_t output_count = output_pair.second;
+            current_weighted_metrics.outputs_sent[output_id] += weight * output_count;
+          }
+        }
+      }
+
+      // Normalize the accumulated values by the sum of weights to obtain the weighted average.
+      double sum_weights_execution_count = 0.0;
+      double sum_weights_input = 0.0;
+      double sum_weights_output = 0.0;
+      for (auto& pipe_pair : pipe_metrics) {
+        Pipeline::PipeMetrics& weighted_metrics = pipe_pair.second;
+        sum_weights_execution_count += weighted_metrics.execution_count;
+
+        for (auto& input_pair : weighted_metrics.inputs_received) {
+          sum_weights_input += input_pair.second;
+        }
+        for (auto& output_pair : weighted_metrics.outputs_sent) {
+          sum_weights_output += output_pair.second;
+        }
+      }
+
+      for (auto& pipe_pair : pipe_metrics) {
+        Pipeline::PipeMetrics& weighted_metrics = pipe_pair.second;
+        weighted_metrics.execution_count /= sum_weights_execution_count;
+
+        for (auto& input_pair : weighted_metrics.inputs_received) {
+          input_pair.second /= sum_weights_input;
+        }
+        for (auto& output_pair : weighted_metrics.outputs_sent) {
+          output_pair.second /= sum_weights_output;
+        }
+      }
+
+      // Store the resulting metrics for the pipeline.
+      Pipeline::PipelineMetrics& pipeline_metrics = metrics[pipeline_id];
+      pipeline_metrics.measure_time_start = metrics_history.back().measure_time_start;
+      pipeline_metrics.pipes = pipe_metrics;
+    }
+
+    // Store the resulting metrics.
+    {
+      std::scoped_lock lock(metrics_mutex_);
+      metrics_ = metrics;
+    }
+
+    // Limit cycle time.
+    std::this_thread::sleep_for(interval_time);
+  }
 }
 
 } // namespace beast

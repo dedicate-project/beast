@@ -59,9 +59,9 @@ class Pipeline {
    * @brief Holds metrics describing the performance of an individual pipe
    */
   struct PipeMetrics {
-    uint32_t execution_count;
-    std::unordered_map<uint32_t, uint32_t> inputs_received;
-    std::unordered_map<uint32_t, uint32_t> outputs_sent;
+    double execution_count;
+    std::unordered_map<uint32_t, double> inputs_received;
+    std::unordered_map<uint32_t, double> outputs_sent;
   };
 
   /**

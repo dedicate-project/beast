@@ -11,7 +11,7 @@ namespace beast {
 TEST_CASE("PipelineManager") {
   std::filesystem::path temp_storage_path =
       std::filesystem::temp_directory_path() / "test_pipelines";
-  PipelineManager manager(temp_storage_path.string());
+  PipelineManager manager(temp_storage_path.string(), 100, 50);
 
   SECTION("Create and get pipeline") {
     const std::string pipeline_name = "Test pipeline";
@@ -43,7 +43,7 @@ TEST_CASE("PipelineManager") {
     const uint32_t id = manager.createPipeline(pipeline_name);
     static_cast<void>(id);
 
-    PipelineManager manager_2(temp_storage_path.string());
+    PipelineManager manager_2(temp_storage_path.string(), 100, 50);
     const std::list<PipelineManager::PipelineDescriptor>& pipelines = manager.getPipelines();
 
     REQUIRE(pipelines.size() == 1);

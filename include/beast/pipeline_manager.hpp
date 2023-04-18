@@ -5,6 +5,8 @@
 #include <list>
 #include <mutex>
 #include <string>
+#include <thread>
+#include <unordered_map>
 
 // Internal
 #include <beast/filesystem_helper.hpp>
@@ -35,8 +37,12 @@ class PipelineManager {
   /**
    * @brief Constructor that initializes the PipelineManager with a storage path.
    * @param storage_path Path to the storage directory.
+   * @param metrics_interval_time Interval time for metrics collection, in ms.
    */
-  explicit PipelineManager(const std::string& storage_path);
+  explicit PipelineManager(const std::string& storage_path, uint32_t metrics_interval_time,
+                           uint32_t metrics_window_size);
+
+  ~PipelineManager();
 
   /**
    * @brief Creates a new pipeline and adds it to the collection.
@@ -156,6 +162,26 @@ class PipelineManager {
    * @return A unique pipeline ID that is not currently in use.
    */
   [[nodiscard]] uint32_t getFreeId() const;
+
+  void metricsCollectorWorker();
+
+  /**
+   * @var PipelineMetrics::metrics_interval_time_
+   * @brief Interval duration of one metrics collection cycle, in ms.
+   */
+  uint32_t metrics_interval_time_;
+
+  double metrics_time_constant_;
+
+  uint32_t metrics_window_size_;
+
+  std::thread metrics_collector_thread_;
+
+  bool should_run_metrics_collector_;
+
+  std::unordered_map<uint32_t, Pipeline::PipelineMetrics> metrics_;
+
+  std::mutex metrics_mutex_;
 
   /**
    * @var PipelineManager::filesystem_

@@ -1,12 +1,42 @@
 #include <beast/pipeline_server.hpp>
 
+// Standard
+#include <iomanip>
+#include <sstream>
+
 // Internal
 #include <beast/version.hpp>
 
 namespace beast {
 
+namespace {
+std::string
+timePointToIso8601(const std::chrono::time_point<std::chrono::steady_clock>& timepoint) {
+  // Convert to UTC time.
+  auto time = std::chrono::duration_cast<std::chrono::milliseconds>(timepoint.time_since_epoch());
+
+  // Extract the individual components of the time.
+  auto hours = std::chrono::duration_cast<std::chrono::hours>(time);
+  time -= hours;
+  auto minutes = std::chrono::duration_cast<std::chrono::minutes>(time);
+  time -= minutes;
+  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(time);
+  time -= seconds;
+  auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+
+  // Format the time as an ISO 8601 string.
+  std::ostringstream oss;
+  oss << std::setfill('0');
+  oss << std::setw(2) << hours.count() << ':';
+  oss << std::setw(2) << minutes.count() << ':';
+  oss << std::setw(2) << seconds.count() << '.';
+  oss << std::setw(3) << milliseconds.count();
+  return oss.str();
+}
+} // namespace
+
 PipelineServer::PipelineServer(const std::string& storage_folder)
-    : pipeline_manager_{storage_folder} {}
+    : pipeline_manager_{storage_folder, 100, 50} {}
 
 crow::json::wvalue PipelineServer::serveStatus() {
   crow::json::wvalue value;
@@ -123,6 +153,29 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
         value["status"] = "failed";
         value["error"] = "invalid_request";
       }
+    } else if (path == "metrics") {
+      const auto& metrics = pipeline_manager_.getPipelineMetrics(pipeline.id);
+      value["time"] = timePointToIso8601(metrics.measure_time_start);
+      value["state"] =
+          pipeline.pipeline->isRunning() ? std::string("running") : std::string("stopped");
+      value["pipes"] = crow::json::wvalue::list();
+      uint32_t idx = 0;
+      for (const auto& pipe_pair : metrics.pipes) {
+        crow::json::wvalue pipe_item;
+        pipe_item["name"] = pipe_pair.first;
+        pipe_item["execution_count"] = pipe_pair.second.execution_count;
+        pipe_item["inputs"] = crow::json::wvalue::list();
+        for (const auto& input_pair : pipe_pair.second.inputs_received) {
+          pipe_item["inputs"][input_pair.first] = input_pair.second;
+        }
+        pipe_item["outputs"] = crow::json::wvalue::list();
+        for (const auto& output_pair : pipe_pair.second.outputs_sent) {
+          pipe_item["outputs"][output_pair.first] = output_pair.second;
+        }
+        value["pipes"][idx] = std::move(pipe_item);
+        idx++;
+      }
+      value["status"] = "success";
     } else if (path == "delete") {
       if (pipeline.pipeline->isRunning()) {
         pipeline.pipeline->stop();

@@ -94,6 +94,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [oldModel, setOldModel] = useState({});
   const [model, setModel] = useState({});
   const [metadata, setMetadata] = useState({});
+  const [metrics, setMetrics] = useState({});
 
   const [pipelineName, setPipelineName] = useState(pipeline.name);
 
@@ -558,13 +559,32 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       }
       const jsonData = await response.json();
       setPipelineState(jsonData.state);
-      console.log(jsonData.model);
       setModel(jsonData.model);
       setMetadata(jsonData.metadata);
     } catch (error) {
       console.error('Error fetching pipeline state:', error);
     }
   };
+
+  const fetchMetrics = async () => {
+    try {
+      const response = await fetch(`/api/v1/pipelines/${pipeline.id}/metrics`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const jsonData = await response.json();
+      console.log(jsonData);
+      setMetrics(jsonData);
+    } catch (error) {
+      console.error('Error fetching pipeline metrics:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMetrics();                                  // Fetch the pipeline metrics initially
+    const interval = setInterval(fetchMetrics, 500); // Fetch the pipeline metrics every 500ms
+    return () => clearInterval(interval);            // Cleanup the interval on component unmount
+  }, []);
 
   useEffect(() => {
     fetchPipelineState();                                   // Fetch the pipeline state initially
