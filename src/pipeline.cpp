@@ -7,7 +7,7 @@
 
 namespace beast {
 
-Pipeline::Pipeline() { metrics_.measure_time_start = std::chrono::steady_clock::now(); }
+Pipeline::Pipeline() { metrics_.measure_time_start = std::chrono::system_clock::now(); }
 
 void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pipe) {
   if (pipeIsInPipeline(pipe)) {
@@ -110,7 +110,7 @@ Pipeline::PipelineMetrics Pipeline::getMetrics() {
   // Cache and reset metrics object.
   PipelineMetrics metrics = metrics_;
   metrics_ = PipelineMetrics{};
-  metrics_.measure_time_start = std::chrono::steady_clock::now();
+  metrics_.measure_time_start = std::chrono::system_clock::now();
 
   return metrics;
 }

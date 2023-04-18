@@ -69,7 +69,7 @@ class Pipeline {
    */
   struct PipelineMetrics {
     std::unordered_map<std::string, PipeMetrics> pipes;
-    std::chrono::time_point<std::chrono::steady_clock> measure_time_start;
+    std::chrono::time_point<std::chrono::system_clock> measure_time_start;
   };
 
   Pipeline();

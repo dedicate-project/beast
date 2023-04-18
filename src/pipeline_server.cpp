@@ -1,36 +1,35 @@
 #include <beast/pipeline_server.hpp>
 
 // Standard
+#include <chrono>
 #include <iomanip>
 #include <sstream>
 
 // Internal
+#include <beast/time_functions.hpp>
 #include <beast/version.hpp>
 
 namespace beast {
 
 namespace {
 std::string
-timePointToIso8601(const std::chrono::time_point<std::chrono::steady_clock>& timepoint) {
-  // Convert to UTC time.
-  auto time = std::chrono::duration_cast<std::chrono::milliseconds>(timepoint.time_since_epoch());
+timePointToIso8601(const std::chrono::time_point<std::chrono::system_clock>& timepoint) {
+  // Convert to time_t.
+  auto time_t_value = std::chrono::system_clock::to_time_t(timepoint);
 
-  // Extract the individual components of the time.
-  auto hours = std::chrono::duration_cast<std::chrono::hours>(time);
-  time -= hours;
-  auto minutes = std::chrono::duration_cast<std::chrono::minutes>(time);
-  time -= minutes;
-  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(time);
-  time -= seconds;
-  auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(time);
+  // Convert to tm structure.
+  std::tm tm_value{};
+  gmtime_r(&time_t_value, &tm_value); // Use gmtime_r for thread-safety.
+
+  // Extract milliseconds.
+  auto time_since_epoch = timepoint.time_since_epoch();
+  auto milliseconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(time_since_epoch) % 1000;
 
   // Format the time as an ISO 8601 string.
   std::ostringstream oss;
-  oss << std::setfill('0');
-  oss << std::setw(2) << hours.count() << ':';
-  oss << std::setw(2) << minutes.count() << ':';
-  oss << std::setw(2) << seconds.count() << '.';
-  oss << std::setw(3) << milliseconds.count();
+  oss << std::put_time(&tm_value, "%Y-%m-%dT%H:%M:%S");
+  oss << '.' << std::setfill('0') << std::setw(3) << milliseconds.count() << "Z";
   return oss.str();
 }
 } // namespace

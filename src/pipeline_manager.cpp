@@ -451,7 +451,7 @@ void PipelineManager::metricsCollectorWorker() {
     }
 
     // Calculate the current metrics.
-    const auto now = std::chrono::steady_clock::now();
+    const auto now = std::chrono::system_clock::now();
     std::unordered_map<uint32_t, Pipeline::PipelineMetrics> metrics;
     for (auto& metrics_pair : metrics_cache) {
       const uint32_t pipeline_id = metrics_pair.first;
@@ -462,6 +462,7 @@ void PipelineManager::metricsCollectorWorker() {
       for (const auto& pipeline_metrics : metrics_history) {
         std::chrono::duration<double> elapsed_time = now - pipeline_metrics.measure_time_start;
         const double weight = std::exp(-elapsed_time.count() / metrics_time_constant_);
+        double duration_seconds = elapsed_time.count();
 
         for (const auto& pipe_pair : pipeline_metrics.pipes) {
           const std::string pipe_name = pipe_pair.first;
@@ -469,18 +470,21 @@ void PipelineManager::metricsCollectorWorker() {
           Pipeline::PipeMetrics& current_weighted_metrics = pipe_metrics[pipe_name];
 
           // Update the execution count.
-          current_weighted_metrics.execution_count += weight * current_pipe_metrics.execution_count;
+          current_weighted_metrics.execution_count +=
+              weight * current_pipe_metrics.execution_count / duration_seconds;
 
           // Update the input and output maps.
           for (const auto& input_pair : current_pipe_metrics.inputs_received) {
             const uint32_t input_id = input_pair.first;
             const uint32_t input_count = input_pair.second;
-            current_weighted_metrics.inputs_received[input_id] += weight * input_count;
+            current_weighted_metrics.inputs_received[input_id] +=
+                weight * input_count / duration_seconds;
           }
           for (const auto& output_pair : current_pipe_metrics.outputs_sent) {
             const uint32_t output_id = output_pair.first;
             const uint32_t output_count = output_pair.second;
-            current_weighted_metrics.outputs_sent[output_id] += weight * output_count;
+            current_weighted_metrics.outputs_sent[output_id] +=
+                weight * output_count / duration_seconds;
           }
         }
       }
