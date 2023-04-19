@@ -2,7 +2,6 @@
 
 // Standard
 #include <chrono>
-#include <iostream>
 
 // Internal
 #include <beast/pipes/evaluator_pipe.hpp>
@@ -459,9 +458,11 @@ void PipelineManager::metricsCollectorWorker() {
 
       // Calculate the weighted average for each metric in the pipeline.
       std::unordered_map<std::string, Pipeline::PipeMetrics> pipe_metrics;
+      double sum_weights = 0.0; // Initialize the sum of weights
       for (const auto& pipeline_metrics : metrics_history) {
         std::chrono::duration<double> elapsed_time = now - pipeline_metrics.measure_time_start;
         const double weight = std::exp(-elapsed_time.count() / metrics_time_constant_);
+        sum_weights += weight; // Add the current weight to the sum of weights
         double duration_seconds = elapsed_time.count();
 
         for (const auto& pipe_pair : pipeline_metrics.pipes) {
@@ -490,30 +491,15 @@ void PipelineManager::metricsCollectorWorker() {
       }
 
       // Normalize the accumulated values by the sum of weights to obtain the weighted average.
-      double sum_weights_execution_count = 0.0;
-      double sum_weights_input = 0.0;
-      double sum_weights_output = 0.0;
       for (auto& pipe_pair : pipe_metrics) {
         Pipeline::PipeMetrics& weighted_metrics = pipe_pair.second;
-        sum_weights_execution_count += weighted_metrics.execution_count;
+        weighted_metrics.execution_count /= sum_weights;
 
         for (auto& input_pair : weighted_metrics.inputs_received) {
-          sum_weights_input += input_pair.second;
+          input_pair.second /= sum_weights;
         }
         for (auto& output_pair : weighted_metrics.outputs_sent) {
-          sum_weights_output += output_pair.second;
-        }
-      }
-
-      for (auto& pipe_pair : pipe_metrics) {
-        Pipeline::PipeMetrics& weighted_metrics = pipe_pair.second;
-        weighted_metrics.execution_count /= sum_weights_execution_count;
-
-        for (auto& input_pair : weighted_metrics.inputs_received) {
-          input_pair.second /= sum_weights_input;
-        }
-        for (auto& output_pair : weighted_metrics.outputs_sent) {
-          output_pair.second /= sum_weights_output;
+          output_pair.second /= sum_weights;
         }
       }
 
