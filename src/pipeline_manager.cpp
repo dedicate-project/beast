@@ -383,6 +383,7 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "EvolutionPipe";
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {
       pipe_json["type"] = "NullSinkPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
     } else if (auto spec_pipe = std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
       pipe_json["type"] = "ProgramFactoryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
@@ -433,14 +434,12 @@ uint32_t PipelineManager::getFreeId() const {
 }
 
 void PipelineManager::metricsCollectorWorker() {
-  std::chrono::milliseconds interval_time(metrics_interval_time_);
-
   std::unordered_map<uint32_t, std::deque<Pipeline::PipelineMetrics>> metrics_cache;
   while (should_run_metrics_collector_) {
     // Remove the oldest element from the cache for each pipeline if maximum window size is reached.
     for (auto& metrics_pair : metrics_cache) {
       if (metrics_pair.second.size() >= metrics_window_size_) {
-        metrics_pair.second.pop_front();
+        metrics_pair.second.pop_back();
       }
     }
 
@@ -448,68 +447,66 @@ void PipelineManager::metricsCollectorWorker() {
     {
       std::scoped_lock lock(pipelines_mutex_);
       for (auto& descriptor : pipelines_) {
-        metrics_cache[descriptor.id].push_back(descriptor.pipeline->getMetrics());
+        metrics_cache[descriptor.id].push_front(descriptor.pipeline->getMetrics());
       }
     }
 
     // Calculate the current metrics.
-    const auto now = std::chrono::system_clock::now();
     std::unordered_map<uint32_t, Pipeline::PipelineMetrics> metrics;
     for (auto& metrics_pair : metrics_cache) {
       const uint32_t pipeline_id = metrics_pair.first;
       const std::deque<Pipeline::PipelineMetrics>& metrics_history = metrics_pair.second;
 
-      // Calculate the weighted average for each metric in the pipeline.
-      std::unordered_map<std::string, Pipeline::PipeMetrics> pipe_metrics;
-      double sum_weights = 0.0; // Initialize the sum of weights
+      if (metrics_history.empty()) {
+        continue;
+      }
+
+      const std::chrono::duration<double> elapsed_time =
+          std::chrono::system_clock::now() - metrics_history.back().measure_time_start;
+      const double duration_seconds = elapsed_time.count();
+
+      Pipeline::PipelineMetrics pipeline_metrics;
+      pipeline_metrics.measure_time_start = std::chrono::system_clock::now();
+
+      std::unordered_map<std::string, Pipeline::PipeMetrics>& pipe_counters =
+          pipeline_metrics.pipes;
+
+      // Sum up all execution counts, inputs received, and outputs sent from all history items
       for (const auto& pipeline_metrics : metrics_history) {
-        std::chrono::duration<double> elapsed_time = now - pipeline_metrics.measure_time_start;
-        const double weight = std::exp(-elapsed_time.count() / metrics_time_constant_);
-        sum_weights += weight; // Add the current weight to the sum of weights
-        double duration_seconds = elapsed_time.count();
-
         for (const auto& pipe_pair : pipeline_metrics.pipes) {
-          const std::string pipe_name = pipe_pair.first;
+          const std::string& pipe_name = pipe_pair.first;
           const Pipeline::PipeMetrics& current_pipe_metrics = pipe_pair.second;
-          Pipeline::PipeMetrics& current_weighted_metrics = pipe_metrics[pipe_name];
+          Pipeline::PipeMetrics& current_counter = pipe_counters[pipe_name];
 
-          // Update the execution count.
-          current_weighted_metrics.execution_count +=
-              weight * current_pipe_metrics.execution_count / duration_seconds;
+          current_counter.execution_count += current_pipe_metrics.execution_count;
 
-          // Update the input and output maps.
           for (const auto& input_pair : current_pipe_metrics.inputs_received) {
-            const uint32_t input_id = input_pair.first;
-            const uint32_t input_count = input_pair.second;
-            current_weighted_metrics.inputs_received[input_id] +=
-                weight * input_count / duration_seconds;
+            current_counter.inputs_received[input_pair.first] += input_pair.second;
           }
           for (const auto& output_pair : current_pipe_metrics.outputs_sent) {
-            const uint32_t output_id = output_pair.first;
-            const uint32_t output_count = output_pair.second;
-            current_weighted_metrics.outputs_sent[output_id] +=
-                weight * output_count / duration_seconds;
+            current_counter.outputs_sent[output_pair.first] += output_pair.second;
           }
         }
       }
 
-      // Normalize the accumulated values by the sum of weights to obtain the weighted average.
-      for (auto& pipe_pair : pipe_metrics) {
-        Pipeline::PipeMetrics& weighted_metrics = pipe_pair.second;
-        weighted_metrics.execution_count /= sum_weights;
+      // Divide by the count of history items and convert to per-second rates
+      for (const auto& pipe_pair : pipe_counters) {
+        const std::string& pipe_name = pipe_pair.first;
+        const Pipeline::PipeMetrics& counters = pipe_pair.second;
+        Pipeline::PipeMetrics& averaged_metrics = pipeline_metrics.pipes[pipe_name];
 
-        for (auto& input_pair : weighted_metrics.inputs_received) {
-          input_pair.second /= sum_weights;
+        averaged_metrics.execution_count = counters.execution_count / duration_seconds;
+
+        for (const auto& input_pair : counters.inputs_received) {
+          averaged_metrics.inputs_received[input_pair.first] = input_pair.second / duration_seconds;
         }
-        for (auto& output_pair : weighted_metrics.outputs_sent) {
-          output_pair.second /= sum_weights;
+        for (const auto& output_pair : counters.outputs_sent) {
+          averaged_metrics.outputs_sent[output_pair.first] = output_pair.second / duration_seconds;
         }
       }
 
       // Store the resulting metrics for the pipeline.
-      Pipeline::PipelineMetrics& pipeline_metrics = metrics[pipeline_id];
-      pipeline_metrics.measure_time_start = metrics_history.back().measure_time_start;
-      pipeline_metrics.pipes = pipe_metrics;
+      metrics[pipeline_id] = pipeline_metrics;
     }
 
     // Store the resulting metrics.
@@ -519,6 +516,7 @@ void PipelineManager::metricsCollectorWorker() {
     }
 
     // Limit cycle time.
+    std::chrono::milliseconds interval_time(metrics_interval_time_);
     std::this_thread::sleep_for(interval_time);
   }
 }

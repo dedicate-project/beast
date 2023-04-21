@@ -35,7 +35,7 @@ timePointToIso8601(const std::chrono::time_point<std::chrono::system_clock>& tim
 } // namespace
 
 PipelineServer::PipelineServer(const std::string& storage_folder)
-    : pipeline_manager_{storage_folder, 100, 50} {}
+    : pipeline_manager_{storage_folder, 10, 50} {}
 
 crow::json::wvalue PipelineServer::serveStatus() {
   crow::json::wvalue value;
