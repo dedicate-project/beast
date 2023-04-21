@@ -94,7 +94,6 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [oldModel, setOldModel] = useState({});
   const [model, setModel] = useState({});
   const [metadata, setMetadata] = useState({});
-  const [metrics, setMetrics] = useState({});
 
   const [pipelineName, setPipelineName] = useState(pipeline.name);
 
@@ -116,6 +115,75 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
     return () => { window.removeEventListener("contextmenu", handleContextMenu); };
   }, []);
+
+  const [metrics, setMetrics] = useState({});
+  const [dialog, setDialog] = useState(null);
+
+  const Dialog = (props) => {
+    if (!props.hoveredPipe) {
+      return;
+    }
+    const pipe = metrics["pipes"].find(pipe => pipe.name === props.hoveredPipe);
+
+    let content = [
+      React.createElement('strong', null, props.hoveredPipe),
+      React.createElement('div', null, 'Type: ' + model["pipes"][props.hoveredPipe]["type"])
+    ];
+
+    if (pipe) {
+      const inputs = pipe.inputs.map(
+          (input, index) => { return e('div', {key : index}, `* Input ${index}: ${input} / s`); });
+
+      const outputs = pipe.outputs.map(
+          (output,
+           index) => { return e('div', {key : index}, `* Output ${index}: ${output} / s`); });
+
+      content.push(React.createElement('div', null, `Executions: ${pipe.execution_count} / s`));
+
+      if (pipe.inputs.length > 0) {
+        content.push(React.createElement('div', null, 'Inputs:'), ...inputs);
+      }
+
+      if (pipe.outputs.length > 0) {
+        content.push(React.createElement('div', null, 'Outputs:'), ...outputs);
+      }
+    }
+    return e('div', {
+      className : 'pipe-dialog',
+      style : {
+        position : 'absolute',
+        backgroundColor : 'white',
+        border : '1px solid black',
+        borderRadius : '4px',
+        boxShadow : '0px 4px 6px rgba(0, 0, 0, 0.1)',
+        fontFamily : 'sans-serif',
+        minWidth : '200px',
+        padding : '1rem',
+        left : '0',
+        top : '0'
+      }
+    },
+             content);
+  };
+
+  const [hoveredPipe, setHoveredPipe] = useState("");
+
+  useEffect(() => {
+    if (hoveredPipe != "") {
+      const newDialog = React.createElement(Dialog, {hoveredPipe});
+      setDialog(newDialog);
+    } else {
+      setDialog(null);
+    }
+  }, [ hoveredPipe, metrics ]);
+
+  useEffect(() => {
+    if (dialog) {
+      ReactDOM.render(dialog, document.getElementById("dialog-root"));
+    } else {
+      ReactDOM.unmountComponentAtNode(document.getElementById('dialog-root'));
+    }
+  }, [ dialog ]);
 
   useEffect(() => {
     const stage = new Konva.Stage({
@@ -315,28 +383,10 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       elementLayerRef.current.add(group);
       elementLayerRef.current.batchDraw();
 
-      const Dialog = (props) => {
-        return React.createElement('div', {
-          className : 'pipe-dialog',
-          style : {
-            position : 'absolute',
-            backgroundColor : 'white',
-            border : '1px solid black',
-            left : '0',
-            top : '0'
-          }
-        },
-                                   name + " (" + type + ")");
-      };
-
       // add event listeners to the object
-      group.on('mouseover', () => {
-        const dialog = React.createElement(Dialog);
-        ReactDOM.render(dialog, document.getElementById('dialog-root'));
-      });
+      group.on('mouseover', () => { setHoveredPipe(name); });
 
-      group.on('mouseout',
-               () => { ReactDOM.unmountComponentAtNode(document.getElementById('dialog-root')); });
+      group.on('mouseout', () => { setHoveredPipe(""); });
 
       group.on('mousemove dragmove', (event) => {
         const dialog = document.getElementById('dialog-root');
