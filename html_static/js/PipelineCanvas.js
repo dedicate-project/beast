@@ -739,7 +739,29 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           show : showContextMenu,
           position : contextMenuPosition,
           onClose : () => setShowContextMenu(false),
-          menuItems : [ "Item 1", "Item 2", "Item 3" ],
+          menuItems : [
+            {
+              text : "Item 1",
+              icon : "add",
+              disabled : false,
+              action : () => console.log("Item 1 clicked"),
+            },
+            {
+              text : "Item 2",
+              icon : "edit",
+              disabled : true,
+              action : () => console.log("Item 2 clicked"),
+            },
+            {
+              isSeparator : true,
+            },
+            {
+              text : "Item 3",
+              icon : "delete",
+              disabled : false,
+              action : () => console.log("Item 3 clicked"),
+            },
+          ],
         })),
       e(Dialog, {open : renameDialogOpen, onClose : () => setRenameDialogOpen(false)},
         e(DialogTitle, null, "Edit Pipeline Title"),
