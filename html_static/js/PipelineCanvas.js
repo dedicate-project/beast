@@ -562,7 +562,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       setModel(jsonData.model);
       setMetadata(jsonData.metadata);
     } catch (error) {
-      console.error('Error fetching pipeline state:', error);
+      // console.error('Error fetching pipeline state:', error);
     }
   };
 
@@ -576,7 +576,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       console.log(jsonData);
       setMetrics(jsonData);
     } catch (error) {
-      console.error('Error fetching pipeline metrics:', error);
+      // console.error('Error fetching pipeline metrics:', error);
     }
   };
 

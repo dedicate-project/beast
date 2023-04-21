@@ -135,11 +135,9 @@ export function PipelineList() {
         } catch (error) {
           setPipelines([]);
           console.log("Json error");
-          setError(error.message); // Set error state if unsuccessful
         }
       } catch (error) {
         setPipelines([]);
-        setError(error.message); // Set error state if unsuccessful
       }
     };
     fetchData();
