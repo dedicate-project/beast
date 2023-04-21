@@ -131,14 +131,16 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     ];
 
     if (pipe) {
-      const inputs = pipe.inputs.map(
-          (input, index) => { return e('div', {key : index}, `* Input ${index}: ${input} / s`); });
+      const inputs = pipe.inputs.map((input, index) => {
+        return e('div', {key : index}, `* Input ${index}: ${parseFloat(input).toFixed(2)} / s`);
+      });
 
-      const outputs = pipe.outputs.map(
-          (output,
-           index) => { return e('div', {key : index}, `* Output ${index}: ${output} / s`); });
+      const outputs = pipe.outputs.map((output, index) => {
+        return e('div', {key : index}, `* Output ${index}: ${parseFloat(output).toFixed(2)} / s`);
+      });
 
-      content.push(React.createElement('div', null, `Executions: ${pipe.execution_count} / s`));
+      content.push(React.createElement(
+          'div', null, `Executions: ${parseFloat(pipe.execution_count).toFixed(2)} / s`));
 
       if (pipe.inputs.length > 0) {
         content.push(React.createElement('div', null, 'Inputs:'), ...inputs);
@@ -632,7 +634,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
   useEffect(() => {
     fetchMetrics();                                  // Fetch the pipeline metrics initially
-    const interval = setInterval(fetchMetrics, 500); // Fetch the pipeline metrics every 500ms
+    const interval = setInterval(fetchMetrics, 100); // Fetch the pipeline metrics every 500ms
     return () => clearInterval(interval);            // Cleanup the interval on component unmount
   }, []);
 
