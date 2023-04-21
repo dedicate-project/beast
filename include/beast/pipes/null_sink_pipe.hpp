@@ -31,7 +31,7 @@ class NullSinkPipe : public Pipe {
   /**
    * @brief Initializes this NullSinkPipe instance
    */
-  explicit NullSinkPipe();
+  explicit NullSinkPipe(uint32_t max_candidates);
 
   /**
    * @brief Executes this NullSinkPipe instance

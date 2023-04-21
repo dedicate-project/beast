@@ -254,7 +254,10 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
                                                                         factory);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "NullSinkPipe") {
-        created_pipes[pipe_name] = std::make_shared<NullSinkPipe>();
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        created_pipes[pipe_name] = std::make_shared<NullSinkPipe>(max_candidates);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "EvaluatorPipe") {
         checkForParameterPresenceInPipeJson(pipe,

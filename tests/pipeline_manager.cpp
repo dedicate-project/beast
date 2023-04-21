@@ -52,7 +52,8 @@ TEST_CASE("PipelineManager") {
   }
 
   SECTION("NullSinkPipe pipeline is correctly constructed from JSON") {
-    const auto json = R"({"pipes":{"pipe0":{"type":"NullSinkPipe"}}})"_json;
+    const auto json =
+        R"({"pipes":{"pipe0":{"type":"NullSinkPipe","parameters":{"max_candidates":10}}}})"_json;
 
     const auto pipeline = PipelineManager::constructPipelineFromJson(json);
     const auto& pipes = pipeline->getPipes();
@@ -65,7 +66,7 @@ TEST_CASE("PipelineManager") {
 
   SECTION("NullSinkPipe pipeline is correctly deconstructed to JSON") {
     std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
-    std::shared_ptr<NullSinkPipe> pipe = std::make_shared<NullSinkPipe>();
+    std::shared_ptr<NullSinkPipe> pipe = std::make_shared<NullSinkPipe>(10);
     const std::string name = "null_sink_pipe";
     pipeline->addPipe(name, pipe);
 

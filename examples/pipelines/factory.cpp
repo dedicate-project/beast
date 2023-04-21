@@ -19,7 +19,7 @@ int main(int /*argc*/, char** /*argv*/) {
 
   pipeline.addPipe("factory", factory_pipe);
 
-  std::shared_ptr<beast::NullSinkPipe> sink_pipe = std::make_shared<beast::NullSinkPipe>();
+  std::shared_ptr<beast::NullSinkPipe> sink_pipe = std::make_shared<beast::NullSinkPipe>(10);
 
   pipeline.addPipe("sink", sink_pipe);
 

@@ -8,11 +8,16 @@
 #include <beast/beast.hpp>
 
 TEST_CASE("NullSinkPipe") {
-  beast::NullSinkPipe pipe;
+  const uint32_t max_candidates = 10;
+  beast::NullSinkPipe pipe(max_candidates);
 
   SECTION("Pipe has one input") { REQUIRE(pipe.getInputSlotCount() == 1); }
 
   SECTION("Pipe has no outputs") { REQUIRE(pipe.getOutputSlotCount() == 0); }
+
+  SECTION("Pipe has the right amount of max_candidates") {
+    REQUIRE(pipe.getMaxCandidates() == max_candidates);
+  }
 
   SECTION("Executing the pipe clears the input queue") {
     // Empty initially
