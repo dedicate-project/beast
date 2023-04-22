@@ -78,6 +78,7 @@ function drawBorder(layer, width, height) {
 export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
+  const pipelineStateRef = useRef("");
   const [dimensions, setDimensions] =
       useState({width : window.innerWidth - 320, height : window.innerHeight - 200});
   const [stageInstance, setStageInstance] = useState(null);
@@ -118,6 +119,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
   const [metrics, setMetrics] = useState({});
   const [dialog, setDialog] = useState(null);
+
+  const rightClickMenuItemsRef = useRef([])
 
   const Dialog = (props) => {
     if (!props.hoveredPipe) {
@@ -169,6 +172,29 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   };
 
   const [hoveredPipe, setHoveredPipe] = useState("");
+  const hoveredPipeRef = useRef("");
+
+  function getRightClickMenuItems(pipe) {
+    if (pipe == "") {
+      return [
+        {
+          text : "Add new Pipe",
+          icon : "add",
+          disabled : pipelineStateRef.current == "running",
+          action : () => console.log("Add a Pipe"),
+        },
+      ];
+    } else {
+      return [
+        {
+          text : "Delete " + pipe,
+          icon : "delete",
+          disabled : pipelineStateRef.current == "running",
+          action : () => console.log("Delete " + pipe),
+        },
+      ];
+    }
+  }
 
   useEffect(() => {
     if (hoveredPipe != "") {
@@ -180,12 +206,12 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   }, [ hoveredPipe, metrics ]);
 
   useEffect(() => {
-    if (dialog) {
+    if (dialog && !showContextMenu) {
       ReactDOM.render(dialog, document.getElementById("dialog-root"));
     } else {
       ReactDOM.unmountComponentAtNode(document.getElementById('dialog-root'));
     }
-  }, [ dialog ]);
+  }, [ dialog, showContextMenu ]);
 
   useEffect(() => {
     const stage = new Konva.Stage({
@@ -225,16 +251,19 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         e.evt.stopImmediatePropagation(); // Add this line
         e.evt.cancelBubble = true;
         const position = stage.getPointerPosition();
+        console.log(stage)
+        console.log(e.evt.target)
 
         const container = stage.container();
         const rect = container.getBoundingClientRect();
 
         // Adjust the position based on the canvas offset
         const adjustedPosition = {
-          x : position.x + rect.left - 10,
-          y : position.y - 2 * rect.top - 10
+          x : position.x + rect.left + 5,
+          y : position.y - 2 * rect.top + 5
         };
 
+        rightClickMenuItemsRef.current = getRightClickMenuItems(hoveredPipeRef.current);
         setContextMenuPosition(adjustedPosition);
         setShowContextMenu(true);
       }
@@ -386,9 +415,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       elementLayerRef.current.batchDraw();
 
       // add event listeners to the object
-      group.on('mouseover', () => { setHoveredPipe(name); });
+      group.on('mouseover', () => {
+        hoveredPipeRef.current = name;
+        setHoveredPipe(name);
+      });
 
-      group.on('mouseout', () => { setHoveredPipe(""); });
+      group.on('mouseout', () => {
+        hoveredPipeRef.current = "";
+        setHoveredPipe("");
+      });
 
       group.on('mousemove dragmove', (event) => {
         const dialog = document.getElementById('dialog-root');
@@ -610,6 +645,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         throw new Error('Network response was not ok');
       }
       const jsonData = await response.json();
+      pipelineStateRef.current = jsonData.state;
       setPipelineState(jsonData.state);
       setModel(jsonData.model);
       setMetadata(jsonData.metadata);
@@ -625,7 +661,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         throw new Error('Network response was not ok');
       }
       const jsonData = await response.json();
-      console.log(jsonData);
+      // console.log(jsonData);
       setMetrics(jsonData);
     } catch (error) {
       // console.error('Error fetching pipeline metrics:', error);
@@ -739,29 +775,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           show : showContextMenu,
           position : contextMenuPosition,
           onClose : () => setShowContextMenu(false),
-          menuItems : [
-            {
-              text : "Item 1",
-              icon : "add",
-              disabled : false,
-              action : () => console.log("Item 1 clicked"),
-            },
-            {
-              text : "Item 2",
-              icon : "edit",
-              disabled : true,
-              action : () => console.log("Item 2 clicked"),
-            },
-            {
-              isSeparator : true,
-            },
-            {
-              text : "Item 3",
-              icon : "delete",
-              disabled : false,
-              action : () => console.log("Item 3 clicked"),
-            },
-          ],
+          menuItems : rightClickMenuItemsRef.current,
         })),
       e(Dialog, {open : renameDialogOpen, onClose : () => setRenameDialogOpen(false)},
         e(DialogTitle, null, "Edit Pipeline Title"),
