@@ -127,8 +127,8 @@ set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-target_link_libraries(${PROJECT_NAME}-evaluators galib)
-target_link_libraries(${PROJECT_NAME}-pipelines Threads::Threads maze)
+target_link_libraries(${PROJECT_NAME}-evaluators galib maze)
+target_link_libraries(${PROJECT_NAME}-pipelines Threads::Threads)
 
 add_executable(${PROJECT_NAME}-compose
   src/compose.cpp)
