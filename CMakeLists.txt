@@ -14,6 +14,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # Add utilities used for evaluations. This needs to be placed before the clang-tidy configuration to
 # not impose clang rules into 3rdparty components.
+set(MAZE_BUILD_TESTS NO)
 add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/maze)
 
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-warnings-as-errors=*;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-altera-id-dependent-backward-branch,-readability-function-cognitive-complexity,-altera-unroll-loops,-bugprone-easily-swappable-parameters,-misc-no-recursion,-altera-struct-pack-align")
@@ -240,15 +241,15 @@ endif()
 if(BEAST_BUILD_TESTS)
   enable_testing()
 
-  add_library(tests_main tests/tests_main.cpp)
-  target_include_directories(tests_main PUBLIC 3rdparty/Catch2/single_include)
-  target_link_libraries(tests_main PUBLIC ${PROJECT_LIBS})
+  add_library(tests_main_beast tests/tests_main.cpp)
+  target_include_directories(tests_main_beast PUBLIC 3rdparty/Catch2/single_include)
+  target_link_libraries(tests_main_beast PUBLIC ${PROJECT_LIBS})
 
   macro(declare_test name)
     message(STATUS "Add test: ${name}")
     add_executable(test_${name} tests/${name}.cpp)
     target_include_directories(test_${name} PUBLIC 3rdparty/Catch2/single_include)
-    target_link_libraries(test_${name} PUBLIC tests_main)
+    target_link_libraries(test_${name} PUBLIC tests_main_beast)
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
       target_link_libraries(test_${name} PUBLIC gcov)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
