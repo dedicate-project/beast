@@ -1,13 +1,14 @@
 #include <beast/evaluators/aggregation_evaluator.hpp>
 
+// Standard
 #include <stdexcept>
 
 namespace beast {
 
-void AggregationEvaluator::addEvaluator(
-    const std::shared_ptr<Evaluator>& evaluator, double weight, bool invert_logic) {
+void AggregationEvaluator::addEvaluator(const std::shared_ptr<Evaluator>& evaluator, double weight,
+                                        bool invert_logic) {
   if (evaluator == nullptr) {
-    throw std::invalid_argument("Null operator not allowed");
+    throw std::invalid_argument("Null evaluator not allowed");
   }
 
   // Weights < 0.0 don't make sense in this context.
@@ -41,4 +42,9 @@ double AggregationEvaluator::evaluate(const VmSession& session) {
   return total_score;
 }
 
-}  // namespace beast
+const std::vector<AggregationEvaluator::EvaluatorDescription>&
+AggregationEvaluator::getEvaluators() const {
+  return evaluators_;
+}
+
+} // namespace beast

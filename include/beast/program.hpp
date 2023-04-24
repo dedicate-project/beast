@@ -40,8 +40,8 @@ class Program {
    * a new type unless it is undeclared first.
    */
   enum class VariableType {
-    Int32 = 0,  ///< A four byte signed integer type
-    Link = 1    ///< A link to another variable (resolved when the variable content is accessed)
+    Int32 = 0, ///< A four byte signed integer type
+    Link = 1   ///< A link to another variable (resolved when the variable content is accessed)
   };
 
   /**
@@ -170,6 +170,8 @@ class Program {
    */
   [[nodiscard]] const std::vector<unsigned char>& getData() const noexcept;
 
+  [[nodiscard]] std::vector<unsigned char> extractData() noexcept;
+
   /**
    * @fn Program::noop
    * @brief Adds a NoOp operation to the program
@@ -268,9 +270,8 @@ class Program {
    * @param destination_variable_index The index of the destination variable.
    * @param follow_destination_links Whether to resolve destination variable links.
    */
-  void addVariableToVariable(
-    int32_t source_variable_index, bool follow_source_links,
-    int32_t destination_variable_index, bool follow_destination_links);
+  void addVariableToVariable(int32_t source_variable_index, bool follow_source_links,
+                             int32_t destination_variable_index, bool follow_destination_links);
 
   /**
    * @fn Program::subtractConstantFromVariable
@@ -304,9 +305,9 @@ class Program {
    * @param destination_variable_index The index of the variable.
    * @param follow_destination_links Whether to resolve variable links.
    */
-  void subtractVariableFromVariable(
-    int32_t source_variable_index, bool follow_source_links,
-    int32_t destination_variable_index, bool follow_destination_links);
+  void subtractVariableFromVariable(int32_t source_variable_index, bool follow_source_links,
+                                    int32_t destination_variable_index,
+                                    bool follow_destination_links);
 
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableGreaterThanZero
@@ -324,8 +325,8 @@ class Program {
    * @param follow_addr_links Whether to follow links in the address variable.
    */
   void relativeJumpToVariableAddressIfVariableGreaterThanZero(
-    int32_t variable_index, bool follow_links,
-    int32_t relative_jump_address_variable_index, bool follow_addr_links);
+      int32_t variable_index, bool follow_links, int32_t relative_jump_address_variable_index,
+      bool follow_addr_links);
 
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableLessThanZero
@@ -342,9 +343,10 @@ class Program {
    *        address.
    * @param follow_addr_links Whether to follow links in the address variable.
    */
-  void relativeJumpToVariableAddressIfVariableLessThanZero(
-    int32_t variable_index, bool follow_links,
-    int32_t relative_jump_address_variable_index, bool follow_addr_links);
+  void
+  relativeJumpToVariableAddressIfVariableLessThanZero(int32_t variable_index, bool follow_links,
+                                                      int32_t relative_jump_address_variable_index,
+                                                      bool follow_addr_links);
 
   /**
    * @fn Program::relativeJumpToVariableAddressIfVariableEqualsZero
@@ -361,9 +363,10 @@ class Program {
    *        address.
    * @param follow_addr_links Whether to follow links in the address variable.
    */
-  void relativeJumpToVariableAddressIfVariableEqualsZero(
-    int32_t variable_index, bool follow_links,
-    int32_t relative_jump_address_variable_index, bool follow_addr_links);
+  void
+  relativeJumpToVariableAddressIfVariableEqualsZero(int32_t variable_index, bool follow_links,
+                                                    int32_t relative_jump_address_variable_index,
+                                                    bool follow_addr_links);
 
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableGreaterThanZero
@@ -381,8 +384,8 @@ class Program {
    * @param follow_addr_links Whether to follow links in the address variable.
    */
   void absoluteJumpToVariableAddressIfVariableGreaterThanZero(
-    int32_t variable_index, bool follow_links,
-    int32_t absolute_jump_address_variable_index, bool follow_addr_links);
+      int32_t variable_index, bool follow_links, int32_t absolute_jump_address_variable_index,
+      bool follow_addr_links);
 
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableLessThanZero
@@ -399,9 +402,10 @@ class Program {
    *        address.
    * @param follow_addr_links Whether to follow links in the address variable.
    */
-  void absoluteJumpToVariableAddressIfVariableLessThanZero(
-    int32_t variable_index, bool follow_links,
-    int32_t absolute_jump_address_variable_index, bool follow_addr_links);
+  void
+  absoluteJumpToVariableAddressIfVariableLessThanZero(int32_t variable_index, bool follow_links,
+                                                      int32_t absolute_jump_address_variable_index,
+                                                      bool follow_addr_links);
 
   /**
    * @fn Program::absoluteJumpToVariableAddressIfVariableEqualsZero
@@ -418,9 +422,10 @@ class Program {
    *        address.
    * @param follow_addr_links Whether to follow links in the address variable.
    */
-  void absoluteJumpToVariableAddressIfVariableEqualsZero(
-    int32_t variable_index, bool follow_links,
-    int32_t absolute_jump_address_variable_index, bool follow_addr_links);
+  void
+  absoluteJumpToVariableAddressIfVariableEqualsZero(int32_t variable_index, bool follow_links,
+                                                    int32_t absolute_jump_address_variable_index,
+                                                    bool follow_addr_links);
 
   /**
    * @fn Program::relativeJumpToAddressIfVariableGreaterThanZero
@@ -435,8 +440,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param relative_jump_address The relative address to jump to.
    */
-  void relativeJumpToAddressIfVariableGreaterThanZero(
-    int32_t variable_index, bool follow_links, int32_t relative_jump_address);
+  void relativeJumpToAddressIfVariableGreaterThanZero(int32_t variable_index, bool follow_links,
+                                                      int32_t relative_jump_address);
 
   /**
    * @fn Program::relativeJumpToAddressIfVariableLessThanZero
@@ -451,8 +456,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param relative_jump_address The relative address to jump to.
    */
-  void relativeJumpToAddressIfVariableLessThanZero(
-    int32_t variable_index, bool follow_links, int32_t relative_jump_address);
+  void relativeJumpToAddressIfVariableLessThanZero(int32_t variable_index, bool follow_links,
+                                                   int32_t relative_jump_address);
 
   /**
    * @fn Program::relativeJumpToAddressIfVariableEqualsZero
@@ -467,8 +472,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param relative_jump_address The relative address to jump to.
    */
-  void relativeJumpToAddressIfVariableEqualsZero(
-    int32_t variable_index, bool follow_links, int32_t relative_jump_address);
+  void relativeJumpToAddressIfVariableEqualsZero(int32_t variable_index, bool follow_links,
+                                                 int32_t relative_jump_address);
 
   /**
    * @fn Program::absoluteJumpToAddressIfVariableGreaterThanZero
@@ -483,8 +488,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param absolute_jump_address The absolute address to jump to.
    */
-  void absoluteJumpToAddressIfVariableGreaterThanZero(
-    int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
+  void absoluteJumpToAddressIfVariableGreaterThanZero(int32_t variable_index, bool follow_links,
+                                                      int32_t absolute_jump_address);
 
   /**
    * @fn Program::absoluteJumpToAddressIfVariableLessThanZero
@@ -499,8 +504,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param absolute_jump_address The absolute address to jump to.
    */
-  void absoluteJumpToAddressIfVariableLessThanZero(
-    int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
+  void absoluteJumpToAddressIfVariableLessThanZero(int32_t variable_index, bool follow_links,
+                                                   int32_t absolute_jump_address);
 
   /**
    * @fn Program::absoluteJumpToAddressIfVariableEqualsZero
@@ -515,8 +520,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param absolute_jump_address The absolute address to jump to.
    */
-  void absoluteJumpToAddressIfVariableEqualsZero(
-    int32_t variable_index, bool follow_links, int32_t absolute_jump_address);
+  void absoluteJumpToAddressIfVariableEqualsZero(int32_t variable_index, bool follow_links,
+                                                 int32_t absolute_jump_address);
 
   /**
    * @fn Program::loadMemorySizeIntoVariable
@@ -550,9 +555,8 @@ class Program {
    * @param destination_variable_index The index of the destination variable.
    * @param follow_destination_links Whether to resolve destination variable links.
    */
-  void checkIfVariableIsInput(
-    int32_t source_variable_index, bool follow_source_links,
-    int32_t destination_variable_index, bool follow_destination_links);
+  void checkIfVariableIsInput(int32_t source_variable_index, bool follow_source_links,
+                              int32_t destination_variable_index, bool follow_destination_links);
 
   /**
    * @fn Program::checkIfVariableIsOutput
@@ -572,9 +576,8 @@ class Program {
    * @param destination_variable_index The index of the destination variable.
    * @param follow_destination_links Whether to resolve destination variable links.
    */
-  void checkIfVariableIsOutput(
-    int32_t source_variable_index, bool follow_source_links,
-    int32_t destination_variable_index, bool follow_destination_links);
+  void checkIfVariableIsOutput(int32_t source_variable_index, bool follow_source_links,
+                               int32_t destination_variable_index, bool follow_destination_links);
 
   /**
    * @fn Program::loadInputCountIntoVariable
@@ -712,9 +715,8 @@ class Program {
    * @param destination_variable_index The index of the destination variable.
    * @param follow_destination_links Whether to resolve destination variable links.
    */
-  void copyVariable(
-      int32_t source_variable_index, bool follow_source_links,
-      int32_t destination_variable_index, bool follow_destination_links);
+  void copyVariable(int32_t source_variable_index, bool follow_source_links,
+                    int32_t destination_variable_index, bool follow_destination_links);
 
   /**
    * @fn Program::loadStringItemLengthIntoVariable
@@ -729,8 +731,8 @@ class Program {
    * @param variable_index The index of the variable.
    * @param follow_links Whether to resolve variable links.
    */
-  void loadStringItemLengthIntoVariable(
-      int32_t string_table_index, int32_t variable_index, bool follow_links);
+  void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index,
+                                        bool follow_links);
 
   /**
    * @fn Program::checkIfInputWasSet
@@ -752,9 +754,8 @@ class Program {
    * @param follow_destination_links Whether to resolve destination variable links.
    * @sa VmSession::setVariableBehavior()
    */
-  void checkIfInputWasSet(
-      int32_t variable_index, bool follow_links,
-      int32_t destination_variable_index, bool follow_destination_links);
+  void checkIfInputWasSet(int32_t variable_index, bool follow_links,
+                          int32_t destination_variable_index, bool follow_destination_links);
 
   /**
    * @fn Program::loadStringTableItemLengthLimitIntoVariable
@@ -870,8 +871,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @sa loadVariableStringItemLengthIntoVariable()
    */
-  void loadStringItemIntoVariables(
-      int32_t string_table_index, int32_t start_variable_index, bool follow_links);
+  void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index,
+                                   bool follow_links);
 
   /**
    * @fn Program::performSystemCall
@@ -891,8 +892,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @sa VmSession::performSystemCall()
    */
-  void performSystemCall(
-      int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
+  void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index,
+                         bool follow_links);
 
   /**
    * @fn Program::bitShiftVariableLeft
@@ -960,8 +961,8 @@ class Program {
    * @param variable_index_b The index of the second variable.
    * @param follow_links_b Whether to resolve second variable's links.
    */
-  void bitWiseAndTwoVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a,
+                              int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::bitWiseOrTwoVariables
@@ -979,8 +980,8 @@ class Program {
    * @param variable_index_b The index of the second variable.
    * @param follow_links_b Whether to resolve second variable's links.
    */
-  void bitWiseOrTwoVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a,
+                             int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::bitWiseXorTwoVariables
@@ -998,8 +999,8 @@ class Program {
    * @param variable_index_b The index of the second variable.
    * @param follow_links_b Whether to resolve second variable's links.
    */
-  void bitWiseXorTwoVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a,
+                              int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn Program::moduloVariableByConstant
@@ -1019,8 +1020,7 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @param modulo_constant The constant to modulo onto the variable.
    */
-  void moduloVariableByConstant(
-      int32_t variable_index, bool follow_links, int32_t modulo_constant);
+  void moduloVariableByConstant(int32_t variable_index, bool follow_links, int32_t modulo_constant);
 
   /**
    * @fn Program::moduloVariableByVariable
@@ -1041,9 +1041,8 @@ class Program {
    * @param modulo_variable_index The index of the modulo variable.
    * @param modulo_follow_links Whether to resolve the modulo variable's links.
    */
-  void moduloVariableByVariable(
-      int32_t variable_index, bool follow_links,
-      int32_t modulo_variable_index, bool modulo_follow_links);
+  void moduloVariableByVariable(int32_t variable_index, bool follow_links,
+                                int32_t modulo_variable_index, bool modulo_follow_links);
 
   /**
    * @fn Program::rotateVariableLeft
@@ -1099,9 +1098,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @sa pushConstantOnStack(), popVariableFromStack(), popTopItemFromStack(), checkIfStackIsEmpty()
    */
-  void pushVariableOnStack(
-      int32_t stack_variable_index, bool follow_links_stack,
-      int32_t variable_index, bool follow_links);
+  void pushVariableOnStack(int32_t stack_variable_index, bool follow_links_stack,
+                           int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::pushConstantOnStack
@@ -1120,8 +1118,7 @@ class Program {
    * @param constant tbd
    * @sa pushVariableOnStack(), popVariableFromStack(), popTopItemFromStack(), checkIfStackIsEmpty()
    */
-  void pushConstantOnStack(
-      int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
+  void pushConstantOnStack(int32_t stack_variable_index, bool follow_links_stack, int32_t constant);
 
   /**
    * @fn Program::popVariableFromStack
@@ -1141,9 +1138,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @sa pushVariableOnStack(), pushConstantOnStack(), popTopItemFromStack(), checkIfStackIsEmpty()
    */
-  void popVariableFromStack(
-      int32_t stack_variable_index, bool follow_links_stack,
-      int32_t variable_index, bool follow_links);
+  void popVariableFromStack(int32_t stack_variable_index, bool follow_links_stack,
+                            int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::popTopItemFromStack
@@ -1182,9 +1178,8 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @sa pushConstantOnStack(), pushVariableOnStack(), pushConstantOnStack(), popTopItemFromStack()
    */
-  void checkIfStackIsEmpty(
-      int32_t stack_variable_index, bool follow_links_stack,
-      int32_t variable_index, bool follow_links);
+  void checkIfStackIsEmpty(int32_t stack_variable_index, bool follow_links_stack,
+                           int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::swapVariables
@@ -1200,8 +1195,8 @@ class Program {
    * @param variable_index_b The index of the variable.
    * @param follow_links_b Whether to resolve variable links.
    */
-  void swapVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b,
+                     bool follow_links_b);
 
   /**
    * @fn Program::setVariableStringTableEntry
@@ -1217,8 +1212,8 @@ class Program {
    * @param string The string to store in the string table
    * @sa setStringTableEntry()
    */
-  void setVariableStringTableEntry(
-      int32_t variable_index, bool follow_links, const std::string& string);
+  void setVariableStringTableEntry(int32_t variable_index, bool follow_links,
+                                   const std::string& string);
 
   /**
    * @fn Program::printVariableStringFromStringTable
@@ -1249,9 +1244,9 @@ class Program {
    * @param variable_index The index of the variable to store the length in
    * @param follow_links Whether to resolve the target variable's links
    */
-  void loadVariableStringItemLengthIntoVariable(
-      int32_t string_item_variable_index, bool follow_links_string_item,
-      int32_t variable_index, bool follow_links);
+  void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index,
+                                                bool follow_links_string_item,
+                                                int32_t variable_index, bool follow_links);
 
   /**
    * @fn Program::loadVariableStringItemIntoVariables
@@ -1271,9 +1266,9 @@ class Program {
    * @param follow_links Whether to resolve variable links.
    * @sa loadStringItemLengthIntoVariable()
    */
-  void loadVariableStringItemIntoVariables(
-      int32_t string_item_variable_index, bool follow_links_string_item,
-      int32_t variable_index, bool follow_links);
+  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index,
+                                           bool follow_links_string_item, int32_t variable_index,
+                                           bool follow_links);
 
   /**
    * @fn Program::terminateWithVariableReturnCode
@@ -1307,9 +1302,8 @@ class Program {
    * @param follow_links_places Whether to resolve the amount variable's links
    * @sa bitShiftVariableLeft()
    */
-  void variableBitShiftVariableLeft(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool follow_links_places);
+  void variableBitShiftVariableLeft(int32_t variable_index, bool follow_links,
+                                    int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::variableBitShiftVariableRight
@@ -1326,9 +1320,8 @@ class Program {
    * @param follow_links_places Whether to resolve the amount variable's links
    * @sa bitShiftVariableRight()
    */
-  void variableBitShiftVariableRight(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool follow_links_places);
+  void variableBitShiftVariableRight(int32_t variable_index, bool follow_links,
+                                     int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::variableRotateVariableLeft
@@ -1344,9 +1337,8 @@ class Program {
    * @param places_variable_index The variable holding the amount to rotate by
    * @param follow_links_places Whether to resolve the amount variable's links
    */
-  void variableRotateVariableLeft(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool follow_links_places);
+  void variableRotateVariableLeft(int32_t variable_index, bool follow_links,
+                                  int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::variableRotateVariableRight
@@ -1362,9 +1354,8 @@ class Program {
    * @param places_variable_index The variable holding the amount to rotate by
    * @param follow_links_places Whether to resolve the amount variable's links
    */
-  void variableRotateVariableRight(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool follow_links_places);
+  void variableRotateVariableRight(int32_t variable_index, bool follow_links,
+                                   int32_t places_variable_index, bool follow_links_places);
 
   /**
    * @fn Program::compareIfVariableGtConstant
@@ -1384,9 +1375,8 @@ class Program {
    * @param target_variable_index The index of the variable.
    * @param target_follow_links Whether to resolve variable links.
    */
-  void compareIfVariableGtConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableLtConstant
@@ -1406,9 +1396,8 @@ class Program {
    * @param target_variable_index The index of the variable.
    * @param target_follow_links Whether to resolve variable links.
    */
-  void compareIfVariableLtConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableEqConstant
@@ -1428,9 +1417,8 @@ class Program {
    * @param target_variable_index The index of the variable.
    * @param target_follow_links Whether to resolve variable links.
    */
-  void compareIfVariableEqConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableGtVariable
@@ -1451,9 +1439,9 @@ class Program {
    * @param target_variable_index The index of the variable.
    * @param target_follow_links Whether to resolve variable links.
    */
-  void compareIfVariableGtVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableLtVariable
@@ -1474,9 +1462,9 @@ class Program {
    * @param target_variable_index The index of the variable.
    * @param target_follow_links Whether to resolve variable links.
    */
-  void compareIfVariableLtVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::compareIfVariableEqVariable
@@ -1497,9 +1485,9 @@ class Program {
    * @param target_variable_index The index of the variable.
    * @param target_follow_links Whether to resolve variable links.
    */
-  void compareIfVariableEqVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMaxOfVariableAndConstant
@@ -1520,9 +1508,8 @@ class Program {
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMinOfVariableAndConstant(), getMaxOfVariableAndVariable(), getMinOfVariableAndVariable()
    */
-  void getMaxOfVariableAndConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMinOfVariableAndConstant
@@ -1543,9 +1530,8 @@ class Program {
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMaxOfVariableAndVariable(), getMinOfVariableAndVariable()
    */
-  void getMinOfVariableAndConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMaxOfVariableAndVariable
@@ -1562,14 +1548,15 @@ class Program {
    * @param variable_index_a The index of the first variable used for the comparison.
    * @param follow_links_a Whether to follow the first variable's links for the comparison variable.
    * @param variable_index_b The index of the second variable used for the comparison.
-   * @param follow_links_b Whether to follow the second variable's links for the comparison variable.
+   * @param follow_links_b Whether to follow the second variable's links for the comparison
+   * variable.
    * @param target_variable_index The index of the variable to store the result in.
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMinOfVariableAndVariable()
    */
-  void getMaxOfVariableAndVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn Program::getMinOfVariableAndVariable
@@ -1586,14 +1573,15 @@ class Program {
    * @param variable_index_a The index of the first variable used for the comparison.
    * @param follow_links_a Whether to follow the first variable's links for the comparison variable.
    * @param variable_index_b The index of the second variable used for the comparison.
-   * @param follow_links_b Whether to follow the second variable's links for the comparison variable.
+   * @param follow_links_b Whether to follow the second variable's links for the comparison
+   * variable.
    * @param target_variable_index The index of the variable to store the result in.
    * @param target_follow_links whether to follow variable links for the target variable.
    * @sa getMaxOfVariableAndConstant(), getMinOfVariableAndConstant(), getMaxOfVariableAndVariable()
    */
-  void getMinOfVariableAndVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
  private:
   /**
@@ -1601,9 +1589,9 @@ class Program {
    * @brief Checks if a number of bytes fits into the available program space
    *
    * Starting from the current program pointer, this method returns a boolean flag denoting whether
-   * a number of bytes can fit into the remaining available program space. For constant size programs,
-   * this is limited by the program size it was initialized with. For dynamically growing programs,
-   * the available space is expanded upon this call to fit the requested bytes.
+   * a number of bytes can fit into the remaining available program space. For constant size
+   * programs, this is limited by the program size it was initialized with. For dynamically growing
+   * programs, the available space is expanded upon this call to fit the requested bytes.
    *
    * @param bytes The number of bytes to fit into the program space.
    *
@@ -1677,7 +1665,7 @@ class Program {
    *
    * @param size The size that should be ensured to fit into the program space.
    */
-  void ensureSize(uint32_t size) noexcept ;
+  void ensureSize(uint32_t size) noexcept;
 
   /**
    * @var Program::data_
@@ -1698,6 +1686,6 @@ class Program {
   bool grows_dynamically_ = true;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PROGRAM_HPP_
+#endif // BEAST_PROGRAM_HPP_

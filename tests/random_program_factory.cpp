@@ -24,7 +24,7 @@ TEST_CASE("factory_generates_many_large_programs_without_hanging", "random_progr
   const uint32_t random_program_size = 2500;
   const uint32_t program_count = 1000;
 
-  for (uint32_t idx = 0; idx < program_count; ++idx) {  
+  for (uint32_t idx = 0; idx < program_count; ++idx) {
     beast::Program program = factory.generate(random_program_size, 100, 100, 100);
     REQUIRE(program.getSize() == random_program_size);
   }

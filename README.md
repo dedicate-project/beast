@@ -106,8 +106,14 @@ values), but this example shows the very bare basics of how to achieve a hello w
 
 First, install the dependencies (assuming you're working on a Ubuntu system):
 ```bash
-sudo apt install clang-tidy ccache
+sudo apt install clang-tidy ccache libasio-dev
 ```
+
+If you are on Ubuntu 22.04 or newer and encounter an issue where `clang-tidy` cannot find standard headers (like `<array>`), install this package:
+```bash
+sudo apt install libstdc++-12-dev
+```
+ane try compiling again.
 
 To build the project, check out the source code:
 ```bash
@@ -151,6 +157,17 @@ make
 make coverage
 ```
 
+## Running BEAST Compose
+
+Compose is a web frontend/backend combination that allows intuitive interaction with evolutionary
+pipelines using BEAST. To run it, from the root directory of the project, run:
+```bash
+./build/bin/beast-compose --html_root html_static/ --storage_folder models
+```
+
+This will start a web server that exposes the BEAST interface at the address http://0.0.0.0:9192
+. Any pipeline models will be read from and stored to the folder given as `storage_folder`, the
+served HTML content will be served from the folder given as `html_root`.
 
 ## Defined Operators
 

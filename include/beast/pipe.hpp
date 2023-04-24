@@ -2,28 +2,42 @@
 #define BEAST_PIPE_HPP_
 
 // Standard
+#include <cstdint>
 #include <deque>
-#include <stdint.h>
+#include <mutex>
 #include <vector>
-
-// Internal
-#include <beast/vm_session.hpp>
 
 namespace beast {
 
 /**
  * @class Pipe
- * @brief Base class for implementing evolutionary pipes
+ * @brief Provides an abstract interface for managing input and output buffers of candidate programs
+ * and finalist programs
  *
- * Evolutionary pipes are the main mechanism for fitting a set of preliminary program candidates to
- * a given task. A pipe implements the entire logic to judge the fitness of a program for the task,
- * by implementing an `evaluate` function. This class is virtual and must be subclassed.
- *
- * @author Jan Winkler
- * @date 2023-02-04
+ * The Pipe class serves as a base class for different types of evolutionary algorithms. It manages
+ * the input and output buffers of candidate programs and finalist programs while providing methods
+ * to add, draw, and check the availability of programs in the buffers. Derived classes should
+ * implement the execute() method to define their specific behavior.
  */
 class Pipe {
  public:
+  /**
+   * @brief Constructs a new Pipe with the specified number of candidates,
+   *        input slots, and output slots
+   *
+   * @param max_candidates The maximum number of candidates in the population
+   * @param input_slots The number of input slots for candidate programs
+   * @param output_slots The number of output slots for finalist programs
+   */
+  Pipe(uint32_t max_candidates, uint32_t input_slots, uint32_t output_slots);
+
+  /**
+   * @brief Destructor
+   *
+   * Added for vtable consistency.
+   */
+  virtual ~Pipe() = default;
+
   /**
    * @brief Holds information about finalist programs
    *
@@ -31,28 +45,18 @@ class Pipe {
    * score in the task given. This struct holds the respective program code, as well as its score.
    */
   struct OutputItem {
-    std::vector<unsigned char> data;  ///< The program code
-    double score;                     ///< The evaluation score this code achieved
+    std::vector<unsigned char> data; ///< The program code
+    double score;                    ///< The evaluation score this code achieved
   };
 
   /**
-   * @class Pipe::Pipe
-   * @brief Constructs the pipe for a maximum candidate buffer size
+   * @class Pipe::inputHasSpace
+   * @brief Denote whether space is left in the input pool
    *
-   * Pipes have a specific initial population size that needs to be met with candidates before
-   * evolution can begin. This size is specified in this constructor.
-   *
-   * @param max_candidates The candidate population size for this pipe
+   * @return `true` if the number of candidates in the input pool is less than the population size,
+   *         `false` otherwise.
    */
-  explicit Pipe(uint32_t max_candidates);
-
-  /**
-   * @class Pipe::~Pipe
-   * @brief Deconstructs this instance
-   *
-   * Required for vtable consistency.
-   */
-  virtual ~Pipe() = default;
+  [[nodiscard]] bool inputHasSpace(uint32_t slot_index);
 
   /**
    * @class Pipe::addInput
@@ -63,40 +67,7 @@ class Pipe {
    *
    * @param candidate The candidate program code to add to the input pool
    */
-  void addInput(const std::vector<unsigned char>& candidate);
-
-  /**
-   * @class Pipe::evolve
-   * @brief Performs an evolution of the input candidate programs according to the Pipe's task
-   *
-   * Based on the `evaluate` function implemented in the concrete Pipe implementation, candidate
-   * programs are scored according to their performance in these tasks. This function performs the
-   * evolutionary steps required for recombination and formulation of new programs, and stores
-   * programs that pass the cut-off score into the output finalist buffer.
-   */
-  void evolve();
-
-  /**
-   * @class Pipe::hasSpace
-   * @brief Denote whether space is left in the input pool
-   *
-   * @return `true` if the number of candidates in the input pool is less than the population size,
-   *         `false` otherwise.
-   */
-  bool hasSpace() const;
-
-  /**
-   * @class Pipe::evaluate
-   * @brief Scores a candidate program according to a concrete task
-   *
-   * The passed in program code shall be tested for suitability for a concrete task. The better the
-   * performance, the higher the score (0.0 - 1.0). Subclasses of the Pipe class need to implement
-   * this function, and it is the main driver for the evolutionary step.
-   *
-   * @param program_data The program candidate to score
-   * @return The evaluation score the program candidate achieved (0.0 - 1.0)
-   */
-  [[nodiscard]] virtual double evaluate(const std::vector<unsigned char>& program_data) = 0;
+  void addInput(uint32_t slot_index, const std::vector<unsigned char>& candidate);
 
   /**
    * @class Pipe::drawInput
@@ -106,7 +77,7 @@ class Pipe {
    *
    * @return An input candidate program code
    */
-  [[nodiscard]] std::vector<unsigned char> drawInput();
+  [[nodiscard]] std::vector<unsigned char> drawInput(uint32_t slot_index);
 
   /**
    * @class Pipe::hasOutput
@@ -114,7 +85,7 @@ class Pipe {
    *
    * @return `true` if at least one output finalist is available, `false` otherwise
    */
-  [[nodiscard]] bool hasOutput() const;
+  [[nodiscard]] bool hasOutput(uint32_t slot_index);
 
   /**
    * @class Pipe::drawOutput
@@ -124,57 +95,95 @@ class Pipe {
    *
    * @return An output finalist item consisting of program code and score
    */
-  [[nodiscard]] OutputItem drawOutput();
+  [[nodiscard]] OutputItem drawOutput(uint32_t slot_index);
 
   /**
-   * @class Pipe::setCutOffScore
-   * @brief Sets the cut-off score
+   * @brief Get the amount of candidates in the specified input slot
    *
-   * Finalists that score below this score are discarded after evolution.
-   *
-   * @param cut_off_score The cut-off score under which to discard finalists
+   * @param slot_index The index of the input slot
+   * @return The number of candidates in the specified input slot
    */
-  void setCutOffScore(double cut_off_score);
+  [[nodiscard]] uint32_t getInputSlotAmount(uint32_t slot_index);
+
+  /**
+   * @brief Get the amount of finalists in the specified output slot
+   *
+   * @param slot_index The index of the output slot
+   * @return The number of finalists in the specified output slot
+   */
+  [[nodiscard]] uint32_t getOutputSlotAmount(uint32_t slot_index);
+
+  /**
+   * @brief Get the total number of input slots
+   *
+   * @return The number of input slots
+   */
+  [[nodiscard]] uint32_t getInputSlotCount() const;
+
+  /**
+   * @brief Get the total number of output slots
+   *
+   * @return The number of output slots
+   */
+  [[nodiscard]] uint32_t getOutputSlotCount() const;
+
+  /**
+   * @brief Get the maximum number of candidates allowed in the population
+   *
+   * @return The maximum number of candidates
+   */
+  [[nodiscard]] uint32_t getMaxCandidates() const;
+
+  /**
+   * @brief Checks if the inputs are saturated (i.e., all input slots are full)
+   *
+   * @return `true` if all input slots are full, `false` otherwise
+   */
+  [[nodiscard]] virtual bool inputsAreSaturated();
+
+  /**
+   * @brief Checks if the outputs are saturated (i.e., all output slots are full)
+   *
+   * @return `true` if all output slots are full, `false` otherwise
+   */
+  [[nodiscard]] virtual bool outputsAreSaturated();
+
+  /**
+   * @brief Executes the pipe's main functionality
+   *
+   * This is a pure virtual function that should be implemented by derived classes.
+   */
+  virtual void execute() = 0;
 
  protected:
-  /**
-   * @class Pipe::storeFinalist
-   * @brief Stores a finalist in the output buffer
-   *
-   * @param finalist The finalist program code to add to the buffer
-   * @param score The score the finalist program code has achieved in the evaluation
-   * @sa hasOutput(), drawOutput()
-   */
-  void storeFinalist(const std::vector<unsigned char>& finalist, float score);
+  void storeOutput(uint32_t slot_index, const OutputItem& output);
+
+  void storeOutput(uint32_t slot_index, OutputItem&& output);
 
  private:
-  /**
-   * @var Pipe::max_candidates_
-   * @brief Denotes the population size of this pipe
-   */
-  uint32_t max_candidates_;
-
   /**
    * @var Pipe::input_
    * @brief Holds the input candidate programs
    */
-  std::deque<std::vector<unsigned char>> input_;
+  std::vector<std::deque<std::vector<unsigned char>>> inputs_;
+
+  std::mutex inputs_mutex_;
 
   /**
    * @var Pipe::output_
    * @brief Holds the finalist output buffer
    */
-  std::deque<OutputItem> output_;
+  std::vector<std::deque<OutputItem>> outputs_;
+
+  std::mutex outputs_mutex_;
 
   /**
-   * @var Pipe::cut_off_score_
-   * @brief Determines the minimum score a finalist needs to have
-   *
-   * Finalists below this score are not added to the output buffer.
+   * @var Pipe::max_candidates_
+   * @brief Denotes the population size of this pipe
    */
-  double cut_off_score_ = 0.0;
+  uint32_t max_candidates_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_PIPE_HPP_
+#endif // BEAST_PIPE_HPP_

@@ -6,12 +6,20 @@ project(beast
   HOMEPAGE_URL "https://github.com/dedicate-project/beast/")
 
 option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
-option(BEAST_BUILD_EXAMPLES "Whether to build examples or not" YES)
+option(BEAST_BUILD_PIPELINES "Whether to build example pipelines or not" YES)
+option(BEAST_BUILD_PROGRAMS "Whether to build example programs or not" YES)
 option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
+# Add utilities used for evaluations. This needs to be placed before the clang-tidy configuration to
+# not impose clang rules into 3rdparty components.
+set(MAZE_BUILD_TESTS NO)
+add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/maze)
+
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-warnings-as-errors=*;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-altera-id-dependent-backward-branch,-readability-function-cognitive-complexity,-altera-unroll-loops,-bugprone-easily-swappable-parameters,-misc-no-recursion,-altera-struct-pack-align")
+
+find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format clang-format-12 clang-format-11 clang-format-10 clang-format-9)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,8 +32,14 @@ if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
 endif()
 
 if(BEAST_BUILD_DOCS)
-  add_subdirectory("docs")
+  add_subdirectory(docs)
 endif()
+
+# Create a list of all .h files in the "ga" subdirectory of the galib source directory
+file(GLOB GALIB_HEADERS ${CMAKE_SOURCE_DIR}/3rdparty/galib/ga/*.h)
+
+# Copy the .h files to the galib_src/ga subdirectory of the build directory
+file(COPY ${GALIB_HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/galib_src/ga/)
 
 set(GALIB_SRCS
   garandom.C gaerror.C GAParameter.C GAStatistics.C GABaseGA.C GASStateGA.C
@@ -37,36 +51,23 @@ set(GALIB_SRCS
   # compilation issues.
   # GAStringGenome.C GARealGenome.C GA1DArrayGenome.C GA2DArrayGenome.C GA3DArrayGenome.C
   )
+
 set(GALIB_SRCS_FULL)
 foreach(file ${GALIB_SRCS})
   list(APPEND GALIB_SRCS_FULL ${CMAKE_SOURCE_DIR}/3rdparty/galib/ga/${file})
 endforeach()
+# Copy all files in GALIB_SRCS_FULL to the build directory's galib_src subdirectory
+file(COPY ${GALIB_SRCS_FULL} DESTINATION ${CMAKE_BINARY_DIR}/galib_src/ga)
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 add_library(galib ${GALIB_SRCS_FULL})
 set_target_properties(galib PROPERTIES CXX_CLANG_TIDY "")
-target_compile_options(galib PRIVATE -fpermissive)
 if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
   target_compile_options(galib PRIVATE -Wno-register -Wno-write-strings -Wno-permissive)
+else()
+  target_compile_options(galib PRIVATE /wd4996 /wd5033 /wd4244 /wd4267)
 endif()
-
-
-# Main BEAST library
-add_library(${PROJECT_NAME}
-  src/beast.cpp
-  src/cpu_virtual_machine.cpp
-  src/pipe.cpp
-  src/program.cpp
-  src/random_program_factory.cpp
-  src/time_functions.cpp
-  src/vm_session.cpp
-  src/virtual_machine.cpp
-  src/evaluators/aggregation_evaluator.cpp
-  src/evaluators/runtime_statistics_evaluator.cpp
-  src/evaluators/operator_usage_evaluator.cpp)
-
-target_link_libraries(${PROJECT_NAME}
-  galib)
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modules ${CMAKE_MODULE_PATH})
@@ -76,59 +77,179 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 
   setup_target_for_coverage_lcov(NAME coverage
     EXECUTABLE make test
-    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/*
+    BASE_DIRECTORY ${CMAKE_SOURCE_DIR}
+    EXCLUDE ${CMAKE_SOURCE_DIR}/3rdparty/* ${CMAKE_SOURCE_DIR}/tests/* /usr/include/c++/* /usr/include/x86_64-linux-gnu/c++/* ${CMAKE_SOURCE_DIR}/examples/* ${CMAKE_SOURCE_DIR}/pipelines/* asio/* ${CMAKE_SOURCE_DIR}/src/compose.cpp ${CMAKE_BINARY_DIR}/* ${CMAKE_BINARY_DIR}/galib_src/* ${CMAKE_SOURCE_DIR}/compose.cpp
     SONARQUBE)
 else()
-  add_compile_options(-O3)
+  if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+    add_compile_options(-O3)
+  endif()
 endif(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Utilities library
+add_library(${PROJECT_NAME}-utils
+  src/filesystem_helper.cpp
+  src/time_functions.cpp
+  src/version.cpp)
+
+# VM library
+add_library(${PROJECT_NAME}-vm
+  src/cpu_virtual_machine.cpp
+  src/program.cpp
+  src/random_program_factory.cpp
+  src/virtual_machine.cpp
+  src/vm_session.cpp)
+
+# Evaluators library
+add_library(${PROJECT_NAME}-evaluators
+  src/evaluators/aggregation_evaluator.cpp
+  src/evaluators/maze_evaluator.cpp
+  src/evaluators/random_serial_data_passthrough_evaluator.cpp
+  src/evaluators/runtime_statistics_evaluator.cpp
+  src/evaluators/operator_usage_evaluator.cpp)
+
+# Pipelines library
+add_library(${PROJECT_NAME}-pipelines
+  src/pipe.cpp
+  src/pipeline.cpp
+  src/pipeline_manager.cpp
+  src/pipeline_server.cpp
+  src/pipes/evaluator_pipe.cpp
+  src/pipes/evolution_pipe.cpp
+  src/pipes/null_sink_pipe.cpp
+  src/pipes/program_factory_pipe.cpp)
+
+set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+target_link_libraries(${PROJECT_NAME}-evaluators galib maze)
+target_link_libraries(${PROJECT_NAME}-pipelines Threads::Threads)
+
+add_executable(${PROJECT_NAME}-compose
+  src/compose.cpp)
+
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  target_link_libraries(${PROJECT_NAME}-compose PUBLIC gcov)
+endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+
+target_link_libraries(${PROJECT_NAME}-compose PUBLIC ${PROJECT_LIBS})
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include_directories(
   include
   ${CMAKE_BINARY_DIR}/include
-  ${CMAKE_SOURCE_DIR}/3rdparty/galib)
+  ${CMAKE_BINARY_DIR}/galib_src
+  ${CMAKE_SOURCE_DIR}/3rdparty/Crow/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/CLI11/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/asio/asio/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/json/include
+  ${CMAKE_SOURCE_DIR}/3rdparty/maze/include)
+
+link_directories(
+  ${CMAKE_BINARY_DIR}/lib)
 
 configure_file(include/beast/version.h.in include/beast/version.h)
 
-# Examples
-if(BEAST_BUILD_EXAMPLES)
-  macro(declare_example name)
-    add_executable(example_${name} examples/${name}.cpp)
-    target_link_libraries(example_${name} PUBLIC ${PROJECT_NAME})
+# Check if clang-format is available
+if (CLANG_FORMAT_EXECUTABLE)
+  # Format C++ files target
+  file(GLOB_RECURSE ALL_CPP_FILES
+    ${CMAKE_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/pipes/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/evaluators/*.cpp
+    ${CMAKE_SOURCE_DIR}/examples/pipelines/*.cpp
+    ${CMAKE_SOURCE_DIR}/examples/programs/*.cpp
+    ${CMAKE_SOURCE_DIR}/tests/*.cpp
+    ${CMAKE_SOURCE_DIR}/include/*.hpp
+    ${CMAKE_SOURCE_DIR}/include/beast/*.hpp
+    ${CMAKE_SOURCE_DIR}/include/beast/pipes/*.hpp
+    ${CMAKE_SOURCE_DIR}/include/beast/evaluators/*.hpp)
 
-    set_target_properties(example_${name}
+  # Format JavaScript files target
+  file(GLOB_RECURSE ALL_JS_FILES
+    ${CMAKE_SOURCE_DIR}/html_static/js/*.js)
+
+  # Exclude 3rdparty JS libs
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/konva*")
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/react*")
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/react-dom*")
+  list(FILTER ALL_JS_FILES EXCLUDE REGEX "${CMAKE_SOURCE_DIR}/html_static/js/material-ui*")
+
+  set(ALL_SOURCE_FILES ${ALL_CPP_FILES})
+  list(APPEND ALL_SOURCE_FILES ${ALL_JS_FILES})
+
+  # Format all files
+  add_custom_target(format
+    COMMAND ${CLANG_FORMAT_EXECUTABLE} -i -style=file
+            -fallback-style=none ${ALL_SOURCE_FILES}
+    COMMENT "Running clang-format on all source files"
+    VERBATIM)
+else()
+  message(WARNING "clang-format not found, format targets are not available.")
+endif()
+
+# Pipelines
+if(BEAST_BUILD_PIPELINES)
+  macro(declare_pipeline name)
+    add_executable(pipeline_${name} examples/pipelines/${name}.cpp)
+    target_link_libraries(pipeline_${name} PUBLIC ${PROJECT_LIBS})
+
+    set_target_properties(pipeline_${name}
       PROPERTIES
-      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples)
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples/pipelines)
 
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
-      target_link_libraries(example_${name} PUBLIC gcov)
+      target_link_libraries(pipeline_${name} PUBLIC gcov)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
   endmacro()
 
-  declare_example(adder)
-  declare_example(bubblesort)
-  declare_example(evaluation)
-  declare_example(feedloop)
-  declare_example(hello_world)
-  declare_example(pipe)
+  declare_pipeline(factory)
+  declare_pipeline(forwarder)
+endif()
+
+# Programs
+if(BEAST_BUILD_PROGRAMS)
+  macro(declare_program name)
+    add_executable(program_${name} examples/programs/${name}.cpp)
+    target_link_libraries(program_${name} PUBLIC ${PROJECT_LIBS})
+
+    set_target_properties(program_${name}
+      PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/examples/programs)
+
+    if(CMAKE_BUILD_TYPE MATCHES "Debug")
+      target_link_libraries(program_${name} PUBLIC gcov)
+    endif(CMAKE_BUILD_TYPE MATCHES "Debug")
+  endmacro()
+
+  declare_program(adder)
+  declare_program(bubblesort)
+  declare_program(evaluation)
+  declare_program(feedloop)
+  declare_program(hello_world)
+  declare_program(pipe)
 endif()
 
 # Testing
 if(BEAST_BUILD_TESTS)
   enable_testing()
 
-  add_library(tests_main tests/tests_main.cpp)
-  target_include_directories(tests_main PUBLIC 3rdparty/Catch2/single_include)
-  target_link_libraries(tests_main PUBLIC ${PROJECT_NAME})
+  add_library(tests_main_beast tests/tests_main.cpp)
+  target_include_directories(tests_main_beast PUBLIC 3rdparty/Catch2/single_include)
+  target_link_libraries(tests_main_beast PUBLIC ${PROJECT_LIBS})
 
   macro(declare_test name)
     message(STATUS "Add test: ${name}")
     add_executable(test_${name} tests/${name}.cpp)
     target_include_directories(test_${name} PUBLIC 3rdparty/Catch2/single_include)
-    target_link_libraries(test_${name} PUBLIC tests_main)
+    target_link_libraries(test_${name} PUBLIC tests_main_beast)
     if(CMAKE_BUILD_TYPE MATCHES "Debug")
       target_link_libraries(test_${name} PUBLIC gcov)
     endif(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -143,13 +264,22 @@ if(BEAST_BUILD_TESTS)
   declare_test(bit_manipulation)
   declare_test(cpu_vm)
   declare_test(evaluators)
+  declare_test(evolution_pipe)
+  declare_test(filesystem_helper)
   declare_test(io)
   declare_test(jumps)
   declare_test(math)
+  declare_test(maze_evaluator)
   declare_test(misc)
+  declare_test(null_sink_pipe)
   declare_test(pipe)
+  declare_test(pipeline)
+  declare_test(pipeline_manager)
+  declare_test(pipeline_server)
+  declare_test(pipelines)
   declare_test(printing_and_string_table)
   declare_test(program)
+  declare_test(program_factory_pipe)
   declare_test(programs)
   declare_test(random_program_factory)
   declare_test(stacks)
@@ -160,7 +290,8 @@ if(BEAST_BUILD_TESTS)
 endif(BEAST_BUILD_TESTS)
 
 # Install targets
-install(TARGETS ${PROJECT_NAME} galib
+install(
+  TARGETS ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-pipelines galib
   EXPORT ${PROJECT_NAME}-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

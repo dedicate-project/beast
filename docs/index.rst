@@ -19,6 +19,7 @@ BEAST (Binary Evolution And Sentience Toolkit) is an open source project `hosted
    bytecode_virtual_machine.rst
    program_factories.rst
    evaluators.rst
+   helpers.rst
 
 
 Project Synopsis

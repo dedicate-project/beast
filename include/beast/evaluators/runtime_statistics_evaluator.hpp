@@ -1,6 +1,7 @@
 #ifndef BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
 #define BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
 
+// Internal
 #include <beast/evaluator.hpp>
 
 namespace beast {
@@ -32,6 +33,11 @@ class RuntimeStatisticsEvaluator : public Evaluator {
   explicit RuntimeStatisticsEvaluator(double dyn_noop_weight, double stat_noop_weight);
 
   /**
+   * @brief Destructor added for vtable consistency
+   */
+  ~RuntimeStatisticsEvaluator() override = default;
+
+  /**
    * @fn OperatorUsageEvaluator::evaluate
    * @brief Evaluates the dynamic runtime behavior and the static structure of a session and program
    *
@@ -43,7 +49,7 @@ class RuntimeStatisticsEvaluator : public Evaluator {
    * @return A score value from 0.0 (bad runtime behavior and/or static structure) to 1.0 (very good
    *         behavior and structure)
    */
-  double evaluate(const VmSession& session) override;
+  [[nodiscard]] double evaluate(const VmSession& session) override;
 
  private:
   /**
@@ -65,6 +71,6 @@ class RuntimeStatisticsEvaluator : public Evaluator {
   double prg_exec_weight_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_
+#endif // BEAST_RUNTIME_STATISTICS_EVALUATOR_HPP_

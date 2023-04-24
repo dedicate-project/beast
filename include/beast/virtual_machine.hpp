@@ -43,12 +43,6 @@ class VirtualMachine {
   VirtualMachine() = default;
 
   /**
-   * @fn VirtualMachine::~VirtualMachine
-   * @brief Virtual destructor performing no operation to ensure vtable consistency
-   */
-  virtual ~VirtualMachine() = default;
-
-  /**
    * @fn VirtualMachine::setMinimumMessageSeverity
    * @brief Sets the minimum message severity for displaying messages
    *
@@ -139,6 +133,6 @@ class VirtualMachine {
   bool silent_ = false;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_VIRTUAL_MACHINE_HPP_
+#endif // BEAST_VIRTUAL_MACHINE_HPP_

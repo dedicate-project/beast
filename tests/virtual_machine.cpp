@@ -6,45 +6,33 @@ namespace {
 
 class MockVirtualMachine : public beast::VirtualMachine {
  public:
-  void sendDebugMessage(const std::string& message) noexcept {
-    debug(message);
-  }
+  void sendDebugMessage(const std::string& message) noexcept { debug(message); }
 
-  void sendInfoMessage(const std::string& message) noexcept {
-    info(message);
-  }
+  void sendInfoMessage(const std::string& message) noexcept { info(message); }
 
-  void sendWarningMessage(const std::string& message) noexcept {
-    warning(message);
-  }
+  void sendWarningMessage(const std::string& message) noexcept { warning(message); }
 
-  void sendErrorMessage(const std::string& message) noexcept {
-    error(message);
-  }
+  void sendErrorMessage(const std::string& message) noexcept { error(message); }
 
-  void sendPanicMessage(const std::string& message) noexcept {
-    panic(message);
-  }
+  void sendPanicMessage(const std::string& message) noexcept { panic(message); }
 
   const std::string& getCachedMessage(beast::VirtualMachine::MessageSeverity severity) noexcept {
     return cache_[severity];
   }
 
-  bool step(beast::VmSession& /*session*/, bool /*dry_run*/) override {
-    return true;
-  }
+  bool step(beast::VmSession& /*session*/, bool /*dry_run*/) override { return true; }
 
  protected:
-   void message(beast::VirtualMachine::MessageSeverity severity, const std::string& message)
-       noexcept override {
-     cache_[severity] = message;
-   }
+  void message(beast::VirtualMachine::MessageSeverity severity,
+               const std::string& message) noexcept override {
+    cache_[severity] = message;
+  }
 
  private:
   std::map<beast::VirtualMachine::MessageSeverity, std::string> cache_;
 };
 
-}  // namespace
+} // namespace
 
 TEST_CASE("when_message_severity_set_to_debug_all_messages_are_printed", "virtual_machine") {
   const std::string debug_message = "Debug";
@@ -63,8 +51,8 @@ TEST_CASE("when_message_severity_set_to_debug_all_messages_are_printed", "virtua
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug) == debug_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info) == info_message);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning)
-          == warning_message);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) ==
+          warning_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -86,8 +74,8 @@ TEST_CASE("when_message_severity_set_to_info_the_right_messages_are_printed", "v
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info) == info_message);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning)
-          == warning_message);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) ==
+          warning_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -109,8 +97,8 @@ TEST_CASE("when_message_severity_set_to_warn_the_right_messages_are_printed", "v
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info).empty() == true);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning)
-          == warning_message);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning) ==
+          warning_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -132,8 +120,8 @@ TEST_CASE("when_message_severity_set_to_error_the_right_messages_are_printed", "
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info).empty() == true);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty()
-          == true);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty() ==
+          true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error) == error_message);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }
@@ -155,8 +143,8 @@ TEST_CASE("when_message_severity_set_to_panic_the_right_messages_are_printed", "
 
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Debug).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Info).empty() == true);
-  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty()
-          == true);
+  REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Warning).empty() ==
+          true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Error).empty() == true);
   REQUIRE(mock_vm.getCachedMessage(beast::VirtualMachine::MessageSeverity::Panic) == panic_message);
 }

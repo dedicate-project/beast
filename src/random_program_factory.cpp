@@ -5,21 +5,20 @@
 
 namespace beast {
 
-Program RandomProgramFactory::generate(
-    uint32_t size, uint32_t memory_size, uint32_t string_table_size,
-    uint32_t string_table_item_length) {
+Program RandomProgramFactory::generate(uint32_t size, uint32_t memory_size,
+                                       uint32_t string_table_size,
+                                       uint32_t string_table_item_length) {
   Program prg(size);
 
   std::random_device random_device;
   std::mt19937 mersenne_engine{random_device()};
-  std::uniform_int_distribution<> code_distribution(
-      0, static_cast<int32_t>(OpCode::Size) - 1);
+  std::uniform_int_distribution<> code_distribution(0, static_cast<int32_t>(OpCode::Size) - 1);
   std::uniform_int_distribution<> var_distribution(0, static_cast<int32_t>(memory_size) - 1);
   std::uniform_int_distribution<> bool_distribution(0, 1);
-  std::uniform_int_distribution<> int32_distribution(
-      std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
-  std::uniform_int_distribution<> int8_distribution(
-      std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max());
+  std::uniform_int_distribution<> int32_distribution(std::numeric_limits<int32_t>::min(),
+                                                     std::numeric_limits<int32_t>::max());
+  std::uniform_int_distribution<> int8_distribution(std::numeric_limits<int8_t>::min(),
+                                                    std::numeric_limits<int8_t>::max());
   std::uniform_int_distribution<> rel_addr_distribution(
       -static_cast<int32_t>(static_cast<double>(size) * 0.5),
       static_cast<int32_t>(static_cast<double>(size) * 0.5));
@@ -27,54 +26,49 @@ Program RandomProgramFactory::generate(
   std::uniform_int_distribution<> string_table_index_distribution(
       0, static_cast<int32_t>(string_table_size));
 
-  // A random string that fits into the string table, with characters ranging from ASCII 33-126.
+  // A random string that fits into the string table, with characters ranging
+  // from ASCII 33-126.
   const auto string_item_generator = [&mersenne_engine, &string_table_item_length]() {
-      std::string random_string;
-      std::uniform_int_distribution<> length_distribution(
-          0, static_cast<int32_t>(string_table_item_length));
-      std::uniform_int_distribution<> char_distribution(33, 126);
-      const int32_t length = length_distribution(mersenne_engine);
-      for (int32_t idx = 0; idx < length; idx++) {
-        random_string += static_cast<char>(char_distribution(mersenne_engine));
-      }
-      return random_string;
+    std::string random_string;
+    std::uniform_int_distribution<> length_distribution(
+        0, static_cast<int32_t>(string_table_item_length));
+    std::uniform_int_distribution<> char_distribution(33, 126);
+    const int32_t length = length_distribution(mersenne_engine);
+    for (int32_t idx = 0; idx < length; idx++) {
+      random_string += static_cast<char>(char_distribution(mersenne_engine));
+    }
+    return random_string;
   };
 
   // Random true/false switch.
-  const auto bool_generator =
-      [&bool_distribution, &mersenne_engine]() {
-        return bool_distribution(mersenne_engine) == 1;
-      };
-  // Select variable indices only from the range that actually fits into variable memory.
-  const auto var_generator =
-      [&var_distribution, &mersenne_engine]() {
-        return var_distribution(mersenne_engine);
-      };
+  const auto bool_generator = [&bool_distribution, &mersenne_engine]() {
+    return bool_distribution(mersenne_engine) == 1;
+  };
+  // Select variable indices only from the range that actually fits into
+  // variable memory.
+  const auto var_generator = [&var_distribution, &mersenne_engine]() {
+    return var_distribution(mersenne_engine);
+  };
   // A random value from the signed int32 range.
-  const auto int32_generator =
-      [&int32_distribution, &mersenne_engine]() {
-        return int32_distribution(mersenne_engine);
-      };
+  const auto int32_generator = [&int32_distribution, &mersenne_engine]() {
+    return int32_distribution(mersenne_engine);
+  };
   // A random value from the signed int8 range.
-  const auto int8_generator =
-      [&int8_distribution, &mersenne_engine]() {
-        return static_cast<int8_t>(int8_distribution(mersenne_engine));
-      };
+  const auto int8_generator = [&int8_distribution, &mersenne_engine]() {
+    return static_cast<int8_t>(int8_distribution(mersenne_engine));
+  };
   // A random relative address in the range [-size/2, size/2).
-  const auto rel_addr_generator =
-      [&rel_addr_distribution, &mersenne_engine]() {
-        return rel_addr_distribution(mersenne_engine);
-      };
+  const auto rel_addr_generator = [&rel_addr_distribution, &mersenne_engine]() {
+    return rel_addr_distribution(mersenne_engine);
+  };
   // A random valid absolute address in the range [0, size];
-  const auto abs_addr_generator =
-      [&abs_addr_distribution, &mersenne_engine]() {
-        return abs_addr_distribution(mersenne_engine);
-      };
+  const auto abs_addr_generator = [&abs_addr_distribution, &mersenne_engine]() {
+    return abs_addr_distribution(mersenne_engine);
+  };
   // A random valid string table index.
-  const auto string_table_index_generator =
-      [&string_table_index_distribution, &mersenne_engine]() {
-        return string_table_index_distribution(mersenne_engine);
-      };
+  const auto string_table_index_generator = [&string_table_index_distribution, &mersenne_engine]() {
+    return string_table_index_distribution(mersenne_engine);
+  };
 
   while (true) {
     Program fragment;
@@ -111,9 +105,9 @@ Program RandomProgramFactory::generate(
     } break;
 
     case OpCode::DeclareVariable: {
-      fragment.declareVariable(
-          var_generator(),
-          bool_generator() ? Program::VariableType::Int32 : Program::VariableType::Link);
+      fragment.declareVariable(var_generator(),
+                               bool_generator() ? Program::VariableType::Int32
+                                                : Program::VariableType::Link);
     } break;
 
     case OpCode::SetVariable: {
@@ -166,50 +160,62 @@ Program RandomProgramFactory::generate(
     } break;
 
     case OpCode::CompareIfVariableGtVariable: {
-      fragment.compareIfVariableGtVariable(
-          var_generator(), bool_generator(), var_generator(), bool_generator(),
-          var_generator(), bool_generator());
+      fragment.compareIfVariableGtVariable(var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator());
     } break;
 
     case OpCode::CompareIfVariableLtVariable: {
-      fragment.compareIfVariableLtVariable(
-          var_generator(), bool_generator(), var_generator(), bool_generator(),
-          var_generator(), bool_generator());
+      fragment.compareIfVariableLtVariable(var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator());
     } break;
 
     case OpCode::CompareIfVariableEqVariable: {
-      fragment.compareIfVariableEqVariable(
-          var_generator(), bool_generator(), var_generator(), bool_generator(),
-          var_generator(), bool_generator());
+      fragment.compareIfVariableEqVariable(var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator());
     } break;
 
     case OpCode::GetMaxOfVariableAndConstant: {
       fragment.getMaxOfVariableAndConstant(
-          var_generator(), bool_generator(), int32_generator(),
-          var_generator(), bool_generator());
+          var_generator(), bool_generator(), int32_generator(), var_generator(), bool_generator());
     } break;
 
     case OpCode::GetMinOfVariableAndConstant: {
       fragment.getMinOfVariableAndConstant(
-          var_generator(), bool_generator(), int32_generator(),
-          var_generator(), bool_generator());
+          var_generator(), bool_generator(), int32_generator(), var_generator(), bool_generator());
     } break;
 
     case OpCode::GetMaxOfVariableAndVariable: {
-      fragment.getMaxOfVariableAndVariable(
-          var_generator(), bool_generator(), var_generator(), bool_generator(),
-          var_generator(), bool_generator());
+      fragment.getMaxOfVariableAndVariable(var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator());
     } break;
 
     case OpCode::GetMinOfVariableAndVariable: {
-      fragment.getMinOfVariableAndVariable(
-          var_generator(), bool_generator(), var_generator(), bool_generator(),
-          var_generator(), bool_generator());
+      fragment.getMinOfVariableAndVariable(var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator(),
+                                           var_generator(),
+                                           bool_generator());
     } break;
 
     case OpCode::ModuloVariableByConstant: {
-      fragment.moduloVariableByConstant(
-          var_generator(), bool_generator(), int32_generator());
+      fragment.moduloVariableByConstant(var_generator(), bool_generator(), int32_generator());
     } break;
 
     case OpCode::ModuloVariableByVariable: {
@@ -218,13 +224,11 @@ Program RandomProgramFactory::generate(
     } break;
 
     case OpCode::BitShiftVariableLeft: {
-      fragment.bitShiftVariableLeft(
-          var_generator(), bool_generator(), int8_generator());
+      fragment.bitShiftVariableLeft(var_generator(), bool_generator(), int8_generator());
     } break;
 
     case OpCode::BitShiftVariableRight: {
-      fragment.bitShiftVariableRight(
-          var_generator(), bool_generator(), int8_generator());
+      fragment.bitShiftVariableRight(var_generator(), bool_generator(), int8_generator());
     } break;
 
     case OpCode::BitWiseInvertVariable: {
@@ -451,7 +455,8 @@ Program RandomProgramFactory::generate(
     }
 
     if (fragment.getSize() + prg.getPointer() > prg.getSize()) {
-      // The instruction doesn't fit into the program anymore. Generation is done.
+      // The instruction doesn't fit into the program anymore. Generation is
+      // done.
       break;
     }
     prg.insertProgram(fragment);
@@ -460,4 +465,4 @@ Program RandomProgramFactory::generate(
   return prg;
 }
 
-}  // namespace beast
+} // namespace beast

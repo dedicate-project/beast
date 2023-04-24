@@ -1,6 +1,7 @@
 #ifndef BEAST_EVALUATOR_HPP_
 #define BEAST_EVALUATOR_HPP_
 
+// Internal
 #include <beast/vm_session.hpp>
 
 namespace beast {
@@ -18,8 +19,7 @@ namespace beast {
 class Evaluator {
  public:
   /**
-   * @fn Evaluator::~Evaluator
-   * @brief Virtual destructor performing no operation to ensure vtable consistency
+   * @brief Destructor added for vtable consistency.
    */
   virtual ~Evaluator() = default;
 
@@ -41,6 +41,6 @@ class Evaluator {
   [[nodiscard]] virtual double evaluate(const VmSession& session) = 0;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_EVALUATOR_HPP_
+#endif // BEAST_EVALUATOR_HPP_

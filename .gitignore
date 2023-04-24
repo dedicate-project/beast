@@ -1,3 +1,5 @@
 build
 *~
 Doxyfile
+models
+.vscode

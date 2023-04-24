@@ -23,6 +23,28 @@ jobs:
           root: .
           paths:
             - "."
+  format:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y clang-format
+      - run:
+          name: Setup cmake
+          command: |
+            cd build
+            cmake ..
+      - run:
+          name: Run clang-format
+          command: |
+            cd build
+            make format
   build_release:
     docker:
       - image: cimg/base:stable
@@ -125,19 +147,22 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y valgrind
       - run:
-          name: Run Valgrind on example_adder
-          command: valgrind ./build/bin/examples/example_adder
+          name: Run Valgrind on program_adder
+          command: valgrind ./build/bin/examples/programs/program_adder
 
 workflows:
   build-and-test:
     jobs:
       - prepare_environment
+      - format:
+          requires:
+            - prepare_environment
       - build_release:
           requires:
-            - prepare_environment
+            - format
       - build_debug:
           requires:
-            - prepare_environment
+            - format
       - test:
           requires:
             - build_debug
