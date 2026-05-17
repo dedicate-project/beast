@@ -266,6 +266,10 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
   const [hoveredPipe, setHoveredPipe] = useState("");
   const hoveredPipeRef = useRef("");
+  // Track which connection (if any) the mouse is over so the canvas-wide right-click
+  // handler can put up the connection-context menu instead of the pipe-context menu.
+  // Ref-based because the right-click runs out of band of React's render cycle.
+  const hoveredConnectionRef = useRef(null);
 
   // FanPipe spin-animation plumbing. We keep two refs so we can: (1) drive a single
   // Konva.Animation that ticks all fans together (cheaper than one animation per pipe),
@@ -557,6 +561,24 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     ];
   }
 
+  // Build the right-click menu shown when the cursor is over a connection line. Lives
+  // next to the pipe menu so both routes share the ContextMenu plumbing -- the trigger
+  // (the per-line contextmenu handler set up in the connections useEffect, OR the
+  // stage-level mousedown handler when bubbling reaches it) just hands the connection
+  // descriptor off here.
+  function getConnectionRightClickMenuItems(conn) {
+    const running = pipelineStateRef.current === "running";
+    const label = `${conn.source_pipe}[${conn.source_slot}] \u2192 ${conn.destination_pipe}[${conn.destination_slot}]`;
+    return [
+      {
+        text : "Delete connection " + label,
+        icon : "delete",
+        disabled : running,
+        action : () => setPendingDeleteConnection(conn),
+      },
+    ];
+  }
+
   // Stash the canvas-space coordinate of the latest right-click so the Add Pipe dialog can
   // use it as the starting position for the new pipe. Updated synchronously inside the
   // stage mousedown handler.
@@ -633,7 +655,16 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           y : position.y - 2 * rect.top + 5
         };
 
-        rightClickMenuItemsRef.current = getRightClickMenuItems(hoveredPipeRef.current);
+        // Connection menu beats pipe menu when both could apply. The line's hit area is
+        // axis-aligned and narrow, so right-clicking exactly on a connection while a
+        // pipe is also under the cursor is rare; when it does happen, the connection
+        // is almost always what the user meant -- they had to aim for the thin line.
+        if (hoveredConnectionRef.current) {
+          rightClickMenuItemsRef.current =
+              getConnectionRightClickMenuItems(hoveredConnectionRef.current);
+        } else {
+          rightClickMenuItemsRef.current = getRightClickMenuItems(hoveredPipeRef.current);
+        }
         setContextMenuPosition(adjustedPosition);
         setShowContextMenu(true);
       } else if (e.evt.button === 0) {
@@ -716,8 +747,13 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   }
 
   useEffect(() => {
-    // Load an image and create a draggable object
-    const createDraggableImage = async (src, x, y, inports, outports, name, type) => {
+    // Load an image and create a draggable object.
+    // Returns the Konva.Group synchronously (was previously `async`, which forced the
+    // caller to register the group via `.then()` -- a microtask that runs AFTER the
+    // connections useEffect in the same React commit, leaving the connections layer
+    // staring at an empty `pipes` registry for a render and dropping every line that
+    // referenced the recreated pipe).
+    const createDraggableImage = (src, x, y, inports, outports, name, type) => {
       // create the group
       var group = new Konva.Group({x : x, y : y, draggable : true});
 
@@ -959,10 +995,27 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     var added_pipes = {};
     var updated_pipes = {};
     var removed_pipes = {};
+    // Deep-equality compare; the previous `!=` compared object references which always
+    // differ across polls because every metrics tick re-parses the JSON response into
+    // fresh objects. The fallout was that *every* pipe got treated as "updated" every
+    // second, causing detach+recreate churn that snapped pipes back to the metadata
+    // position (the user-visible bug) and synchronously blew away the connection layer
+    // while the new pipes hadn't finished their async image load (so lines vanished).
+    // JSON.stringify is overkill for shallow data but correct for the nested parameter
+    // blobs we may carry on EvaluatorPipe etc., and the model is tiny so the cost is
+    // immaterial compared to the cost of needlessly recreating Konva groups.
+    const pipeJsonEqual = (a, b) => {
+      if (a === b) return true;
+      try {
+        return JSON.stringify(a) === JSON.stringify(b);
+      } catch {
+        return false;
+      }
+    };
     for (let key in safeModel["pipes"]) {
       // Check if in old model
       if (key in safeOldModel["pipes"]) {
-        if (safeModel["pipes"][key] != safeOldModel["pipes"][key]) {
+        if (!pipeJsonEqual(safeModel["pipes"][key], safeOldModel["pipes"][key])) {
           updated_pipes[key] = safeModel["pipes"][key];
         }
       } else {
@@ -992,9 +1045,9 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         pos_x = safeMetaInner["pipes"][key]["position"]["x"];
         pos_y = safeMetaInner["pipes"][key]["position"]["y"];
       }
-      createDraggableImage(image_file, pos_x, pos_y, inports, outports, key,
-                           pipe_json && pipe_json["type"])
-          .then((konvaImage) => { pipes[key] = konvaImage; });
+      const konvaImage = createDraggableImage(image_file, pos_x, pos_y, inports, outports,
+                                              key, pipe_json && pipe_json["type"]);
+      pipes[key] = konvaImage;
     };
 
     for (let key in added_pipes) {
@@ -1019,21 +1072,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       detach(key);
       renderPipe(key, updated_pipes[key]);
     }
-    // Process model metadata. The backend reports `"metadata": null` for pipelines that
-    // have never had any UI state persisted, so we defend against the non-object case
-    // before doing any `in` / property access (`"pipes" in null` throws a TypeError, which
-    // is what used to white-screen the entire app the moment you opened a fresh pipeline).
-    const safeMetadata = (metadata && typeof metadata === 'object') ? metadata : {};
-    if (safeMetadata["pipes"]) {
-      for (let pipe_id in safeMetadata["pipes"]) {
-        const pipeMeta = safeMetadata["pipes"][pipe_id];
-        if (pipeMeta && pipeMeta["position"] && pipe_id in pipes &&
-            currentlyDraggedPipe != pipe_id) {
-          pipes[pipe_id].x(pipeMeta["position"]["x"]);
-          pipes[pipe_id].y(pipeMeta["position"]["y"]);
-        }
-      }
-    }
+    // Previously we re-applied the metadata position to every known pipe on every model
+    // change. That looked like "snap pipes back to canonical position on every poll",
+    // and racily fought the user: a freshly-dropped pipe whose move_pipe POST hadn't
+    // hit the server yet would be reset back to the last persisted position by the very
+    // next polling tick (~1 s later). The position is established once at pipe creation
+    // (renderPipe -> createDraggableImage pulls from metadata) and then owned locally;
+    // the user moves it, dragend POSTs it, the next reload pulls it from the server.
+    // We deliberately don't reconcile against a second tab editing the same pipeline --
+    // that's a configuration-edit collaborative-editing scenario we don't need to solve.
   }, [ model ]);
 
   useEffect(() => {
@@ -1087,16 +1134,18 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         line.on('mouseover', () => {
           line.stroke('#ff8c00');
           line.getLayer().batchDraw();
+          // Latch the hovered connection so the stage-level right-click handler can
+          // pop the connection menu instead of the empty-canvas menu.
+          hoveredConnectionRef.current = line.connectionInfo;
+          const stage = line.getStage();
+          if (stage) stage.container().style.cursor = 'pointer';
         });
         line.on('mouseout', () => {
           line.stroke('red');
           line.getLayer().batchDraw();
-        });
-        line.on('contextmenu', (event) => {
-          event.evt.preventDefault();
-          event.evt.stopPropagation();
-          event.cancelBubble = true;
-          setPendingDeleteConnection(line.connectionInfo);
+          hoveredConnectionRef.current = null;
+          const stage = line.getStage();
+          if (stage) stage.container().style.cursor = 'default';
         });
         connectionsLayerRef.current.add(line);
         const key = connection.source_pipe + ':' + connection.source_slot + '->' +
