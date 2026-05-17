@@ -176,8 +176,10 @@ add_library(${PROJECT_NAME}-pipelines
   src/pipeline.cpp
   src/pipeline_manager.cpp
   src/pipeline_server.cpp
+  src/pipes/demultiplexer_pipe.cpp
   src/pipes/evaluator_pipe.cpp
   src/pipes/evolution_pipe.cpp
+  src/pipes/multiplexer_pipe.cpp
   src/pipes/null_sink_pipe.cpp
   src/pipes/program_factory_pipe.cpp
   src/pipes/results_summary_pipe.cpp)
@@ -331,6 +333,8 @@ if(BEAST_BUILD_TESTS)
   declare_test(math)
   declare_test(maze_evaluator)
   declare_test(misc)
+  declare_test(demultiplexer_pipe)
+  declare_test(multiplexer_pipe)
   declare_test(null_sink_pipe)
   declare_test(pipe)
   declare_test(pipeline)

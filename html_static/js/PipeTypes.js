@@ -198,6 +198,76 @@ export const PIPE_TYPE_DEFINITIONS = [
     parseParameters: (params) => ({max_candidates: params.max_candidates}),
   },
   {
+    type: 'MultiplexerPipe',
+    label: 'Multiplexer',
+    description:
+      'Merges candidates from several input slots into a single output stream. Use to ' +
+      'combine fresh candidates from a factory with survivors looped back from a ' +
+      'downstream stage, or to fan multiple producers into one consumer.',
+    image: '/img/multiplexer_pipe.png',
+    // Port count is dynamic: the input slot count is set per-instance via the form below.
+    // Output is always 1 (that's the whole point of a mux).
+    inputs: (params) => Math.max(1, Math.min(16, Number(params.input_slots || 2))),
+    outputs: 1,
+    sections: [
+      {
+        title: 'Slots',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per slot', type: 'int', default: 50, min: 1},
+          {name: 'input_slots', label: 'Input slots (1-16)', type: 'int', default: 2, min: 1, max: 16},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      input_slots: values.input_slots,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      input_slots: params.input_slots,
+    }),
+  },
+  {
+    type: 'DemultiplexerPipe',
+    label: 'Demultiplexer',
+    description:
+      'Splits a single input stream across several output slots. Round-robin spreads work ' +
+      'evenly across parallel downstream branches; broadcast copies every candidate to ' +
+      'every output (useful when evaluating the same population against several tasks).',
+    image: '/img/demultiplexer_pipe.png',
+    inputs: 1,
+    outputs: (params) => Math.max(1, Math.min(16, Number(params.output_slots || 2))),
+    sections: [
+      {
+        title: 'Slots',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per slot', type: 'int', default: 50, min: 1},
+          {name: 'output_slots', label: 'Output slots (1-16)', type: 'int', default: 2, min: 1, max: 16},
+          {
+            name: 'strategy',
+            label: 'Distribution strategy',
+            type: 'enum',
+            options: [
+              {value: 'round_robin', label: 'Round-robin (one candidate per branch)'},
+              {value: 'broadcast', label: 'Broadcast (every branch sees every candidate)'},
+            ],
+            default: 'round_robin',
+          },
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      output_slots: values.output_slots,
+      strategy: values.strategy,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      output_slots: params.output_slots,
+      strategy: params.strategy,
+    }),
+  },
+  {
     type: 'ResultsSummaryPipe',
     label: 'Results Summary',
     description:
@@ -262,6 +332,22 @@ export function findPipeDefinition(pipe_json) {
     }
   }
   return PIPE_TYPE_DEFINITIONS.find(def => def.type === pipe_json.type);
+}
+
+// Resolve the input/output port counts for a pipe instance. Pipe types whose port count
+// is fixed (e.g. NullSinkPipe is always 1 input / 0 outputs) just expose a number; types
+// like MultiplexerPipe / DemultiplexerPipe whose ports depend on parameters expose a
+// function that takes the pipe's parameters and returns the count. We default to 0 when
+// nothing is configured so an unknown pipe still renders.
+export function portCountsFor(definition, pipe_json) {
+  if (!definition) return {inputs: 0, outputs: 0};
+  const params = (pipe_json && pipe_json.parameters) || {};
+  const resolve = (fieldOrFn) =>
+    typeof fieldOrFn === 'function' ? Number(fieldOrFn(params) || 0) : Number(fieldOrFn || 0);
+  return {
+    inputs: resolve(definition.inputs),
+    outputs: resolve(definition.outputs),
+  };
 }
 
 // Default form values for a given definition; used both by AddPipeDialog when opening a

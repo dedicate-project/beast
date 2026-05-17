@@ -104,6 +104,65 @@ TEST_CASE("PipelineManager") {
     REQUIRE(back["pipes"]["summary"]["parameters"]["window_size"].get<uint32_t>() == 64);
   }
 
+  SECTION("MultiplexerPipe round-trips through JSON serialisation") {
+    const auto json = R"({
+        "pipes": {
+          "mux": {
+            "type": "MultiplexerPipe",
+            "parameters": { "max_candidates": 20, "input_slots": 4 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto mux = std::dynamic_pointer_cast<MultiplexerPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(mux != nullptr);
+    REQUIRE(mux->getInputSlots() == 4);
+    REQUIRE(mux->getInputSlotCount() == 4);
+    REQUIRE(mux->getOutputSlotCount() == 1);
+    REQUIRE(mux->getMaxCandidates() == 20);
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["mux"]["type"].get<std::string>() == "MultiplexerPipe");
+    REQUIRE(back["pipes"]["mux"]["parameters"]["max_candidates"].get<uint32_t>() == 20);
+    REQUIRE(back["pipes"]["mux"]["parameters"]["input_slots"].get<uint32_t>() == 4);
+  }
+
+  SECTION("DemultiplexerPipe round-trips both strategies through JSON") {
+    for (const std::string strategy : {"round_robin", "broadcast"}) {
+      INFO("strategy = " << strategy);
+      const auto json = nlohmann::json::parse(
+          R"({"pipes":{"dmx":{"type":"DemultiplexerPipe","parameters":{"max_candidates":12,"output_slots":3,"strategy":")" +
+          strategy + R"("}}}})");
+      const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+      const auto dmx = std::dynamic_pointer_cast<DemultiplexerPipe>(
+          pipeline->getPipes().front()->pipe);
+      REQUIRE(dmx != nullptr);
+      REQUIRE(dmx->getOutputSlots() == 3);
+      REQUIRE(dmx->getOutputSlotCount() == 3);
+      REQUIRE(dmx->getInputSlotCount() == 1);
+      REQUIRE(dmx->getMaxCandidates() == 12);
+      const bool expected_broadcast = strategy == "broadcast";
+      REQUIRE((dmx->getStrategy() == DemultiplexerPipe::Strategy::Broadcast) ==
+              expected_broadcast);
+      const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+      REQUIRE(back["pipes"]["dmx"]["parameters"]["strategy"].get<std::string>() == strategy);
+    }
+  }
+
+  SECTION("DemultiplexerPipe defaults to round_robin when strategy omitted") {
+    const auto json = R"({
+        "pipes": {
+          "dmx": {
+            "type": "DemultiplexerPipe",
+            "parameters": { "max_candidates": 4, "output_slots": 2 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto dmx = std::dynamic_pointer_cast<DemultiplexerPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(dmx != nullptr);
+    REQUIRE(dmx->getStrategy() == DemultiplexerPipe::Strategy::RoundRobin);
+  }
+
   SECTION("ResultsSummaryPipe defaults window_size when omitted") {
     // Omitting `window_size` should pick the built-in default (256) rather than throwing
     // -- the UI exposes the knob as optional and persists 0 when the user leaves it

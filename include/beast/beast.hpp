@@ -26,8 +26,10 @@
 #include <beast/evaluators/random_serial_data_passthrough_evaluator.hpp>
 #include <beast/evaluators/runtime_statistics_evaluator.hpp>
 
+#include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
+#include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>

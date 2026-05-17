@@ -18,7 +18,7 @@ const {Stage, Layer, Rect} = Konva;
 import {ContextMenu} from './ContextMenu.js';
 import {AddPipeDialog} from './AddPipeDialog.js';
 import {ConfirmationDialog} from './ConfirmationDialog.js';
-import {PIPE_TYPE_DEFINITIONS, findPipeDefinition} from './PipeTypes.js';
+import {PIPE_TYPE_DEFINITIONS, findPipeDefinition, portCountsFor} from './PipeTypes.js';
 
 const useStyles = makeStyles((theme) => ({
                                toolbar : {
@@ -796,13 +796,12 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     }
     setOldModel(model);
 
-    for (let key in added_pipes) {
+    const renderPipe = (key, pipe_json) => {
       // Look up the pipe's appearance via the central PipeTypes definition so adding new
       // pipe categories only requires one new entry. Unknown types still render with the
       // legacy plain icon and no ports so they don't crash the canvas.
-      const definition = findPipeDefinition(added_pipes[key]);
-      const inports = definition ? definition.inputs : 0;
-      const outports = definition ? definition.outputs : 0;
+      const definition = findPipeDefinition(pipe_json);
+      const {inputs: inports, outputs: outports} = portCountsFor(definition, pipe_json);
       const image_file = (definition && definition.image) ||
                          "/img/pipe_plain_oneinputoneoutput.png";
       var pos_x = 50;
@@ -813,18 +812,29 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         pos_x = safeMetaInner["pipes"][key]["position"]["x"];
         pos_y = safeMetaInner["pipes"][key]["position"]["y"];
       }
-
       createDraggableImage(image_file, pos_x, pos_y, inports, outports, key,
-                           added_pipes[key] && added_pipes[key]["type"])
+                           pipe_json && pipe_json["type"])
           .then((konvaImage) => { pipes[key] = konvaImage; });
+    };
+
+    for (let key in added_pipes) {
+      renderPipe(key, added_pipes[key]);
     }
     for (let key in removed_pipes) {
-      pipes[key].remove();
-      delete pipes[key];
+      if (pipes[key]) {
+        pipes[key].remove();
+        delete pipes[key];
+      }
     }
+    // For *updates* (e.g. the user edited a MultiplexerPipe and bumped input_slots) we
+    // tear down and recreate the visual so the new port count / icon takes effect. The
+    // position is restored from metadata so the pipe doesn't visually jump.
     for (let key in updated_pipes) {
-      // TODO(fairlight1337): Figure out what to update exactly once that is implemented in the
-      // backend.
+      if (pipes[key]) {
+        pipes[key].remove();
+        delete pipes[key];
+      }
+      renderPipe(key, updated_pipes[key]);
     }
     // Process model metadata. The backend reports `"metadata": null` for pipelines that
     // have never had any UI state persisted, so we defend against the non-object case

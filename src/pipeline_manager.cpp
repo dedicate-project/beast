@@ -5,8 +5,10 @@
 #include <unordered_map>
 
 // Internal
+#include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
+#include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
@@ -431,6 +433,29 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         created_pipes[pipe_name] =
             std::make_shared<ResultsSummaryPipe>(max_candidates, window_size);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "MultiplexerPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "input_slots"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const uint32_t input_slots =
+            pipe.value()["parameters"]["input_slots"].get<uint32_t>();
+        created_pipes[pipe_name] = std::make_shared<MultiplexerPipe>(max_candidates,
+                                                                      input_slots);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "DemultiplexerPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "output_slots"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const uint32_t output_slots =
+            pipe.value()["parameters"]["output_slots"].get<uint32_t>();
+        const std::string strategy_str =
+            pipe.value()["parameters"].value("strategy", std::string("round_robin"));
+        const auto strategy = (strategy_str == "broadcast")
+                                  ? DemultiplexerPipe::Strategy::Broadcast
+                                  : DemultiplexerPipe::Strategy::RoundRobin;
+        created_pipes[pipe_name] =
+            std::make_shared<DemultiplexerPipe>(max_candidates, output_slots, strategy);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "EvaluatorPipe") {
         checkForParameterPresenceInPipeJson(pipe,
                                             {"evaluators",
@@ -583,6 +608,18 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "ResultsSummaryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["window_size"] = summary_pipe->getWindowSize();
+    } else if (auto mux_pipe = std::dynamic_pointer_cast<MultiplexerPipe>(pipe->pipe)) {
+      pipe_json["type"] = "MultiplexerPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["input_slots"] = mux_pipe->getInputSlots();
+    } else if (auto demux_pipe = std::dynamic_pointer_cast<DemultiplexerPipe>(pipe->pipe)) {
+      pipe_json["type"] = "DemultiplexerPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["output_slots"] = demux_pipe->getOutputSlots();
+      pipe_json["parameters"]["strategy"] =
+          demux_pipe->getStrategy() == DemultiplexerPipe::Strategy::Broadcast
+              ? std::string("broadcast")
+              : std::string("round_robin");
     } else if (auto spec_pipe = std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
       pipe_json["type"] = "ProgramFactoryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
