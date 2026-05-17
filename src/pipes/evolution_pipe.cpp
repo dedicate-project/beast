@@ -37,6 +37,48 @@ namespace {
 struct GenomeUserData {
   EvolutionPipe* pipe;
   const EvolutionPipe::EvolutionParameters* parameters;
+  // Pointer to the unique_lock guarding GAlib's static RNG state. The evaluator wrapper
+  // temporarily releases this lock for the duration of the VM execution (see
+  // `staticEvaluatorWrapper`) so multiple `EvolutionPipe::execute()`s can run their
+  // evaluators in parallel even though the surrounding GAlib selection/mutation logic
+  // stays serialized. nullptr is *only* valid in test paths that construct user data
+  // without an active GAlib evolve; production callers always set this.
+  std::unique_lock<std::mutex>* galib_lock;
+};
+
+/// RAII helper that releases the GAlib mutex on construction and reacquires it on
+/// destruction. Used to bracket the evaluator callback so the VM (which does not touch
+/// any GAlib state) can run in parallel across worker threads. Exception-safe: if the
+/// callback throws, the destructor still reacquires the lock before unwinding into
+/// GAlib's interior, which is the invariant `evolve()` relies on.
+class EvaluationScope {
+ public:
+  explicit EvaluationScope(std::unique_lock<std::mutex>* lock) noexcept : lock_{lock} {
+    if (lock_ != nullptr && lock_->owns_lock()) {
+      lock_->unlock();
+    } else {
+      // Lock wasn't held coming in (test path, or a future caller pattern). Skip the
+      // re-lock in the destructor to keep behaviour symmetric.
+      lock_ = nullptr;
+    }
+  }
+
+  EvaluationScope(const EvaluationScope&) = delete;
+  EvaluationScope& operator=(const EvaluationScope&) = delete;
+  EvaluationScope(EvaluationScope&&) = delete;
+  EvaluationScope& operator=(EvaluationScope&&) = delete;
+
+  ~EvaluationScope() {
+    if (lock_ != nullptr) {
+      // Reacquire unconditionally. We have to be back inside the critical section
+      // before returning to GAlib because the next thing it does after a callback is
+      // typically another `GARandomFloat()` call.
+      lock_->lock();
+    }
+  }
+
+ private:
+  std::unique_lock<std::mutex>* lock_;
 };
 
 /// Thread-local RNG used by the GAlib callbacks. GAlib is single-threaded by default so a
@@ -59,10 +101,15 @@ std::mt19937& threadEngine() {
 ///
 /// Until the day we fork GAlib to make its RNG thread-local, the cheap-and-correct fix is
 /// to serialise *all* GAlib entries behind one mutex. This is a global mutex (not per
-/// pipe) because the contention is on GAlib's globals, not anything we own. Throughput
-/// loss is acceptable: in a real pipeline most time is spent inside evaluators (which
-/// themselves don't call GAlib RNG directly -- they go through VM execution), and there
-/// is usually one bottleneck evaluator anyway.
+/// pipe) because the contention is on GAlib's globals, not anything we own.
+///
+/// Throughput note: the evaluator callback (`staticEvaluatorWrapper`) bracket-releases
+/// this mutex via `EvaluationScope` for the duration of `pipe->evaluate(data)` -- the VM
+/// runs on a private `VmSession` with no shared GAlib state, so it's safe to overlap
+/// with other workers' GAlib-internal sections. That means N concurrent
+/// `EvolutionPipe::execute()`s serialize on selection/mutation/crossover (microseconds
+/// each) but evaluate in parallel (the bulk of wall-clock time), which is the difference
+/// between a multi-pipe pipeline making cycles every few seconds vs. once a minute.
 std::mutex& galibSerialisationMutex() {
   static std::mutex mutex;
   return mutex;
@@ -120,7 +167,16 @@ std::vector<unsigned char> truncateToMaxBytes(const std::vector<unsigned char>& 
 float staticEvaluatorWrapper(GAGenome& genome) {
   auto& list_genome = dynamic_cast<GAListGenome<unsigned char>&>(genome);
   auto* user_data = static_cast<GenomeUserData*>(genome.userData());
+  // Snapshot the genome bytes *while still holding the GAlib lock*. GAList's iterators
+  // walk shared list pointers; touching them outside the lock would be fine in
+  // isolation (this is our own genome), but doing the read before the unlock keeps the
+  // critical section's semantics dead-simple: we only release the lock for "pure VM
+  // work that has no GAlib dependency".
   const std::vector<unsigned char> data = genomeToBytes(list_genome);
+  // Release the GAlib mutex for the VM run. Other workers may now enter their own
+  // GAlib-internal sections in parallel. The destructor reacquires the lock before we
+  // return into GAlib's interior even on exception.
+  EvaluationScope evaluation_scope(user_data->galib_lock);
   return static_cast<float>(user_data->pipe->evaluate(data));
 }
 
@@ -336,9 +392,14 @@ void EvolutionPipe::execute() {
   // `algorithm.population()`, genome iteration) reach into GAlib internals that touch
   // the shared RNG, so the lock has to cover the full lifetime of the local algorithm
   // instance. See `galibSerialisationMutex` for the why.
-  std::scoped_lock galib_lock(galibSerialisationMutex());
+  //
+  // We use `unique_lock` (not `scoped_lock`) so the evaluator callback can
+  // bracket-release this lock for the duration of its VM run via `EvaluationScope`,
+  // letting other workers' GAlib selection/mutation steps proceed in parallel with our
+  // VM execution. Re-acquired on scope exit either way, so RAII semantics are preserved.
+  std::unique_lock<std::mutex> galib_lock(galibSerialisationMutex());
 
-  GenomeUserData user_data{this, &evolution_parameters_};
+  GenomeUserData user_data{this, &evolution_parameters_, &galib_lock};
 
   GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
   genome.initializer(staticInitializerWrapper);
