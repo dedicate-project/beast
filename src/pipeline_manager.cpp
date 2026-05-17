@@ -6,8 +6,14 @@
 
 // Internal
 #include <beast/evaluators/adder_evaluator.hpp>
+#include <beast/evaluators/bitwise_evaluator.hpp>
+#include <beast/evaluators/identity_evaluator.hpp>
 #include <beast/evaluators/maximum_evaluator.hpp>
+#include <beast/evaluators/rotate_evaluator.hpp>
+#include <beast/evaluators/sha256_ch_evaluator.hpp>
+#include <beast/evaluators/sha256_maj_evaluator.hpp>
 #include <beast/evaluators/sha256_round_evaluator.hpp>
+#include <beast/evaluators/sha256_sigma_evaluator.hpp>
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
@@ -304,6 +310,62 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
           params["trial_count"].get<uint32_t>(),
           params["round_constant_index"].get<uint32_t>(),
           params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "IdentityEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "width", "max_steps_per_trial"});
+      evaluator = std::make_shared<IdentityEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["width"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "BitwiseEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "operation", "max_steps_per_trial"});
+      evaluator = std::make_shared<BitwiseEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          BitwiseEvaluator::parseOperation(params["operation"].get<std::string>()),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "RotateEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(
+          params, {"trial_count", "amount", "direction", "max_steps_per_trial"});
+      evaluator = std::make_shared<RotateEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["amount"].get<uint32_t>(),
+          RotateEvaluator::parseDirection(params["direction"].get<std::string>()),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256SigmaEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "variant", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256SigmaEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          Sha256SigmaEvaluator::parseVariant(params["variant"].get<std::string>()),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256ChEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256ChEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256MajEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256MajEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else {
@@ -660,6 +722,44 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["parameters"]["trial_count"] = sha_eval->getTrialCount();
       evaluator["parameters"]["round_constant_index"] = sha_eval->getRoundConstantIndex();
       evaluator["parameters"]["max_steps_per_trial"] = sha_eval->getMaxStepsPerTrial();
+    } else if (const auto id_eval =
+                   std::dynamic_pointer_cast<IdentityEvaluator>(description.evaluator)) {
+      evaluator["type"] = "IdentityEvaluator";
+      evaluator["parameters"]["trial_count"] = id_eval->getTrialCount();
+      evaluator["parameters"]["width"] = id_eval->getWidth();
+      evaluator["parameters"]["max_steps_per_trial"] = id_eval->getMaxStepsPerTrial();
+    } else if (const auto bw_eval =
+                   std::dynamic_pointer_cast<BitwiseEvaluator>(description.evaluator)) {
+      evaluator["type"] = "BitwiseEvaluator";
+      evaluator["parameters"]["trial_count"] = bw_eval->getTrialCount();
+      evaluator["parameters"]["operation"] =
+          BitwiseEvaluator::operationName(bw_eval->getOperation());
+      evaluator["parameters"]["max_steps_per_trial"] = bw_eval->getMaxStepsPerTrial();
+    } else if (const auto rot_eval =
+                   std::dynamic_pointer_cast<RotateEvaluator>(description.evaluator)) {
+      evaluator["type"] = "RotateEvaluator";
+      evaluator["parameters"]["trial_count"] = rot_eval->getTrialCount();
+      evaluator["parameters"]["amount"] = rot_eval->getAmount();
+      evaluator["parameters"]["direction"] =
+          RotateEvaluator::directionName(rot_eval->getDirection());
+      evaluator["parameters"]["max_steps_per_trial"] = rot_eval->getMaxStepsPerTrial();
+    } else if (const auto sigma_eval =
+                   std::dynamic_pointer_cast<Sha256SigmaEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256SigmaEvaluator";
+      evaluator["parameters"]["trial_count"] = sigma_eval->getTrialCount();
+      evaluator["parameters"]["variant"] =
+          Sha256SigmaEvaluator::variantName(sigma_eval->getVariant());
+      evaluator["parameters"]["max_steps_per_trial"] = sigma_eval->getMaxStepsPerTrial();
+    } else if (const auto ch_eval =
+                   std::dynamic_pointer_cast<Sha256ChEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256ChEvaluator";
+      evaluator["parameters"]["trial_count"] = ch_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = ch_eval->getMaxStepsPerTrial();
+    } else if (const auto maj_eval =
+                   std::dynamic_pointer_cast<Sha256MajEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256MajEvaluator";
+      evaluator["parameters"]["trial_count"] = maj_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = maj_eval->getMaxStepsPerTrial();
     }
 
     evaluators.push_back(std::move(evaluator));

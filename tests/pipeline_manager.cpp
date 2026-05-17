@@ -238,6 +238,131 @@ TEST_CASE("PipelineManager") {
                 ["max_steps_per_trial"].get<uint32_t>() == 3500);
   }
 
+  SECTION("Curriculum evaluators round-trip through EvaluatorPipe JSON") {
+    // One section to cover all six curriculum evaluators -- they share the same JSON
+    // shape (type + parameters), so a single sweep is enough to catch
+    // typo/serialisation bugs in any of them. Each subsection picks parameters that
+    // exercise the type-specific knobs (enum decoding, clamp behaviour, etc.).
+    const auto json = R"({
+        "pipes": {
+          "identity": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8, "memory_variables": 32, "string_table_items": 0,
+              "string_table_item_length": 0, "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "IdentityEvaluator", "weight": 1.0, "invert_logic": false,
+                "parameters": { "trial_count": 6, "width": 5, "max_steps_per_trial": 1200 }
+              }]
+            }
+          },
+          "bitwise": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8, "memory_variables": 16, "string_table_items": 0,
+              "string_table_item_length": 0, "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "BitwiseEvaluator", "weight": 1.0, "invert_logic": false,
+                "parameters": { "trial_count": 4, "operation": "and",
+                                "max_steps_per_trial": 900 }
+              }]
+            }
+          },
+          "rotate": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8, "memory_variables": 16, "string_table_items": 0,
+              "string_table_item_length": 0, "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "RotateEvaluator", "weight": 1.0, "invert_logic": false,
+                "parameters": { "trial_count": 4, "amount": 13, "direction": "right",
+                                "max_steps_per_trial": 900 }
+              }]
+            }
+          },
+          "sigma": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8, "memory_variables": 16, "string_table_items": 0,
+              "string_table_item_length": 0, "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "Sha256SigmaEvaluator", "weight": 1.0, "invert_logic": false,
+                "parameters": { "trial_count": 4, "variant": "small1",
+                                "max_steps_per_trial": 1500 }
+              }]
+            }
+          },
+          "ch": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8, "memory_variables": 16, "string_table_items": 0,
+              "string_table_item_length": 0, "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "Sha256ChEvaluator", "weight": 1.0, "invert_logic": false,
+                "parameters": { "trial_count": 4, "max_steps_per_trial": 1100 }
+              }]
+            }
+          },
+          "maj": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8, "memory_variables": 16, "string_table_items": 0,
+              "string_table_item_length": 0, "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "Sha256MajEvaluator", "weight": 1.0, "invert_logic": false,
+                "parameters": { "trial_count": 4, "max_steps_per_trial": 1100 }
+              }]
+            }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+
+    auto evaluator_in = [&](const std::string& pipe_name) -> std::shared_ptr<Evaluator> {
+      for (const auto& managed : pipeline->getPipes()) {
+        if (managed->name == pipe_name) {
+          const auto ep = std::dynamic_pointer_cast<EvaluatorPipe>(managed->pipe);
+          REQUIRE(ep != nullptr);
+          REQUIRE(ep->getEvaluators().size() == 1);
+          return ep->getEvaluators().front().evaluator;
+        }
+      }
+      return nullptr;
+    };
+
+    const auto id_eval = std::dynamic_pointer_cast<IdentityEvaluator>(evaluator_in("identity"));
+    REQUIRE(id_eval != nullptr);
+    CHECK(id_eval->getWidth() == 5);
+    CHECK(id_eval->getTrialCount() == 6);
+
+    const auto bw_eval = std::dynamic_pointer_cast<BitwiseEvaluator>(evaluator_in("bitwise"));
+    REQUIRE(bw_eval != nullptr);
+    CHECK(bw_eval->getOperation() == BitwiseEvaluator::Operation::And);
+
+    const auto rot_eval = std::dynamic_pointer_cast<RotateEvaluator>(evaluator_in("rotate"));
+    REQUIRE(rot_eval != nullptr);
+    CHECK(rot_eval->getAmount() == 13);
+    CHECK(rot_eval->getDirection() == RotateEvaluator::Direction::Right);
+
+    const auto sigma_eval =
+        std::dynamic_pointer_cast<Sha256SigmaEvaluator>(evaluator_in("sigma"));
+    REQUIRE(sigma_eval != nullptr);
+    CHECK(sigma_eval->getVariant() == Sha256SigmaEvaluator::Variant::SmallSigma1);
+
+    REQUIRE(std::dynamic_pointer_cast<Sha256ChEvaluator>(evaluator_in("ch")) != nullptr);
+    REQUIRE(std::dynamic_pointer_cast<Sha256MajEvaluator>(evaluator_in("maj")) != nullptr);
+
+    // Re-serialise and confirm the type/parameter names survive the trip back. We
+    // spot-check the trickier shapes (the ones with enum-as-string values), since the
+    // numeric-only ones are covered by the parameter-value checks above.
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    CHECK(back["pipes"]["bitwise"]["parameters"]["evaluators"][0]["parameters"]["operation"]
+              .get<std::string>() == "and");
+    CHECK(back["pipes"]["rotate"]["parameters"]["evaluators"][0]["parameters"]["direction"]
+              .get<std::string>() == "right");
+    CHECK(back["pipes"]["sigma"]["parameters"]["evaluators"][0]["parameters"]["variant"]
+              .get<std::string>() == "small1");
+  }
+
   SECTION("FanPipe round-trips through JSON serialisation") {
     const auto json = R"({
         "pipes": {
@@ -714,7 +839,8 @@ TEST_CASE("PipelineManager") {
     const std::filesystem::path src_root =
         std::filesystem::path(__FILE__).parent_path().parent_path();
     for (const auto* sample :
-         {"ascending-mazes.json", "survivor-recirculation.json", "sha256-round.json"}) {
+         {"ascending-mazes.json", "survivor-recirculation.json", "sha256-round.json",
+          "sha256-curriculum.json"}) {
       INFO(sample);
       const auto path = src_root / "examples" / "compose-pipelines" / sample;
       REQUIRE(std::filesystem::exists(path));

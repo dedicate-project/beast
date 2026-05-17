@@ -94,29 +94,93 @@ mutation rate, the max-genome size; seed the population with a hand-written roun
 `ProgramStorageSourcePipe`; or chain several `Sha256RoundEvaluator`s with different
 `round_constant_index` values to teach a polymorphic round.
 
+### `sha256-curriculum.json`
+
+A three-stage curriculum that teaches a population the prerequisites of the SHA-256
+round body before throwing the round itself at it. Each stage runs in parallel, writes
+its top-K survivors to a JSON ledger, and the next stage seeds from that ledger via a
+`Multiplexer` mixing fresh exploration with survivor seed material.
+
+```
+factory_id    -> id_stage    -> id_stats    -> id_sink      (writes /tmp/beast-sha-id.json)
+
+factory_rot ──┐
+              ├─> rot_mux -> rot_stage -> rot_stats -> rot_sink   (writes /tmp/beast-sha-rot.json)
+id_seed     ──┘
+
+factory_sigma ─┐
+               ├─> sigma_mux -> sigma_stage -> sigma_stats -> sigma_sink   (writes /tmp/beast-sha-sigma.json)
+rot_seed    ───┘
+```
+
+Stage 0 is `IdentityEvaluator(width=4)` -- teaches the genome to copy inputs to
+outputs (the prerequisite skill any downstream stage assumes). Stage 1 is a
+`RotateEvaluator(amount=2, direction=right)` seeded from the identity-stage survivors;
+it teaches the GA to apply the `RotateVariableRight` opcode at a specific amount on
+top of a population that already knows how to address output slots. Stage 2 is a
+`Sha256SigmaEvaluator(variant=big0)` seeded from the rotate-stage survivors; that
+sigma is itself just three rotations XORed together, so a population that's fluent in
+rotation and XOR should converge much faster than starting from byte soup.
+
+Once stage 2 is converging well, extend the curriculum the same way: add a stage that
+seeds `sigma_sink` survivors into a `Sha256ChEvaluator` and a `Sha256MajEvaluator`,
+then a final stage that seeds *those* survivors into the full `Sha256RoundEvaluator`.
+The example file only ships three stages because the file gets unwieldy beyond that,
+but the pattern is mechanical -- add a `(factory, ledger-source, mux, evaluator,
+stats, sink)` tuple per new stage.
+
+`opcode_weights` in each stage is tuned to bias toward the opcodes that stage's
+reference function needs. Stage 0 biases `CopyVariable` (opcode 10) heavily; stage 1
+biases `RotateVariableLeft/Right` (opcodes 34/35) plus a smaller `CopyVariable`
+weight; stage 2 biases `BitWiseXorTwoVariables` (opcode 33) plus rotations. Without
+these biases the random-program factory would produce too many jumps, prints, and
+system calls and the early-stage progress would slow to a crawl.
+
 ## Roadmap toward the full SHA-256 hash
 
 The plan for evolving a complete SHA-256 hasher decomposes the algorithm into stages
 that match the natural reusability of its components. Each stage gets its own
-evaluator (`Sha256RoundEvaluator` is the first one in tree) and can be evolved on its
-own pipeline. The downstream stage composes the upstream stage as a building block,
-either by reusing the bytecode (when we add a `Subroutine` opcode) or by re-running
-the genome inline today:
+evaluator and can be evolved on its own pipeline. The downstream stage composes the
+upstream stage as a building block, either by seeding from its ledger today, or
+(eventually) by directly invoking the upstream genome via a `Subroutine` opcode --
+see `docs/SUBROUTINE_OPCODE_DESIGN.md` for the design proposal.
 
-1. **One round** -- this pipeline. `(a..h, K, W) -> (a'..h')`.
-2. **Message-schedule expansion** -- evolve `W[0..15] -> W[0..63]` via σ0/σ1 the same
-   way the round above evolves the compression step. Smaller search space than a round
-   because the transformation is more local.
-3. **Block compression** -- given `H[0..7]` and a 64-byte message block, run 64 rounds
-   plus the schedule and emit the new running hash. Once stages 1 and 2 exist this
-   stage is mostly bookkeeping: rotate a shift-register of 8 words 64 times and add at
-   the end.
-4. **Padding** -- given a byte stream plus length, emit padded 64-byte blocks per
-   FIPS 180-4 §5.1.1. Trivial compared to the round, but needs its own evaluator so
-   the end-to-end stage doesn't have to also learn padding from scratch.
-5. **End-to-end hash** -- given an arbitrary byte stream, emit the 256-bit digest.
-   Composes 3+4 with an iteration loop over blocks.
+| Stage | Evaluator(s) | Status | Notes |
+|---|---|---|---|
+| 0. Identity | `IdentityEvaluator` | shipped | "Copy N inputs to N outputs." Foundation skill. |
+| 1a. Bitwise primitives | `BitwiseEvaluator` (xor/and/or/not) | shipped | One pipeline per op. |
+| 1b. Rotation primitives | `RotateEvaluator` | shipped | One pipeline per amount used by SHA-256 (2, 6, 7, 11, 13, 17, 18, 19, 22, 25). |
+| 2. Sigma compositions | `Sha256SigmaEvaluator` (big0/big1/small0/small1) | shipped | One pipeline per variant. Composes 1a+1b. |
+| 3. Round body atoms | `Sha256ChEvaluator`, `Sha256MajEvaluator` | shipped | One pipeline each; composes 1a. |
+| 4. Round | `Sha256RoundEvaluator` | shipped | Composes 2+3 plus a few adds and a state rotate. |
+| 5. Message schedule | `Sha256ScheduleEvaluator` (planned) | future | `W[0..15] -> W[0..63]` via small sigmas. |
+| 6. Block compression | `Sha256BlockEvaluator` (planned) | future | 64 rounds + schedule + working-state add. |
+| 7. Padding | `Sha256PaddingEvaluator` (planned) | future | Trivial vs. the round; needs its own evaluator. |
+| 8. End-to-end hash | `Sha256HashEvaluator` (planned) | future | Composes 6+7 with an iteration loop. |
 
-All five stages can run side-by-side as independent pipelines feeding into a shared
-`ProgramStorageSinkPipe` ledger; once a stage starts hitting high scores, its best
-genomes get seeded into the next stage's pipeline via a `ProgramStorageSourcePipe`.
+All shipped stages can run side-by-side as independent pipelines feeding into shared
+`ProgramStorageSinkPipe` ledgers; downstream stages mix those ledgers in via
+`ProgramStorageSourcePipe` + `MultiplexerPipe` (the `sha256-curriculum.json` example
+shows the wiring). The longer the curriculum runs, the richer the seed material the
+final stages have available.
+
+### Pitfalls when configuring a SHA-256 pipeline
+
+A few foot-guns I've hit while running these pipelines that are easy to miss:
+
+- **`variable_count` must be >= evaluator inputs + 1 + outputs**, otherwise the GA's
+  mutator literally cannot pick variable indices for some outputs and the pipeline's
+  score ceiling is artificially capped. For `Sha256RoundEvaluator`, that's >= 19;
+  bump to 32 or 64 for scratch space. Same constraint applies to `memory_variables`
+  on the host `EvaluatorPipe` -- the VM session has to have room for the outputs to
+  live in.
+- **`max_size` / `starting_program_size` matter more than you'd think.** A hand-written
+  SHA-256 round in BEAST bytecode is ~30 operators × ~10 bytes ≈ 300 bytes; starting
+  at 80 bytes means the GA has to grow the genome via insertion mutations before it
+  can even hold the answer. The example files set `starting_program_size: 256` and
+  up.
+- **`opcode_weights: {}` (uniform) is roughly the worst default for SHA-256.** The
+  random factory has ~70 opcodes; uniform sampling gives every opcode a 1/70 share,
+  including jumps, prints, system calls, terminate, none of which help compute the
+  round. Bias toward the opcodes the task actually needs and the population's
+  exploration efficiency goes up by an order of magnitude.

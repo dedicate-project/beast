@@ -327,6 +327,170 @@ export const PIPE_TYPE_DEFINITIONS = [
         }),
       }),
       numericEvaluatorPipe({
+        type: 'IdentityEvaluatorPipe',
+        label: 'Identity Evaluator',
+        description:
+          'Curriculum stage 0: copy N input words verbatim to N output words. The ' +
+          'trivial first lesson -- proves the genome can address every output slot. ' +
+          'Survivors here make excellent seed material for downstream stages (rotate, ' +
+          'sigma, ch, maj, ...) via a ProgramStorageSink + Source loop.',
+        image: '/img/identity_evaluator_pipe.png',
+        evaluatorType: 'IdentityEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'width', label: 'Words to copy (1-16)', type: 'int', default: 8, min: 1, max: 16},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, width: v.width, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, width: p.width, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'BitwiseEvaluatorPipe',
+        label: 'Bitwise Evaluator',
+        description:
+          'Curriculum stage that scores programs on computing one specific bitwise ' +
+          'operation (XOR / AND / OR for two inputs at vars 0,1; NOT for one input at ' +
+          'var 0). Use to grow a population that\'s fluent in the bit primitives the ' +
+          'SHA-256 round actually needs.',
+        image: '/img/bitwise_evaluator_pipe.png',
+        evaluatorType: 'BitwiseEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {
+            name: 'operation', label: 'Operation', type: 'enum',
+            options: [
+              {value: 'xor', label: 'XOR (a ^ b)'},
+              {value: 'and', label: 'AND (a & b)'},
+              {value: 'or',  label: 'OR (a | b)'},
+              {value: 'not', label: 'NOT (~a)'},
+            ],
+            default: 'xor',
+          },
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, operation: v.operation,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, operation: p.operation || 'xor',
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'RotateEvaluatorPipe',
+        label: 'Rotate Evaluator',
+        description:
+          'Curriculum stage that scores programs on right-rotating (or left-rotating) ' +
+          'a single input word by a fixed amount. SHA-256 uses ten distinct rotation ' +
+          'amounts (2, 6, 7, 11, 13, 17, 18, 19, 22, 25); instantiate one rotate pipe ' +
+          'per amount to teach each as a separate skill, then merge the surviving ' +
+          'populations into the Sigma / round stages downstream.',
+        image: '/img/rotate_evaluator_pipe.png',
+        evaluatorType: 'RotateEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'amount', label: 'Rotation amount (1-31)', type: 'int', default: 2, min: 1, max: 31},
+          {
+            name: 'direction', label: 'Direction', type: 'enum',
+            options: [
+              {value: 'right', label: 'Right (rotr)'},
+              {value: 'left', label: 'Left (rotl)'},
+            ],
+            default: 'right',
+          },
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1200, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, amount: v.amount, direction: v.direction,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, amount: p.amount, direction: p.direction || 'right',
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256SigmaEvaluatorPipe',
+        label: 'SHA-256 Sigma Evaluator',
+        description:
+          'Curriculum stage targeting one of the four SHA-256 sigma functions ' +
+          '(BigSigma0/1 used inside the round body, SmallSigma0/1 used inside the ' +
+          'message-schedule expansion). Each variant is the XOR of 2-3 rotations / ' +
+          'shifts -- the smallest meaningful composite of the rotate + bitwise ' +
+          'primitives. A great waypoint between the per-skill stages and the full ' +
+          'round.',
+        image: '/img/sha256_sigma_evaluator_pipe.png',
+        evaluatorType: 'Sha256SigmaEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {
+            name: 'variant', label: 'Sigma variant', type: 'enum',
+            options: [
+              {value: 'big0',   label: 'BigSigma0  (rotr2 ^ rotr13 ^ rotr22)'},
+              {value: 'big1',   label: 'BigSigma1  (rotr6 ^ rotr11 ^ rotr25)'},
+              {value: 'small0', label: 'SmallSigma0 (rotr7 ^ rotr18 ^ shr3)'},
+              {value: 'small1', label: 'SmallSigma1 (rotr17 ^ rotr19 ^ shr10)'},
+            ],
+            default: 'big0',
+          },
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 2000, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, variant: v.variant,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, variant: p.variant || 'big0',
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256ChEvaluatorPipe',
+        label: 'SHA-256 Ch Evaluator',
+        description:
+          'Curriculum stage for the SHA-256 "choose" function: Ch(x, y, z) = ' +
+          '(x AND y) XOR ((NOT x) AND z). Three inputs (vars 0, 1, 2), one output ' +
+          '(var 4). The reference function is 4 bitwise opcodes -- one of the more ' +
+          'compact building blocks of the round body.',
+        image: '/img/sha256_ch_evaluator_pipe.png',
+        evaluatorType: 'Sha256ChEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256MajEvaluatorPipe',
+        label: 'SHA-256 Maj Evaluator',
+        description:
+          'Curriculum stage for the SHA-256 "majority" function: Maj(x, y, z) = ' +
+          '(x AND y) XOR (x AND z) XOR (y AND z). Three inputs (vars 0, 1, 2), one ' +
+          'output (var 4). Five bitwise opcodes in BEAST -- a sibling to Ch.',
+        image: '/img/sha256_maj_evaluator_pipe.png',
+        evaluatorType: 'Sha256MajEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
         type: 'Sha256RoundEvaluatorPipe',
         label: 'SHA-256 Round Evaluator',
         description:
@@ -607,6 +771,12 @@ export function findPipeDefinition(pipe_json) {
       MazeEvaluator: 'MazeEvaluatorPipe',
       AdderEvaluator: 'AdderEvaluatorPipe',
       MaximumEvaluator: 'MaximumEvaluatorPipe',
+      IdentityEvaluator: 'IdentityEvaluatorPipe',
+      BitwiseEvaluator: 'BitwiseEvaluatorPipe',
+      RotateEvaluator: 'RotateEvaluatorPipe',
+      Sha256SigmaEvaluator: 'Sha256SigmaEvaluatorPipe',
+      Sha256ChEvaluator: 'Sha256ChEvaluatorPipe',
+      Sha256MajEvaluator: 'Sha256MajEvaluatorPipe',
       Sha256RoundEvaluator: 'Sha256RoundEvaluatorPipe',
     }[firstType];
     if (specialized) {
