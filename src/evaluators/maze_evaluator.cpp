@@ -46,10 +46,6 @@ MazeEvaluator::MazeEvaluator(uint32_t rows, uint32_t cols, double difficulty, ui
     : rows_{rows}, cols_{cols}, difficulty_{difficulty}, max_steps_{max_steps} {}
 
 double MazeEvaluator::evaluate(const VmSession& session) {
-  // Note: max_steps_ on this evaluator is currently unused as a runtime cap; we still apply
-  // the hard-coded 10000-step ceiling below to keep evaluation bounded. A future PR should
-  // honor `max_steps_` directly to make this configurable per evaluator instance (see also
-  // the constructor docstring).
   const uint32_t visibility_radius = 3;
   maze::Maze target_maze = getSolvableMaze(rows_, cols_, difficulty_, 10);
 
@@ -68,7 +64,9 @@ double MazeEvaluator::evaluate(const VmSession& session) {
 
   CpuVirtualMachine virtual_machine;
   virtual_machine.setSilent(true);
-  const uint32_t max_steps = 10000;
+  // Honor the constructor-supplied max_steps_; 0 means "use the legacy 10000-step default"
+  // so callers (and serialised pipelines from older saves) that pass nothing keep working.
+  const uint32_t max_steps = max_steps_ > 0 ? max_steps_ : 10000;
   uint32_t current_steps = 0;
   uint32_t moves = 0;
   bool update_sight = true;

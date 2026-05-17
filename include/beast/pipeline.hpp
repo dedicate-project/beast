@@ -79,6 +79,21 @@ class Pipeline {
   Pipeline();
 
   /**
+   * @brief Destructor: stops the pipeline if it is still running.
+   *
+   * Without this, forgetting to call stop() before destruction would terminate the program: each
+   * ManagedPipe holds a joinable std::thread, and ~std::thread on a joinable thread calls
+   * std::terminate(). The destructor swallows exceptions so partial constructions can still be
+   * torn down cleanly.
+   */
+  ~Pipeline();
+
+  Pipeline(const Pipeline&) = delete;
+  Pipeline(Pipeline&&) = delete;
+  Pipeline& operator=(const Pipeline&) = delete;
+  Pipeline& operator=(Pipeline&&) = delete;
+
+  /**
    * @fn Pipeline::addPipe
    * @brief Adds a Pipe instance to this Pipeline
    *
@@ -234,6 +249,18 @@ class Pipeline {
   void reportMetrics(const std::shared_ptr<ManagedPipe>& managed_pipe, bool executed,
                      const std::unordered_map<uint32_t, uint32_t>& input_metrics,
                      const std::unordered_map<uint32_t, uint32_t>& output_metrics);
+
+  /**
+   * @brief Wakes idle workers when one of their peers makes progress.
+   *
+   * Each worker iteration that actually moved items between buffers (or that received a stop
+   * request via stop() / ~Pipeline()) calls `activity_cv_.notify_all()`. Idle workers wait on
+   * it via `wait_for(..., 10ms)`; the 10 ms ceiling keeps the worker responsive even if a
+   * notification is missed (the cv is used purely for latency reduction and shutdown, not for
+   * correctness). See `pipelineWorker`.
+   */
+  std::mutex activity_mutex_;
+  std::condition_variable activity_cv_;
 
   PipelineMetrics metrics_;
 

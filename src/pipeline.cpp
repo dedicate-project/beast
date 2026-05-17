@@ -9,6 +9,32 @@ namespace beast {
 
 Pipeline::Pipeline() { metrics_.measure_time_start = std::chrono::system_clock::now(); }
 
+Pipeline::~Pipeline() {
+  if (is_running_.load(std::memory_order_acquire)) {
+    try {
+      stop();
+    } catch (...) {
+      // stop() only throws std::invalid_argument when the pipeline isn't running; we just
+      // checked the flag, but another thread could have raced us. Swallow because letting an
+      // exception escape from a destructor is undefined behaviour.
+    }
+  }
+  // Defense-in-depth: even if stop() didn't run (because is_running_ was false but a worker
+  // thread is still alive due to a partial start/stop), join anything that's joinable so we
+  // don't trip std::terminate from ~std::thread.
+  for (auto& managed_pipe : pipes_) {
+    if (managed_pipe->thread.joinable()) {
+      managed_pipe->should_run.store(false, std::memory_order_release);
+      activity_cv_.notify_all();
+      try {
+        managed_pipe->thread.join();
+      } catch (...) {
+        // Can only fail if the thread joined itself, which shouldn't happen here.
+      }
+    }
+  }
+}
+
 void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pipe) {
   if (pipeIsInPipeline(pipe)) {
     throw std::invalid_argument("Pipe already in this pipeline.");
@@ -97,9 +123,20 @@ void Pipeline::stop() {
     throw std::invalid_argument("Pipeline is not running, cannot stop it.");
   }
 
+  // Two-phase shutdown so we don't pay the 10ms wait_for ceiling per worker.
+  // Phase 1: ask every worker to stop, then poke the activity cv once so any worker currently
+  // blocked in wait_for() wakes up immediately and checks should_run on its next loop guard.
   for (const std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
     if (managed_pipe->is_running.load(std::memory_order_acquire)) {
       managed_pipe->should_run.store(false, std::memory_order_release);
+    }
+  }
+  activity_cv_.notify_all();
+
+  // Phase 2: join everyone. Whoever finishes first is reaped first; the worker loop's exit
+  // condition is its should_run flag, so order doesn't matter for correctness.
+  for (const std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
+    if (managed_pipe->is_running.load(std::memory_order_acquire)) {
       managed_pipe->thread.join();
       managed_pipe->is_running.store(false, std::memory_order_release);
     }
@@ -228,6 +265,16 @@ void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) 
   std::vector<std::shared_ptr<Connection>> destination_connections;
   findConnections(managed_pipe, source_connections, destination_connections);
 
+  // Returns true if any per-slot count in the supplied metrics map is non-zero.
+  const auto any_movement = [](const std::unordered_map<uint32_t, uint32_t>& metrics) {
+    for (const auto& kv : metrics) {
+      if (kv.second != 0) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   while (managed_pipe->should_run.load(std::memory_order_acquire)) {
     const auto input_metrics = processInputSlots(managed_pipe, source_connections);
 
@@ -246,12 +293,27 @@ void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) 
 
     const auto output_metrics = processOutputSlots(managed_pipe, destination_connections);
 
-    // Limit cycle time. The fixed 10 ms wait is intentional: it gives upstream/downstream pipes a
-    // chance to make progress without burning a core for purely structural work. A future PR can
-    // replace this with a condition_variable backed off connection events.
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    const bool moved_input = any_movement(input_metrics);
+    const bool moved_output = any_movement(output_metrics);
 
-    // Report metrics for this worker.
+    if (moved_input || moved_output || executed) {
+      // We unblocked an upstream producer (by draining their connection buffer), fed a
+      // downstream consumer (by pushing into theirs), or produced new data ourselves. Wake any
+      // peer worker currently waiting on the activity cv so they can make progress on their
+      // next iteration without paying the 10 ms ceiling.
+      activity_cv_.notify_all();
+      // Yield instead of waiting; we likely have more work to do this round and another worker
+      // may already be processing the data we just moved.
+      std::this_thread::yield();
+    } else {
+      // No useful work this round. Sleep up to 10 ms (the same ceiling the old fixed
+      // sleep_for() used) waiting for a peer to notify us; wake immediately on a stop request.
+      std::unique_lock<std::mutex> lock(activity_mutex_);
+      activity_cv_.wait_for(lock, std::chrono::milliseconds(10), [&managed_pipe] {
+        return !managed_pipe->should_run.load(std::memory_order_acquire);
+      });
+    }
+
     reportMetrics(managed_pipe, executed, input_metrics, output_metrics);
   }
 }

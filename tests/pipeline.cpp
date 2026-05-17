@@ -272,4 +272,48 @@ TEST_CASE("pipeline") {
     const auto item = sink->drawOutput(1);
     REQUIRE(item.data == payload);
   }
+
+  SECTION("stop_wakes_idle_workers_quickly") {
+    // Regression test for the worker-pacing change: previously every worker did a fixed
+    // sleep_for(10 ms) at the bottom of its loop, so a pipeline with N idle workers paid up to
+    // N * 10 ms before stop() returned. With the condition_variable-based pacing the
+    // notify_all() in stop() wakes every idle worker at once, so shutdown should comfortably
+    // fit in well under 50 ms even with a handful of completely idle pipes wired up.
+    beast::Pipeline pipeline;
+    constexpr uint32_t kIdleCount = 8;
+    std::vector<std::shared_ptr<MultiSlotPassthroughPipe>> idle_pipes;
+    idle_pipes.reserve(kIdleCount);
+    for (uint32_t idx = 0; idx < kIdleCount; ++idx) {
+      auto pipe = std::make_shared<MultiSlotPassthroughPipe>(/*max_candidates=*/4,
+                                                             /*inputs_count=*/1,
+                                                             /*outputs_count=*/1);
+      pipeline.addPipe("idle_" + std::to_string(idx), pipe);
+      idle_pipes.push_back(std::move(pipe));
+    }
+    pipeline.start();
+    // Give workers a couple of ms to definitely reach their first cv wait_for().
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    const auto stop_start = std::chrono::steady_clock::now();
+    pipeline.stop();
+    const auto stop_duration = std::chrono::steady_clock::now() - stop_start;
+    REQUIRE(stop_duration < std::chrono::milliseconds(50));
+  }
+
+  SECTION("destructor_stops_running_pipeline_without_terminate") {
+    // Regression test for ~Pipeline(): a Pipeline that goes out of scope while still running
+    // used to invoke ~std::thread on a joinable worker, which calls std::terminate(). The
+    // destructor now politely stops everything first.
+    auto sink = std::make_shared<MultiSlotPassthroughPipe>(/*max_candidates=*/2,
+                                                           /*inputs_count=*/1,
+                                                           /*outputs_count=*/1);
+    {
+      beast::Pipeline pipeline;
+      pipeline.addPipe("sink", sink);
+      pipeline.start();
+      REQUIRE(pipeline.isRunning());
+      // Intentionally leave scope without calling stop().
+    }
+    // If we get here without std::terminate firing, the destructor handled cleanup correctly.
+    SUCCEED("Pipeline destructor cleanly tore down its workers.");
+  }
 }
