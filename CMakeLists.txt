@@ -66,7 +66,11 @@ if(BEAST_ENABLE_CLANG_TIDY)
       -llvmlibc-restrict-system-libc-headers
       -altera-id-dependent-backward-branch
       -altera-unroll-loops
-      -altera-struct-pack-align)
+      -altera-struct-pack-align
+      # We don't depend on absl, so reroute the suggestion-to-use-absl checks. Replacing
+      # std::string::find != npos with absl::StrContains would force us to vendor abseil
+      # purely to satisfy this lint.
+      -abseil-string-find-str-contains)
   string(REPLACE ";" "," BEAST_CLANG_TIDY_CHECKS "${BEAST_CLANG_TIDY_DISABLED_CHECKS}")
   set(CMAKE_CXX_CLANG_TIDY
       "clang-tidy;-warnings-as-errors=*;-checks=*,${BEAST_CLANG_TIDY_CHECKS}")

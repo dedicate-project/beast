@@ -16,6 +16,9 @@ const {createPortal} = ReactDOM;
 const {Stage, Layer, Rect} = Konva;
 
 import {ContextMenu} from './ContextMenu.js';
+import {AddPipeDialog} from './AddPipeDialog.js';
+import {ConfirmationDialog} from './ConfirmationDialog.js';
+import {PIPE_TYPE_DEFINITIONS, findPipeDefinition} from './PipeTypes.js';
 
 const useStyles = makeStyles((theme) => ({
                                toolbar : {
@@ -114,6 +117,25 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [pipes, setPipes] = useState({});
   const [currentlyDraggedPipe, setCurrentlyDraggedPipe] = useState("");
 
+  // Authoring state. `addPipeOpen` controls the new-pipe modal; `addPipeAnchor` carries the
+  // canvas coordinate the user right-clicked, so the new pipe lands roughly where they
+  // asked for it. `pendingDelete` carries the name of a pipe queued for delete (we route
+  // through ConfirmationDialog so accidental clicks don't blow away a 20-knob configured
+  // EvaluatorPipe). `pendingConnectionSource` tracks the source port of an in-progress
+  // click-source-then-click-destination connection authoring gesture; `null` means "no
+  // connection in flight, port clicks should start a new gesture instead of completing
+  // one". `pendingDeleteConnection` is the analogous queue for connection deletes.
+  const [addPipeOpen, setAddPipeOpen] = useState(false);
+  const [addPipeAnchor, setAddPipeAnchor] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [pendingDeleteConnection, setPendingDeleteConnection] = useState(null);
+  const [pendingConnectionSource, setPendingConnectionSource] = useState(null);
+  const pendingConnectionSourceRef = useRef(null);
+  const [apiError, setApiError] = useState("");
+  // When non-null, the AddPipeDialog renders in edit mode against this pipe; shape
+  // `{name, pipe_json}` so the dialog can prefill the form via valuesFromExistingPipe.
+  const [editingPipe, setEditingPipe] = useState(null);
+
   React.useEffect(() => {
     const handleContextMenu = (e) => { e.preventDefault(); };
 
@@ -187,27 +209,91 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [hoveredPipe, setHoveredPipe] = useState("");
   const hoveredPipeRef = useRef("");
 
+  // Single entry point for all mutating REST calls. Centralised so the API-error toast and
+  // the post-mutation pipeline re-fetch live in one place; every action handler below uses
+  // it and treats the boolean return as "was the server happy?".
+  const postUpdate = async (body) => {
+    try {
+      const response = await fetch(`/api/v1/pipelines/${pipeline.id}/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+      if (!response.ok || data.status !== 'success') {
+        const reason = data.error || `HTTP ${response.status}`;
+        setApiError(`${body.action} failed: ${reason}`);
+        return false;
+      }
+      // Kick a refresh so the change shows up immediately instead of after the next 1s
+      // poll cycle. We deliberately ignore the result because the polling loop will pick
+      // up any state we miss; this is purely a latency optimisation.
+      refreshPipelineState();
+      setApiError('');
+      return true;
+    } catch (e) {
+      setApiError(`${body.action} failed: ${e && e.message ? e.message : e}`);
+      return false;
+    }
+  };
+
+  // Stable handle so polling and on-demand fetches share the same code path. The actual
+  // implementation lives inside the polling useEffect; we expose it through this ref so
+  // postUpdate (declared above the polling effect for ordering reasons) can call it.
+  const refreshPipelineStateRef = useRef(() => {});
+  const refreshPipelineState = () => refreshPipelineStateRef.current();
+
   function getRightClickMenuItems(pipe) {
-    if (pipe == "") {
+    const running = pipelineStateRef.current === "running";
+    if (pipe === "") {
       return [
         {
           text : "Add new Pipe",
           icon : "add",
-          disabled : pipelineStateRef.current == "running",
-          action : () => console.log("Add a Pipe"),
-        },
-      ];
-    } else {
-      return [
-        {
-          text : "Delete " + pipe,
-          icon : "delete",
-          disabled : pipelineStateRef.current == "running",
-          action : () => console.log("Delete " + pipe),
+          disabled : running,
+          action : () => {
+            setEditingPipe(null);
+            setAddPipeAnchor(addPipeAnchorRef.current);
+            setAddPipeOpen(true);
+          },
         },
       ];
     }
+    return [
+      {
+        text : "Edit " + pipe,
+        icon : "edit",
+        disabled : running,
+        action : () => {
+          // Pull the latest model snapshot rather than closing over a stale prop, since
+          // this lambda runs through `rightClickMenuItemsRef` which is set once per click.
+          const modelPipes = (model && model.pipes) || {};
+          if (modelPipes[pipe]) {
+            setEditingPipe({name: pipe, pipe_json: modelPipes[pipe]});
+            setAddPipeOpen(true);
+          }
+        },
+      },
+      {
+        text : "Delete " + pipe,
+        icon : "delete",
+        disabled : running,
+        action : () => setPendingDelete(pipe),
+      },
+    ];
   }
+
+  // Stash the canvas-space coordinate of the latest right-click so the Add Pipe dialog can
+  // use it as the starting position for the new pipe. Updated synchronously inside the
+  // stage mousedown handler.
+  const addPipeAnchorRef = useRef({x: 50, y: 50});
+
+  // Cancel an in-progress connection authoring gesture (called on Escape, click on empty
+  // canvas, or when the source pipe gets deleted out from under us).
+  const cancelPendingConnection = () => {
+    pendingConnectionSourceRef.current = null;
+    setPendingConnectionSource(null);
+  };
 
   // Previously this rendered a separate React tree into a manually-created `#dialog-root`
   // div via the legacy `ReactDOM.render` API. That API is deprecated under React 18 and the
@@ -249,17 +335,25 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         lastDragPointRef.current = stage.getPointerPosition();
       } else if (e.evt.button === 2) {
         e.evt.preventDefault();           // This prevents the native context menu
-        e.evt.stopPropagation();          // Add this line
-        e.evt.stopImmediatePropagation(); // Add this line
+        e.evt.stopPropagation();
+        e.evt.stopImmediatePropagation();
         e.evt.cancelBubble = true;
         const position = stage.getPointerPosition();
-        console.log(stage)
-        console.log(e.evt.target)
+
+        // Translate the pointer position from stage-space into element-layer-space (the
+        // layer is panned by the middle-mouse drag handler, so we subtract its offset).
+        // This is the coordinate we hand off to AddPipeDialog so the new pipe lands where
+        // the user actually right-clicked.
+        const layer = elementLayerRef.current;
+        if (layer) {
+          addPipeAnchorRef.current = {
+            x: position.x - layer.x(),
+            y: position.y - layer.y(),
+          };
+        }
 
         const container = stage.container();
         const rect = container.getBoundingClientRect();
-
-        // Adjust the position based on the canvas offset
         const adjustedPosition = {
           x : position.x + rect.left + 5,
           y : position.y - 2 * rect.top + 5
@@ -268,6 +362,14 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         rightClickMenuItemsRef.current = getRightClickMenuItems(hoveredPipeRef.current);
         setContextMenuPosition(adjustedPosition);
         setShowContextMenu(true);
+      } else if (e.evt.button === 0) {
+        // Left-click on empty canvas cancels any in-flight connection authoring gesture.
+        // We compare the event target to the stage itself rather than to a layer so port
+        // clicks (which bubble up from a Konva.Rect inside a Group) still complete
+        // connections normally.
+        if (e.target === stage && pendingConnectionSourceRef.current) {
+          cancelPendingConnection();
+        }
       }
     });
 
@@ -381,6 +483,69 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           stroke : '#333',
           strokeWidth : 1,
           cornerRadius : 0,
+          // Slightly larger invisible hit region than the visible 3x10 rectangle so the
+          // user doesn't have to click pixel-perfectly to start a connection. Konva uses
+          // the hitFunc rather than the geometry for hit-testing when it's defined.
+          hitFunc: function(context) {
+            context.beginPath();
+            context.rect(-4, -4, portWidth + 8, portHeight + 8);
+            context.closePath();
+            context.fillStrokeShape(this);
+          },
+        });
+
+        portRect.portInfo = {pipeName: name, side, slot};
+
+        portRect.on('mouseover', (event) => {
+          portRect.fill('#ff8c00');
+          portRect.getLayer().batchDraw();
+          event.cancelBubble = true;
+        });
+        portRect.on('mouseout', () => {
+          portRect.fill('#ccc');
+          portRect.getLayer().batchDraw();
+        });
+        // Stop drags from starting on the port itself so the user can click cleanly to
+        // begin/finish a connection.
+        portRect.on('mousedown', (event) => {
+          if (event.evt.button === 0) {
+            event.cancelBubble = true;
+            event.evt.stopPropagation();
+          }
+        });
+        portRect.on('click', (event) => {
+          if (event.evt.button !== 0) return;
+          event.cancelBubble = true;
+          const pending = pendingConnectionSourceRef.current;
+          if (!pending) {
+            // Begin a new connection. Only outputs can start one; clicking an input first
+            // would have ambiguous semantics (you can't have a connection that flows
+            // "backwards"), and starting from inputs makes the wrong end orange.
+            if (side !== 'output') return;
+            pendingConnectionSourceRef.current = {pipeName: name, slot};
+            setPendingConnectionSource({pipeName: name, slot});
+          } else {
+            // Complete a connection. Mirror restriction: only an input can be the
+            // destination. Reject inputs on the same pipe to keep the model acyclic by
+            // default (loops are technically supported in the C++ core but a UI-driven
+            // self-loop is almost always a mis-click).
+            if (side !== 'input') return;
+            if (pending.pipeName === name) {
+              setApiError('Cannot connect a pipe to itself.');
+              return;
+            }
+            postUpdate({
+              action: 'add_connection',
+              source_pipe: pending.pipeName,
+              source_slot: pending.slot,
+              destination_pipe: name,
+              destination_slot: slot,
+              // Use the same buffer size as the pipelines example. Future PR: expose it
+              // via the connection right-click menu.
+              buffer_size: 50,
+            });
+            cancelPendingConnection();
+          }
         });
 
         group.add(portRect);
@@ -492,25 +657,14 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     setOldModel(model);
 
     for (let key in added_pipes) {
-      var inports = 0;
-      var outports = 0;
-      let image_file = "/img/pipe_plain_oneinputoneoutput.png";
-      const pipe_type = added_pipes[key] && added_pipes[key]["type"];
-      if (pipe_type == "ProgramFactoryPipe") {
-        image_file = "/img/factory_pipe.png";
-        outports = 1;
-      } else if (pipe_type == "NullSinkPipe") {
-        image_file = "/img/null_sink_pipe.png";
-        inports = 1;
-      } else if (pipe_type == "EvaluatorPipe") {
-        const evaluators = added_pipes[key]["parameters"] &&
-                           added_pipes[key]["parameters"]["evaluators"];
-        if (evaluators && evaluators[0] && evaluators[0]["type"] == "MazeEvaluator") {
-          image_file = "/img/maze_evaluator_pipe.png";
-          inports = 1;
-          outports = 1;
-        }
-      }
+      // Look up the pipe's appearance via the central PipeTypes definition so adding new
+      // pipe categories only requires one new entry. Unknown types still render with the
+      // legacy plain icon and no ports so they don't crash the canvas.
+      const definition = findPipeDefinition(added_pipes[key]);
+      const inports = definition ? definition.inputs : 0;
+      const outports = definition ? definition.outputs : 0;
+      const image_file = (definition && definition.image) ||
+                         "/img/pipe_plain_oneinputoneoutput.png";
       var pos_x = 50;
       var pos_y = 50;
       const safeMetaInner = (metadata && typeof metadata === 'object') ? metadata : {};
@@ -521,7 +675,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       }
 
       createDraggableImage(image_file, pos_x, pos_y, inports, outports, key,
-                           added_pipes[key]["type"])
+                           added_pipes[key] && added_pipes[key]["type"])
           .then((konvaImage) => { pipes[key] = konvaImage; });
     }
     for (let key in removed_pipes) {
@@ -578,13 +732,94 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           stroke : 'red',
           strokeWidth : 2,
           lineCap : 'round',
-          lineJoin : 'round'
+          lineJoin : 'round',
+          // Stash the connection metadata directly on the Konva object so the click
+          // handler doesn't have to search the model again.
+          hitStrokeWidth: 10,
+        });
+        line.connectionInfo = {
+          source_pipe: connection.source_pipe,
+          source_slot: connection.source_slot,
+          destination_pipe: connection.destination_pipe,
+          destination_slot: connection.destination_slot,
+        };
+        line.on('mouseover', () => {
+          line.stroke('#ff8c00');
+          line.getLayer().batchDraw();
+        });
+        line.on('mouseout', () => {
+          line.stroke('red');
+          line.getLayer().batchDraw();
+        });
+        // Right-click on a connection: queue it for delete (the ConfirmationDialog at the
+        // bottom of the render asks before actually mutating).
+        line.on('contextmenu', (event) => {
+          event.evt.preventDefault();
+          event.evt.stopPropagation();
+          event.cancelBubble = true;
+          setPendingDeleteConnection(line.connectionInfo);
         });
         connectionsLayerRef.current.add(line);
       }
     }
+    // While a connection is being authored, draw a guide line from the source port to
+    // wherever the mouse last hovered. This makes the gesture feel responsive instead of
+    // requiring the user to remember which port they clicked first.
+    if (pendingConnectionSource) {
+      const sourcePipe = pipes[pendingConnectionSource.pipeName];
+      const sourcePort = sourcePipe && sourcePipe.ports.outputs[pendingConnectionSource.slot];
+      if (sourcePort) {
+        const sx = sourcePipe.x() + sourcePort.x() + 1.5;
+        const sy = sourcePipe.y() + sourcePort.y() + 5;
+        const guide = new Konva.Line({
+          points: [sx, sy, sx, sy],
+          stroke: '#ff8c00',
+          strokeWidth: 2,
+          dash: [4, 4],
+          lineCap: 'round',
+          listening: false,
+        });
+        guide.name('connection-guide');
+        connectionsLayerRef.current.add(guide);
+      }
+    }
     connectionsLayerRef.current.draw();
-  }, [ dragMovePoint, model ]);
+  }, [ dragMovePoint, model, pendingConnectionSource ]);
+
+  // Track mouse moves at the stage level so the guide line follows the cursor while the
+  // user is choosing the destination port. Cheap because we just mutate the existing line;
+  // no React re-render happens here.
+  useEffect(() => {
+    if (!stageInstance) return;
+    const handler = () => {
+      if (!pendingConnectionSourceRef.current || !connectionsLayerRef.current) return;
+      const layer = connectionsLayerRef.current;
+      const guides = layer.find('.connection-guide');
+      if (!guides || guides.length === 0) return;
+      const pos = stageInstance.getPointerPosition();
+      if (!pos) return;
+      const elementLayer = elementLayerRef.current;
+      const offsetX = elementLayer ? elementLayer.x() : 0;
+      const offsetY = elementLayer ? elementLayer.y() : 0;
+      const guide = guides[0];
+      const startPoints = guide.points();
+      guide.points([startPoints[0], startPoints[1], pos.x - offsetX, pos.y - offsetY]);
+      layer.batchDraw();
+    };
+    stageInstance.on('mousemove', handler);
+    return () => { stageInstance.off('mousemove', handler); };
+  }, [ stageInstance, pendingConnectionSource ]);
+
+  // Esc cancels an in-progress connection-authoring gesture.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape' && pendingConnectionSourceRef.current) {
+        cancelPendingConnection();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Update the grid and border when dimensions change
   const updateGridAndBorder = () => {
@@ -651,11 +886,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         // Network blip or unmount; ignore and try again on the next tick.
       }
     };
+    // Expose the fetcher to non-effect callers (the API mutation helper) so they can force
+    // a refresh after a successful POST instead of waiting for the next poll cycle.
+    refreshPipelineStateRef.current = fetchPipelineState;
     fetchPipelineState();
     const interval = setInterval(fetchPipelineState, 1000);
     return () => {
       clearInterval(interval);
       controller.abort();
+      refreshPipelineStateRef.current = () => {};
     };
   }, [ pipeline.id ]);
 
@@ -794,6 +1033,95 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
             disabled : !newPipelineName.trim() || newPipelineName.trim() === pipeline.name,
           },
             "Save"))),
+      // Modal for adding a new pipe. The dialog itself only knows how to render its form
+      // and produce a request body; the actual mutation goes through `postUpdate` so the
+      // error-toast and refresh logic stay in one place.
+      e(AddPipeDialog, {
+        open: addPipeOpen,
+        anchorPosition: addPipeAnchor,
+        existingPipeNames: Object.keys((model && model.pipes) || {}),
+        editing: editingPipe,
+        onClose: () => {
+          setAddPipeOpen(false);
+          setEditingPipe(null);
+        },
+        onSave: async (body) => {
+          const ok = await postUpdate(body);
+          if (ok) {
+            setAddPipeOpen(false);
+            setEditingPipe(null);
+          }
+          return ok;
+        },
+      }),
+      // Delete confirmations -- one for pipes, one for connections. Both route through
+      // ConfirmationDialog so the wording reads consistently and the same Yes/No buttons
+      // appear in both places.
+      e(ConfirmationDialog, {
+        open: Boolean(pendingDelete),
+        onClose: () => setPendingDelete(null),
+        onConfirm: async () => {
+          await postUpdate({action: 'delete_pipe', name: pendingDelete});
+          setPendingDelete(null);
+        },
+        title: 'Delete pipe?',
+        content: pendingDelete
+          ? `Delete pipe "${pendingDelete}"? Any connections to or from it will also be removed.`
+          : '',
+      }),
+      e(ConfirmationDialog, {
+        open: Boolean(pendingDeleteConnection),
+        onClose: () => setPendingDeleteConnection(null),
+        onConfirm: async () => {
+          await postUpdate({
+            action: 'delete_connection',
+            ...pendingDeleteConnection,
+          });
+          setPendingDeleteConnection(null);
+        },
+        title: 'Delete connection?',
+        content: pendingDeleteConnection
+          ? `Disconnect ${pendingDeleteConnection.source_pipe}[${pendingDeleteConnection.source_slot}] → ${pendingDeleteConnection.destination_pipe}[${pendingDeleteConnection.destination_slot}]?`
+          : '',
+      }),
+      // Status bar for the in-flight connection authoring gesture, plus any API errors.
+      // Both render as small floating banners inside the canvas viewport so the user gets
+      // immediate feedback without us having to wire a separate notification system.
+      pendingConnectionSource &&
+          e('div', {
+            style: {
+              position: 'absolute',
+              left: 16,
+              bottom: 16,
+              padding: '8px 12px',
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeeba',
+              borderRadius: 4,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              zIndex: 10,
+            },
+          },
+            `Click a destination input port to finish the connection (or press Esc to cancel). Source: ${pendingConnectionSource.pipeName}[${pendingConnectionSource.slot}]`),
+      apiError &&
+          e('div', {
+            style: {
+              position: 'absolute',
+              right: 16,
+              bottom: 16,
+              padding: '8px 12px',
+              backgroundColor: '#f8d7da',
+              color: '#721c24',
+              border: '1px solid #f5c6cb',
+              borderRadius: 4,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              zIndex: 10,
+              maxWidth: 360,
+              cursor: 'pointer',
+            },
+            onClick: () => setApiError(''),
+            title: 'Click to dismiss',
+          },
+            apiError),
       // Pipe-info tooltip: rendered through a portal directly into <body> so it floats above
       // the Konva canvas without being clipped by Material UI's overflow rules. Only shows
       // when a pipe is hovered and the right-click menu isn't currently up.

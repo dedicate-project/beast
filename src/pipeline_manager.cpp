@@ -442,8 +442,9 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         // could carry a pipe that did not exist in the live `Pipeline` -- connections
         // referencing it would then fail with a confusing "pipe not found" error from the
         // connection loop below. Surface the bad type up-front instead.
-        throw std::invalid_argument("Unknown pipe type '" + pipe_type + "' for pipe '" +
-                                    pipe_name + "'");
+        std::string message = "Unknown pipe type '";
+        message.append(pipe_type).append("' for pipe '").append(pipe_name).append("'");
+        throw std::invalid_argument(message);
       }
     }
   }

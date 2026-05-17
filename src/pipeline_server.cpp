@@ -260,8 +260,12 @@ void PipelineServer::handleAddPipe(crow::json::wvalue& value, uint32_t pipeline_
     int32_t pos_y = 0;
     if (req_body.contains("position")) {
       const auto& pos = req_body["position"];
-      if (pos.contains("x")) pos_x = pos["x"].get<int32_t>();
-      if (pos.contains("y")) pos_y = pos["y"].get<int32_t>();
+      if (pos.contains("x")) {
+        pos_x = pos["x"].get<int32_t>();
+      }
+      if (pos.contains("y")) {
+        pos_y = pos["y"].get<int32_t>();
+      }
     }
 
     pipeline_manager_.mutatePipeline(
