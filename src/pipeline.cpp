@@ -267,12 +267,8 @@ void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) 
 
   // Returns true if any per-slot count in the supplied metrics map is non-zero.
   const auto any_movement = [](const std::unordered_map<uint32_t, uint32_t>& metrics) {
-    for (const auto& kv : metrics) {
-      if (kv.second != 0) {
-        return true;
-      }
-    }
-    return false;
+    return std::any_of(metrics.begin(), metrics.end(),
+                       [](const auto& kv) { return kv.second != 0; });
   };
 
   while (managed_pipe->should_run.load(std::memory_order_acquire)) {

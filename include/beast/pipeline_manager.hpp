@@ -57,11 +57,20 @@ class PipelineManager {
 
   /**
    * @brief Gets a reference to a pipeline by its ID.
-   * @param id The unique identifier of the desired pipeline.
+   *
+   * @note This intentionally does NOT lock `pipelines_mutex_`; callers that need atomicity
+   *       across the lookup + use must acquire the mutex themselves (see e.g.
+   *       updatePipelineName, deletePipeline). The returned reference is only valid as long
+   *       as that lock is held -- a concurrent delete would invalidate it.
+   *
+   * @param pipeline_id The unique identifier of the desired pipeline.
    * @return A reference to the pipeline descriptor with the given ID.
    * @throws std::invalid_argument if the pipeline with the given ID is not found.
    */
   [[nodiscard]] PipelineDescriptor& getPipelineById(uint32_t pipeline_id);
+
+  /// @copydoc getPipelineById(uint32_t)
+  [[nodiscard]] const PipelineDescriptor& getPipelineById(uint32_t pipeline_id) const;
 
   /**
    * @brief Gets a const reference to the list of pipeline descriptors.

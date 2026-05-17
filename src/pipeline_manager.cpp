@@ -51,6 +51,22 @@ PipelineManager::~PipelineManager() {
   if (metrics_collector_thread_.joinable()) {
     metrics_collector_thread_.join();
   }
+
+  // Stop any pipelines that are still running so worker threads are joined while *we* still
+  // hold the only shared_ptr to them. Without this, ~Pipeline() would also do the right thing
+  // (see Pipeline.cpp), but stopping here means the manager controls shutdown order and the
+  // process can exit cleanly even on SIGINT-driven destruction paths. We swallow exceptions
+  // because letting one escape a destructor is undefined behaviour.
+  std::scoped_lock lock{pipelines_mutex_};
+  for (auto& descriptor : pipelines_) {
+    if (descriptor.pipeline && descriptor.pipeline->isRunning()) {
+      try {
+        descriptor.pipeline->stop();
+      } catch (...) {
+        // Best-effort shutdown; ~Pipeline() will still clean up any joinable workers.
+      }
+    }
+  }
 }
 
 uint32_t PipelineManager::createPipeline(const std::string& name) {
@@ -73,13 +89,22 @@ uint32_t PipelineManager::createPipeline(const std::string& name) {
 }
 
 void PipelineManager::savePipeline(uint32_t pipeline_id) {
+  std::scoped_lock lock{pipelines_mutex_};
   const auto& descriptor = getPipelineById(pipeline_id);
   const auto model = deconstructPipelineToJson(descriptor.pipeline);
   filesystem_.updateModel(descriptor.filename, descriptor.name, model, descriptor.metadata);
 }
 
 PipelineManager::PipelineDescriptor& PipelineManager::getPipelineById(uint32_t pipeline_id) {
-  for (PipelineDescriptor& descriptor : pipelines_) {
+  // Defer to the const overload to share the lookup logic without code duplication; the
+  // const_cast is safe because we only call this on a non-const `*this`.
+  return const_cast<PipelineDescriptor&>(
+      const_cast<const PipelineManager*>(this)->getPipelineById(pipeline_id));
+}
+
+const PipelineManager::PipelineDescriptor&
+PipelineManager::getPipelineById(uint32_t pipeline_id) const {
+  for (const PipelineDescriptor& descriptor : pipelines_) {
     if (descriptor.id == pipeline_id) {
       return descriptor;
     }
@@ -99,8 +124,11 @@ void PipelineManager::updatePipelineName(uint32_t pipeline_id, const std::string
 
 void PipelineManager::deletePipeline(uint32_t pipeline_id) {
   std::scoped_lock lock{pipelines_mutex_};
-  PipelineDescriptor descriptor = getPipelineById(pipeline_id);
-  filesystem_.deleteModel(descriptor.filename);
+  // Copy out only the filename (cheap std::string); the previous PipelineDescriptor-by-value
+  // copy here pulled the whole metadata json along with it, which is wasteful and only worked
+  // because PipelineDescriptor::pipeline is a shared_ptr.
+  const std::string filename = getPipelineById(pipeline_id).filename;
+  filesystem_.deleteModel(filename);
   pipelines_.remove_if([pipeline_id](const auto& pipeline) { return pipeline.id == pipeline_id; });
 }
 
@@ -115,7 +143,9 @@ Pipeline::PipelineMetrics PipelineManager::getPipelineMetrics(uint32_t pipeline_
 
 nlohmann::json PipelineManager::getJsonForPipeline(uint32_t pipeline_id) {
   std::scoped_lock lock{pipelines_mutex_};
-  PipelineDescriptor descriptor = getPipelineById(pipeline_id);
+  // Take a const reference into the stored descriptor instead of copying the entire
+  // PipelineDescriptor (which would clone the metadata json byte-for-byte).
+  const PipelineDescriptor& descriptor = getPipelineById(pipeline_id);
   return deconstructPipelineToJson(descriptor.pipeline);
 }
 
