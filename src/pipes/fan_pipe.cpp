@@ -14,6 +14,8 @@ FanPipe::FanPipe(uint32_t max_candidates, double window_seconds)
     : Pipe(max_candidates, /*input_slots=*/1, /*output_slots=*/1),
       window_seconds_(window_seconds <= 0.0 ? kDefaultWindowSeconds : window_seconds) {}
 
+bool FanPipe::inputsAreSaturated() { return getInputSlotAmount(0) > 0; }
+
 void FanPipe::execute() {
   uint64_t handled_this_tick = 0;
   while (getInputSlotAmount(0) > 0) {

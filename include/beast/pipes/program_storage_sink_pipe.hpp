@@ -55,6 +55,15 @@ class ProgramStorageSinkPipe : public Pipe {
   void execute() override;
 
   /**
+   * @brief Ready as soon as the input slot has anything to ingest.
+   *
+   * Sinks should never wait for a full buffer; we want each new high-water-mark
+   * candidate persisted as soon as it arrives. See ResultsSummaryPipe's override
+   * for the broader rationale.
+   */
+  [[nodiscard]] bool inputsAreSaturated() override;
+
+  /**
    * @brief On-disk destination of the JSON ledger (empty when disabled)
    */
   [[nodiscard]] const std::string& getPath() const noexcept;

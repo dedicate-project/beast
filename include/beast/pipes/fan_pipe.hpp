@@ -49,6 +49,12 @@ class FanPipe : public Pipe {
   void execute() override;
 
   /**
+   * @brief Run as soon as any candidate arrives, rather than waiting for a full buffer.
+   * See ResultsSummaryPipe::inputsAreSaturated for the rationale.
+   */
+  [[nodiscard]] bool inputsAreSaturated() override;
+
+  /**
    * @brief Snapshot of the current throughput reading
    */
   [[nodiscard]] Throughput getThroughput() const;

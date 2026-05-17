@@ -71,6 +71,17 @@ class ResultsSummaryPipe : public Pipe {
   void execute() override;
 
   /**
+   * @brief Worker-loop readiness gate: execute as soon as any candidate has arrived.
+   *
+   * The base-class default returns true only when every input slot is FULL (which is
+   * what the GA-style EvolutionPipe needs). For a passthrough/observer pipe that's
+   * the wrong condition -- a slow upstream might never fill the buffer, and the pipe
+   * would silently never run despite having data sitting at its input. Same fix
+   * pattern NullSinkPipe already uses.
+   */
+  [[nodiscard]] bool inputsAreSaturated() override;
+
+  /**
    * @brief Snapshot of the current rolling statistics
    */
   [[nodiscard]] Summary getSummary() const;

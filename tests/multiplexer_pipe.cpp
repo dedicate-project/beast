@@ -60,6 +60,17 @@ TEST_CASE("MultiplexerPipe applies back-pressure when the single output saturate
   REQUIRE(pipe.getInputSlotAmount(0) + pipe.getInputSlotAmount(1) == 2);
 }
 
+TEST_CASE("MultiplexerPipe is ready when any single input has a candidate") {
+  // The mux ought to fire as long as *some* upstream has produced something; waiting
+  // until *every* slot is full would deadlock common loop-back wirings where one of
+  // the inputs only produces sporadically (e.g. the survivor feedback loop).
+  beast::MultiplexerPipe pipe(/*max_candidates=*/50, /*input_slots=*/3);
+  CHECK_FALSE(pipe.inputsAreSaturated());
+
+  pipe.addInputWithScore(1, beast::Pipe::OutputItem{{0xAB}, 0.0});
+  CHECK(pipe.inputsAreSaturated());
+}
+
 TEST_CASE("MultiplexerPipe clamps weird slot counts to a sane range") {
   beast::MultiplexerPipe zero(/*max_candidates=*/2, /*input_slots=*/0);
   CHECK(zero.getInputSlotCount() == 1);

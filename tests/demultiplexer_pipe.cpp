@@ -59,6 +59,16 @@ TEST_CASE("DemultiplexerPipe applies back-pressure rather than dropping candidat
   REQUIRE(pipe.getInputSlotAmount(0) == 1);
 }
 
+TEST_CASE("DemultiplexerPipe is ready as soon as a single candidate arrives") {
+  // Same regression as the other passthroughs: the worker loop calls
+  // inputsAreSaturated() to decide whether to execute the pipe, and the base-class
+  // "all slots full" gate would silently stall a demux fed by a slow upstream.
+  beast::DemultiplexerPipe pipe(/*max_candidates=*/50, /*output_slots=*/2);
+  CHECK_FALSE(pipe.inputsAreSaturated());
+  pipe.addInputWithScore(0, beast::Pipe::OutputItem{{0xAB}, 0.0});
+  CHECK(pipe.inputsAreSaturated());
+}
+
 TEST_CASE("DemultiplexerPipe broadcast blocks when *any* slot is full") {
   beast::DemultiplexerPipe pipe(/*max_candidates=*/3, /*output_slots=*/3,
                                 beast::DemultiplexerPipe::Strategy::Broadcast);

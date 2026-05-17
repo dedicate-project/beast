@@ -23,6 +23,8 @@ DemultiplexerPipe::DemultiplexerPipe(uint32_t max_candidates, uint32_t output_sl
       output_slot_count_(clampSlots(output_slots)),
       strategy_(strategy) {}
 
+bool DemultiplexerPipe::inputsAreSaturated() { return getInputSlotAmount(0) > 0; }
+
 void DemultiplexerPipe::execute() {
   // Always check downstream capacity BEFORE drawing from the input. If we drew first and
   // then discovered we couldn't route, we'd have to push the item back onto the input

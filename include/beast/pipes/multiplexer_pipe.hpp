@@ -44,6 +44,16 @@ class MultiplexerPipe : public Pipe {
   void execute() override;
 
   /**
+   * @brief Ready as soon as any input slot has something to drain.
+   *
+   * The base-class default requires *every* slot to be full, which would deadlock a
+   * mux whose only purpose is to feed from a sparsely-active loop-back: if input 1
+   * (the survivor loop) is slow to produce, input 0 (a fresh factory) would never
+   * see execute() called and items would pile up at the input until max_candidates.
+   */
+  [[nodiscard]] bool inputsAreSaturated() override;
+
+  /**
    * @brief Number of input slots exposed by this pipe
    */
   [[nodiscard]] uint32_t getInputSlots() const noexcept;

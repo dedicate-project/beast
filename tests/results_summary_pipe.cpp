@@ -88,6 +88,18 @@ TEST_CASE("ResultsSummaryPipe accumulates rolling statistics") {
   CHECK(summary.best_ever_data.empty());
 }
 
+TEST_CASE("ResultsSummaryPipe is ready as soon as a single candidate arrives") {
+  // Regression: without this override the worker loop treated a passthrough fed by a
+  // slow upstream as "not ready" and never invoked execute(), so the UI showed
+  // non-zero input rate but 0/s output rate. With max_candidates=50 the old gating
+  // meant the user had to wait for ~50 candidates to arrive before *any* output --
+  // which for a 0.4/s upstream is ~2 minutes of apparent dead silence per cycle.
+  beast::ResultsSummaryPipe pipe(/*max_candidates=*/50);
+  CHECK_FALSE(pipe.inputsAreSaturated());
+  pipe.addInputWithScore(0, beast::Pipe::OutputItem{{0xAB}, 0.5});
+  CHECK(pipe.inputsAreSaturated());
+}
+
 TEST_CASE("ResultsSummaryPipe applies back-pressure when output saturates") {
   beast::ResultsSummaryPipe pipe(/*max_candidates=*/2);
   // Feed more items than the output slot can hold.

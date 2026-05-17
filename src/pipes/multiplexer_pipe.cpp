@@ -21,6 +21,15 @@ MultiplexerPipe::MultiplexerPipe(uint32_t max_candidates, uint32_t input_slots)
     : Pipe(max_candidates, clampSlots(input_slots), 1),
       input_slot_count_(clampSlots(input_slots)) {}
 
+bool MultiplexerPipe::inputsAreSaturated() {
+  for (uint32_t slot = 0; slot < input_slot_count_; ++slot) {
+    if (getInputSlotAmount(slot) > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void MultiplexerPipe::execute() {
   // Round-robin walk: visit every input slot starting from the cursor, take one item per
   // visit, advance. We do up to input_slot_count_ rounds before re-checking whether

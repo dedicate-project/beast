@@ -59,6 +59,8 @@ ProgramStorageSinkPipe::ProgramStorageSinkPipe(uint32_t max_candidates, std::str
   }
 }
 
+bool ProgramStorageSinkPipe::inputsAreSaturated() { return getInputSlotAmount(0) > 0; }
+
 void ProgramStorageSinkPipe::execute() {
   bool changed = false;
   while (getInputSlotAmount(0) > 0) {

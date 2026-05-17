@@ -39,6 +39,13 @@ class DemultiplexerPipe : public Pipe {
    */
   void execute() override;
 
+  /**
+   * @brief Ready as soon as the single input slot has anything to fan out.
+   *
+   * See ResultsSummaryPipe::inputsAreSaturated for the rationale.
+   */
+  [[nodiscard]] bool inputsAreSaturated() override;
+
   [[nodiscard]] uint32_t getOutputSlots() const noexcept;
   [[nodiscard]] Strategy getStrategy() const noexcept;
 

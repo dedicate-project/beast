@@ -79,6 +79,17 @@ TEST_CASE("ProgramStorageSinkPipe skips exact duplicates and ignores worse candi
   std::filesystem::remove(path);
 }
 
+TEST_CASE("ProgramStorageSinkPipe is ready as soon as a single candidate arrives") {
+  // A sink should record each candidate as soon as it shows up; the base-class "all
+  // slots full" readiness gate would otherwise hold the sink off until 50 candidates
+  // had accumulated, which for a slow upstream means new high-scoring programs never
+  // make it to disk in any reasonable wall-clock time.
+  beast::ProgramStorageSinkPipe sink(/*max_candidates=*/50, /*path=*/"", /*top_k=*/3);
+  CHECK_FALSE(sink.inputsAreSaturated());
+  sink.addInputWithScore(0, beast::Pipe::OutputItem{{0xAB}, 0.5});
+  CHECK(sink.inputsAreSaturated());
+}
+
 TEST_CASE("ProgramStorageSinkPipe degrades gracefully with no path configured") {
   beast::ProgramStorageSinkPipe sink(/*max_candidates=*/4, /*path=*/"", /*top_k=*/0);
   sink.addInputWithScore(0, beast::Pipe::OutputItem{{0xA}, 0.5});

@@ -68,3 +68,16 @@ TEST_CASE("FanPipe falls back to the default window when given a non-positive va
   beast::FanPipe negative(/*max_candidates=*/2, /*window_seconds=*/-3.5);
   CHECK(negative.getWindowSeconds() == Approx(2.0));
 }
+
+TEST_CASE("FanPipe is ready as soon as a single candidate arrives") {
+  // Regression: the base-class `inputsAreSaturated()` returns true only when *every*
+  // input slot is full, which would cause the worker loop to never call execute() on
+  // a passthrough fed by a slow upstream (the practical symptom: the pipe shows
+  // non-zero input rate but zero output rate, candidates effectively black-holed
+  // until the input buffer fills). FanPipe must say "ready" with even one item.
+  beast::FanPipe pipe(/*max_candidates=*/50, /*window_seconds=*/1.0);
+  CHECK_FALSE(pipe.inputsAreSaturated());
+
+  pipe.addInputWithScore(0, beast::Pipe::OutputItem{{0xAA}, 0.0});
+  CHECK(pipe.inputsAreSaturated());
+}

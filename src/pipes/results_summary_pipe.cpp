@@ -15,6 +15,8 @@ ResultsSummaryPipe::ResultsSummaryPipe(uint32_t max_candidates, uint32_t window_
     : Pipe(max_candidates, 1, 1),
       window_size_(window_size == 0 ? kDefaultWindowSize : window_size) {}
 
+bool ResultsSummaryPipe::inputsAreSaturated() { return getInputSlotAmount(0) > 0; }
+
 void ResultsSummaryPipe::execute() {
   // Drain the input slot all the way down each tick, mirroring NullSinkPipe's "consume
   // anything available" behaviour. We stop once the output slot fills so we apply natural
