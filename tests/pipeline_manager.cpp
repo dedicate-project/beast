@@ -2,6 +2,7 @@
 
 // Standard
 #include <filesystem>
+#include <fstream>
 
 // BEAST
 #include <beast/beast.hpp>
@@ -651,6 +652,30 @@ TEST_CASE("PipelineManager") {
     });
     REQUIRE(manager.getPipelineById(id).pipeline->getPipes().size() == 1);
     REQUIRE(manager.getPipelineById(id).pipeline->getConnections().empty());
+  }
+
+  SECTION("Example JSON pipelines parse cleanly") {
+    // Smoke-test the on-disk example pipelines so a future schema change can't quietly
+    // break them. We resolve the path relative to the source tree -- the build dir's
+    // copy isn't always present and we want to fail loudly if the examples drift away
+    // from the constructor's expectations.
+    const std::filesystem::path src_root =
+        std::filesystem::path(__FILE__).parent_path().parent_path();
+    for (const auto* sample : {"ascending-mazes.json", "survivor-recirculation.json"}) {
+      INFO(sample);
+      const auto path = src_root / "examples" / "compose-pipelines" / sample;
+      REQUIRE(std::filesystem::exists(path));
+      std::ifstream input(path);
+      REQUIRE(input.is_open());
+      nlohmann::json wrapped;
+      input >> wrapped;
+      REQUIRE(wrapped.contains("model"));
+      const auto pipeline = PipelineManager::constructPipelineFromJson(wrapped["model"]);
+      REQUIRE(pipeline != nullptr);
+      // Each example wires at least one connection -- a "pipeline" with no edges is a
+      // sign the file got truncated.
+      REQUIRE(!pipeline->getConnections().empty());
+    }
   }
 
   SECTION("mutatePipeline refuses to mutate a running pipeline") {
