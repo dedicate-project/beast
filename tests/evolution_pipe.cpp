@@ -1,5 +1,9 @@
 #include <catch2/catch.hpp>
 
+#include <atomic>
+#include <thread>
+#include <vector>
+
 #include <beast/beast.hpp>
 
 class MockPipe : public beast::EvolutionPipe {
@@ -88,6 +92,56 @@ TEST_CASE("genome_size_stays_within_max_genome_bytes_after_many_generations", "p
   // cap; in practice we comfortably stay below 600 bytes even after 25 generations of high
   // mutation pressure.
   REQUIRE(pipe.getMaxSeen() <= params.max_genome_bytes + 256);
+}
+
+TEST_CASE("concurrent_execute_does_not_crash_on_shared_galib_state", "pipe") {
+  // Regression test for a SIGSEGV that fired when a pipeline ran multiple EvolutionPipes
+  // in parallel. GAlib (3rdparty/galib) keeps its RNG state in file-static variables
+  // (`idum`, `iy`, `iv[NTAB]` in garandom.C), so two workers entering `evolve()` at the
+  // same time race on those statics -- typically corrupting `iy` into an out-of-range
+  // index for `iv[]` and dying with a SIGSEGV inside the RNG. The fix wraps the GAlib
+  // entry point in EvolutionPipe::execute() with a process-wide mutex. This test asserts
+  // that a tight loop of concurrent executes completes cleanly across several pipes.
+  constexpr int kPipeCount = 8;
+  constexpr int kIterations = 8;
+  constexpr uint32_t kPopulation = 32;
+
+  std::vector<std::unique_ptr<MockPipe>> pipes;
+  pipes.reserve(kPipeCount);
+  for (int i = 0; i < kPipeCount; ++i) {
+    pipes.emplace_back(std::make_unique<MockPipe>(kPopulation));
+    // Pick parameters that produce enough RNG traffic per execute() for the race to
+    // fire reliably on a multi-core box but still keep the whole test sub-second on
+    // typical hardware. 32x10 generations across 8 threads is enough; smaller knobs
+    // didn't trip the race within a few runs on a fast laptop.
+    beast::EvolutionPipe::EvolutionParameters params;
+    params.generations = 10;
+    params.starting_program_size = 16;
+    params.variable_count = 4;
+    pipes.back()->setEvolutionParameters(params);
+  }
+
+  std::atomic<bool> failed{false};
+  std::vector<std::thread> threads;
+  threads.reserve(kPipeCount);
+  for (auto& pipe : pipes) {
+    threads.emplace_back([&pipe, &failed]() {
+      try {
+        for (int n = 0; n < kIterations; ++n) {
+          pipe->execute();
+        }
+      } catch (...) {
+        failed.store(true);
+      }
+    });
+  }
+  for (auto& t : threads) {
+    t.join();
+  }
+  REQUIRE_FALSE(failed.load());
+  for (const auto& pipe : pipes) {
+    REQUIRE(pipe->getEvaluateCallCount() > 0);
+  }
 }
 
 TEST_CASE("execute_does_not_throw_when_input_pool_starts_empty", "pipe") {

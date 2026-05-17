@@ -2,6 +2,7 @@
 
 // Standard
 #include <algorithm>
+#include <mutex>
 #include <random>
 #include <stdexcept>
 #include <vector>
@@ -43,6 +44,28 @@ struct GenomeUserData {
 std::mt19937& threadEngine() {
   thread_local std::mt19937 engine{std::random_device{}()};
   return engine;
+}
+
+/// Process-wide mutex serialising every entry into GAlib.
+///
+/// GAlib (3rdparty/galib/ga/garandom.C) keeps its RNG state in *file-static* variables --
+/// `idum`, `iy`, `iv[NTAB]`, etc. Every selector/mutator/crossover dispatched by
+/// `GASimpleGA::evolve()` calls back into `GARandomFloat()` / `GARandomInt()`, which means
+/// running two `EvolutionPipe::execute()`s concurrently across worker threads is an
+/// unprotected race on those statics. In practice (e.g. a pipeline with four parallel
+/// evolution stages running at the same time) this manifests as `iv[]` getting indexed
+/// with a corrupted `iy`, and the process dies with a SIGSEGV inside `garandom.C` while
+/// the rest of the pipeline looks perfectly healthy from the outside.
+///
+/// Until the day we fork GAlib to make its RNG thread-local, the cheap-and-correct fix is
+/// to serialise *all* GAlib entries behind one mutex. This is a global mutex (not per
+/// pipe) because the contention is on GAlib's globals, not anything we own. Throughput
+/// loss is acceptable: in a real pipeline most time is spent inside evaluators (which
+/// themselves don't call GAlib RNG directly -- they go through VM execution), and there
+/// is usually one bottleneck evaluator anyway.
+std::mutex& galibSerialisationMutex() {
+  static std::mutex mutex;
+  return mutex;
 }
 
 /// Read a `GAListGenome<unsigned char>` into a contiguous byte vector. Uses `operator[]`
@@ -306,6 +329,13 @@ int operatorAwareCrossover(const GAGenome& parent1, const GAGenome& parent2, GAG
 EvolutionPipe::EvolutionPipe(uint32_t max_candidates) : Pipe(max_candidates, 1, 1) {}
 
 void EvolutionPipe::execute() {
+  // Hold the GAlib serialisation mutex for the entirety of execute(). Both the
+  // `algorithm.evolve()` call AND the post-run harvest (`algorithm.statistics()`,
+  // `algorithm.population()`, genome iteration) reach into GAlib internals that touch
+  // the shared RNG, so the lock has to cover the full lifetime of the local algorithm
+  // instance. See `galibSerialisationMutex` for the why.
+  std::scoped_lock galib_lock(galibSerialisationMutex());
+
   GenomeUserData user_data{this, &evolution_parameters_};
 
   GAListGenome<unsigned char> genome(staticEvaluatorWrapper);
