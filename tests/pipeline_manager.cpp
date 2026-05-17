@@ -898,7 +898,9 @@ TEST_CASE("PipelineManager") {
         std::filesystem::path(__FILE__).parent_path().parent_path();
     for (const auto* sample :
          {"ascending-mazes.json", "survivor-recirculation.json", "sha256-round.json",
-          "sha256-curriculum.json", "sha256-round-with-subroutines.json"}) {
+          "sha256-curriculum.json", "sha256-round-with-subroutines.json",
+          "primitives-gym.json", "maze-ladder-with-subroutines.json",
+          "cognitive-scaffolding-ab.json"}) {
       INFO(sample);
       const auto path = src_root / "examples" / "compose-pipelines" / sample;
       REQUIRE(std::filesystem::exists(path));

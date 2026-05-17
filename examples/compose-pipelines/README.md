@@ -210,6 +210,153 @@ stronger building blocks. Stage 5+ (message schedule, block compression, full ha
 will follow the same pattern, mounting Stage 4's round_sink as subroutine 0 to
 sequence 64 rounds without re-evolving the round body from scratch.
 
+## Cognitive scaffolding: primitives, mazes, and the transfer-learning experiment
+
+These three pipelines load and run together to ask a single research question:
+
+> Does evolving a set of low-level algorithmic primitives first, then mounting them
+> as immutable subroutines, accelerate evolution on a more complex downstream task
+> -- even when the primitives and the downstream task come from different domains?
+
+The honest answer at the time of writing: **we don't know yet**. The infrastructure to
+run the experiment is what we just shipped; the experiment itself is something you
+run yourself and watch unfold in the popovers. The pipelines below are sized so a
+laptop can finish a meaningful run within a single evening.
+
+### `primitives-gym.json`
+
+Four parallel "primitive evolution" stages, each evolving one small,
+self-contained algorithmic function with a clean numeric gradient. Each stage runs
+independently and writes its top-K survivors to a JSON ledger that downstream
+consumers will mount as a subroutine.
+
+```
+popcount_factory → popcount_stage → popcount_stats → popcount_sink  (/tmp/beast-popcount.json)
+parity_factory   → parity_stage   → parity_stats   → parity_sink    (/tmp/beast-parity.json)
+bitrev_factory   → bitrev_stage   → bitrev_stats   → bitrev_sink    (/tmp/beast-bitrev.json)
+min4_factory     → min4_stage     → min4_stats     → min4_sink      (/tmp/beast-min4.json)
+```
+
+| Stage | Reference function | Difficulty | Scoring | Typical convergence |
+|---|---|---|---|---|
+| `popcount` | `output = popcount(input[0])` | Easy-medium (~8 ops) | Numeric distance, ceiling 32 | minutes to >0.8 |
+| `parity` | `output = input[0] ^ ... ^ input[3]` | Trivial (~3 ops) | Bit-Hamming | seconds to >0.9 |
+| `bitrev` | `output = reverse_bits(input[0])` | Hard (~15-25 ops) | Bit-Hamming | tens of minutes to ~0.8 |
+| `min4` | `output = min(input[0..3])` | Medium (~6 ops with min opcode) | Log-scale numeric distance | minutes to >0.7 |
+
+Each stage's `opcode_weights` biases the random factory toward opcodes that the
+reference function actually needs (XOR for parity, shift+AND for popcount, the
+dedicated `GetMinOfVariableAndVariable` opcode for min4, etc.). Without those
+biases the GA's exploration budget gets wasted on jumps, prints, and system calls
+that contribute nothing to any of the four tasks.
+
+`parity` and `popcount` should be visibly converging within the first minute. If they
+aren't, the GA stack itself has a problem -- they're your canary primitives.
+
+### `maze-ladder-with-subroutines.json`
+
+The within-domain transfer experiment: small mazes (6×6) feed a medium-maze stage
+(12×12) via population seeding, which in turn feeds a large-maze stage (24×24) via
+the same mechanism. The large stage also mounts `popcount` and `min4` from the
+primitives gym as subroutines.
+
+```
+small_factory ───────────────→ small_maze   → small_stats   → small_sink   (/tmp/beast-maze-small.json)
+
+medium_factory ─┐
+                ├→ medium_mux → medium_maze → medium_stats → medium_sink  (/tmp/beast-maze-medium.json)
+small_seed   ───┘   (loops the small-maze ledger back as seed material)
+
+large_factory ─┐
+                ├→ large_mux → large_maze   → large_stats → large_sink    (/tmp/beast-maze-large.json)
+medium_seed  ──┘   (loops the medium-maze ledger back as seed material)
+                    PLUS subroutines: popcount, min4
+```
+
+**Why seeding instead of subroutines for the maze→maze step?** The maze evaluator
+runs the candidate as a *control loop*: read perception → decide a move → step the
+maze → repeat. A "small-maze winner" is therefore a control loop, not a pure
+function of inputs. The subroutine mechanism (v1) calls the callee with a fixed set
+of input variables, runs it once, and reads back outputs -- which is the right shape
+for the bit-twiddling primitives but the wrong shape for a maze-navigation control
+loop. Seeding the population from the small-maze ledger via `ProgramStorageSourcePipe`
++ `MultiplexerPipe` is the right composition pattern for that case, and it's what
+the existing curriculum-learning examples use.
+
+`popcount` and `min4` are mounted as subroutines on the large stage because they
+*are* pure functions and *could* plausibly help (popcount over a perception window
+gives a "how cluttered is this direction" feature; min4 picks the smallest of four
+distance hints). Whether the GA actually discovers a use for them is the
+interesting question.
+
+### `cognitive-scaffolding-ab.json`
+
+The cross-domain transfer experiment, structured as a clean A/B comparison.
+
+```
+control_factory  → control_maze   → control_stats   → control_fan   → control_sink
+                   (16×16 maze, NO subroutines)
+
+treatment_factory → treatment_maze → treatment_stats → treatment_fan → treatment_sink
+                   (16×16 maze, SAME config + 4 primitives mounted as subroutines)
+```
+
+Both branches run the identical `MazeEvaluator(16×16, difficulty=0.30)` with the
+identical evolution-parameter shape. The only difference is the `subroutines` block
+on the treatment branch, which mounts the top-1 winner from each of
+`popcount`/`parity`/`min4`/`bitrev` as subroutine IDs 0..3, and biases the opcode
+distribution toward `CallSubroutine` (`0x4d` = `77`, weight 3.5).
+
+Watch the two `ResultsSummary` popovers side by side. If the cognitive-scaffolding
+hypothesis is right, the treatment popover's best-ever score should pull ahead and
+stay ahead. If the bit-twiddling primitives turn out to be irrelevant to maze
+navigation (the honest null hypothesis), the two should track each other within noise.
+
+### Recommended run order
+
+1. **Load and start `primitives-gym.json`.** Watch `parity` and `popcount` converge
+   first (seconds-minutes), then `min4` and `bitrev`. Once each stage has scored at
+   least once at >0.7 the ledgers contain useful subroutine material.
+2. **Load and start `cognitive-scaffolding-ab.json`.** This is the A/B experiment.
+   Both branches now have the same starting conditions but the treatment branch
+   has the primitives mounted as callable subroutines. Compare best-ever scores in
+   the two popovers.
+3. **(Optional) Load `maze-ladder-with-subroutines.json`** alongside the above for
+   the within-domain curriculum demonstration.
+
+All three pipelines coexist with each other and with the SHA-256 family -- they
+write to disjoint ledger paths and don't share any pipes. The
+`galibSerialisationMutex` releases during the evaluator callback, so multi-pipeline
+throughput stays high even with seven or eight evolution stages running concurrently
+(see `src/pipes/evolution_pipe.cpp` for the locking strategy).
+
+### What success looks like
+
+Honest expectations for what you'll see at convergence after, say, half an hour of
+wall-clock with the default sizing:
+
+- `parity`: ~0.95+ (essentially solved).
+- `popcount`: ~0.80-0.90 (close to solved; the genome encodes the loop pattern).
+- `min4`: ~0.75-0.90 (genome has discovered the `GetMinOfVariableAndVariable` opcode
+  and uses it three times in sequence).
+- `bitrev`: ~0.70-0.85 (genome has discovered shift+mask but probably not the full
+  5-stage swap pattern; bit-Hamming gives it a noisy gradient regardless).
+- `small_maze`: ~0.40-0.60 (small mazes are mostly luck-of-the-perception-window
+  for the easy ones).
+- `medium_maze`: ~0.15-0.35 (large gap from `small_maze`; the seeding helps but
+  the evaluator's exponential-with-overshoot scoring is harsh).
+- `large_maze`: ~0.05-0.20 (24×24 is properly hard; even a hand-written A\* would
+  need to make every move count).
+- `control_maze` vs. `treatment_maze`: this is the actual experiment. If they track
+  each other within ±0.05, the primitives don't transfer. If `treatment_maze`
+  pulls ahead by more than ~0.10 sustained for tens of cycles, the primitives are
+  doing something real.
+
+A negative result is still a valid experimental outcome. The cleanest thing the
+infrastructure does is *make the question askable* -- swap in different primitives,
+different downstream tasks, different opcode biases, and the A/B comparison
+generalises to any "does priming with X help with Y" investigation.
+
 ## Roadmap toward the full SHA-256 hash
 
 The plan for evolving a complete SHA-256 hasher decomposes the algorithm into stages

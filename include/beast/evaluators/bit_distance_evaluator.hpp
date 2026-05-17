@@ -106,6 +106,19 @@ class BitDistanceEvaluator : public Evaluator {
   virtual void computeExpected(const std::vector<uint32_t>& inputs,
                                std::vector<uint32_t>& outputs, uint32_t trial_id) = 0;
 
+  /**
+   * @brief Per-output-word score in [0, 1]. 1.0 = perfect match, 0.0 = pathological.
+   *
+   * Default implementation: bit-Hamming distance, `1 - popcount(expected ^ observed) / 32`.
+   *
+   * Subclasses override this when their task has a different natural gradient. The
+   * standard alternative is numeric distance, which works much better for tasks where
+   * the output is a small integer (popcount in 0..32, minimum of N words, etc.) and
+   * bit-flips give a misleadingly steep gradient ("you're 14 bits off" vs. "you're
+   * 1 off the right number" tell very different stories about how close you are).
+   */
+  [[nodiscard]] virtual double scoreWord(uint32_t expected, uint32_t observed) const noexcept;
+
  private:
   const uint32_t trial_count_;
   const uint32_t max_steps_per_trial_;

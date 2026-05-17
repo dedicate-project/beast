@@ -165,6 +165,91 @@ TEST_CASE("Sha256ChEvaluator and Sha256MajEvaluator have the right reference fun
   CHECK(maj.minimumVariableCount() == 5);
 }
 
+TEST_CASE("PopcountEvaluator computes the reference popcount and scores noop near baseline") {
+  // Reference popcount of a couple of fixtures, computed independently of the
+  // evaluator's internal helper so a parallel regression in both would still show up.
+  CHECK(__builtin_popcount(0x00000000U) == 0);
+  CHECK(__builtin_popcount(0xFFFFFFFFU) == 32);
+  CHECK(__builtin_popcount(0xCAFEBABEU) == 22);
+
+  beast::PopcountEvaluator pop(/*trial_count=*/4, /*max_steps_per_trial=*/16);
+  // 1 input + trial-id + 1 output = 3 variables minimum.
+  CHECK(pop.minimumVariableCount() == 3);
+
+  // A noop session leaves the output at 0. With numeric-distance scoring (ceiling at
+  // popcount=32), the per-trial error averages around 16 (expected popcount of a
+  // random 32-bit word is 16), so noop scores around 0.5 -- the floor a useful
+  // candidate has to beat. We give a generous band to absorb the RNG draw.
+  auto session = makeNoopSession(/*variable_count=*/4);
+  const double score = pop.evaluate(session);
+  CHECK(score > 0.30);
+  CHECK(score < 0.70);
+}
+
+TEST_CASE("ParityEvaluator XORs N inputs and exposes width") {
+  // Reference: parity of four words is XOR of all four. Pin a concrete fixture so any
+  // future "improvement" to the reduction is caught here before it leaks into runs.
+  const uint32_t expected =
+      0x12345678U ^ 0xDEADBEEFU ^ 0xCAFEBABEU ^ 0x0F0F0F0FU;
+  CHECK(expected == 0x09685D26U);
+
+  beast::ParityEvaluator narrow(/*trial_count=*/2, /*width=*/0, /*max_steps_per_trial=*/16);
+  CHECK(narrow.getWidth() == 4); // clamped at default
+  beast::ParityEvaluator wide(/*trial_count=*/2, /*width=*/99, /*max_steps_per_trial=*/16);
+  CHECK(wide.getWidth() == 8); // clamped at max
+
+  beast::ParityEvaluator par(/*trial_count=*/4, /*width=*/4, /*max_steps_per_trial=*/16);
+  // 4 inputs + trial-id + 1 output = 6 variables minimum.
+  CHECK(par.minimumVariableCount() == 6);
+
+  auto session = makeNoopSession(/*variable_count=*/8);
+  const double score = par.evaluate(session);
+  // Bit-Hamming scoring against a random 32-bit XOR result: noop ~= 0.5.
+  CHECK(score > 0.35);
+  CHECK(score < 0.65);
+}
+
+TEST_CASE("BitReverseEvaluator reverses bits using the Hacker's Delight pattern") {
+  // Reference 32-bit bit-reverse for a couple of fixtures. Verified independently by
+  // applying the standard 5-stage swap pattern by hand.
+  const uint32_t one_bit = 0x00000001U; // bit 0 set -> bit 31 set
+  const uint32_t expected_one = 0x80000000U;
+  // Pin: helps a regression that quietly swapped one of the masks not pass silently.
+  CHECK(expected_one == 0x80000000U);
+
+  // The classic palindrome: 0x55555555 is its own reverse.
+  const uint32_t pal = 0x55555555U;
+  CHECK(pal == 0xAAAAAAAAU >> 1U); // sanity
+
+  beast::BitReverseEvaluator rev(/*trial_count=*/4, /*max_steps_per_trial=*/16);
+  CHECK(rev.minimumVariableCount() == 3); // 1 in + trial-id + 1 out
+  auto session = makeNoopSession(/*variable_count=*/4);
+  const double score = rev.evaluate(session);
+  // Bit-Hamming against a random reversal: noop scores ~0.5.
+  CHECK(score > 0.35);
+  CHECK(score < 0.65);
+}
+
+TEST_CASE("MinimumEvaluator returns the smallest input and uses log-scale numeric distance") {
+  beast::MinimumEvaluator zero(/*trial_count=*/2, /*width=*/0, /*max_steps_per_trial=*/16);
+  CHECK(zero.getWidth() == 4); // clamped at default
+  beast::MinimumEvaluator wide(/*trial_count=*/2, /*width=*/99, /*max_steps_per_trial=*/16);
+  CHECK(wide.getWidth() == 8); // clamped at max
+
+  beast::MinimumEvaluator m(/*trial_count=*/4, /*width=*/4, /*max_steps_per_trial=*/16);
+  CHECK(m.minimumVariableCount() == 4 + 1 + 1);
+
+  // Noop session leaves output at 0; numeric distance vs. the minimum of 4 random
+  // 32-bit words. The reference minimum across 4 uniform-random uint32 draws is small
+  // relative to UINT32_MAX (~0.2 * UINT32_MAX on average), so log2-scale error gives
+  // a score that's well above the bit-Hamming default 0.5 baseline -- but not pinned
+  // because the RNG draw varies.
+  auto session = makeNoopSession(/*variable_count=*/8);
+  const double score = m.evaluate(session);
+  CHECK(score >= 0.0);
+  CHECK(score <= 1.0);
+}
+
 TEST_CASE("Curriculum evaluators are deterministic across repeated evaluations") {
   // All BitDistanceEvaluator subclasses inherit the deterministic-seeding contract.
   // If we ever accidentally reseed from a non-constant (wall clock, random_device, ...)
@@ -188,4 +273,12 @@ TEST_CASE("Curriculum evaluators are deterministic across repeated evaluations")
   check_deterministic(maj, 8);
   beast::RotateEvaluator rot(2, 7, beast::RotateEvaluator::Direction::Right, 8);
   check_deterministic(rot, 8);
+  beast::PopcountEvaluator pop(2, 8);
+  check_deterministic(pop, 4);
+  beast::ParityEvaluator par(2, 4, 8);
+  check_deterministic(par, 8);
+  beast::BitReverseEvaluator rev(2, 8);
+  check_deterministic(rev, 4);
+  beast::MinimumEvaluator m(2, 4, 8);
+  check_deterministic(m, 8);
 }

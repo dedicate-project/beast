@@ -6,9 +6,13 @@
 
 // Internal
 #include <beast/evaluators/adder_evaluator.hpp>
+#include <beast/evaluators/bit_reverse_evaluator.hpp>
 #include <beast/evaluators/bitwise_evaluator.hpp>
 #include <beast/evaluators/identity_evaluator.hpp>
 #include <beast/evaluators/maximum_evaluator.hpp>
+#include <beast/evaluators/minimum_evaluator.hpp>
+#include <beast/evaluators/parity_evaluator.hpp>
+#include <beast/evaluators/popcount_evaluator.hpp>
 #include <beast/evaluators/rotate_evaluator.hpp>
 #include <beast/evaluators/sha256_ch_evaluator.hpp>
 #include <beast/evaluators/sha256_maj_evaluator.hpp>
@@ -366,6 +370,40 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
       checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
       evaluator = std::make_shared<Sha256MajEvaluator>(
           params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "PopcountEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<PopcountEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "ParityEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "width", "max_steps_per_trial"});
+      evaluator = std::make_shared<ParityEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["width"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "BitReverseEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<BitReverseEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "MinimumEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "width", "max_steps_per_trial"});
+      evaluator = std::make_shared<MinimumEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["width"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else {
@@ -785,6 +823,28 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["type"] = "Sha256MajEvaluator";
       evaluator["parameters"]["trial_count"] = maj_eval->getTrialCount();
       evaluator["parameters"]["max_steps_per_trial"] = maj_eval->getMaxStepsPerTrial();
+    } else if (const auto pop_eval =
+                   std::dynamic_pointer_cast<PopcountEvaluator>(description.evaluator)) {
+      evaluator["type"] = "PopcountEvaluator";
+      evaluator["parameters"]["trial_count"] = pop_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = pop_eval->getMaxStepsPerTrial();
+    } else if (const auto par_eval =
+                   std::dynamic_pointer_cast<ParityEvaluator>(description.evaluator)) {
+      evaluator["type"] = "ParityEvaluator";
+      evaluator["parameters"]["trial_count"] = par_eval->getTrialCount();
+      evaluator["parameters"]["width"] = par_eval->getWidth();
+      evaluator["parameters"]["max_steps_per_trial"] = par_eval->getMaxStepsPerTrial();
+    } else if (const auto rev_eval =
+                   std::dynamic_pointer_cast<BitReverseEvaluator>(description.evaluator)) {
+      evaluator["type"] = "BitReverseEvaluator";
+      evaluator["parameters"]["trial_count"] = rev_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = rev_eval->getMaxStepsPerTrial();
+    } else if (const auto min_eval =
+                   std::dynamic_pointer_cast<MinimumEvaluator>(description.evaluator)) {
+      evaluator["type"] = "MinimumEvaluator";
+      evaluator["parameters"]["trial_count"] = min_eval->getTrialCount();
+      evaluator["parameters"]["width"] = min_eval->getWidth();
+      evaluator["parameters"]["max_steps_per_trial"] = min_eval->getMaxStepsPerTrial();
     }
 
     evaluators.push_back(std::move(evaluator));

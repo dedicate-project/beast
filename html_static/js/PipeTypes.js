@@ -561,6 +561,99 @@ export const PIPE_TYPE_DEFINITIONS = [
           max_steps_per_trial: p.max_steps_per_trial,
         }),
       }),
+      numericEvaluatorPipe({
+        type: 'PopcountEvaluatorPipe',
+        label: 'Popcount Evaluator',
+        description:
+          'Primitive gym: count the set bits in a single 32-bit input word. Solvable in ' +
+          'a few opcodes with the classic Hacker\'s Delight trick. Scoring uses numeric ' +
+          'distance (the output is 0..32, not a bitfield, so bit-Hamming would lie about ' +
+          'how close the candidate is). Survivors make a small, fast subroutine that ' +
+          'downstream consumers can mount to count features in any input word.',
+        image: '/img/popcount_evaluator_pipe.png',
+        evaluatorType: 'PopcountEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 800, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'ParityEvaluatorPipe',
+        label: 'Parity Evaluator',
+        description:
+          'Primitive gym: XOR-reduce N input words (default 4) to one output word. The ' +
+          'easiest meaningful target in the whole suite -- three XOR opcodes plus the ' +
+          'load/store overhead. A useful "is everything wired up correctly" smoke test ' +
+          'and a tiny subroutine for downstream signature/digest features.',
+        image: '/img/parity_evaluator_pipe.png',
+        evaluatorType: 'ParityEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'width', label: 'Words to XOR (2-8)', type: 'int', default: 4, min: 2, max: 8},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 800, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, width: v.width,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, width: p.width || 4,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'BitReverseEvaluatorPipe',
+        label: 'Bit-Reverse Evaluator',
+        description:
+          'Primitive gym: reverse the bit order of a single 32-bit input word (bit 0 ' +
+          'becomes bit 31, etc.). Solvable in ~10-30 opcodes with shift+mask, or via the ' +
+          'classic 5-stage Hacker\'s Delight swap pattern. Bit-Hamming scoring fits ' +
+          'perfectly because the output is a full bitfield. A nice mid-difficulty target ' +
+          'that pulls the population toward the shift/mask opcodes.',
+        image: '/img/bit_reverse_evaluator_pipe.png',
+        evaluatorType: 'BitReverseEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'MinimumEvaluatorPipe',
+        label: 'Minimum Evaluator',
+        description:
+          'Primitive gym: return the smallest of N input words. Pushes the GA to ' +
+          'discover the compare-and-swap pattern (CompareLessThan + branch + variable ' +
+          'reassignment). Scoring uses log-scale numeric distance so "off by one" scores ' +
+          'much closer to 1.0 than "off by a million" -- the gradient stays meaningful ' +
+          'across the full uint32 range.',
+        image: '/img/minimum_evaluator_pipe.png',
+        evaluatorType: 'MinimumEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'width', label: 'Inputs to compare (2-8)', type: 'int', default: 4, min: 2, max: 8},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, width: v.width,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, width: p.width || 4,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
     ];
   })(),
   {
@@ -817,6 +910,10 @@ export function findPipeDefinition(pipe_json) {
       RotateEvaluator: 'RotateEvaluatorPipe',
       Sha256SigmaEvaluator: 'Sha256SigmaEvaluatorPipe',
       Sha256ChEvaluator: 'Sha256ChEvaluatorPipe',
+      PopcountEvaluator: 'PopcountEvaluatorPipe',
+      ParityEvaluator: 'ParityEvaluatorPipe',
+      BitReverseEvaluator: 'BitReverseEvaluatorPipe',
+      MinimumEvaluator: 'MinimumEvaluatorPipe',
       Sha256MajEvaluator: 'Sha256MajEvaluatorPipe',
       Sha256RoundEvaluator: 'Sha256RoundEvaluatorPipe',
     }[firstType];

@@ -1,0 +1,175 @@
+{
+  "name": "Primitives Gym",
+  "model": {
+    "pipes": {
+      "popcount_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 80,
+          "memory_variables": 4, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "popcount_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 4,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "PopcountEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 8, "max_steps_per_trial": 800 }
+          }],
+          "evolution_parameters": {
+            "generations": 20, "crossover_probability": 0.7, "mutation_probability": 0.06,
+            "elitism": true, "byte_mutation_share": 0.25,
+            "variable_count": 4, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 256, "starting_program_size": 32,
+            "opcode_weights": {
+              "10": 3.0, "12": 3.0, "13": 3.0, "14": 2.0,
+              "29": 5.0, "31": 4.0,
+              "46": 2.0
+            }
+          }
+        }
+      },
+      "popcount_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "popcount_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-popcount.json", "top_k": 8 } },
+
+      "parity_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 60,
+          "memory_variables": 8, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "parity_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 8,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "ParityEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 8, "width": 4, "max_steps_per_trial": 800 }
+          }],
+          "evolution_parameters": {
+            "generations": 16, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.20,
+            "variable_count": 8, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 192, "starting_program_size": 24,
+            "opcode_weights": {
+              "10": 3.0, "33": 8.0, "13": 1.5
+            }
+          }
+        }
+      },
+      "parity_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "parity_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-parity.json", "top_k": 8 } },
+
+      "bitrev_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 200,
+          "memory_variables": 4, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "bitrev_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 4,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "BitReverseEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 6, "max_steps_per_trial": 1500 }
+          }],
+          "evolution_parameters": {
+            "generations": 20, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.25,
+            "variable_count": 4, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 512, "starting_program_size": 96,
+            "opcode_weights": {
+              "10": 3.0, "28": 4.0, "29": 4.0,
+              "30": 2.0, "31": 3.0, "33": 4.0, "34": 3.0, "35": 3.0
+            }
+          }
+        }
+      },
+      "bitrev_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "bitrev_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-bitrev.json", "top_k": 8 } },
+
+      "min4_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 150,
+          "memory_variables": 8, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "min4_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 8,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "MinimumEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 8, "width": 4, "max_steps_per_trial": 1500 }
+          }],
+          "evolution_parameters": {
+            "generations": 18, "crossover_probability": 0.7, "mutation_probability": 0.06,
+            "elitism": true, "byte_mutation_share": 0.20,
+            "variable_count": 8, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 384, "starting_program_size": 64,
+            "opcode_weights": {
+              "10": 4.0, "11": 1.5,
+              "23": 3.0, "25": 8.0,
+              "20": 2.0
+            }
+          }
+        }
+      },
+      "min4_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "min4_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-min4.json", "top_k": 8 } }
+    },
+    "connections": [
+      {"source_pipe": "popcount_factory", "source_slot": 0, "destination_pipe": "popcount_stage", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "popcount_stage",   "source_slot": 0, "destination_pipe": "popcount_stats", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "popcount_stats",   "source_slot": 0, "destination_pipe": "popcount_sink",  "destination_slot": 0, "buffer_size": 24},
+
+      {"source_pipe": "parity_factory", "source_slot": 0, "destination_pipe": "parity_stage", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "parity_stage",   "source_slot": 0, "destination_pipe": "parity_stats", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "parity_stats",   "source_slot": 0, "destination_pipe": "parity_sink",  "destination_slot": 0, "buffer_size": 24},
+
+      {"source_pipe": "bitrev_factory", "source_slot": 0, "destination_pipe": "bitrev_stage", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "bitrev_stage",   "source_slot": 0, "destination_pipe": "bitrev_stats", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "bitrev_stats",   "source_slot": 0, "destination_pipe": "bitrev_sink",  "destination_slot": 0, "buffer_size": 24},
+
+      {"source_pipe": "min4_factory", "source_slot": 0, "destination_pipe": "min4_stage", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "min4_stage",   "source_slot": 0, "destination_pipe": "min4_stats", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "min4_stats",   "source_slot": 0, "destination_pipe": "min4_sink",  "destination_slot": 0, "buffer_size": 24}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "popcount_factory": { "position": { "x":  40, "y":  80 } },
+      "popcount_stage":   { "position": { "x": 230, "y":  80 } },
+      "popcount_stats":   { "position": { "x": 460, "y":  80 } },
+      "popcount_sink":    { "position": { "x": 660, "y":  80 } },
+
+      "parity_factory":   { "position": { "x":  40, "y": 240 } },
+      "parity_stage":     { "position": { "x": 230, "y": 240 } },
+      "parity_stats":     { "position": { "x": 460, "y": 240 } },
+      "parity_sink":      { "position": { "x": 660, "y": 240 } },
+
+      "bitrev_factory":   { "position": { "x":  40, "y": 400 } },
+      "bitrev_stage":     { "position": { "x": 230, "y": 400 } },
+      "bitrev_stats":     { "position": { "x": 460, "y": 400 } },
+      "bitrev_sink":      { "position": { "x": 660, "y": 400 } },
+
+      "min4_factory":     { "position": { "x":  40, "y": 560 } },
+      "min4_stage":       { "position": { "x": 230, "y": 560 } },
+      "min4_stats":       { "position": { "x": 460, "y": 560 } },
+      "min4_sink":        { "position": { "x": 660, "y": 560 } }
+    }
+  }
+}

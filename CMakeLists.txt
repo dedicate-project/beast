@@ -168,10 +168,14 @@ add_library(${PROJECT_NAME}-evaluators
   src/evaluators/adder_evaluator.cpp
   src/evaluators/aggregation_evaluator.cpp
   src/evaluators/bit_distance_evaluator.cpp
+  src/evaluators/bit_reverse_evaluator.cpp
   src/evaluators/bitwise_evaluator.cpp
   src/evaluators/identity_evaluator.cpp
   src/evaluators/maximum_evaluator.cpp
   src/evaluators/maze_evaluator.cpp
+  src/evaluators/minimum_evaluator.cpp
+  src/evaluators/parity_evaluator.cpp
+  src/evaluators/popcount_evaluator.cpp
   src/evaluators/random_serial_data_passthrough_evaluator.cpp
   src/evaluators/rotate_evaluator.cpp
   src/evaluators/sha256_ch_evaluator.cpp

@@ -23,16 +23,19 @@ constexpr uint32_t popcount32(uint32_t value) noexcept {
   return (value * 0x01010101U) >> 24U;
 }
 
-// Score a single output word: 1.0 for an exact match, smoothly decaying to 0.0 with
-// the number of bit flips. The smooth gradient is the entire reason this class exists --
-// if we scored exact-match-or-zero, every member of the curriculum collapses into a
-// needle-in-a-haystack search and the GA has no slope to climb.
-double scoreWord(uint32_t expected, uint32_t observed) noexcept {
+} // namespace
+
+// Default scoring: bit-Hamming distance. 1.0 for an exact match, smoothly decaying to 0.0
+// with the number of bit flips. The smooth gradient is the entire reason this class
+// exists -- if we scored exact-match-or-zero, every member of the curriculum collapses
+// into a needle-in-a-haystack search and the GA has no slope to climb.
+//
+// Subclasses override `scoreWord()` to use a different gradient (see e.g.
+// `PopcountEvaluator` for the numeric-distance variant).
+double BitDistanceEvaluator::scoreWord(uint32_t expected, uint32_t observed) const noexcept {
   const uint32_t bits_wrong = popcount32(expected ^ observed);
   return 1.0 - static_cast<double>(bits_wrong) / static_cast<double>(kBitsPerWord);
 }
-
-} // namespace
 
 BitDistanceEvaluator::BitDistanceEvaluator(uint32_t trial_count, uint32_t max_steps_per_trial,
                                            uint32_t rng_seed)
@@ -123,6 +126,9 @@ double BitDistanceEvaluator::evaluate(const VmSession& session) {
         const auto observed = static_cast<uint32_t>(local_session.getVariableValue(
             static_cast<int32_t>(out_offset + i), true));
         trial_score += scoreWord(expected.at(i), observed);
+        // ^ Virtual dispatch into the subclass-supplied scoring function. Bit-Hamming
+        // by default; subclasses with non-bit-shaped tasks (popcount, minimum, ...)
+        // override to use numeric distance instead.
       }
       total_score += trial_score / static_cast<double>(out_count);
     }
