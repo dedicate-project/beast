@@ -10,4 +10,6 @@ void NullSinkPipe::execute() {
   }
 }
 
+bool NullSinkPipe::inputsAreSaturated() { return getInputSlotAmount(0) > 0; }
+
 } // namespace beast

@@ -34,4 +34,14 @@ TEST_CASE("NullSinkPipe") {
     pipe.execute();
     REQUIRE(pipe.getInputSlotAmount(0) == 0);
   }
+
+  SECTION("Sink saturates as soon as any input is present") {
+    // Regression test for the deadlock-on-slow-upstream bug: if the sink only fires once its
+    // input is fully saturated (size == max_candidates), it stalls indefinitely when the
+    // upstream produces less than max_candidates per cycle.
+    REQUIRE_FALSE(pipe.inputsAreSaturated());
+    const std::vector<unsigned char> data{0xAB};
+    pipe.addInput(0, data);
+    REQUIRE(pipe.inputsAreSaturated());
+  }
 }

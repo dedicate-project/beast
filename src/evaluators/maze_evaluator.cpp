@@ -46,6 +46,10 @@ MazeEvaluator::MazeEvaluator(uint32_t rows, uint32_t cols, double difficulty, ui
     : rows_{rows}, cols_{cols}, difficulty_{difficulty}, max_steps_{max_steps} {}
 
 double MazeEvaluator::evaluate(const VmSession& session) {
+  // Note: max_steps_ on this evaluator is currently unused as a runtime cap; we still apply
+  // the hard-coded 10000-step ceiling below to keep evaluation bounded. A future PR should
+  // honor `max_steps_` directly to make this configurable per evaluator instance (see also
+  // the constructor docstring).
   const uint32_t visibility_radius = 3;
   maze::Maze target_maze = getSolvableMaze(rows_, cols_, difficulty_, 10);
 
@@ -79,8 +83,8 @@ double MazeEvaluator::evaluate(const VmSession& session) {
           moves++;
           update_sight = true;
         } else {
-          // The player ran out of food.
-          std::cout << "No food " << moves << std::endl;
+          // The player ran out of food. Used to log "No food <N>" to stdout; we drop the
+          // log because the GA evaluates this thousands of times per second.
           return 0.02;
         }
       }
@@ -100,18 +104,17 @@ double MazeEvaluator::evaluate(const VmSession& session) {
 
       if (target_maze.isFinished()) {
         // Score based on how many more moves we needed than A*.
-        const double metric = computeMetric(ideal_path.size(), moves);
-        std::cout << metric << std::endl;
-        return metric;
+        return computeMetric(ideal_path.size(), moves);
       }
 
       current_steps++;
       if (current_steps > max_steps) {
-        std::cout << "Clamp (" << moves << ")" << std::endl;
+        // Stepped out without finishing. A future PR could surface this as a finer-grained
+        // structured metric instead of returning a single near-zero magic number.
         return moves == 0 ? 0.0 : 0.01;
       }
     }
-  } catch(...) {
+  } catch (...) {
     return 0.0;
   }
 

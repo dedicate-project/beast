@@ -40,6 +40,17 @@ class NullSinkPipe : public Pipe {
    * discards any candidate programs passed to it without any processing or evaluation.
    */
   void execute() override;
+
+  /**
+   * @brief Sinks are saturated as soon as any input is buffered
+   *
+   * The default `Pipe::inputsAreSaturated()` insists on the input slot being full to
+   * `max_candidates`, which makes a sink connected to a slow upstream stall indefinitely
+   * (the upstream produces less than max_candidates per cycle, the sink never fires, the
+   * upstream's downstream buffer eventually fills, and the whole pipeline deadlocks). For a
+   * sink the meaningful invariant is "have anything to drop on the floor".
+   */
+  [[nodiscard]] bool inputsAreSaturated() override;
 };
 
 } // namespace beast

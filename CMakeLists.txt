@@ -221,6 +221,7 @@ if(BEAST_BUILD_PIPELINES)
 
   declare_pipeline(factory)
   declare_pipeline(forwarder)
+  declare_pipeline(maze)
 endif()
 
 # Programs
