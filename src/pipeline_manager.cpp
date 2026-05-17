@@ -200,6 +200,79 @@ PipelineManager::constructAggregationEvaluatorFromJson(const nlohmann::json& jso
   return evaluator;
 }
 
+EvolutionPipe::EvolutionParameters
+PipelineManager::constructEvolutionParametersFromJson(const nlohmann::json& json) {
+  EvolutionPipe::EvolutionParameters parameters;
+  if (json.contains("generations")) {
+    parameters.generations = json["generations"].get<uint32_t>();
+  }
+  if (json.contains("crossover_probability")) {
+    parameters.crossover_probability = json["crossover_probability"].get<double>();
+  }
+  if (json.contains("mutation_probability")) {
+    parameters.mutation_probability = json["mutation_probability"].get<double>();
+  }
+  if (json.contains("elitism")) {
+    parameters.elitism = json["elitism"].get<bool>();
+  }
+  if (json.contains("byte_mutation_share")) {
+    parameters.byte_mutation_share = json["byte_mutation_share"].get<double>();
+  }
+  if (json.contains("variable_count")) {
+    parameters.variable_count = json["variable_count"].get<uint32_t>();
+  }
+  if (json.contains("string_table_size")) {
+    parameters.string_table_size = json["string_table_size"].get<uint32_t>();
+  }
+  if (json.contains("string_table_item_length")) {
+    parameters.string_table_item_length = json["string_table_item_length"].get<uint32_t>();
+  }
+  if (json.contains("max_genome_bytes")) {
+    parameters.max_genome_bytes = json["max_genome_bytes"].get<uint32_t>();
+  }
+  if (json.contains("starting_program_size")) {
+    parameters.starting_program_size = json["starting_program_size"].get<uint32_t>();
+  }
+  if (json.contains("opcode_weights") && json["opcode_weights"].is_object()) {
+    for (auto it = json["opcode_weights"].begin(); it != json["opcode_weights"].end(); ++it) {
+      // Keys are stringified opcode integer values. Parse defensively: any non-numeric or
+      // out-of-range key is silently ignored to keep load-from-disk robust against external
+      // edits.
+      try {
+        const int raw_code = std::stoi(it.key());
+        if (raw_code < 0 || raw_code >= static_cast<int>(OpCode::Size)) {
+          continue;
+        }
+        parameters.opcode_weights[static_cast<OpCode>(raw_code)] = it.value().get<double>();
+      } catch (const std::exception&) {
+        // Skip malformed entry.
+      }
+    }
+  }
+  return parameters;
+}
+
+nlohmann::json PipelineManager::deconstructEvolutionParametersToJson(
+    const EvolutionPipe::EvolutionParameters& parameters) {
+  nlohmann::json json;
+  json["generations"] = parameters.generations;
+  json["crossover_probability"] = parameters.crossover_probability;
+  json["mutation_probability"] = parameters.mutation_probability;
+  json["elitism"] = parameters.elitism;
+  json["byte_mutation_share"] = parameters.byte_mutation_share;
+  json["variable_count"] = parameters.variable_count;
+  json["string_table_size"] = parameters.string_table_size;
+  json["string_table_item_length"] = parameters.string_table_item_length;
+  json["max_genome_bytes"] = parameters.max_genome_bytes;
+  json["starting_program_size"] = parameters.starting_program_size;
+  nlohmann::json weights = nlohmann::json::object();
+  for (const auto& [opcode, weight] : parameters.opcode_weights) {
+    weights[std::to_string(static_cast<int>(opcode))] = weight;
+  }
+  json["opcode_weights"] = weights;
+  return json;
+}
+
 std::shared_ptr<Evaluator>
 PipelineManager::constructMazeEvaluatorFromJson(const nlohmann::json& json) {
   checkForKeyPresenceInJson(json, {"parameters"});
@@ -289,6 +362,18 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
           bool invert_logic = false;
           std::tie(evaluator, weight, invert_logic) = evaluator_triplet;
           evaluator_pipe->addEvaluator(evaluator, weight, invert_logic);
+        }
+
+        // Optional cut-off score and full EvolutionParameters set; see
+        // `deconstructEvolutionParametersToJson` for the on-disk shape. Both blocks default
+        // to the C++-side defaults when missing so older pipeline JSON files keep working.
+        if (pipe.value()["parameters"].contains("cut_off_score")) {
+          evaluator_pipe->setCutOffScore(
+              pipe.value()["parameters"]["cut_off_score"].get<double>());
+        }
+        if (pipe.value()["parameters"].contains("evolution_parameters")) {
+          evaluator_pipe->setEvolutionParameters(constructEvolutionParametersFromJson(
+              pipe.value()["parameters"]["evolution_parameters"]));
         }
 
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
@@ -381,6 +466,9 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["parameters"]["string_table_items"] = evaluator_pipe->getStringTableSize();
       pipe_json["parameters"]["evaluators"] =
           deconstructEvaluatorsToJson(evaluator_pipe->getEvaluators());
+      pipe_json["parameters"]["cut_off_score"] = evaluator_pipe->getCutOffScore();
+      pipe_json["parameters"]["evolution_parameters"] =
+          deconstructEvolutionParametersToJson(evaluator_pipe->getEvolutionParameters());
     } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvolutionPipe";
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {

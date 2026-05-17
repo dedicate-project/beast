@@ -232,6 +232,61 @@ TEST_CASE("PipelineManager") {
     }
   }
 
+  SECTION("EvaluatorPipe round-trips EvolutionParameters and cut_off_score through JSON") {
+    // Regression test for the previously-empty EvolutionPipe JSON branch: ensure both the
+    // GA knobs and the cut-off score survive a deconstruct/reconstruct cycle, including the
+    // OpcodeWeights map.
+    std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
+    auto pipe = std::make_shared<EvaluatorPipe>(/*max_candidates=*/16,
+                                                /*memory_variables=*/8,
+                                                /*string_table_items=*/2,
+                                                /*string_table_item_length=*/4);
+    pipe->addEvaluator(std::make_shared<MazeEvaluator>(5, 5, 0.2, 100), 1.0, false);
+    pipe->setCutOffScore(0.42);
+
+    EvolutionPipe::EvolutionParameters params;
+    params.generations = 7;
+    params.crossover_probability = 0.6;
+    params.mutation_probability = 0.15;
+    params.elitism = false;
+    params.byte_mutation_share = 0.33;
+    params.variable_count = 32;
+    params.string_table_size = 3;
+    params.string_table_item_length = 7;
+    params.max_genome_bytes = 512;
+    params.starting_program_size = 48;
+    params.opcode_weights[OpCode::NoOp] = 0.0;
+    params.opcode_weights[OpCode::SetVariable] = 4.5;
+    params.opcode_weights[OpCode::Terminate] = 0.1;
+    pipe->setEvolutionParameters(params);
+
+    pipeline->addPipe("eval", pipe);
+
+    const auto json = PipelineManager::deconstructPipelineToJson(pipeline);
+    const auto rebuilt = PipelineManager::constructPipelineFromJson(json);
+    const auto rebuilt_pipe =
+        std::dynamic_pointer_cast<EvaluatorPipe>(rebuilt->getPipes().front()->pipe);
+    REQUIRE(rebuilt_pipe != nullptr);
+    REQUIRE(rebuilt_pipe->getCutOffScore() == 0.42);
+
+    const auto& rebuilt_params = rebuilt_pipe->getEvolutionParameters();
+    REQUIRE(rebuilt_params.generations == params.generations);
+    REQUIRE(rebuilt_params.crossover_probability == params.crossover_probability);
+    REQUIRE(rebuilt_params.mutation_probability == params.mutation_probability);
+    REQUIRE(rebuilt_params.elitism == params.elitism);
+    REQUIRE(rebuilt_params.byte_mutation_share == params.byte_mutation_share);
+    REQUIRE(rebuilt_params.variable_count == params.variable_count);
+    REQUIRE(rebuilt_params.string_table_size == params.string_table_size);
+    REQUIRE(rebuilt_params.string_table_item_length == params.string_table_item_length);
+    REQUIRE(rebuilt_params.max_genome_bytes == params.max_genome_bytes);
+    REQUIRE(rebuilt_params.starting_program_size == params.starting_program_size);
+    REQUIRE(rebuilt_params.opcode_weights.size() == params.opcode_weights.size());
+    for (const auto& [opcode, weight] : params.opcode_weights) {
+      REQUIRE(rebuilt_params.opcode_weights.count(opcode) == 1);
+      REQUIRE(rebuilt_params.opcode_weights.at(opcode) == weight);
+    }
+  }
+
   SECTION("EvaluatorPipe with invalid evaluator pipeline constructed from JSON throw") {
     const auto json = R"({
         "pipes": {

@@ -117,6 +117,11 @@ class EvolutionPipe : public Pipe {
   void setCutOffScore(double cut_off_score);
 
   /**
+   * @brief Currently configured cut-off score (see `setCutOffScore`)
+   */
+  [[nodiscard]] double getCutOffScore() const noexcept;
+
+  /**
    * @brief Replace the evolution parameter set used by the next `execute()` call
    */
   void setEvolutionParameters(const EvolutionParameters& parameters);

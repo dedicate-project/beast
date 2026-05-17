@@ -352,6 +352,8 @@ void EvolutionPipe::execute() {
 
 void EvolutionPipe::setCutOffScore(double cut_off_score) { cut_off_score_ = cut_off_score; }
 
+double EvolutionPipe::getCutOffScore() const noexcept { return cut_off_score_; }
+
 void EvolutionPipe::setEvolutionParameters(const EvolutionParameters& parameters) {
   evolution_parameters_ = parameters;
 }

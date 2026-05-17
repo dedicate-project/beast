@@ -12,6 +12,7 @@
 // Internal
 #include <beast/filesystem_helper.hpp>
 #include <beast/pipeline.hpp>
+#include <beast/pipes/evolution_pipe.hpp>
 
 #include <beast/evaluators/aggregation_evaluator.hpp>
 
@@ -111,6 +112,25 @@ class PipelineManager {
 
   [[nodiscard]] static std::shared_ptr<Evaluator>
   constructMazeEvaluatorFromJson(const nlohmann::json& json);
+
+  /**
+   * @brief Deserializes a JSON object into an `EvolutionPipe::EvolutionParameters` struct.
+   *
+   * Missing fields fall back to the C++-side defaults defined on `EvolutionParameters`, so
+   * older pipeline JSON files that predate a particular knob still load cleanly.
+   */
+  [[nodiscard]] static EvolutionPipe::EvolutionParameters
+  constructEvolutionParametersFromJson(const nlohmann::json& json);
+
+  /**
+   * @brief Serializes an `EvolutionPipe::EvolutionParameters` struct into JSON.
+   *
+   * The shape mirrors the struct field names and uses string keys for `opcode_weights`
+   * (where the keys are the integer underlying value of `OpCode`, stringified for JSON
+   * object compatibility).
+   */
+  [[nodiscard]] static nlohmann::json
+  deconstructEvolutionParametersToJson(const EvolutionPipe::EvolutionParameters& parameters);
 
   /**
    * @brief Constructs a Pipeline object from a JSON object.
