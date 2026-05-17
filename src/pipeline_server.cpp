@@ -7,6 +7,7 @@
 #include <sstream>
 
 // Internal
+#include <beast/pipes/fan_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
 #include <beast/time_functions.hpp>
 #include <beast/version.hpp>
@@ -256,6 +257,15 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
                 static_cast<uint64_t>(summary.best_ever_data.size());
             summary_json["window_size"] = summary_pipe->getWindowSize();
             pipe_item["summary"] = std::move(summary_json);
+          }
+          if (const auto fan_pipe = std::dynamic_pointer_cast<FanPipe>(pipe_iter->second)) {
+            const auto throughput = fan_pipe->getThroughput();
+            crow::json::wvalue throughput_json;
+            throughput_json["total_seen"] = throughput.total_seen;
+            throughput_json["window_seen"] = throughput.window_seen;
+            throughput_json["window_seconds"] = throughput.window_seconds;
+            throughput_json["candidates_per_second"] = throughput.candidates_per_second;
+            pipe_item["throughput"] = std::move(throughput_json);
           }
         }
         value["pipes"][idx] = std::move(pipe_item);

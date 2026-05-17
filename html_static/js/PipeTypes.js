@@ -335,6 +335,35 @@ export const PIPE_TYPE_DEFINITIONS = [
     }),
   },
   {
+    type: 'FanPipe',
+    label: 'Fan (throughput probe)',
+    description:
+      'Passthrough that measures candidate throughput over a sliding window. The icon ' +
+      'spins faster as more candidates flow through, making contention points easy to ' +
+      'spot at a glance. Pure observer -- forwards everything, drops nothing.',
+    image: '/img/fan_pipe.png',
+    inputs: 1,
+    outputs: 1,
+    sections: [
+      {
+        title: 'Measurement',
+        fields: [
+          {name: 'max_candidates', label: 'Max input buffer', type: 'int', default: 50, min: 1},
+          {name: 'window_seconds', label: 'Throughput window (s, 0 = default 2s)',
+           type: 'float', default: 2.0, min: 0, step: 0.1},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      window_seconds: values.window_seconds,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      window_seconds: params.window_seconds != null ? params.window_seconds : 2.0,
+    }),
+  },
+  {
     type: 'ResultsSummaryPipe',
     label: 'Results Summary',
     description:

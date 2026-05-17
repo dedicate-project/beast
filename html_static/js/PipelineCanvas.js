@@ -204,6 +204,19 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
             React.createElement('div', {key : 'sumb'},
                                 `* Best ever: ${fmt(s.best_ever_score)} (${s.best_ever_size} bytes)`));
       }
+      // FanPipe attaches a `throughput` block. Same idea as `summary` -- surface the
+      // headline numbers so a hover answers "what's flowing through here?".
+      if (pipe.throughput) {
+        const t = pipe.throughput;
+        const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(2) : '--';
+        content.push(
+            React.createElement('div', {key : 'thh', style : {marginTop : '0.4rem'}},
+                                'Throughput:'),
+            React.createElement('div', {key : 'thr'},
+                                `* ${fmt(t.candidates_per_second)} candidates/s (over ${fmt(t.window_seconds)} s)`),
+            React.createElement('div', {key : 'tht'},
+                                `* Total seen: ${t.total_seen}`));
+      }
     }
     return e('div', {
       className : 'pipe-dialog',
@@ -228,6 +241,13 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [hoveredPipe, setHoveredPipe] = useState("");
   const hoveredPipeRef = useRef("");
 
+  // FanPipe spin-animation plumbing. We keep two refs so we can: (1) drive a single
+  // Konva.Animation that ticks all fans together (cheaper than one animation per pipe),
+  // and (2) decouple the metrics polling cadence (~1 Hz) from the visual animation
+  // cadence (~60 Hz) so the spin stays smooth between metrics updates.
+  const fanImagesRef = useRef({});
+  const fanRatesRef = useRef({});
+
   // The results panel can be collapsed to a single header strip so it doesn't compete
   // with the canvas for screen real estate. Persisted in localStorage so the choice
   // survives a tab refresh -- having to re-collapse on every reload is annoying.
@@ -245,6 +265,48 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       // localStorage may be disabled (private browsing); the panel still works in-session.
     }
   }, [resultsPanelCollapsed]);
+
+  // Drive the FanPipe spin animation. One Konva.Animation ticks at the layer's frame
+  // rate and rotates each registered fan image by `rate * dt`, where `rate` is the
+  // most recent candidates/second reading sourced from the metrics endpoint. Capped at
+  // 720 deg/sec so a hot pipe doesn't end up a strobing blur.
+  useEffect(() => {
+    if (!elementLayerRef.current || !Konva) return;
+    const anim = new Konva.Animation((frame) => {
+      if (!frame) return;
+      const dt = frame.timeDiff / 1000;
+      const images = fanImagesRef.current;
+      const rates = fanRatesRef.current;
+      let any = false;
+      for (const name in images) {
+        const img = images[name];
+        if (!img) continue;
+        const rate = Math.max(0, Number(rates[name] || 0));
+        if (rate <= 0) continue;
+        const degPerCandidate = 9; // 10 cand/s ≈ 90 deg/s, 80 cand/s ≈ 720 deg/s.
+        const degPerSec = Math.min(720, rate * degPerCandidate);
+        img.rotate(degPerSec * dt);
+        any = true;
+      }
+      return any;
+    }, elementLayerRef.current);
+    anim.start();
+    return () => { anim.stop(); };
+  }, [elementLayerRef.current]);
+
+  // Sync fan rates from the latest metrics snapshot. Anything missing falls back to 0
+  // so a stopped pipeline (or a pipe whose throughput hasn't been reported yet) parks
+  // its fan.
+  useEffect(() => {
+    const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
+    const next = {};
+    for (const p of pipesMetrics) {
+      if (p && p.throughput && typeof p.throughput.candidates_per_second === 'number') {
+        next[p.name] = p.throughput.candidates_per_second;
+      }
+    }
+    fanRatesRef.current = next;
+  }, [metrics]);
 
   // Render helper for the results panel. Returns null when there are no summary pipes so
   // we don't waste pixels on an empty box. Lives next to the canvas so its absolute
@@ -707,16 +769,28 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       var imageObj = new Image();
       imageObj.crossOrigin = "anonymous";
       imageObj.onload = function() {
+        // FanPipe rotates around its center, so it needs an offset of (w/2, h/2) and a
+        // matching position offset to keep the image centered after rotation. For other
+        // pipe types we keep the regular top-left placement so the existing layout doesn't
+        // shift around.
+        const isFan = type === 'FanPipe';
         var img = new Konva.Image({
-          x : (item.width() - 50) / 2 + 5,
-          y : (item.height() - 50) / 2 + 5,
+          x : (item.width() - 50) / 2 + 5 + (isFan ? 20 : 0),
+          y : (item.height() - 50) / 2 + 5 + (isFan ? 20 : 0),
           image : imageObj,
           width : 40,
           height : 40,
+          offsetX : isFan ? 20 : 0,
+          offsetY : isFan ? 20 : 0,
         });
 
         // add the Konva.Image object to the group
         group.add(img);
+        if (isFan) {
+          // Keep a reference so the spin-animation effect can rotate this image based on
+          // the live throughput readings; deleted in the pipe-removal path below.
+          fanImagesRef.current[name] = img;
+        }
 
         // redraw the layer to show the updated rectangle and image
         elementLayerRef.current.draw();
@@ -820,20 +894,23 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     for (let key in added_pipes) {
       renderPipe(key, added_pipes[key]);
     }
-    for (let key in removed_pipes) {
+    const detach = (key) => {
       if (pipes[key]) {
         pipes[key].remove();
         delete pipes[key];
       }
+      if (fanImagesRef.current[key]) {
+        delete fanImagesRef.current[key];
+      }
+    };
+    for (let key in removed_pipes) {
+      detach(key);
     }
     // For *updates* (e.g. the user edited a MultiplexerPipe and bumped input_slots) we
     // tear down and recreate the visual so the new port count / icon takes effect. The
     // position is restored from metadata so the pipe doesn't visually jump.
     for (let key in updated_pipes) {
-      if (pipes[key]) {
-        pipes[key].remove();
-        delete pipes[key];
-      }
+      detach(key);
       renderPipe(key, updated_pipes[key]);
     }
     // Process model metadata. The backend reports `"metadata": null` for pipelines that

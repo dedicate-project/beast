@@ -104,6 +104,40 @@ TEST_CASE("PipelineManager") {
     REQUIRE(back["pipes"]["summary"]["parameters"]["window_size"].get<uint32_t>() == 64);
   }
 
+  SECTION("FanPipe round-trips through JSON serialisation") {
+    const auto json = R"({
+        "pipes": {
+          "fan": {
+            "type": "FanPipe",
+            "parameters": { "max_candidates": 32, "window_seconds": 5.0 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto fan = std::dynamic_pointer_cast<FanPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(fan != nullptr);
+    REQUIRE(fan->getWindowSeconds() == Approx(5.0));
+    REQUIRE(fan->getMaxCandidates() == 32);
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["fan"]["type"].get<std::string>() == "FanPipe");
+    REQUIRE(back["pipes"]["fan"]["parameters"]["window_seconds"].get<double>() == Approx(5.0));
+  }
+
+  SECTION("FanPipe defaults its window when window_seconds omitted") {
+    const auto json = R"({
+        "pipes": {
+          "fan": {
+            "type": "FanPipe",
+            "parameters": { "max_candidates": 8 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto fan = std::dynamic_pointer_cast<FanPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(fan != nullptr);
+    REQUIRE(fan->getWindowSeconds() == Approx(2.0));
+  }
+
   SECTION("MultiplexerPipe round-trips through JSON serialisation") {
     const auto json = R"({
         "pipes": {

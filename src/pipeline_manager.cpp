@@ -8,6 +8,7 @@
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
+#include <beast/pipes/fan_pipe.hpp>
 #include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
@@ -465,6 +466,14 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         created_pipes[pipe_name] =
             std::make_shared<ProgramStorageSourcePipe>(max_candidates, path, loop);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "FanPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const double window_seconds =
+            pipe.value()["parameters"].value("window_seconds", 0.0);
+        created_pipes[pipe_name] = std::make_shared<FanPipe>(max_candidates, window_seconds);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "DemultiplexerPipe") {
         checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "output_slots"});
         const uint32_t max_candidates =
@@ -645,6 +654,10 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["path"] = storage_source->getPath();
       pipe_json["parameters"]["loop"] = storage_source->getLoop();
+    } else if (auto fan_pipe = std::dynamic_pointer_cast<FanPipe>(pipe->pipe)) {
+      pipe_json["type"] = "FanPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["window_seconds"] = fan_pipe->getWindowSeconds();
     } else if (auto demux_pipe = std::dynamic_pointer_cast<DemultiplexerPipe>(pipe->pipe)) {
       pipe_json["type"] = "DemultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
