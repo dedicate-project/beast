@@ -105,6 +105,64 @@ TEST_CASE("PipelineManager") {
     REQUIRE(back["pipes"]["summary"]["parameters"]["window_size"].get<uint32_t>() == 64);
   }
 
+  SECTION("Subroutine sources round-trip through EvaluatorPipe JSON") {
+    const auto json = R"({
+        "pipes": {
+          "callsite": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 4,
+              "memory_variables": 16,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "AdderEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "trial_count": 1,
+                  "value_range": 10,
+                  "max_steps_per_trial": 100
+                }
+              }],
+              "subroutines": [
+                {
+                  "ledger_path": "/tmp/beast-test-sub-a.json",
+                  "top_k": 2,
+                  "input_arity": 1,
+                  "output_arity": 1,
+                  "max_steps_per_call": 333
+                },
+                {
+                  "ledger_path": "/tmp/beast-test-sub-b.json",
+                  "top_k": 1,
+                  "input_arity": 3,
+                  "output_arity": 1,
+                  "max_steps_per_call": 700
+                }
+              ]
+            }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(eval_pipe != nullptr);
+    REQUIRE(eval_pipe->getSubroutineSources().size() == 2);
+    REQUIRE(eval_pipe->getSubroutineSources()[0].ledger_path == "/tmp/beast-test-sub-a.json");
+    REQUIRE(eval_pipe->getSubroutineSources()[0].top_k == 2);
+    REQUIRE(eval_pipe->getSubroutineSources()[1].input_arity == 3);
+    REQUIRE(eval_pipe->getSubroutineSources()[1].max_steps_per_call == 700);
+
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["callsite"]["parameters"]["subroutines"].size() == 2);
+    REQUIRE(back["pipes"]["callsite"]["parameters"]["subroutines"][0]["ledger_path"]
+                .get<std::string>() == "/tmp/beast-test-sub-a.json");
+    REQUIRE(back["pipes"]["callsite"]["parameters"]["subroutines"][1]["output_arity"]
+                .get<uint32_t>() == 1);
+  }
+
   SECTION("AdderEvaluator round-trips through EvaluatorPipe JSON") {
     const auto json = R"({
         "pipes": {
@@ -840,7 +898,7 @@ TEST_CASE("PipelineManager") {
         std::filesystem::path(__FILE__).parent_path().parent_path();
     for (const auto* sample :
          {"ascending-mazes.json", "survivor-recirculation.json", "sha256-round.json",
-          "sha256-curriculum.json"}) {
+          "sha256-curriculum.json", "sha256-round-with-subroutines.json"}) {
       INFO(sample);
       const auto path = src_root / "examples" / "compose-pipelines" / sample;
       REQUIRE(std::filesystem::exists(path));

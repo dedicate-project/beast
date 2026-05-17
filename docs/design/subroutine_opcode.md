@@ -1,8 +1,8 @@
 # Design: Subroutine opcode
 
-Status: **Proposed**.
+Status: **Shipped** (Phases 1-4 complete; see `examples/compose-pipelines/sha256-round-with-subroutines.json` for the end-to-end wiring).
 Owner: open.
-Tracking branch: TBD.
+Tracking branch: `pipeline-applications`.
 
 ## Problem
 

@@ -143,8 +143,10 @@ void staticInitializerWrapper(GAGenome& genome) {
     const uint32_t size = params.starting_program_size > 0
                               ? params.starting_program_size
                               : std::max<uint32_t>(params.variable_count * 8, 16);
-    Program program = factory.generate(size, params.variable_count, params.string_table_size,
-                                       params.string_table_item_length, params.opcode_weights);
+    Program program =
+        factory.generate(size, params.variable_count, params.string_table_size,
+                         params.string_table_item_length, params.opcode_weights,
+                         params.subroutine_arities);
     seed = program.getData();
   }
   bytesToGenome(list_genome, seed);
@@ -230,14 +232,14 @@ int operatorAwareMutator(GAGenome& genome, float probability) {
     if (normalized < 0.70F) {
       auto replacement = RandomProgramFactory::generateRandomOperator(
           params.variable_count, params.string_table_size, params.string_table_item_length,
-          /*max_bytes=*/64, params.opcode_weights);
+          /*max_bytes=*/128, params.opcode_weights, params.subroutine_arities);
       new_bytes.insert(new_bytes.end(), replacement.begin(), replacement.end());
     } else if (normalized < 0.85F) {
       // Deletion: contribute nothing for this span.
     } else {
       auto insertion = RandomProgramFactory::generateRandomOperator(
           params.variable_count, params.string_table_size, params.string_table_item_length,
-          /*max_bytes=*/64, params.opcode_weights);
+          /*max_bytes=*/128, params.opcode_weights, params.subroutine_arities);
       new_bytes.insert(new_bytes.end(), insertion.begin(), insertion.end());
       new_bytes.insert(new_bytes.end(), bytes.begin() + span.offset,
                        bytes.begin() + span.offset + span.length);

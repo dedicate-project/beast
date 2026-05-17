@@ -1182,6 +1182,52 @@ class Program {
                            int32_t variable_index, bool follow_links);
 
   /**
+   * @brief Single caller-side variable reference (index + follow-links flag)
+   *
+   * Used as the argument list type for `Program::callSubroutine`. Matches the
+   * `(int32_t, bool)` shape that every other variable-aware operator already uses,
+   * so subroutine arguments are mutated and crossover-spliced by the GA the same
+   * way as e.g. `CopyVariable` operands.
+   */
+  struct SubroutineArgument {
+    int32_t variable_index;
+    bool follow_links;
+  };
+
+  /**
+   * @fn Program::callSubroutine
+   * @brief Emit a `CallSubroutine` instruction
+   *
+   * Wire format (variable length, matches `ProgramParser::parse`):
+   *
+   * @code
+   *   byte 0     : opcode byte (0x4d)
+   *   byte 1     : subroutine_id  (uint8)
+   *   byte 2     : input_arity    (uint8, count of inputs)
+   *   byte 3     : output_arity   (uint8, count of outputs)
+   *   byte 4..   : (int32 variable_index, int8 follow_links) per input
+   *   byte ..    : (int32 variable_index, int8 follow_links) per output
+   * @endcode
+   *
+   * Total length: `4 + 5 * (inputs.size() + outputs.size())`.
+   *
+   * @param subroutine_id Which slot in the active `SubroutineLibrary` to call.
+   * @param inputs        Caller-side variable references whose values are copied
+   *                      into the callee's input vars `0 .. input_arity-1` before
+   *                      execution.
+   * @param outputs       Caller-side variable references whose values are written
+   *                      from the callee's output vars after execution.
+   *
+   * Both arity counts must fit in a `uint8_t`. The actual library at runtime may
+   * apply additional caps (`kMaxSubroutineArity`); those caps are enforced by the
+   * VM dispatch, not by this byte-encoder.
+   *
+   * Identified by OpCode::CallSubroutine.
+   */
+  void callSubroutine(uint8_t subroutine_id, const std::vector<SubroutineArgument>& inputs,
+                      const std::vector<SubroutineArgument>& outputs);
+
+  /**
    * @fn Program::swapVariables
    * @brief Swaps the contents of two variables
    *

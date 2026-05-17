@@ -28,6 +28,20 @@ namespace beast {
 using OpcodeWeights = std::map<OpCode, double>;
 
 /**
+ * @brief Minimal description of the subroutine library available to the factory
+ *
+ * Holds the `(input_arity, output_arity)` of every subroutine in the mounted
+ * library, indexed by `subroutine_id`. The factory only needs the arities (not
+ * the bytecode) to mint valid `CallSubroutine` instructions: arities determine
+ * the operand byte layout, the bytecode determines what the call *does* at runtime
+ * which is none of the factory's business.
+ *
+ * Empty table (the default) means "no library is mounted; `CallSubroutine` is
+ * dropped from the random distribution even if weighted explicitly".
+ */
+using SubroutineArityTable = std::vector<std::pair<uint8_t, uint8_t>>;
+
+/**
  * @class RandomProgramFactory
  * @brief Generates random programs with a valid structure
  *
@@ -81,6 +95,21 @@ class RandomProgramFactory : public ProgramFactoryBase {
                                  uint32_t string_table_item_length, const OpcodeWeights& weights);
 
   /**
+   * @brief Subroutine-aware overload of `generate`
+   *
+   * Same semantics as the weighted overload, but additionally makes a
+   * `SubroutineArityTable` available to the factory. When the table is non-empty
+   * AND `CallSubroutine` is not weighted to zero, the factory emits valid
+   * `CallSubroutine` instructions (with in-bounds ids and correct operand byte
+   * layouts). When the table is empty, the factory drops `CallSubroutine` from
+   * its output even if the caller weighted it non-zero -- there's no library to
+   * point at, so any call would be guaranteed-invalid bytecode.
+   */
+  [[nodiscard]] Program generate(uint32_t size, uint32_t memory_size, uint32_t string_table_size,
+                                 uint32_t string_table_item_length, const OpcodeWeights& weights,
+                                 const SubroutineArityTable& subroutines);
+
+  /**
    * @brief Generates a single random operator, returned as raw bytecode
    *
    * Used by operator-aware mutation in `EvolutionPipe::execute()` (and any other caller that
@@ -110,6 +139,18 @@ class RandomProgramFactory : public ProgramFactoryBase {
   generateRandomOperator(uint32_t memory_size, uint32_t string_table_size,
                          uint32_t string_table_item_length, uint32_t max_bytes,
                          const OpcodeWeights& weights);
+
+  /**
+   * @brief Subroutine-aware variant of `generateRandomOperator`
+   *
+   * Same retry/fallback behavior as the other overloads, plus the ability to
+   * emit valid `CallSubroutine` instructions when `subroutines` is non-empty.
+   */
+  [[nodiscard]] static std::vector<unsigned char>
+  generateRandomOperator(uint32_t memory_size, uint32_t string_table_size,
+                         uint32_t string_table_item_length, uint32_t max_bytes,
+                         const OpcodeWeights& weights,
+                         const SubroutineArityTable& subroutines);
 
  private:
   std::mt19937 mersenne_engine_;

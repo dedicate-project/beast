@@ -6,11 +6,30 @@ bool ProgramParser::isVariableLengthOperator(OpCode opcode) noexcept {
   switch (opcode) {
   case OpCode::SetStringTableEntry:
   case OpCode::SetVariableStringTableEntry:
+  case OpCode::CallSubroutine:
     return true;
   default:
     return false;
   }
 }
+
+namespace {
+
+/// CallSubroutine encoding constants.
+///
+/// Wire format (matches `Program::callSubroutine`):
+///   byte 0     : opcode (0x4d)
+///   byte 1     : subroutine_id (uint8)
+///   byte 2     : input_arity   (uint8)
+///   byte 3     : output_arity  (uint8)
+///   byte 4..   : (int32 variable_index, int8 follow_links) per input
+///   byte ..    : (int32 variable_index, int8 follow_links) per output
+constexpr uint32_t kCallSubroutineFixedPrefixBytes = 4;
+constexpr uint32_t kCallSubroutineBytesPerArgument = 5;
+constexpr uint32_t kCallSubroutineInputArityOffset = 2;
+constexpr uint32_t kCallSubroutineOutputArityOffset = 3;
+
+} // namespace
 
 // Encoding cheat sheet (matches CpuVirtualMachine::step):
 //   v4 = 4-byte variable index   d4 = 4-byte data         f1 = 1-byte follow flag
@@ -97,6 +116,7 @@ uint32_t ProgramParser::getOperatorLength(OpCode opcode) noexcept {
   case OpCode::PopVariableFromStack:                       return 1 + 4 + 1 + 4 + 1;
   case OpCode::PopTopItemFromStack:                        return 1 + 4 + 1;
   case OpCode::CheckIfStackIsEmpty:                        return 1 + 4 + 1 + 4 + 1;
+  case OpCode::CallSubroutine:                             return kCallSubroutineFixedPrefixBytes;
   case OpCode::Size:                                       return 0;
   }
   return 0;
@@ -121,18 +141,28 @@ ProgramParser::ParseResult ProgramParser::parse(const std::vector<unsigned char>
 
     uint32_t span_length = fixed;
     if (isVariableLengthOperator(opcode)) {
-      // Variable-length operators carry a 2-byte length field that sits at the very end of
-      // the fixed prefix. We need the prefix to be fully in-bounds before we can read it.
+      // We need the fixed prefix to be fully in-bounds before we can read any payload
+      // length data.
       if (offset + fixed > total) {
         result.clean = false;
         result.trailing_garbage_bytes = total - offset;
         return result;
       }
-      // Read the 2-byte length (little-endian); matches Program::appendData2.
-      const uint32_t length_offset = offset + fixed - 2;
-      const uint16_t string_length = static_cast<uint16_t>(data[length_offset]) |
-                                     (static_cast<uint16_t>(data[length_offset + 1]) << 8);
-      span_length += string_length;
+      if (opcode == OpCode::CallSubroutine) {
+        // Two arity bytes at fixed offsets within the prefix; payload is
+        // 5 bytes per argument (int32 var_index + 1-byte follow_links flag).
+        const uint8_t input_arity = data[offset + kCallSubroutineInputArityOffset];
+        const uint8_t output_arity = data[offset + kCallSubroutineOutputArityOffset];
+        span_length += static_cast<uint32_t>(input_arity + output_arity) *
+                       kCallSubroutineBytesPerArgument;
+      } else {
+        // String-table operators: 2-byte little-endian length field at end of prefix,
+        // payload is that many character bytes.
+        const uint32_t length_offset = offset + fixed - 2;
+        const uint16_t string_length = static_cast<uint16_t>(data[length_offset]) |
+                                       (static_cast<uint16_t>(data[length_offset + 1]) << 8);
+        span_length += string_length;
+      }
     }
 
     if (offset + span_length > total) {

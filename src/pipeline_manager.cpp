@@ -628,6 +628,31 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
           evaluator_pipe->setEvolutionParameters(constructEvolutionParametersFromJson(
               pipe.value()["parameters"]["evolution_parameters"]));
         }
+        // Optional subroutine library configuration. Sources are mounted in array
+        // order; their `subroutine_id` indices are stable as long as the array
+        // and each source's `top_k` don't change between configurations.
+        if (pipe.value()["parameters"].contains("subroutines") &&
+            pipe.value()["parameters"]["subroutines"].is_array()) {
+          for (const auto& source_json : pipe.value()["parameters"]["subroutines"]) {
+            EvaluatorPipe::SubroutineSource source;
+            if (source_json.contains("ledger_path")) {
+              source.ledger_path = source_json["ledger_path"].get<std::string>();
+            }
+            if (source_json.contains("top_k")) {
+              source.top_k = source_json["top_k"].get<uint32_t>();
+            }
+            if (source_json.contains("input_arity")) {
+              source.input_arity = source_json["input_arity"].get<uint8_t>();
+            }
+            if (source_json.contains("output_arity")) {
+              source.output_arity = source_json["output_arity"].get<uint8_t>();
+            }
+            if (source_json.contains("max_steps_per_call")) {
+              source.max_steps_per_call = source_json["max_steps_per_call"].get<uint32_t>();
+            }
+            evaluator_pipe->addSubroutineSource(source);
+          }
+        }
 
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else {
@@ -787,6 +812,21 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["parameters"]["cut_off_score"] = evaluator_pipe->getCutOffScore();
       pipe_json["parameters"]["evolution_parameters"] =
           deconstructEvolutionParametersToJson(evaluator_pipe->getEvolutionParameters());
+      // Subroutine sources are only serialised when actually configured; an empty
+      // array means "no library mounted" and writing the empty array would needlessly
+      // clutter pipeline JSON files that pre-date the feature.
+      const auto& sources = evaluator_pipe->getSubroutineSources();
+      if (!sources.empty()) {
+        nlohmann::json sources_json = nlohmann::json::array();
+        for (const auto& source : sources) {
+          sources_json.push_back({{"ledger_path", source.ledger_path},
+                                  {"top_k", source.top_k},
+                                  {"input_arity", source.input_arity},
+                                  {"output_arity", source.output_arity},
+                                  {"max_steps_per_call", source.max_steps_per_call}});
+        }
+        pipe_json["parameters"]["subroutines"] = sources_json;
+      }
     } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvolutionPipe";
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {

@@ -69,6 +69,21 @@ void VmSession::setMaximumPrintBufferLength(size_t maximum_print_buffer_length) 
   maximum_print_buffer_length_ = maximum_print_buffer_length;
 }
 
+void VmSession::setSubroutineLibrary(
+    std::shared_ptr<const SubroutineLibrary> library) noexcept {
+  subroutine_library_ = std::move(library);
+}
+
+std::shared_ptr<const SubroutineLibrary> VmSession::getSubroutineLibrary() const noexcept {
+  return subroutine_library_;
+}
+
+size_t VmSession::getVariableCount() const noexcept { return variable_count_; }
+
+size_t VmSession::getStringTableCount() const noexcept { return string_table_count_; }
+
+size_t VmSession::getMaxStringSize() const noexcept { return max_string_size_; }
+
 int32_t VmSession::getData4() {
   int32_t data = program_.getData4(pointer_);
   pointer_ += 4;

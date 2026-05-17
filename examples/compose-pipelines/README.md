@@ -136,14 +136,89 @@ weight; stage 2 biases `BitWiseXorTwoVariables` (opcode 33) plus rotations. With
 these biases the random-program factory would produce too many jumps, prints, and
 system calls and the early-stage progress would slow to a crawl.
 
+### `sha256-round-with-subroutines.json`
+
+A minimal example of the **subroutine mechanism** in action. It runs a single
+`Sha256RoundEvaluator` stage but mounts the best `Sha256SigmaEvaluator(variant=big0)`
+genome from `sha256-curriculum.json`'s `sigma_sink` ledger as **subroutine 0**, callable
+from the round body via the `CallSubroutine` opcode (`0x4d` = `77`):
+
+```
+factory_round -> round_stage -> round_stats -> round_sink
+                     │
+                     └── subroutine 0 ← /tmp/beast-sha-sigma.json (top-1)
+```
+
+To use it, run `sha256-curriculum.json` first (until the sigma stage starts producing
+non-trivial winners), then load `sha256-round-with-subroutines.json` alongside it.
+Each evolution cycle, `round_stage` reloads the current top-1 entry of the sigma
+ledger and re-mounts it. That means the round_stage's view of subroutine 0 *improves
+over time* as the sigma stage discovers better candidates -- without any explicit
+re-wiring or restart.
+
+The wiring lives in the `subroutines` block of `round_stage.parameters`:
+
+```json
+"subroutines": [
+  {
+    "ledger_path": "/tmp/beast-sha-sigma.json",
+    "top_k": 1,
+    "input_arity": 1,
+    "output_arity": 1,
+    "max_steps_per_call": 800
+  }
+]
+```
+
+The order of entries in this list determines each subroutine's ID; the first entry is
+ID 0, the second is ID 1, and so on (max library size is 255). At evaluation time
+`EvaluatorPipe` reads the ledger, takes the highest-scoring `top_k` genomes, and
+mounts them into the callee VM as `SubroutineEntry` objects. The genome itself is the
+raw bytecode of the winning program -- the caller passes input variable indices, the
+VM forks a fresh `VmSession` for the callee with the inputs copied into its
+variables, runs the callee bytecode up to `max_steps_per_call` instructions, and
+copies the callee's output variables back to the caller's output slots. **The callee
+cannot itself call subroutines** (recursive bodies are rejected at mount time by
+`subroutineBodyIsCallFree`); that constraint keeps step accounting bounded and avoids
+runaway recursion.
+
+A few constraints that are easy to miss when designing a subroutine source:
+
+- **Arity matches what the producer pipeline wrote.** If the source stage wrote
+  programs that read variable 0 and wrote variable 1, set `input_arity: 1` and
+  `output_arity: 1` here. Misconfigured arity won't crash, but the caller will pass
+  the wrong number of arguments and the callee will see garbage in unwritten input
+  slots.
+- **`max_steps_per_call` is the only upper bound** on callee execution within one
+  call. Pick a value large enough for the callee to actually finish (the example uses
+  800, which matches the producer's `max_steps_per_trial: 2000` with margin to spare
+  for unaligned starts). Too low and the callee gets clipped mid-write; too high and
+  the caller burns its own step budget on a single call.
+- **Re-mount on every `execute()` cycle** is automatic. There's no need to restart
+  the pipeline after the producer ledger updates -- `EvaluatorPipe::execute()`
+  rebuilds its library at the top of every cycle.
+- **Ledger must exist before the callee runs**, or the rebuild fails for that source
+  and the slot is silently dropped (you'll see a warning in the server log). If you
+  load `sha256-round-with-subroutines.json` before `sha256-curriculum.json` has
+  produced `/tmp/beast-sha-sigma.json`, the round_stage will run *without* subroutine
+  0 available, and the GA will gravitate toward `NoOp` whenever it picks the
+  `CallSubroutine` opcode.
+
+The intended composition pattern is: curriculum stages run *continuously* and keep
+their ledgers fresh, downstream stages mount those ledgers and get progressively
+stronger building blocks. Stage 5+ (message schedule, block compression, full hash)
+will follow the same pattern, mounting Stage 4's round_sink as subroutine 0 to
+sequence 64 rounds without re-evolving the round body from scratch.
+
 ## Roadmap toward the full SHA-256 hash
 
 The plan for evolving a complete SHA-256 hasher decomposes the algorithm into stages
 that match the natural reusability of its components. Each stage gets its own
 evaluator and can be evolved on its own pipeline. The downstream stage composes the
-upstream stage as a building block, either by seeding from its ledger today, or
-(eventually) by directly invoking the upstream genome via a `Subroutine` opcode --
-see `docs/SUBROUTINE_OPCODE_DESIGN.md` for the design proposal.
+upstream stage as a building block, either by seeding from its ledger via a
+`ProgramStorageSourcePipe`, or by directly invoking the upstream genome via the
+`CallSubroutine` opcode -- see `sha256-round-with-subroutines.json` for a worked
+example and `docs/design/subroutine_opcode.md` for the full design notes.
 
 | Stage | Evaluator(s) | Status | Notes |
 |---|---|---|---|

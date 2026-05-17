@@ -1,0 +1,79 @@
+{
+  "name": "SHA-256 Round (subroutine-assisted)",
+  "model": {
+    "pipes": {
+      "factory_round": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 16, "max_size": 500,
+          "memory_variables": 32, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "round_stage": {
+        "comment": [
+          "Targets one SHA-256 compression round. The round needs three logical pieces",
+          "(BigSigma0/1, Ch, Maj) on its way to producing the new state. We mount the best",
+          "BigSigma0 genome from `/tmp/beast-sha-sigma.json` (the upstream sigma_sink in",
+          "sha256-curriculum.json) as subroutine_id 0 and let the GA learn to wire it in via",
+          "the CallSubroutine opcode (opcode 0x4d = 77).",
+          "",
+          "opcode_weights:",
+          "  10 (CopyVariable)        : 3.0   move bits across the SHA-256 state",
+          "  13 (AddVariableToVariable): 4.0  the round is mostly 32-bit modular adds",
+          "  77 (CallSubroutine)      : 5.0   biases the GA to actually reach for the sigma",
+          "  33 (BitWiseXorTwoVariables): 4.0 used for the Ch/Maj approximations",
+          "  34 (RotateVariableLeft)  : 3.0   left-rotate pieces of the state",
+          "  35 (RotateVariableRight) : 3.0   right-rotate pieces of the state",
+          "Every other opcode defaults to weight 1.0."
+        ],
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 16, "memory_variables": 32,
+          "string_table_items": 0, "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "Sha256RoundEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 4, "round_constant_index": 0, "max_steps_per_trial": 4000 }
+          }],
+          "evolution_parameters": {
+            "generations": 16, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.25,
+            "variable_count": 32, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 2048, "starting_program_size": 256,
+            "opcode_weights": {
+              "10": 3.0, "13": 4.0, "33": 4.0, "34": 3.0, "35": 3.0, "77": 5.0
+            }
+          },
+          "subroutines": [
+            {
+              "ledger_path": "/tmp/beast-sha-sigma.json",
+              "top_k": 1,
+              "input_arity": 1,
+              "output_arity": 1,
+              "max_steps_per_call": 800
+            }
+          ]
+        }
+      },
+      "round_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 16, "window_size": 128 } },
+      "round_sink": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": { "max_candidates": 16, "path": "/tmp/beast-sha-round.json", "top_k": 8 }
+      }
+    },
+    "connections": [
+      {"source_pipe": "factory_round", "source_slot": 0, "destination_pipe": "round_stage", "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "round_stage",   "source_slot": 0, "destination_pipe": "round_stats", "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "round_stats",   "source_slot": 0, "destination_pipe": "round_sink",  "destination_slot": 0, "buffer_size": 16}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "factory_round": { "position": { "x":  60, "y": 100 } },
+      "round_stage":   { "position": { "x": 240, "y": 100 } },
+      "round_stats":   { "position": { "x": 460, "y": 100 } },
+      "round_sink":    { "position": { "x": 680, "y": 100 } }
+    }
+  }
+}

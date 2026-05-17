@@ -505,6 +505,30 @@ void Program::checkIfStackIsEmpty(int32_t stack_variable_index, bool follow_link
   appendFlag1(follow_links);
 }
 
+void Program::callSubroutine(uint8_t subroutine_id,
+                             const std::vector<SubroutineArgument>& inputs,
+                             const std::vector<SubroutineArgument>& outputs) {
+  // Pre-validate so the caller gets a useful exception before any half-written bytes hit
+  // the program buffer. Mirrors the eager bounds checking in `setStringTableEntry`.
+  constexpr size_t kArityCeiling = 255;
+  if (inputs.size() > kArityCeiling || outputs.size() > kArityCeiling) {
+    throw std::length_error("CallSubroutine arity exceeds uint8_t encoding range");
+  }
+
+  appendCode1(OpCode::CallSubroutine);
+  appendData1(static_cast<int8_t>(subroutine_id));
+  appendData1(static_cast<int8_t>(static_cast<uint8_t>(inputs.size())));
+  appendData1(static_cast<int8_t>(static_cast<uint8_t>(outputs.size())));
+  for (const auto& arg : inputs) {
+    appendData4(arg.variable_index);
+    appendFlag1(arg.follow_links);
+  }
+  for (const auto& arg : outputs) {
+    appendData4(arg.variable_index);
+    appendFlag1(arg.follow_links);
+  }
+}
+
 void Program::swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b,
                             bool follow_links_b) {
   appendCode1(OpCode::SwapVariables);

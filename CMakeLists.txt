@@ -159,6 +159,7 @@ add_library(${PROJECT_NAME}-vm
   src/program.cpp
   src/program_parser.cpp
   src/random_program_factory.cpp
+  src/subroutine_library.cpp
   src/virtual_machine.cpp
   src/vm_session.cpp)
 
@@ -347,6 +348,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(maze_evaluator)
   declare_test(misc)
   declare_test(adder_evaluator)
+  declare_test(call_subroutine)
   declare_test(demultiplexer_pipe)
   declare_test(fan_pipe)
   declare_test(curriculum_evaluators)

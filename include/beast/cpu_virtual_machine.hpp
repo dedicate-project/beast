@@ -41,6 +41,21 @@ class CpuVirtualMachine : public VirtualMachine {
    * @param message The message text
    */
   void message(MessageSeverity severity, const std::string& message) noexcept override;
+
+ private:
+  /**
+   * @brief Decode and execute a single CallSubroutine instruction
+   *
+   * Factored out of `step` purely to keep the main dispatch switch under the
+   * complexity threshold enforced by clang-tidy (and to give the subroutine path
+   * a single place to grow when v2 adds recursion / library composition).
+   *
+   * Returns true to continue stepping, false on hard failure (in which case the
+   * session has already been marked `exitedAbnormally`). Operand bytes are always
+   * drained from the session stream so the instruction pointer ends up positioned
+   * at the next instruction regardless of validation outcomes.
+   */
+  [[nodiscard]] bool dispatchCallSubroutine(VmSession& session, bool dry_run);
 };
 
 } // namespace beast

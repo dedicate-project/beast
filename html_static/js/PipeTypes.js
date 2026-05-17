@@ -228,30 +228,67 @@ export const PIPE_TYPE_DEFINITIONS = [
             {name: 'max_genome_bytes', label: 'Max genome size (bytes)', type: 'int', default: evolutionParameterDefaults.max_genome_bytes, min: 1},
           ],
         },
-      ],
-      buildParameters: (values) => ({
-        max_candidates: values.max_candidates,
-        memory_variables: values.memory_variables,
-        string_table_items: values.string_table_items,
-        string_table_item_length: values.string_table_item_length,
-        cut_off_score: values.cut_off_score,
-        evaluators: [{
-          type: evaluatorType,
-          weight: 1.0,
-          invert_logic: false,
-          parameters: evaluatorBuild(values),
-        }],
-        evolution_parameters: {
-          ...evolutionParameterDefaults,
-          generations: values.generations,
-          crossover_probability: values.crossover_probability,
-          mutation_probability: values.mutation_probability,
-          byte_mutation_share: values.byte_mutation_share,
-          elitism: values.elitism,
-          starting_program_size: values.starting_program_size,
-          max_genome_bytes: values.max_genome_bytes,
+        {
+          // The library is rebuilt at the start of every cycle from the configured
+          // ledger paths, so changes here take effect on the next cycle without
+          // restarting the pipeline. Each entry adds one or more subroutines to the
+          // shared library indexed by ascending `subroutine_id`.
+          title: 'Subroutines (advanced)',
+          collapsedByDefault: true,
+          fields: [
+            {
+              name: 'subroutines',
+              label: 'Subroutine sources (JSON array)',
+              type: 'json',
+              minRows: 6,
+              default: '[]',
+              placeholder:
+                'JSON array of {ledger_path, top_k, input_arity, output_arity, max_steps_per_call}',
+            },
+          ],
         },
-      }),
+      ],
+      buildParameters: (values) => {
+        // Subroutines field is a raw JSON string; parse defensively so a typo in the
+        // form doesn't drop the whole pipe -- the backend will surface a precise error
+        // if the parsed array is malformed.
+        let subroutines = [];
+        try {
+          const parsed = JSON.parse(values.subroutines || '[]');
+          if (Array.isArray(parsed)) {
+            subroutines = parsed;
+          }
+        } catch (err) {
+          subroutines = [];
+        }
+        const params = {
+          max_candidates: values.max_candidates,
+          memory_variables: values.memory_variables,
+          string_table_items: values.string_table_items,
+          string_table_item_length: values.string_table_item_length,
+          cut_off_score: values.cut_off_score,
+          evaluators: [{
+            type: evaluatorType,
+            weight: 1.0,
+            invert_logic: false,
+            parameters: evaluatorBuild(values),
+          }],
+          evolution_parameters: {
+            ...evolutionParameterDefaults,
+            generations: values.generations,
+            crossover_probability: values.crossover_probability,
+            mutation_probability: values.mutation_probability,
+            byte_mutation_share: values.byte_mutation_share,
+            elitism: values.elitism,
+            starting_program_size: values.starting_program_size,
+            max_genome_bytes: values.max_genome_bytes,
+          },
+        };
+        if (subroutines.length > 0) {
+          params.subroutines = subroutines;
+        }
+        return params;
+      },
       parseParameters: (params) => {
         const task = (params.evaluators && params.evaluators[0] && params.evaluators[0].parameters) || {};
         const ga = params.evolution_parameters || {};
@@ -269,6 +306,10 @@ export const PIPE_TYPE_DEFINITIONS = [
           elitism: ga.elitism,
           starting_program_size: ga.starting_program_size,
           max_genome_bytes: ga.max_genome_bytes,
+          // Pretty-print for editability when we round-trip back into the form.
+          subroutines: params.subroutines
+            ? JSON.stringify(params.subroutines, null, 2)
+            : '[]',
         };
       },
     });

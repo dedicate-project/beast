@@ -74,6 +74,18 @@ class EvolutionPipe : public Pipe {
     /// replace/insert operators. Empty map = uniform across all opcodes. Set entries to 0.0
     /// to forbid an opcode entirely for this stage.
     OpcodeWeights opcode_weights{};
+
+    /// Arity table for any `CallSubroutine` instructions the GA may emit. One
+    /// `(input_arity, output_arity)` entry per mounted subroutine, indexed by
+    /// `subroutine_id`. Empty (the default) means "no subroutine library mounted";
+    /// the factory and mutator then drop `CallSubroutine` from the opcode
+    /// distribution even if the weights map says otherwise.
+    ///
+    /// The owner of the actual library (typically `EvaluatorPipe`) is responsible
+    /// for keeping this table in sync with the bytecode it mounts on each VM
+    /// session. The byte-encoder only needs arities, not bytecode, so the table is
+    /// the cheapest dependency surface available to the GA-side toolchain.
+    SubroutineArityTable subroutine_arities{};
   };
 
   /**

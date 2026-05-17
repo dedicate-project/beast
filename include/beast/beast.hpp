@@ -16,6 +16,7 @@
 #include <beast/program.hpp>
 #include <beast/program_parser.hpp>
 #include <beast/random_program_factory.hpp>
+#include <beast/subroutine_library.hpp>
 #include <beast/time_functions.hpp>
 #include <beast/version.hpp>
 #include <beast/vm_session.hpp>
