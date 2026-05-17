@@ -116,12 +116,18 @@ int main(int argc, char** argv) {
 
   // Start application
   try {
+    std::cout << "beast-compose listening on http://0.0.0.0:" << http_port
+              << " (storage=" << storage_folder << "), press Ctrl-C to stop" << std::endl;
     app.port(http_port).multithreaded().run();
   } catch (const std::runtime_error& exception) {
     std::cerr << "Failed to start REST server: " << exception.what() << std::endl;
     return EXIT_FAILURE;
   }
 
-  // Quit
+  // Crow installs SIGINT/SIGTERM handlers by default; reaching this point means a signal was
+  // received and run() returned cleanly. The local PipelineServer destructor will tear down
+  // any still-running pipelines (see ~PipelineManager / ~Pipeline) so we won't leak worker
+  // threads or trigger std::terminate during stack unwinding.
+  std::cout << "beast-compose shutting down" << std::endl;
   return EXIT_SUCCESS;
 }
