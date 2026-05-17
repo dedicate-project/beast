@@ -62,31 +62,37 @@ export default function App() {
   const [selectedDrawerItem, setSelectedDrawerItem] = useState('home');
 
   useEffect(() => {
+    // AbortController so the in-flight fetch is cancelled when the component unmounts (or
+    // hot-reloads under React 18 StrictMode), avoiding setState-on-unmounted warnings.
+    const controller = new AbortController();
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/v1/status');
+        const response = await fetch('/api/v1/status', {signal : controller.signal});
         if (!response.ok) {
           throw new Error('Network response was not ok');
-          setConnected(false);
         }
         setConnected(true);
         try {
           const jsonData = await response.json();
-          // Process the returned data
           setStatus(jsonData);
-          setError(null); // Reset error state if successful
-        } catch (error) {
-          console.log("Json error");
-          setError(error.message); // Set error state if unsuccessful
+          setError(null);
+        } catch (jsonError) {
+          setError(jsonError.message);
         }
-      } catch (error) {
+      } catch (fetchError) {
+        if (fetchError.name === 'AbortError') {
+          return; // Component unmounted, ignore.
+        }
         setConnected(false);
-        setError(error.message); // Set error state if unsuccessful
+        setError(fetchError.message);
       }
     };
     fetchData();
-    const interval = setInterval(() => { fetchData(); }, 1000); // Fetch data every 5 seconds
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchData, 1000);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
   }, []);
 
   const menuItems = [

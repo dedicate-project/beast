@@ -635,50 +635,51 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     // Handle response if necessary
   };
 
-  const fetchPipelineState = async () => {
-    try {
-      const response = await fetch(`/api/v1/pipelines/${pipeline.id}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchPipelineState = async () => {
+      try {
+        const response = await fetch(`/api/v1/pipelines/${pipeline.id}`,
+                                     {signal : controller.signal});
+        if (!response.ok) throw new Error('not ok');
+        const jsonData = await response.json();
+        pipelineStateRef.current = jsonData.state;
+        setPipelineState(jsonData.state);
+        setModel(jsonData.model || {});
+        setMetadata(jsonData.metadata || {});
+      } catch (e) {
+        // Network blip or unmount; ignore and try again on the next tick.
       }
-      const jsonData = await response.json();
-      pipelineStateRef.current = jsonData.state;
-      setPipelineState(jsonData.state);
-      setModel(jsonData.model);
-      setMetadata(jsonData.metadata);
-    } catch (error) {
-      // console.error('Error fetching pipeline state:', error);
-    }
-  };
-
-  const fetchMetrics = async () => {
-    try {
-      const response = await fetch(`/api/v1/pipelines/${pipeline.id}/metrics`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const jsonData = await response.json();
-      // console.log(jsonData);
-      setMetrics(jsonData);
-    } catch (error) {
-      // console.error('Error fetching pipeline metrics:', error);
-    }
-  };
+    };
+    fetchPipelineState();
+    const interval = setInterval(fetchPipelineState, 1000);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
+  }, [ pipeline.id ]);
 
   useEffect(() => {
-    // 100ms was needlessly aggressive (10 requests/s per open canvas, doubled by React 18
-    // StrictMode double-mounting in dev). 500ms is more than enough for human eyes and
-    // keeps the backend's metrics collector + Crow router relaxed.
+    const controller = new AbortController();
+    const fetchMetrics = async () => {
+      try {
+        const response = await fetch(`/api/v1/pipelines/${pipeline.id}/metrics`,
+                                     {signal : controller.signal});
+        if (!response.ok) throw new Error('not ok');
+        const jsonData = await response.json();
+        setMetrics(jsonData);
+      } catch (e) {
+        // Network blip or unmount; ignore.
+      }
+    };
+    // 100ms used to be the cadence; 500ms is still smooth and easier on the backend.
     fetchMetrics();
     const interval = setInterval(fetchMetrics, 500);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    fetchPipelineState();                                   // Fetch the pipeline state initially
-    const interval = setInterval(fetchPipelineState, 1000); // Fetch the pipeline state every 1000ms
-    return () => clearInterval(interval); // Cleanup the interval on component unmount
-  }, []);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
+  }, [ pipeline.id ]);
 
   useEffect(() => {
     if (stageInstance) {

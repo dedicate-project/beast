@@ -1,6 +1,9 @@
 import App from './App.js';
+import {ErrorBoundary} from './ErrorBoundary.js';
 
 const rootElement = document.getElementById('root');
-const appElement = React.createElement(App, null);
+const tree = React.createElement(React.StrictMode, null,
+                                 React.createElement(ErrorBoundary, null,
+                                                     React.createElement(App, null)));
 
-ReactDOM.createRoot(rootElement).render(React.createElement(React.StrictMode, null, appElement));
+ReactDOM.createRoot(rootElement).render(tree);

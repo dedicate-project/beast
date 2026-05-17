@@ -122,27 +122,31 @@ export function PipelineList() {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/v1/pipelines');
+        const response = await fetch('/api/v1/pipelines', {signal : controller.signal});
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         try {
           const jsonData = await response.json();
-          // Process the returned data
-          setPipelines(jsonData);
-        } catch (error) {
+          setPipelines(Array.isArray(jsonData) ? jsonData : []);
+        } catch (e) {
           setPipelines([]);
-          console.log("Json error");
         }
-      } catch (error) {
-        setPipelines([]);
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          setPipelines([]);
+        }
       }
     };
     fetchData();
     const interval = setInterval(fetchData, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
   }, []);
 
   async function handleButtonClick(id, action) {
