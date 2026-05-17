@@ -27,6 +27,7 @@
 #include <beast/evaluators/operator_usage_evaluator.hpp>
 #include <beast/evaluators/random_serial_data_passthrough_evaluator.hpp>
 #include <beast/evaluators/runtime_statistics_evaluator.hpp>
+#include <beast/evaluators/sha256_round_evaluator.hpp>
 
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>

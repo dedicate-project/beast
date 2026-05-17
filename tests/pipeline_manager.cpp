@@ -186,6 +186,58 @@ TEST_CASE("PipelineManager") {
     REQUIRE(maximum->getMaxStepsPerTrial() == 777);
   }
 
+  SECTION("Sha256RoundEvaluator round-trips through EvaluatorPipe JSON") {
+    // End-to-end JSON round-trip check: parse a pipeline whose only evaluator is the new
+    // SHA-256 round evaluator, confirm the parameters survive the trip, and then
+    // re-serialise and confirm the on-wire shape matches.
+    const auto json = R"({
+        "pipes": {
+          "sha256_round": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 16,
+              "memory_variables": 32,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "Sha256RoundEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "trial_count": 5,
+                  "round_constant_index": 7,
+                  "max_steps_per_trial": 3500
+                }
+              }]
+            }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(eval_pipe != nullptr);
+    const auto descs = eval_pipe->getEvaluators();
+    REQUIRE(descs.size() == 1);
+    const auto sha = std::dynamic_pointer_cast<Sha256RoundEvaluator>(descs.front().evaluator);
+    REQUIRE(sha != nullptr);
+    REQUIRE(sha->getTrialCount() == 5);
+    REQUIRE(sha->getRoundConstantIndex() == 7);
+    REQUIRE(sha->getMaxStepsPerTrial() == 3500);
+    // K[7] is one of the well-known FIPS 180-4 round constants; we exercise the
+    // constants-table lookup path here so a future refactor that swaps tables or
+    // accidentally truncates the array can't slip past unnoticed.
+    REQUIRE(sha->getRoundConstantValue() == 0xab1c5ed5U);
+
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["type"]
+                .get<std::string>() == "Sha256RoundEvaluator");
+    REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
+                ["round_constant_index"].get<uint32_t>() == 7);
+    REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
+                ["max_steps_per_trial"].get<uint32_t>() == 3500);
+  }
+
   SECTION("FanPipe round-trips through JSON serialisation") {
     const auto json = R"({
         "pipes": {
@@ -661,7 +713,8 @@ TEST_CASE("PipelineManager") {
     // from the constructor's expectations.
     const std::filesystem::path src_root =
         std::filesystem::path(__FILE__).parent_path().parent_path();
-    for (const auto* sample : {"ascending-mazes.json", "survivor-recirculation.json"}) {
+    for (const auto* sample :
+         {"ascending-mazes.json", "survivor-recirculation.json", "sha256-round.json"}) {
       INFO(sample);
       const auto path = src_root / "examples" / "compose-pipelines" / sample;
       REQUIRE(std::filesystem::exists(path));

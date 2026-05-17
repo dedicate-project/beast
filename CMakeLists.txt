@@ -169,6 +169,7 @@ add_library(${PROJECT_NAME}-evaluators
   src/evaluators/maximum_evaluator.cpp
   src/evaluators/maze_evaluator.cpp
   src/evaluators/random_serial_data_passthrough_evaluator.cpp
+  src/evaluators/sha256_round_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
   src/evaluators/operator_usage_evaluator.cpp)
 
@@ -341,6 +342,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(adder_evaluator)
   declare_test(demultiplexer_pipe)
   declare_test(fan_pipe)
+  declare_test(sha256_round_evaluator)
   declare_test(multiplexer_pipe)
   declare_test(null_sink_pipe)
   declare_test(pipe)

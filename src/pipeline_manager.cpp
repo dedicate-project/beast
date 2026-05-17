@@ -7,6 +7,7 @@
 // Internal
 #include <beast/evaluators/adder_evaluator.hpp>
 #include <beast/evaluators/maximum_evaluator.hpp>
+#include <beast/evaluators/sha256_round_evaluator.hpp>
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
@@ -291,6 +292,17 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
           params["input_count"].get<uint32_t>(),
           params["trial_count"].get<uint32_t>(),
           params["value_range"].get<int32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256RoundEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(
+          params, {"trial_count", "round_constant_index", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256RoundEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          params["round_constant_index"].get<uint32_t>(),
           params["max_steps_per_trial"].get<uint32_t>());
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
@@ -642,6 +654,12 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["parameters"]["trial_count"] = max_eval->getTrialCount();
       evaluator["parameters"]["value_range"] = max_eval->getValueRange();
       evaluator["parameters"]["max_steps_per_trial"] = max_eval->getMaxStepsPerTrial();
+    } else if (const auto sha_eval =
+                   std::dynamic_pointer_cast<Sha256RoundEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256RoundEvaluator";
+      evaluator["parameters"]["trial_count"] = sha_eval->getTrialCount();
+      evaluator["parameters"]["round_constant_index"] = sha_eval->getRoundConstantIndex();
+      evaluator["parameters"]["max_steps_per_trial"] = sha_eval->getMaxStepsPerTrial();
     }
 
     evaluators.push_back(std::move(evaluator));

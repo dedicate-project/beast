@@ -326,6 +326,36 @@ export const PIPE_TYPE_DEFINITIONS = [
           max_steps_per_trial: p.max_steps_per_trial,
         }),
       }),
+      numericEvaluatorPipe({
+        type: 'Sha256RoundEvaluatorPipe',
+        label: 'SHA-256 Round Evaluator',
+        description:
+          'Evolves programs that reproduce one round of the SHA-256 compression ' +
+          'function. Reads working state (a..h) from vars 0..7, K from var 8 and W ' +
+          'from var 9; writes the new (a..h) to vars 11..18. Scored bit-by-bit ' +
+          '(Hamming distance) so the GA has a smooth gradient to climb -- pure ' +
+          'exact-match scoring would degenerate into needle-in-a-haystack hash ' +
+          'inversion. First rung of a curriculum that eventually composes the schedule, ' +
+          'block compression and padding into a full SHA-256 hasher.',
+        image: '/img/sha256_round_evaluator_pipe.png',
+        evaluatorType: 'Sha256RoundEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'round_constant_index', label: 'SHA-256 round index (0-63)', type: 'int',
+           default: 0, min: 0, max: 63},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 4000, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count,
+          round_constant_index: v.round_constant_index,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count,
+          round_constant_index: p.round_constant_index,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
     ];
   })(),
   {
@@ -577,6 +607,7 @@ export function findPipeDefinition(pipe_json) {
       MazeEvaluator: 'MazeEvaluatorPipe',
       AdderEvaluator: 'AdderEvaluatorPipe',
       MaximumEvaluator: 'MaximumEvaluatorPipe',
+      Sha256RoundEvaluator: 'Sha256RoundEvaluatorPipe',
     }[firstType];
     if (specialized) {
       return PIPE_TYPE_DEFINITIONS.find(def => def.type === specialized);
