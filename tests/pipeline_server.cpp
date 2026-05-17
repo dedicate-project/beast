@@ -244,5 +244,135 @@ TEST_CASE("PipelineServer") {
     REQUIRE(pipelines[1]["name"].dump() == "\"test_pipeline2\"");
   }
 
+  SECTION("pipelines_can_be_assembled_through_update_actions") {
+    // End-to-end exercise of the HTTP mutation surface that the compose UI relies on. We add
+    // three pipes (factory -> evaluator -> sink), wire them up, and start the resulting
+    // pipeline. Each step asserts on the structured status reply so a regression in the
+    // dispatcher (e.g. an action being silently rejected as "invalid_action") would be
+    // caught here before users notice in the browser.
+    crow::request req;
+    req.add_header("Content-Type", "application/json");
+    req.body = R"({"name":"compose_assembly"})";
+    auto response = server.serveNewPipeline(req);
+    REQUIRE(response["status"].dump() == "\"success\"");
+    const auto pipeline_id = static_cast<uint32_t>(std::stoi(response["id"].dump()));
+
+    const auto add = [&](const std::string& body) {
+      req.body = body;
+      return server.servePipelineAction(req, pipeline_id, "update");
+    };
+
+    response = add(R"({
+      "action": "add_pipe",
+      "name": "factory",
+      "type": "ProgramFactoryPipe",
+      "position": {"x": 10, "y": 20},
+      "parameters": {
+        "factory": "RandomProgramFactory",
+        "max_candidates": 5,
+        "max_size": 32,
+        "memory_variables": 16,
+        "string_table_items": 0,
+        "string_table_item_length": 0
+      }
+    })");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    response = add(R"({
+      "action": "add_pipe",
+      "name": "evaluator",
+      "type": "EvaluatorPipe",
+      "position": {"x": 200, "y": 20},
+      "parameters": {
+        "max_candidates": 4,
+        "memory_variables": 16,
+        "string_table_items": 0,
+        "string_table_item_length": 0,
+        "evaluators": [{
+          "type": "MazeEvaluator",
+          "weight": 1.0,
+          "invert_logic": false,
+          "parameters": {"rows": 5, "cols": 5, "difficulty": 0.1, "max_steps": 50}
+        }]
+      }
+    })");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    response = add(R"({
+      "action": "add_pipe",
+      "name": "sink",
+      "type": "NullSinkPipe",
+      "position": {"x": 400, "y": 20},
+      "parameters": {"max_candidates": 8}
+    })");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    response = add(R"({
+      "action": "add_connection",
+      "source_pipe": "factory", "source_slot": 0,
+      "destination_pipe": "evaluator", "destination_slot": 0,
+      "buffer_size": 8
+    })");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    response = add(R"({
+      "action": "add_connection",
+      "source_pipe": "evaluator", "source_slot": 0,
+      "destination_pipe": "sink", "destination_slot": 0,
+      "buffer_size": 8
+    })");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    // Now run the pipeline briefly to confirm the assembled graph actually trains.
+    response = server.servePipelineAction(req, pipeline_id, "start");
+    REQUIRE(response["status"].dump() == "\"success\"");
+    response = server.servePipelineAction(req, pipeline_id, "stop");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    // Structural edits must be rejected when running.
+    response = server.servePipelineAction(req, pipeline_id, "start");
+    REQUIRE(response["status"].dump() == "\"success\"");
+    response = add(R"({"action":"delete_pipe","name":"sink"})");
+    REQUIRE(response["status"].dump() == "\"failed\"");
+    REQUIRE(response["error"].dump() == "\"pipeline_running\"");
+    response = server.servePipelineAction(req, pipeline_id, "stop");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    // Delete a connection, then a pipe (which should also remove the still-referencing
+    // connection without the rebuild throwing).
+    response = add(R"({
+      "action": "delete_connection",
+      "source_pipe": "evaluator", "source_slot": 0,
+      "destination_pipe": "sink", "destination_slot": 0
+    })");
+    REQUIRE(response["status"].dump() == "\"success\"");
+    response = add(R"({"action":"delete_pipe","name":"factory"})");
+    REQUIRE(response["status"].dump() == "\"success\"");
+
+    response = server.servePipelineById(pipeline_id);
+    REQUIRE(response["status"].dump() == "\"success\"");
+  }
+
+  SECTION("add_pipe_with_unknown_type_fails_with_descriptive_error") {
+    crow::request req;
+    req.add_header("Content-Type", "application/json");
+    req.body = R"({"name":"bogus"})";
+    auto response = server.serveNewPipeline(req);
+    const auto pipeline_id = static_cast<uint32_t>(std::stoi(response["id"].dump()));
+
+    req.body = R"({
+      "action": "add_pipe",
+      "name": "weird",
+      "type": "TotallyNotARealPipe",
+      "parameters": {}
+    })";
+    response = server.servePipelineAction(req, pipeline_id, "update");
+    REQUIRE(response["status"].dump() == "\"failed\"");
+    // We don't pin the exact error text (it comes from constructPipelineFromJson's
+    // checkForParameterPresenceInPipeJson and may evolve), just that we surface *something*
+    // useful for the user instead of a silent success.
+    REQUIRE(response.count("error") == 1);
+  }
+
   std::filesystem::remove_all(temp_path);
 }

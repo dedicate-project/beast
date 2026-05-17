@@ -374,6 +374,114 @@ TEST_CASE("PipelineManager") {
     REQUIRE_THROWS_AS(PipelineManager::constructPipelineFromJson(json), std::invalid_argument);
   }
 
+  SECTION("mutatePipeline adds, connects, and removes pipes via JSON edits") {
+    // Drives the same JSON shape the HTTP layer's add_pipe / add_connection / delete_pipe
+    // / delete_connection handlers produce, end-to-end through the manager. Validates that
+    // each edit reaches the live Pipeline object (not just the on-disk model).
+    const uint32_t id = manager.createPipeline("ui-test");
+
+    // 1. Add a ProgramFactoryPipe.
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& metadata) {
+      model["pipes"]["factory"] = R"({
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 5,
+          "max_size": 32,
+          "memory_variables": 16,
+          "string_table_items": 0,
+          "string_table_item_length": 0
+        }
+      })"_json;
+      metadata["pipes"]["factory"]["position"] = {{"x", 10}, {"y", 20}};
+    });
+    REQUIRE(manager.getPipelineById(id).pipeline->getPipes().size() == 1);
+    REQUIRE(manager.getPipelineById(id).metadata["pipes"]["factory"]["position"]["x"] == 10);
+
+    // 2. Add a NullSinkPipe and connect them.
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& /*metadata*/) {
+      model["pipes"]["sink"] = R"({
+        "type": "NullSinkPipe",
+        "parameters": { "max_candidates": 10 }
+      })"_json;
+      if (!model.contains("connections") || !model["connections"].is_array()) {
+        model["connections"] = nlohmann::json::array();
+      }
+      model["connections"].push_back(R"({
+        "source_pipe": "factory",
+        "source_slot": 0,
+        "destination_pipe": "sink",
+        "destination_slot": 0,
+        "buffer_size": 4
+      })"_json);
+    });
+    REQUIRE(manager.getPipelineById(id).pipeline->getPipes().size() == 2);
+    REQUIRE(manager.getPipelineById(id).pipeline->getConnections().size() == 1);
+
+    // 3. Delete the factory; the connection referencing it must come along to satisfy
+    //    constructPipelineFromJson, otherwise rebuild would throw.
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& metadata) {
+      model["pipes"].erase("factory");
+      auto& connections = model["connections"];
+      connections.erase(std::remove_if(connections.begin(), connections.end(),
+                                       [](const nlohmann::json& c) {
+                                         return c["source_pipe"] == "factory" ||
+                                                c["destination_pipe"] == "factory";
+                                       }),
+                        connections.end());
+      metadata["pipes"].erase("factory");
+    });
+    REQUIRE(manager.getPipelineById(id).pipeline->getPipes().size() == 1);
+    REQUIRE(manager.getPipelineById(id).pipeline->getConnections().empty());
+  }
+
+  SECTION("mutatePipeline refuses to mutate a running pipeline") {
+    const uint32_t id = manager.createPipeline("running-test");
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& /*metadata*/) {
+      model["pipes"]["sink"] = R"({
+        "type": "NullSinkPipe",
+        "parameters": { "max_candidates": 4 }
+      })"_json;
+    });
+    manager.getPipelineById(id).pipeline->start();
+    REQUIRE_THROWS_AS(manager.mutatePipeline(id,
+                                             [](nlohmann::json& model,
+                                                nlohmann::json& /*metadata*/) {
+                                               model["pipes"]["sink2"] = R"({
+            "type": "NullSinkPipe", "parameters": { "max_candidates": 1 }
+          })"_json;
+                                             }),
+                      std::invalid_argument);
+    manager.getPipelineById(id).pipeline->stop();
+  }
+
+  SECTION("mutatePipeline rolls back when validation fails") {
+    // Regression test: a malformed edit (here, declaring a connection to a non-existent
+    // pipe) must leave the live Pipeline and on-disk model unchanged because
+    // constructPipelineFromJson throws during the validation step.
+    const uint32_t id = manager.createPipeline("rollback-test");
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& /*metadata*/) {
+      model["pipes"]["sink"] = R"({
+        "type": "NullSinkPipe",
+        "parameters": { "max_candidates": 1 }
+      })"_json;
+    });
+    const auto pipes_before = manager.getPipelineById(id).pipeline->getPipes().size();
+    REQUIRE_THROWS_AS(manager.mutatePipeline(id,
+                                             [](nlohmann::json& model,
+                                                nlohmann::json& /*metadata*/) {
+                                               model["connections"].push_back(R"({
+            "source_pipe": "ghost",
+            "source_slot": 0,
+            "destination_pipe": "sink",
+            "destination_slot": 0,
+            "buffer_size": 1
+          })"_json);
+                                             }),
+                      std::invalid_argument);
+    REQUIRE(manager.getPipelineById(id).pipeline->getPipes().size() == pipes_before);
+  }
+
   // Clean up temporary files
   std::filesystem::remove_all(temp_storage_path);
 }

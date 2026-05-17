@@ -46,16 +46,29 @@ class PipelineServer {
   /**
    * Serve a JSON response for handling pipeline actions.
    *
-   * Supported JSON request actions:
-   *  - "start": start the pipeline. Returns "already_running" error if pipeline is already running.
-   *  - "stop": stop the pipeline. Returns "not_running" error if pipeline is not running.
-   *  - "update": update the pipeline. Expects a JSON payload with "action" and "name" fields.
-   *    Supported update actions:
-   *     - "change_name": changes the name of the pipeline.
+   * Supported top-level paths:
+   *  - "start": start the pipeline. Returns "already_running" if it is.
+   *  - "stop": stop the pipeline. Returns "not_running" if it isn't.
    *  - "delete": delete the pipeline.
+   *  - "metrics": return the most recent metrics window.
+   *  - "update": expects a JSON payload with an "action" field. Supported update actions:
+   *     - "change_name":              `{ "name": ... }`
+   *     - "move_pipe":                `{ "name": ..., "x": ..., "y": ... }`
+   *     - "add_pipe":                 `{ "name": ..., "type": ..., "parameters": {...},
+   *                                     "position": { "x": ..., "y": ... } }`
+   *     - "delete_pipe":              `{ "name": ... }`
+   *     - "add_connection":           `{ "source_pipe": ..., "source_slot": ...,
+   *                                     "destination_pipe": ..., "destination_slot": ...,
+   *                                     "buffer_size": ... }`
+   *     - "delete_connection":        `{ "source_pipe": ..., "source_slot": ...,
+   *                                     "destination_pipe": ..., "destination_slot": ... }`
+   *     - "update_pipe_parameters":   `{ "name": ..., "parameters": {...} }`
+   *
+   * All structural mutations (add_pipe, delete_pipe, add_connection, delete_connection,
+   * update_pipe_parameters) require the pipeline to be stopped; the server returns
+   * `pipeline_running` on attempts to mutate a running pipeline.
    *
    * @param req Request object.
-   * @param pipeline_manager Pointer to the PipelineManager instance.
    * @param pipeline_id ID of the pipeline.
    * @param path Path of the action.
    * @return JSON response containing pipeline action status.
@@ -72,6 +85,23 @@ class PipelineServer {
   [[nodiscard]] crow::json::wvalue serveAllPipelines() const;
 
  private:
+  // Update-action handlers. All of them write into the supplied `value` (status/error/etc.)
+  // and translate exceptions thrown by the pipeline manager into structured failure
+  // responses. Kept private because they're only ever called from `servePipelineAction`.
+  // They take an nlohmann::json body (already parsed once at the dispatch site) instead of
+  // Crow's rvalue so they can splice fragments straight into the pipeline-manager JSON
+  // without re-quoting through Crow's type system.
+  void handleAddPipe(crow::json::wvalue& value, uint32_t pipeline_id,
+                     const nlohmann::json& req_body);
+  void handleDeletePipe(crow::json::wvalue& value, uint32_t pipeline_id,
+                        const nlohmann::json& req_body);
+  void handleAddConnection(crow::json::wvalue& value, uint32_t pipeline_id,
+                           const nlohmann::json& req_body);
+  void handleDeleteConnection(crow::json::wvalue& value, uint32_t pipeline_id,
+                              const nlohmann::json& req_body);
+  void handleUpdatePipeParameters(crow::json::wvalue& value, uint32_t pipeline_id,
+                                  const nlohmann::json& req_body);
+
   beast::PipelineManager pipeline_manager_;
 };
 

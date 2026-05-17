@@ -149,6 +149,36 @@ nlohmann::json PipelineManager::getJsonForPipeline(uint32_t pipeline_id) {
   return deconstructPipelineToJson(descriptor.pipeline);
 }
 
+void PipelineManager::mutatePipeline(
+    uint32_t pipeline_id,
+    const std::function<void(nlohmann::json& model, nlohmann::json& metadata)>& mutator) {
+  std::scoped_lock lock{pipelines_mutex_};
+  PipelineDescriptor& descriptor = getPipelineById(pipeline_id);
+  if (descriptor.pipeline && descriptor.pipeline->isRunning()) {
+    throw std::invalid_argument(
+        "Cannot mutate a running pipeline; stop it first before editing its structure.");
+  }
+
+  // Snapshot the current state, run the mutator on the snapshot, then validate by re-building
+  // the live Pipeline from the resulting JSON. We do this on copies so a mid-mutation throw
+  // (validation failure, malformed parameters, ...) leaves the descriptor untouched.
+  nlohmann::json model = deconstructPipelineToJson(descriptor.pipeline);
+  nlohmann::json metadata = descriptor.metadata.is_null() ? nlohmann::json::object()
+                                                          : descriptor.metadata;
+  mutator(model, metadata);
+
+  // constructPipelineFromJson throws std::invalid_argument on schema problems; we let those
+  // bubble up so the HTTP layer can surface the message to the user. If construction
+  // succeeds, we commit by swapping in the new pipeline and persisting.
+  std::shared_ptr<Pipeline> rebuilt = constructPipelineFromJson(model);
+  descriptor.pipeline = std::move(rebuilt);
+  descriptor.metadata = std::move(metadata);
+  filesystem_.updateModel(descriptor.filename,
+                          descriptor.name,
+                          deconstructPipelineToJson(descriptor.pipeline),
+                          descriptor.metadata);
+}
+
 void PipelineManager::checkForParameterPresenceInPipeJson(
     const nlohmann::detail::iteration_proxy_value<nlohmann::json::basic_json::const_iterator>& json,
     const std::vector<std::string>& parameters) {
@@ -407,6 +437,13 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         }
 
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else {
+        // Unknown pipe types used to be silently dropped, which meant the on-disk model
+        // could carry a pipe that did not exist in the live `Pipeline` -- connections
+        // referencing it would then fail with a confusing "pipe not found" error from the
+        // connection loop below. Surface the bad type up-front instead.
+        throw std::invalid_argument("Unknown pipe type '" + pipe_type + "' for pipe '" +
+                                    pipe_name + "'");
       }
     }
   }

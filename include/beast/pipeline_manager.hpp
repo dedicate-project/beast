@@ -3,6 +3,7 @@
 
 // Standard
 #include <atomic>
+#include <functional>
 #include <list>
 #include <mutex>
 #include <string>
@@ -106,6 +107,26 @@ class PipelineManager {
    * @return The JSON representation of the pipeline.
    */
   [[nodiscard]] nlohmann::json getJsonForPipeline(uint32_t pipeline_id);
+
+  /**
+   * @brief Atomically mutate a pipeline's model + metadata.
+   *
+   * The mutator callback receives the current model (with `pipes` / `connections` keys) and
+   * UI metadata. After it returns, the model is fed back through `constructPipelineFromJson`
+   * to materialise a fresh `Pipeline` instance, and the result is swapped into the
+   * descriptor and persisted to disk.
+   *
+   * Mutations are rejected if the target pipeline is currently running -- rebuilding the
+   * Pipe graph while worker threads are iterating over it would be a data race. Callers
+   * should stop the pipeline first.
+   *
+   * @throws std::invalid_argument if the pipeline is unknown, currently running, or if the
+   *         mutated JSON fails to deserialise into a valid pipeline (e.g. unknown pipe type,
+   *         missing required parameter, port collision).
+   */
+  void mutatePipeline(uint32_t pipeline_id,
+                      const std::function<void(nlohmann::json& model,
+                                               nlohmann::json& metadata)>& mutator);
 
   /**
    * @brief Constructs a vector of evaluator tuples from a JSON object.
