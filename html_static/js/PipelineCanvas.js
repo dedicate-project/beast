@@ -70,6 +70,32 @@ function drawGrid(layer, width, height, gridSize, gridSizeMultiplier) {
   }
 }
 
+// Build an orthogonal (axis-aligned) point sequence for a Konva.Line that runs from a
+// source port (right-facing) to a destination port (left-facing). The shape is:
+// - forward connections (destination is to the right of source by a reasonable margin)
+//   take a three-segment Z route through the midpoint -- visually clean and short;
+// - backward / loop connections (destination is left of source, or directly above /
+//   below) take a five-segment U route out the right of the source, up (or down) past
+//   the pipe bodies, left toward the destination, then back in.
+// This matches the user's "more like pipes, axis-aligned, with automated routing"
+// requirement without needing a real router (we don't account for other pipe bodies
+// blocking the path -- in practice the user just drags pipes out of the way).
+function orthogonalRoutePoints(sx, sy, dx, dy) {
+  const minForwardClearance = 40;
+  if (dx >= sx + minForwardClearance) {
+    const mid = Math.round((sx + dx) / 2);
+    return [sx, sy, mid, sy, mid, dy, dx, dy];
+  }
+  const stub = 24; // how far we stick out of each port before turning
+  const verticalOffset = 70; // how far we route above / below the pipe bodies
+  // Pick "above" when the source sits above (or level with) the destination, "below"
+  // otherwise. The aim is to keep the loop bend on the same side as the destination,
+  // which keeps tighter loops visually compact instead of swooping the wrong way.
+  const routeY = sy <= dy ? Math.min(sy, dy) - verticalOffset
+                          : Math.max(sy, dy) + verticalOffset;
+  return [sx, sy, sx + stub, sy, sx + stub, routeY, dx - stub, routeY, dx - stub, dy, dx, dy];
+}
+
 function drawBorder(layer, width, height) {
   const border = new Konva.Rect({
     x : 0,
@@ -248,6 +274,16 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const fanImagesRef = useRef({});
   const fanRatesRef = useRef({});
 
+  // Connection flow animation: keep a per-edge rate derived from diffing the
+  // cumulative outputs_sent[source_slot] values across metrics polls, and animate the
+  // dash offset on the line at the frame rate so the dashes appear to "march" toward
+  // the destination. Same decoupling idea as the fan animation -- a slow metrics poll
+  // doesn't have to make the animation jerky.
+  const connectionLinesRef = useRef({});
+  const connectionRatesRef = useRef({});
+  const previousOutputsRef = useRef({});
+  const previousOutputsTsRef = useRef(0);
+
   // The results panel can be collapsed to a single header strip so it doesn't compete
   // with the canvas for screen real estate. Persisted in localStorage so the choice
   // survives a tab refresh -- having to re-collapse on every reload is annoying.
@@ -296,17 +332,87 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
   // Sync fan rates from the latest metrics snapshot. Anything missing falls back to 0
   // so a stopped pipeline (or a pipe whose throughput hasn't been reported yet) parks
-  // its fan.
+  // its fan. The same metrics snapshot also feeds connection rates: each connection's
+  // flow rate is derived from the cumulative outputs_sent[source_slot] of its source
+  // pipe, diffed against the previous snapshot.
   useEffect(() => {
     const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
-    const next = {};
+    const fanRates = {};
     for (const p of pipesMetrics) {
       if (p && p.throughput && typeof p.throughput.candidates_per_second === 'number') {
-        next[p.name] = p.throughput.candidates_per_second;
+        fanRates[p.name] = p.throughput.candidates_per_second;
       }
     }
-    fanRatesRef.current = next;
-  }, [metrics]);
+    fanRatesRef.current = fanRates;
+
+    // Build a per-(pipe, slot) snapshot of cumulative outputs_sent so we can diff
+    // against the previous snapshot. The metrics object exposes outputs as an array
+    // indexed by slot.
+    const nowTs = (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000;
+    const previousTs = previousOutputsTsRef.current;
+    const dt = previousTs > 0 ? Math.max(0.001, nowTs - previousTs) : 0;
+    const previous = previousOutputsRef.current;
+    const current = {};
+    for (const p of pipesMetrics) {
+      if (!p || !p.outputs) continue;
+      for (let slot = 0; slot < p.outputs.length; ++slot) {
+        const key = p.name + ':' + slot;
+        current[key] = Number(p.outputs[slot] || 0);
+      }
+    }
+    if (dt > 0) {
+      const rates = {};
+      const conns = (model && model["connections"]) ? model["connections"] : [];
+      for (const conn of conns) {
+        if (!conn) continue;
+        const srcKey = conn.source_pipe + ':' + conn.source_slot;
+        const cur = current[srcKey] || 0;
+        const prev = previous[srcKey] || 0;
+        const delta = Math.max(0, cur - prev);
+        const connKey = conn.source_pipe + ':' + conn.source_slot + '->' +
+                        conn.destination_pipe + ':' + conn.destination_slot;
+        rates[connKey] = delta / dt;
+      }
+      connectionRatesRef.current = rates;
+    }
+    previousOutputsRef.current = current;
+    previousOutputsTsRef.current = nowTs;
+  }, [metrics, model]);
+
+  // March the dashes along every connection at a speed proportional to its flow rate.
+  // Konva.Animation hands us a per-frame timeDiff so we can do real-time integration
+  // without worrying about whether the metrics polling interval is exactly 1s.
+  useEffect(() => {
+    if (!connectionsLayerRef.current || !Konva) return;
+    const anim = new Konva.Animation((frame) => {
+      if (!frame) return;
+      const dt = frame.timeDiff / 1000;
+      const lines = connectionLinesRef.current;
+      const rates = connectionRatesRef.current;
+      let any = false;
+      for (const key in lines) {
+        const line = lines[key];
+        if (!line) continue;
+        const rate = Math.max(0, Number(rates[key] || 0));
+        // Map rate -> pixels-per-second so the user gets visible motion even at low
+        // rates while still capping fast pipes at a comfortable max. Each dash period
+        // is 20 px (8 + 12), so 60 px/s ≈ 3 dashes/s which reads as a brisk flow.
+        const baselineSpeed = 12; // px/s when rate == 0 -- a slow trickle so the user
+                                  // can see the connection exists and which direction
+                                  // it flows, even before any candidates have moved
+        const pixelsPerCandidate = 2.5;
+        const speed = Math.min(180, baselineSpeed + rate * pixelsPerCandidate);
+        // Subtracting moves the dashes in the same direction as the line's `points`
+        // array (source -> destination), which is exactly the user's mental model of
+        // "candidates flowing downstream".
+        line.dashOffset(line.dashOffset() - speed * dt);
+        any = true;
+      }
+      return any;
+    }, connectionsLayerRef.current);
+    anim.start();
+    return () => { anim.stop(); };
+  }, [connectionsLayerRef.current]);
 
   // Render helper for the results panel. Returns null when there are no summary pipes so
   // we don't waste pixels on an empty box. Lives next to the canvas so its absolute
@@ -936,6 +1042,10 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     // concurrent mode.
     if (!connectionsLayerRef.current) return;
     connectionsLayerRef.current.removeChildren();
+    // The line refs get rebuilt each redraw -- previously-rendered Konva.Line objects
+    // belong to the layer we just cleared so they're already invalid. Clear the map so
+    // the animation effect doesn't try to step a stale handle.
+    connectionLinesRef.current = {};
     const conns = (model && model["connections"]) ? model["connections"] : null;
     if (conns) {
       for (let connection_index in conns) {
@@ -950,19 +1060,23 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         const destination_port = destination_pipe.ports.inputs[connection.destination_slot];
         if (!source_port || !destination_port) continue;
 
+        const sx = source_pipe.x() + source_port.x() + source_port.width();
+        const sy = source_pipe.y() + source_port.y() + source_port.height() / 2;
+        const dx = destination_pipe.x() + destination_port.x();
+        const dy = destination_pipe.y() + destination_port.y() + destination_port.height() / 2;
+        const points = orthogonalRoutePoints(sx, sy, dx, dy);
+
         const line = new Konva.Line({
-          points : [
-            source_pipe.x() + source_port.x() + 1.5, source_pipe.y() + source_port.y() + 5,
-            destination_pipe.x() + destination_port.x(),
-            destination_pipe.y() + destination_port.y() + 5
-          ],
+          points,
           stroke : 'red',
-          strokeWidth : 2,
+          strokeWidth : 3,
           lineCap : 'round',
           lineJoin : 'round',
-          // Stash the connection metadata directly on the Konva object so the click
-          // handler doesn't have to search the model again.
-          hitStrokeWidth: 10,
+          // Use a dashed pattern; animating `dashOffset` over time gives the classic
+          // marching-ants flow animation without needing to render packet sprites.
+          dash : [8, 12],
+          dashOffset : 0,
+          hitStrokeWidth: 14,
         });
         line.connectionInfo = {
           source_pipe: connection.source_pipe,
@@ -978,8 +1092,6 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           line.stroke('red');
           line.getLayer().batchDraw();
         });
-        // Right-click on a connection: queue it for delete (the ConfirmationDialog at the
-        // bottom of the render asks before actually mutating).
         line.on('contextmenu', (event) => {
           event.evt.preventDefault();
           event.evt.stopPropagation();
@@ -987,19 +1099,23 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           setPendingDeleteConnection(line.connectionInfo);
         });
         connectionsLayerRef.current.add(line);
+        const key = connection.source_pipe + ':' + connection.source_slot + '->' +
+                    connection.destination_pipe + ':' + connection.destination_slot;
+        connectionLinesRef.current[key] = line;
       }
     }
     // While a connection is being authored, draw a guide line from the source port to
     // wherever the mouse last hovered. This makes the gesture feel responsive instead of
-    // requiring the user to remember which port they clicked first.
+    // requiring the user to remember which port they clicked first. Same orthogonal
+    // routing as committed connections so what-you-see-is-what-you-get.
     if (pendingConnectionSource) {
       const sourcePipe = pipes[pendingConnectionSource.pipeName];
       const sourcePort = sourcePipe && sourcePipe.ports.outputs[pendingConnectionSource.slot];
       if (sourcePort) {
-        const sx = sourcePipe.x() + sourcePort.x() + 1.5;
-        const sy = sourcePipe.y() + sourcePort.y() + 5;
+        const sx = sourcePipe.x() + sourcePort.x() + sourcePort.width();
+        const sy = sourcePipe.y() + sourcePort.y() + sourcePort.height() / 2;
         const guide = new Konva.Line({
-          points: [sx, sy, sx, sy],
+          points: orthogonalRoutePoints(sx, sy, sx, sy),
           stroke: '#ff8c00',
           strokeWidth: 2,
           dash: [4, 4],
@@ -1030,7 +1146,11 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       const offsetY = elementLayer ? elementLayer.y() : 0;
       const guide = guides[0];
       const startPoints = guide.points();
-      guide.points([startPoints[0], startPoints[1], pos.x - offsetX, pos.y - offsetY]);
+      // First two entries in `points` are always the source port's anchor. Rebuild the
+      // orthogonal route from there to the (panned) cursor position so the guide
+      // matches what the committed connection will look like.
+      guide.points(orthogonalRoutePoints(startPoints[0], startPoints[1],
+                                         pos.x - offsetX, pos.y - offsetY));
       layer.batchDraw();
     };
     stageInstance.on('mousemove', handler);
