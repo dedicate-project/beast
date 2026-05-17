@@ -12,6 +12,7 @@ const {
   DialogContent,
   DialogActions
 } = MaterialUI;
+const {createPortal} = ReactDOM;
 const {Stage, Layer, Rect} = Konva;
 
 import {ContextMenu} from './ContextMenu.js';
@@ -30,12 +31,16 @@ const useStyles = makeStyles((theme) => ({
                                },
                              }));
 
-const onResize = () => { callback(); };
-
+// Previous `onResize`/`useResize` pair referenced an undefined `callback` symbol and
+// ignored its actual argument. Replaced with a self-contained hook that keeps the latest
+// callback in a ref so the resize listener doesn't have to re-register on every render.
 const useResize = (callback) => {
+  const cbRef = useRef(callback);
+  useEffect(() => { cbRef.current = callback; }, [ callback ]);
   useEffect(() => {
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const handler = () => { if (cbRef.current) cbRef.current(); };
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, []);
 };
 
@@ -118,45 +123,53 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   }, []);
 
   const [metrics, setMetrics] = useState({});
-  const [dialog, setDialog] = useState(null);
+  // Position of the floating pipe-info tooltip, in viewport coordinates.
+  const [tooltipPos, setTooltipPos] = useState({x : 0, y : 0});
 
   const rightClickMenuItemsRef = useRef([])
 
-  const Dialog = (props) => {
+  // Renamed from the previous local `Dialog` definition, which silently shadowed
+  // MaterialUI.Dialog and broke the pipeline-rename modal at the bottom of the render tree.
+  const PipeInfoTooltip = (props) => {
     if (!props.hoveredPipe) {
-      return;
+      return null;
     }
-    const pipe = metrics["pipes"].find(pipe => pipe.name === props.hoveredPipe);
+    const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
+    const pipe = pipesMetrics.find(p => p.name === props.hoveredPipe);
+    const modelPipes = model && model["pipes"] ? model["pipes"] : {};
+    const modelPipe = modelPipes[props.hoveredPipe];
 
-    let content = [
-      React.createElement('strong', null, props.hoveredPipe),
-      React.createElement('div', null, 'Type: ' + model["pipes"][props.hoveredPipe]["type"])
-    ];
+    let content = [ React.createElement('strong', {key : 'name'}, props.hoveredPipe) ];
+    if (modelPipe && modelPipe["type"]) {
+      content.push(React.createElement('div', {key : 'type'}, 'Type: ' + modelPipe["type"]));
+    }
 
     if (pipe) {
-      const inputs = pipe.inputs.map((input, index) => {
-        return e('div', {key : index}, `* Input ${index}: ${parseFloat(input).toFixed(2)} / s`);
-      });
-
-      const outputs = pipe.outputs.map((output, index) => {
-        return e('div', {key : index}, `* Output ${index}: ${parseFloat(output).toFixed(2)} / s`);
-      });
-
       content.push(React.createElement(
-          'div', null, `Executions: ${parseFloat(pipe.execution_count).toFixed(2)} / s`));
+          'div', {key : 'exec'},
+          `Executions: ${parseFloat(pipe.execution_count).toFixed(2)} / s`));
 
-      if (pipe.inputs.length > 0) {
-        content.push(React.createElement('div', null, 'Inputs:'), ...inputs);
+      const inputs = (pipe.inputs || []).map((input, index) => {
+        return e('div', {key : 'in' + index},
+                 `* Input ${index}: ${parseFloat(input).toFixed(2)} / s`);
+      });
+      const outputs = (pipe.outputs || []).map((output, index) => {
+        return e('div', {key : 'out' + index},
+                 `* Output ${index}: ${parseFloat(output).toFixed(2)} / s`);
+      });
+      if (inputs.length > 0) {
+        content.push(React.createElement('div', {key : 'inh'}, 'Inputs:'), ...inputs);
       }
-
-      if (pipe.outputs.length > 0) {
-        content.push(React.createElement('div', null, 'Outputs:'), ...outputs);
+      if (outputs.length > 0) {
+        content.push(React.createElement('div', {key : 'outh'}, 'Outputs:'), ...outputs);
       }
     }
     return e('div', {
       className : 'pipe-dialog',
       style : {
-        position : 'absolute',
+        position : 'fixed',
+        left : props.x + 'px',
+        top : props.y + 'px',
         backgroundColor : 'white',
         border : '1px solid black',
         borderRadius : '4px',
@@ -164,8 +177,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         fontFamily : 'sans-serif',
         minWidth : '200px',
         padding : '1rem',
-        left : '0',
-        top : '0'
+        zIndex : 9999,
+        pointerEvents : 'none'
       }
     },
              content);
@@ -196,22 +209,11 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     }
   }
 
-  useEffect(() => {
-    if (hoveredPipe != "") {
-      const newDialog = React.createElement(Dialog, {hoveredPipe});
-      setDialog(newDialog);
-    } else {
-      setDialog(null);
-    }
-  }, [ hoveredPipe, metrics ]);
-
-  useEffect(() => {
-    if (dialog && !showContextMenu) {
-      ReactDOM.render(dialog, document.getElementById("dialog-root"));
-    } else {
-      ReactDOM.unmountComponentAtNode(document.getElementById('dialog-root'));
-    }
-  }, [ dialog, showContextMenu ]);
+  // Previously this rendered a separate React tree into a manually-created `#dialog-root`
+  // div via the legacy `ReactDOM.render` API. That API is deprecated under React 18 and the
+  // dialog root div was being recreated on every render (the `document.createElement` call
+  // used to sit at the top level of the component body and ran for each pass). We now use
+  // `createPortal` from inside the regular tree, see the JSX at the bottom of the render.
 
   useEffect(() => {
     const stage = new Konva.Stage({
@@ -298,6 +300,17 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       draggingRef.current = false;
       setCurrentlyDraggedPipe("");
     });
+
+    // Clean up the Konva stage when the canvas unmounts (e.g. user navigates back to the
+    // pipeline list). Without this the entire stage tree, image objects, and event handlers
+    // stay attached to the detached container div forever.
+    return () => {
+      stage.destroy();
+      gridLayerRef.current = null;
+      borderLayerRef.current = null;
+      elementLayerRef.current = null;
+      connectionsLayerRef.current = null;
+    };
   }, []);
 
   function getPipeNameForKonvaImage(konvaImage) {
@@ -325,12 +338,6 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           {action : "move_pipe", name : pipe_name, x : konvaImage.getX(), y : konvaImage.getY()}),
     });
   }
-
-  const dialogRoot = document.createElement('div');
-  dialogRoot.id = 'dialog-root';
-  dialogRoot.style.position = 'absolute';
-  dialogRoot.style.zIndex = 9999;
-  document.body.appendChild(dialogRoot);
 
   useEffect(() => {
     // Load an image and create a draggable object
@@ -426,30 +433,12 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       });
 
       group.on('mousemove dragmove', (event) => {
-        const dialog = document.getElementById('dialog-root');
-        const rect = event.target.getClientRect();
-
-        // Calculate the position of the dialog relative to the mouse position
-        const mouseX = event.evt.clientX;
-        const mouseY = event.evt.clientY;
-        const dialogWidth = dialog.offsetWidth;
-        const dialogHeight = dialog.offsetHeight;
-        const canvasWidth = window.innerWidth;
-        const canvasHeight = window.innerHeight;
-
-        let dialogX = mouseX + 10;
-        let dialogY = mouseY + 10;
-
-        if (dialogX + dialogWidth > canvasWidth) {
-          dialogX = canvasWidth - dialogWidth;
-        }
-        if (dialogY + dialogHeight > canvasHeight) {
-          dialogY = canvasHeight - dialogHeight;
-        }
-
-        // Set the position of the dialog
-        dialog.style.left = dialogX + 'px';
-        dialog.style.top = dialogY + 'px';
+        // The tooltip is rendered through a React portal (see PipeInfoTooltip + createPortal
+        // at the bottom of the render). We only update the desired position here; React
+        // takes care of styling the portal child accordingly. Final clamping against the
+        // viewport happens in the tooltip's render so we don't read its offsetWidth here
+        // (which would race the React commit).
+        setTooltipPos({x : event.evt.clientX + 12, y : event.evt.clientY + 12});
       });
 
       group.on("mousedown", (e) => {
@@ -476,35 +465,28 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     };
 
     // Compare oldModel to model and only update the pipes that changed!
+    // Defend against the backend reporting `"pipes": null` or `model: null` for empty
+    // pipelines; both `null` and `undefined` would otherwise blow up `for ... in`.
+    const safeModel = (model && typeof model === 'object') ? model : {};
+    const safeOldModel = (oldModel && typeof oldModel === 'object') ? oldModel : {};
+    if (!safeModel["pipes"]) safeModel["pipes"] = {};
+    if (!safeOldModel["pipes"]) safeOldModel["pipes"] = {};
     var added_pipes = {};
     var updated_pipes = {};
     var removed_pipes = {};
-    for (let key in model["pipes"]) {
+    for (let key in safeModel["pipes"]) {
       // Check if in old model
-      if ("pipes" in oldModel) {
-        if (key in oldModel["pipes"]) {
-          // Was in old model
-          if (model["pipes"][key] != oldModel["pipes"][key]) {
-            // Update
-            updated_pipes[key] = model["pipes"][key];
-          } else {
-            // Ignore
-          }
-        } else {
-          // Was not in old model
-          added_pipes[key] = model["pipes"][key];
+      if (key in safeOldModel["pipes"]) {
+        if (safeModel["pipes"][key] != safeOldModel["pipes"][key]) {
+          updated_pipes[key] = safeModel["pipes"][key];
         }
       } else {
-        added_pipes[key] = model["pipes"][key];
+        added_pipes[key] = safeModel["pipes"][key];
       }
     }
-    for (let key in oldModel["pipes"]) {
-      // Check if in new model
-      if (key in model["pipes"]) {
-        // Is in new model. Ignore.
-      } else {
-        // Is not in new model. This was removed.
-        removed_pipes[key] = model["pipes"][key];
+    for (let key in safeOldModel["pipes"]) {
+      if (!(key in safeModel["pipes"])) {
+        removed_pipes[key] = safeOldModel["pipes"][key];
       }
     }
     setOldModel(model);
@@ -513,14 +495,17 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       var inports = 0;
       var outports = 0;
       let image_file = "/img/pipe_plain_oneinputoneoutput.png";
-      if (added_pipes[key]["type"] == "ProgramFactoryPipe") {
+      const pipe_type = added_pipes[key] && added_pipes[key]["type"];
+      if (pipe_type == "ProgramFactoryPipe") {
         image_file = "/img/factory_pipe.png";
         outports = 1;
-      } else if (added_pipes[key]["type"] == "NullSinkPipe") {
+      } else if (pipe_type == "NullSinkPipe") {
         image_file = "/img/null_sink_pipe.png";
         inports = 1;
-      } else if (added_pipes[key]["type"] == "EvaluatorPipe") {
-        if (added_pipes[key]["parameters"]["evaluators"][0]["type"] == "MazeEvaluator") {
+      } else if (pipe_type == "EvaluatorPipe") {
+        const evaluators = added_pipes[key]["parameters"] &&
+                           added_pipes[key]["parameters"]["evaluators"];
+        if (evaluators && evaluators[0] && evaluators[0]["type"] == "MazeEvaluator") {
           image_file = "/img/maze_evaluator_pipe.png";
           inports = 1;
           outports = 1;
@@ -528,9 +513,11 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       }
       var pos_x = 50;
       var pos_y = 50;
-      if ("pipes" in metadata && key in metadata["pipes"] && "position" in metadata["pipes"][key]) {
-        pos_x = metadata["pipes"][key]["position"]["x"];
-        pos_y = metadata["pipes"][key]["position"]["y"];
+      const safeMetaInner = (metadata && typeof metadata === 'object') ? metadata : {};
+      if (safeMetaInner["pipes"] && safeMetaInner["pipes"][key] &&
+          safeMetaInner["pipes"][key]["position"]) {
+        pos_x = safeMetaInner["pipes"][key]["position"]["x"];
+        pos_y = safeMetaInner["pipes"][key]["position"]["y"];
       }
 
       createDraggableImage(image_file, pos_x, pos_y, inports, outports, key,
@@ -545,32 +532,42 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       // TODO(fairlight1337): Figure out what to update exactly once that is implemented in the
       // backend.
     }
-    // Process model metadata
-    if ("pipes" in metadata) {
-      for (let pipe_id in metadata["pipes"]) {
-        if ("position" in metadata["pipes"][pipe_id]) {
-          if (pipe_id in pipes && currentlyDraggedPipe != pipe_id) {
-            pipes[pipe_id].x(metadata["pipes"][pipe_id]["position"]["x"]);
-            pipes[pipe_id].y(metadata["pipes"][pipe_id]["position"]["y"]);
-          }
+    // Process model metadata. The backend reports `"metadata": null` for pipelines that
+    // have never had any UI state persisted, so we defend against the non-object case
+    // before doing any `in` / property access (`"pipes" in null` throws a TypeError, which
+    // is what used to white-screen the entire app the moment you opened a fresh pipeline).
+    const safeMetadata = (metadata && typeof metadata === 'object') ? metadata : {};
+    if (safeMetadata["pipes"]) {
+      for (let pipe_id in safeMetadata["pipes"]) {
+        const pipeMeta = safeMetadata["pipes"][pipe_id];
+        if (pipeMeta && pipeMeta["position"] && pipe_id in pipes &&
+            currentlyDraggedPipe != pipe_id) {
+          pipes[pipe_id].x(pipeMeta["position"]["x"]);
+          pipes[pipe_id].y(pipeMeta["position"]["y"]);
         }
       }
     }
   }, [ model ]);
 
   useEffect(() => {
-    // Process connections
+    // Process connections. The stage useEffect runs before this one on first mount, but
+    // we still defend against a missing ref in case React schedules things unusually under
+    // concurrent mode.
+    if (!connectionsLayerRef.current) return;
     connectionsLayerRef.current.removeChildren();
-    if ("connections" in model) {
-      for (let connection_index in model["connections"]) {
-        const connection = model["connections"][connection_index];
-        if (!(connection.source_pipe in pipes) || !(connection.destination_pipe in pipes)) {
+    const conns = (model && model["connections"]) ? model["connections"] : null;
+    if (conns) {
+      for (let connection_index in conns) {
+        const connection = conns[connection_index];
+        if (!connection || !(connection.source_pipe in pipes) ||
+            !(connection.destination_pipe in pipes)) {
           continue;
         }
         const source_pipe = pipes[connection.source_pipe];
         const destination_pipe = pipes[connection.destination_pipe];
         const source_port = source_pipe.ports.outputs[connection.source_slot];
         const destination_port = destination_pipe.ports.inputs[connection.destination_slot];
+        if (!source_port || !destination_port) continue;
 
         const line = new Konva.Line({
           points : [
@@ -669,9 +666,12 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   };
 
   useEffect(() => {
-    fetchMetrics();                                  // Fetch the pipeline metrics initially
-    const interval = setInterval(fetchMetrics, 100); // Fetch the pipeline metrics every 500ms
-    return () => clearInterval(interval);            // Cleanup the interval on component unmount
+    // 100ms was needlessly aggressive (10 requests/s per open canvas, doubled by React 18
+    // StrictMode double-mounting in dev). 500ms is more than enough for human eyes and
+    // keeps the backend's metrics collector + Crow router relaxed.
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 500);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -793,5 +793,13 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
             disabled : !newPipelineName.trim() || newPipelineName.trim() === pipeline.name,
           },
             "Save"))),
+      // Pipe-info tooltip: rendered through a portal directly into <body> so it floats above
+      // the Konva canvas without being clipped by Material UI's overflow rules. Only shows
+      // when a pipe is hovered and the right-click menu isn't currently up.
+      (hoveredPipe && !showContextMenu)
+          ? createPortal(e(PipeInfoTooltip,
+                           {hoveredPipe : hoveredPipe, x : tooltipPos.x, y : tooltipPos.y}),
+                         document.body)
+          : null,
   );
 }

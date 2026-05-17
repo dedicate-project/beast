@@ -138,7 +138,8 @@ export default function App() {
                 e(Toolbar, {style : {marginLeft : `${drawerWidth + 10}px`}},
                   e(Typography, {variant : "h6"}, title),
                   e(Typography, {
-                    variant : "h8",
+                    variant : "body2",
+                    component : "span",
                     className : classes.connectionStatus + " " +
                                     (connected ? classes.connected : classes.disconnected)
                   },
@@ -162,7 +163,7 @@ export default function App() {
                         }
                       },
                       e("img", {
-                        src : "img/beast_head_logo_small.png",
+                        src : "/img/beast_head_logo_small.png",
                         alt : "The BEAST logo",
                         style : {width : '80%', objectFit : 'cover'}
                       }),
