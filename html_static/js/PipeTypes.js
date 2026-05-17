@@ -198,6 +198,73 @@ export const PIPE_TYPE_DEFINITIONS = [
     parseParameters: (params) => ({max_candidates: params.max_candidates}),
   },
   {
+    type: 'ProgramStorageSinkPipe',
+    label: 'Storage Sink',
+    description:
+      'Persists the top-K highest-scoring programs that flow through this pipe to a ' +
+      'JSON ledger on disk. Use to checkpoint the best solutions so a later run can ' +
+      'seed itself from them via a Storage Source.',
+    image: '/img/program_storage_sink_pipe.png',
+    inputs: 1,
+    outputs: 0,
+    sections: [
+      {
+        title: 'Destination',
+        fields: [
+          {name: 'max_candidates', label: 'Max input buffer', type: 'int', default: 50, min: 1},
+          {name: 'path', label: 'Ledger file path', type: 'path',
+           placeholder: 'Absolute path, e.g. /tmp/beast-best.json. Leave blank to log nothing.',
+           default: ''},
+          {name: 'top_k', label: 'Retain top K (0 = default 10)', type: 'int', default: 10, min: 0},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      path: values.path || '',
+      top_k: values.top_k,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      path: params.path || '',
+      top_k: params.top_k != null ? params.top_k : 10,
+    }),
+  },
+  {
+    type: 'ProgramStorageSourcePipe',
+    label: 'Storage Source',
+    description:
+      'Loads previously persisted programs from a JSON ledger and emits them as seed ' +
+      'candidates. Feed into a Multiplexer alongside a Program Factory to start a new ' +
+      'run with last run\'s survivors mixed in with fresh exploration.',
+    image: '/img/program_storage_source_pipe.png',
+    inputs: 0,
+    outputs: 1,
+    sections: [
+      {
+        title: 'Source',
+        fields: [
+          {name: 'max_candidates', label: 'Max output buffer', type: 'int', default: 50, min: 1},
+          {name: 'path', label: 'Ledger file path', type: 'path',
+           placeholder: 'Absolute path. Missing file = empty source (no-op).',
+           default: ''},
+          {name: 'loop', label: 'Loop entries (re-emit after exhausting the ledger)',
+           type: 'bool', default: false},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      path: values.path || '',
+      loop: values.loop,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      path: params.path || '',
+      loop: Boolean(params.loop),
+    }),
+  },
+  {
     type: 'MultiplexerPipe',
     label: 'Multiplexer',
     description:

@@ -11,6 +11,8 @@
 #include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
+#include <beast/pipes/program_storage_sink_pipe.hpp>
+#include <beast/pipes/program_storage_source_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
 
 #include <beast/program_factory_base.hpp>
@@ -442,6 +444,27 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         created_pipes[pipe_name] = std::make_shared<MultiplexerPipe>(max_candidates,
                                                                       input_slots);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "ProgramStorageSinkPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const std::string path =
+            pipe.value()["parameters"].value("path", std::string{});
+        const uint32_t top_k =
+            pipe.value()["parameters"].value("top_k", static_cast<uint32_t>(0));
+        created_pipes[pipe_name] =
+            std::make_shared<ProgramStorageSinkPipe>(max_candidates, path, top_k);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "ProgramStorageSourcePipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const std::string path =
+            pipe.value()["parameters"].value("path", std::string{});
+        const bool loop = pipe.value()["parameters"].value("loop", false);
+        created_pipes[pipe_name] =
+            std::make_shared<ProgramStorageSourcePipe>(max_candidates, path, loop);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "DemultiplexerPipe") {
         checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "output_slots"});
         const uint32_t max_candidates =
@@ -612,6 +635,16 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "MultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["input_slots"] = mux_pipe->getInputSlots();
+    } else if (auto storage_sink = std::dynamic_pointer_cast<ProgramStorageSinkPipe>(pipe->pipe)) {
+      pipe_json["type"] = "ProgramStorageSinkPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["path"] = storage_sink->getPath();
+      pipe_json["parameters"]["top_k"] = storage_sink->getTopK();
+    } else if (auto storage_source = std::dynamic_pointer_cast<ProgramStorageSourcePipe>(pipe->pipe)) {
+      pipe_json["type"] = "ProgramStorageSourcePipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["path"] = storage_source->getPath();
+      pipe_json["parameters"]["loop"] = storage_source->getLoop();
     } else if (auto demux_pipe = std::dynamic_pointer_cast<DemultiplexerPipe>(pipe->pipe)) {
       pipe_json["type"] = "DemultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();

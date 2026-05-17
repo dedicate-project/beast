@@ -32,6 +32,8 @@
 #include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
+#include <beast/pipes/program_storage_sink_pipe.hpp>
+#include <beast/pipes/program_storage_source_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
 
 #endif // BEAST_BEAST_HPP_

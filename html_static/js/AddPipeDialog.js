@@ -42,7 +42,10 @@ function coerceFieldValue(field, raw) {
   if (field.type === 'bool') {
     return Boolean(raw);
   }
-  return raw;
+  // 'string' and 'path' both render as a plain text input and are stored verbatim. We
+  // accept whatever the user typed (including the empty string) so the backend can
+  // surface a precise validation error if needed.
+  return raw == null ? '' : String(raw);
 }
 
 function FieldInput({field, value, onChange}) {
@@ -64,6 +67,17 @@ function FieldInput({field, value, onChange}) {
     return e(FormControlLabel, {
       control: e(Checkbox, {checked: Boolean(value), onChange: handle, color: 'primary'}),
       label: field.label,
+    });
+  }
+  if (field.type === 'string' || field.type === 'path') {
+    return e(TextField, {
+      label: field.label,
+      type: 'text',
+      value: value !== undefined && value !== null ? value : '',
+      onChange: handle,
+      fullWidth: true,
+      margin: 'dense',
+      helperText: field.placeholder || undefined,
     });
   }
   // int/float share the same numeric input; we use type="number" so mobile keyboards
