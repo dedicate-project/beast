@@ -14,6 +14,12 @@ option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
 # revision will refuse to compile against this codebase. We therefore make the check opt-in so
 # that day-to-day builds are reproducible. CI should enable it explicitly with a pinned
 # clang-tidy version.
+#
+# Note for Ubuntu 22.04 hosts: clang-tidy uses the compiler's resource directory to find the
+# C++ standard library headers. Stock 22.04 ships only libstdc++-11-dev which has a known
+# layout incompatibility with clang-tidy 14+. Install the matching newer headers with:
+#     sudo apt install libstdc++-12-dev
+# Otherwise you will see "fatal error: 'string' file not found" while parsing system headers.
 option(BEAST_ENABLE_CLANG_TIDY "Run clang-tidy as part of the build (CI only)" NO)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
@@ -24,7 +30,46 @@ set(MAZE_BUILD_TESTS NO)
 add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/maze)
 
 if(BEAST_ENABLE_CLANG_TIDY)
-  set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-warnings-as-errors=*;-checks=*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-fuchsia-default-arguments-calls,-llvmlibc-callee-namespace,-llvmlibc-implementation-in-namespace,-llvmlibc-restrict-system-libc-headers,-altera-id-dependent-backward-branch,-readability-function-cognitive-complexity,-altera-unroll-loops,-bugprone-easily-swappable-parameters,-misc-no-recursion,-altera-struct-pack-align")
+  # The disable list below is split per-line so the rationale is reviewable. Categories:
+  #   * Style / formatting churn (use auto, trailing return types, braced init lists,
+  #     identifier length, magic numbers): leave to clang-format + reviewer judgement.
+  #   * False positives in switch statements over related opcodes (branch-clone, identical
+  #     RHS), in POD struct init (member-init), and in correct bitwise math on small ints
+  #     promoted to int (signed-bitwise, narrowing-conversions).
+  #   * Aspirational rules that conflict with the project's existing API choices (default
+  #     argument decls, public POD members, type-const-cast around 3rdparty types).
+  #   * Altera / llvmlibc / fuchsia / cppcoreguidelines fluff that doesn't apply to a host
+  #     C++17 evolution toolkit.
+  set(BEAST_CLANG_TIDY_DISABLED_CHECKS
+      -modernize-use-trailing-return-type
+      -modernize-use-auto
+      -modernize-return-braced-init-list
+      -cppcoreguidelines-avoid-magic-numbers
+      -cppcoreguidelines-narrowing-conversions
+      -cppcoreguidelines-pro-type-member-init
+      -cppcoreguidelines-pro-type-const-cast
+      -readability-magic-numbers
+      -readability-identifier-length
+      -readability-function-cognitive-complexity
+      -bugprone-branch-clone
+      -bugprone-easily-swappable-parameters
+      -bugprone-narrowing-conversions
+      -hicpp-use-auto
+      -hicpp-member-init
+      -hicpp-signed-bitwise
+      -fuchsia-default-arguments-calls
+      -fuchsia-default-arguments-declarations
+      -misc-no-recursion
+      -misc-non-private-member-variables-in-classes
+      -llvmlibc-callee-namespace
+      -llvmlibc-implementation-in-namespace
+      -llvmlibc-restrict-system-libc-headers
+      -altera-id-dependent-backward-branch
+      -altera-unroll-loops
+      -altera-struct-pack-align)
+  string(REPLACE ";" "," BEAST_CLANG_TIDY_CHECKS "${BEAST_CLANG_TIDY_DISABLED_CHECKS}")
+  set(CMAKE_CXX_CLANG_TIDY
+      "clang-tidy;-warnings-as-errors=*;-checks=*,${BEAST_CLANG_TIDY_CHECKS}")
 endif()
 
 find_program(CLANG_FORMAT_EXECUTABLE NAMES clang-format clang-format-12 clang-format-11 clang-format-10 clang-format-9)

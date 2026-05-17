@@ -253,7 +253,7 @@ TEST_CASE("pipeline") {
                                                            /*outputs_count=*/3);
     pipeline.addPipe("source", source);
     pipeline.addPipe("sink", sink);
-    pipeline.connectPipes(source, /*source_slot=*/2, sink, /*destination_slot=*/1,
+    pipeline.connectPipes(source, /*source_slot_index=*/2, sink, /*destination_slot_index=*/1,
                           /*buffer_size=*/8);
 
     pipeline.start();

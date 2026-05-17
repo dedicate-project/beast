@@ -19,6 +19,22 @@ namespace beast {
 class VirtualMachine {
  public:
   /**
+   * @brief Polymorphic base class special-member functions.
+   *
+   * `VirtualMachine` has virtual methods (`step`, `message`) and is used through base-class
+   * pointers (`CpuVirtualMachine`, etc.). Without an explicit `virtual ~VirtualMachine`
+   * deleting through a base pointer is undefined behavior. We additionally default the
+   * copy/move members explicitly so the rule-of-five is observed (otherwise clang-tidy
+   * objects to a class with a user-declared destructor that doesn't also declare the
+   * other four special members).
+   */
+  virtual ~VirtualMachine() = default;
+  VirtualMachine(const VirtualMachine&) = default;
+  VirtualMachine(VirtualMachine&&) noexcept = default;
+  VirtualMachine& operator=(const VirtualMachine&) = default;
+  VirtualMachine& operator=(VirtualMachine&&) noexcept = default;
+
+  /**
    * @enum class MessageSeverity
    * @brief An enumeration of message severities that denote their urgency.
    *

@@ -6,6 +6,13 @@ namespace {
 
 class MockVirtualMachine : public beast::VirtualMachine {
  public:
+  MockVirtualMachine() = default;
+  ~MockVirtualMachine() override = default;
+  MockVirtualMachine(const MockVirtualMachine&) = delete;
+  MockVirtualMachine(MockVirtualMachine&&) = delete;
+  MockVirtualMachine& operator=(const MockVirtualMachine&) = delete;
+  MockVirtualMachine& operator=(MockVirtualMachine&&) = delete;
+
   void sendDebugMessage(const std::string& message) noexcept { debug(message); }
 
   void sendInfoMessage(const std::string& message) noexcept { info(message); }
