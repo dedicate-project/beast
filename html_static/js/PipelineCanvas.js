@@ -484,12 +484,26 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           strokeWidth : 1,
           cornerRadius : 0,
           // Slightly larger invisible hit region than the visible 3x10 rectangle so the
-          // user doesn't have to click pixel-perfectly to start a connection. Konva uses
-          // the hitFunc rather than the geometry for hit-testing when it's defined.
+          // user doesn't have to click pixel-perfectly to start a connection. CRITICAL:
+          // the expansion grows away from the pipe body, never into it -- if it grew
+          // inward we'd steal mousedowns from the body and break native Konva dragging
+          // (which is the entire reason pipes can be repositioned on the canvas).
           hitFunc: function(context) {
-            context.beginPath();
-            context.rect(-4, -4, portWidth + 8, portHeight + 8);
-            context.closePath();
+            const padOutward = 6;
+            const padVertical = 4;
+            if (side === 'input') {
+              // Body sits at x>=0; grow leftward only.
+              context.beginPath();
+              context.rect(-padOutward, -padVertical, portWidth + padOutward,
+                           portHeight + 2 * padVertical);
+              context.closePath();
+            } else {
+              // Output port sits at x=50 (body's right edge); grow rightward only.
+              context.beginPath();
+              context.rect(0, -padVertical, portWidth + padOutward,
+                           portHeight + 2 * padVertical);
+              context.closePath();
+            }
             context.fillStrokeShape(this);
           },
         });
@@ -505,12 +519,22 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           portRect.fill('#ccc');
           portRect.getLayer().batchDraw();
         });
-        // Stop drags from starting on the port itself so the user can click cleanly to
-        // begin/finish a connection.
+        // Stop the parent group's drag from starting when the user is mid-connection,
+        // i.e. either about to start one (clicking a fresh output port) or about to
+        // finish one (clicking a destination input). At rest -- no pending connection --
+        // we let the mousedown propagate so a click on the port doesn't disable nearby
+        // canvas dragging when the user mis-aims.
         portRect.on('mousedown', (event) => {
-          if (event.evt.button === 0) {
+          if (event.evt.button !== 0) return;
+          if (side === 'output' || pendingConnectionSourceRef.current) {
             event.cancelBubble = true;
             event.evt.stopPropagation();
+            // Disengage any drag Konva had already started in the same tick -- without
+            // this, holding the mouse after a port click would still initiate a drag.
+            const groupNode = portRect.getParent();
+            if (groupNode && groupNode.isDragging && groupNode.isDragging()) {
+              groupNode.stopDrag();
+            }
           }
         });
         portRect.on('click', (event) => {
