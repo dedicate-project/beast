@@ -2,6 +2,7 @@
 
 // Standard
 #include <chrono>
+#include <unordered_map>
 
 // Internal
 #include <beast/pipes/evaluator_pipe.hpp>
@@ -172,6 +173,30 @@ void PipelineManager::mutatePipeline(
   // bubble up so the HTTP layer can surface the message to the user. If construction
   // succeeds, we commit by swapping in the new pipeline and persisting.
   std::shared_ptr<Pipeline> rebuilt = constructPipelineFromJson(model);
+
+  // Carry running statistics from the old pipeline into the new one for pipe types that
+  // accumulate state across cycles. Without this, every parameter edit (e.g. bumping the
+  // maze evaluator's difficulty) would reset every ResultsSummaryPipe's best-ever score
+  // back to 0, even when the user only touched an unrelated knob. We migrate by
+  // (name, type) pair so renaming the pipe correctly resets its state -- a rename is the
+  // user telling us "this is a different stage now".
+  if (descriptor.pipeline) {
+    std::unordered_map<std::string, std::shared_ptr<ResultsSummaryPipe>> old_summaries;
+    for (const auto& managed : descriptor.pipeline->getPipes()) {
+      if (auto summary = std::dynamic_pointer_cast<ResultsSummaryPipe>(managed->pipe)) {
+        old_summaries.emplace(managed->name, summary);
+      }
+    }
+    for (const auto& managed : rebuilt->getPipes()) {
+      if (auto summary = std::dynamic_pointer_cast<ResultsSummaryPipe>(managed->pipe)) {
+        auto previous = old_summaries.find(managed->name);
+        if (previous != old_summaries.end()) {
+          summary->importState(previous->second->exportState());
+        }
+      }
+    }
+  }
+
   descriptor.pipeline = std::move(rebuilt);
   descriptor.metadata = std::move(metadata);
   filesystem_.updateModel(descriptor.filename,

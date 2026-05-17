@@ -499,6 +499,50 @@ TEST_CASE("PipelineManager") {
     manager.getPipelineById(id).pipeline->stop();
   }
 
+  SECTION("mutatePipeline preserves ResultsSummaryPipe statistics across edits") {
+    // Regression test for the "best ever resets to 0 when I edit anything" failure
+    // mode: mutatePipeline rebuilds pipes from JSON which would wipe accumulated
+    // statistics. We migrate state by (name, type) so editing an unrelated knob keeps
+    // the rolling window and best-ever intact.
+    const uint32_t id = manager.createPipeline("summary-migration-test");
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& /*metadata*/) {
+      model["pipes"]["summary"] = R"({
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 4, "window_size": 16 }
+      })"_json;
+    });
+    {
+      auto& live = manager.getPipelineById(id);
+      auto summary_pipe = std::dynamic_pointer_cast<ResultsSummaryPipe>(
+          live.pipeline->getPipes().front()->pipe);
+      REQUIRE(summary_pipe != nullptr);
+      summary_pipe->addInputWithScore(0, Pipe::OutputItem{{0xAA, 0xBB}, 0.75});
+      summary_pipe->addInputWithScore(0, Pipe::OutputItem{{0x01}, 0.30});
+      summary_pipe->execute();
+      const auto pre = summary_pipe->getSummary();
+      REQUIRE(pre.count_total == 2);
+      REQUIRE(pre.best_ever_score == Approx(0.75));
+      REQUIRE(pre.best_ever_data == std::vector<unsigned char>{0xAA, 0xBB});
+    }
+    // Edit an unrelated knob (window_size): the new pipe should report the same total
+    // count, best-ever score, and best-ever payload despite being a freshly constructed
+    // C++ object.
+    manager.mutatePipeline(id, [](nlohmann::json& model, nlohmann::json& /*metadata*/) {
+      model["pipes"]["summary"]["parameters"]["window_size"] = 32;
+    });
+    {
+      auto& live = manager.getPipelineById(id);
+      auto summary_pipe = std::dynamic_pointer_cast<ResultsSummaryPipe>(
+          live.pipeline->getPipes().front()->pipe);
+      REQUIRE(summary_pipe != nullptr);
+      REQUIRE(summary_pipe->getWindowSize() == 32);
+      const auto post = summary_pipe->getSummary();
+      REQUIRE(post.count_total == 2);
+      REQUIRE(post.best_ever_score == Approx(0.75));
+      REQUIRE(post.best_ever_data == std::vector<unsigned char>{0xAA, 0xBB});
+    }
+  }
+
   SECTION("mutatePipeline rolls back when validation fails") {
     // Regression test: a malformed edit (here, declaring a connection to a non-existent
     // pipe) must leave the live Pipeline and on-disk model unchanged because

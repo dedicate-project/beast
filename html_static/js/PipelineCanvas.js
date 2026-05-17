@@ -228,6 +228,93 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [hoveredPipe, setHoveredPipe] = useState("");
   const hoveredPipeRef = useRef("");
 
+  // The results panel can be collapsed to a single header strip so it doesn't compete
+  // with the canvas for screen real estate. Persisted in localStorage so the choice
+  // survives a tab refresh -- having to re-collapse on every reload is annoying.
+  const [resultsPanelCollapsed, setResultsPanelCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('beast.results_panel_collapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('beast.results_panel_collapsed', resultsPanelCollapsed ? '1' : '0');
+    } catch {
+      // localStorage may be disabled (private browsing); the panel still works in-session.
+    }
+  }, [resultsPanelCollapsed]);
+
+  // Render helper for the results panel. Returns null when there are no summary pipes so
+  // we don't waste pixels on an empty box. Lives next to the canvas so its absolute
+  // positioning is anchored to the stage area, not the page body (the latter would put
+  // it on top of the AppBar / start-stop controls).
+  const renderResultsPanel = () => {
+    const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
+    const summaryPipes = pipesMetrics.filter(p => p && p.summary);
+    if (summaryPipes.length === 0) return null;
+    const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
+    const headerStyle = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      marginBottom: resultsPanelCollapsed ? 0 : 6,
+    };
+    return e('div', {
+      style: {
+        position: 'absolute',
+        right: 8,
+        top: 8,
+        padding: '8px 10px',
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        border: '1px solid #ccc',
+        borderRadius: 4,
+        boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+        zIndex: 10,
+        maxWidth: 300,
+        fontFamily: 'sans-serif',
+        fontSize: 12,
+      },
+    },
+      e('div', {
+        style: headerStyle,
+        onClick: () => setResultsPanelCollapsed(!resultsPanelCollapsed),
+        title: resultsPanelCollapsed ? 'Click to expand' : 'Click to collapse',
+      },
+        e('span', null, `Results summaries (${summaryPipes.length})`),
+        e('span', {style: {marginLeft: 8, fontSize: 14}}, resultsPanelCollapsed ? '+' : '\u2212'),
+      ),
+      !resultsPanelCollapsed && summaryPipes.map((p, idx) =>
+        e('div', {
+          key: 'sp' + p.name,
+          style: {
+            paddingTop: idx === 0 ? 0 : 6,
+            marginTop: idx === 0 ? 0 : 6,
+            borderTop: idx === 0 ? 'none' : '1px solid #eee',
+          },
+        },
+          e('div', {style: {fontWeight: 'bold'}}, p.name),
+          e('div', null, `seen: ${p.summary.count_total} (window ${p.summary.count_window}/${p.summary.window_size || '--'})`),
+          e('div', null, `min/mean/max: ${fmt(p.summary.min_score)} / ${fmt(p.summary.mean_score)} / ${fmt(p.summary.max_score)}`),
+          e('div', null, `last: ${fmt(p.summary.last_score)}`),
+          e('div', null, `best ever: ${fmt(p.summary.best_ever_score)} (${p.summary.best_ever_size} bytes)`),
+          e('button', {
+            onClick: () => postUpdate({action: 'reset_summary', name: p.name}),
+            style: {
+              marginTop: 4,
+              padding: '2px 8px',
+              fontSize: 11,
+              cursor: 'pointer',
+            },
+            title: 'Reset rolling window and best-ever (use after bumping difficulty)',
+          }, 'Reset'),
+        )),
+    );
+  };
+
   // Single entry point for all mutating REST calls. Centralised so the API-error toast and
   // the post-mutation pipeline re-fetch live in one place; every action handler below uses
   // it and treats the boolean return as "was the server happy?".
@@ -485,9 +572,13 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
       // add ports
       const addPort = (side, slot, max_slots) => {
-        const portHeight = 10;
-        const portWidth = 3;
-        const portDistance = 5;
+        // Visibly chunky ports so they're easy to click without zooming. The earlier
+        // 3x10 strip + cursor:default mouse turned port-clicking into a target-practice
+        // exercise; 8x14 plus an outward-only hit-region pad gives a comfortable click
+        // target without eating into the body's drag surface.
+        const portHeight = 14;
+        const portWidth = 8;
+        const portDistance = 6;
         const x = (side == "input" ? -portWidth : 50);
         const y =
             (slot * (portHeight + portDistance) - portDistance + 25) -
@@ -508,8 +599,8 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           // inward we'd steal mousedowns from the body and break native Konva dragging
           // (which is the entire reason pipes can be repositioned on the canvas).
           hitFunc: function(context) {
-            const padOutward = 6;
-            const padVertical = 4;
+            const padOutward = 8;
+            const padVertical = 5;
             if (side === 'input') {
               // Body sits at x>=0; grow leftward only.
               context.beginPath();
@@ -532,11 +623,18 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         portRect.on('mouseover', (event) => {
           portRect.fill('#ff8c00');
           portRect.getLayer().batchDraw();
+          // Switch the canvas cursor to a hand so the user knows the port is clickable.
+          // We restore it on mouseout (and the canvas itself restores it when nothing is
+          // hovered, so this is a per-port concern only).
+          const stage = portRect.getStage();
+          if (stage) stage.container().style.cursor = 'pointer';
           event.cancelBubble = true;
         });
         portRect.on('mouseout', () => {
           portRect.fill('#ccc');
           portRect.getLayer().batchDraw();
+          const stage = portRect.getStage();
+          if (stage) stage.container().style.cursor = 'default';
         });
         // Stop the parent group's drag from starting when the user is mid-connection,
         // i.e. either about to start one (clicking a fresh output port) or about to
@@ -656,15 +754,14 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       });
 
       group.on("dragstart", (e) => {
+        // Note: the original code peeked at the pixel under the cursor with getImageData
+        // and stopped the drag when alpha was 0. That heuristic was brittle (Konva's
+        // layer canvas can be mid-redraw at this point so getImageData reports stale
+        // pixels, especially right after a port click cancellation) and was the actual
+        // reason "dragging pipes doesn't work" -- the drag started, the heuristic fired,
+        // the drag was cancelled before the user ever saw it move. With explicit
+        // mousedown handling on the ports we don't need it any more.
         setCurrentlyDraggedPipe(getPipeNameForKonvaImage(e.target));
-        const pointerPosition = stageInstance.getPointerPosition();
-        const pixel = e.target.getLayer()
-                          .getContext()
-                          .getImageData(pointerPosition.x, pointerPosition.y, 1, 1)
-                          .data;
-        if (pixel[3] === 0) {
-          e.target.stopDrag();
-        }
       });
       group.on("dragend", (e) => { handlePipeDragEnded(group); });
       group.on("dragmove", (e) => { setDragMovePoint({x : e.target.x(), y : e.target.y()}); });
@@ -1059,7 +1156,47 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           position : contextMenuPosition,
           onClose : () => setShowContextMenu(false),
           menuItems : rightClickMenuItemsRef.current,
-        })),
+        }),
+        // Floating panels (results summary + connection-author status + API errors) live
+        // INSIDE the stage div so their `position: absolute` is relative to the canvas
+        // viewport and not the page body -- otherwise they cover the AppBar / start-stop
+        // controls that sit above the canvas.
+        renderResultsPanel(),
+        pendingConnectionSource &&
+            e('div', {
+              style: {
+                position: 'absolute',
+                left: 16,
+                bottom: 16,
+                padding: '8px 12px',
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffeeba',
+                borderRadius: 4,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                zIndex: 10,
+              },
+            },
+              `Click a destination input port to finish the connection (or press Esc to cancel). Source: ${pendingConnectionSource.pipeName}[${pendingConnectionSource.slot}]`),
+        apiError &&
+            e('div', {
+              style: {
+                position: 'absolute',
+                right: 16,
+                bottom: 16,
+                padding: '8px 12px',
+                backgroundColor: '#f8d7da',
+                color: '#721c24',
+                border: '1px solid #f5c6cb',
+                borderRadius: 4,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                zIndex: 10,
+                maxWidth: 360,
+                cursor: 'pointer',
+              },
+              onClick: () => setApiError(''),
+              title: 'Click to dismiss',
+            },
+              apiError)),
       e(Dialog, {open : renameDialogOpen, onClose : () => setRenameDialogOpen(false)},
         e(DialogTitle, null, "Edit Pipeline Title"),
         e(DialogContent, null, e(TextField, {
@@ -1127,99 +1264,6 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           ? `Disconnect ${pendingDeleteConnection.source_pipe}[${pendingDeleteConnection.source_slot}] → ${pendingDeleteConnection.destination_pipe}[${pendingDeleteConnection.destination_slot}]?`
           : '',
       }),
-      // Top-right floating panel listing every ResultsSummaryPipe in the pipeline with
-      // its live stats. This is the primary place to see "how is the maze doing?" without
-      // having to hover over each pipe individually. Each entry exposes a Reset button
-      // that hits the `reset_summary` action so the user can clear the rolling window
-      // after bumping the maze difficulty.
-      (() => {
-        const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
-        const summaryPipes = pipesMetrics.filter(p => p && p.summary);
-        if (summaryPipes.length === 0) return null;
-        const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
-        return e('div', {
-          style: {
-            position: 'absolute',
-            right: 16,
-            top: 16,
-            padding: '10px 12px',
-            backgroundColor: 'rgba(255,255,255,0.95)',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
-            zIndex: 10,
-            maxWidth: 320,
-            fontFamily: 'sans-serif',
-            fontSize: 13,
-          },
-        },
-          e('div', {style: {fontWeight: 'bold', marginBottom: 6}}, 'Results summaries'),
-          ...summaryPipes.map((p, idx) =>
-            e('div', {
-              key: 'sp' + p.name,
-              style: {
-                paddingTop: idx === 0 ? 0 : 6,
-                marginTop: idx === 0 ? 0 : 6,
-                borderTop: idx === 0 ? 'none' : '1px solid #eee',
-              },
-            },
-              e('div', {style: {fontWeight: 'bold'}}, p.name),
-              e('div', null, `seen: ${p.summary.count_total} (window ${p.summary.count_window}/${p.summary.window_size || '--'})`),
-              e('div', null, `min/mean/max: ${fmt(p.summary.min_score)} / ${fmt(p.summary.mean_score)} / ${fmt(p.summary.max_score)}`),
-              e('div', null, `last: ${fmt(p.summary.last_score)}`),
-              e('div', null, `best ever: ${fmt(p.summary.best_ever_score)} (${p.summary.best_ever_size} bytes)`),
-              e('button', {
-                onClick: () => postUpdate({action: 'reset_summary', name: p.name}),
-                style: {
-                  marginTop: 4,
-                  padding: '2px 8px',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                },
-                title: 'Reset rolling window and best-ever (use after bumping difficulty)',
-              }, 'Reset'),
-            )),
-        );
-      })(),
-
-      // Status bar for the in-flight connection authoring gesture, plus any API errors.
-      // Both render as small floating banners inside the canvas viewport so the user gets
-      // immediate feedback without us having to wire a separate notification system.
-      pendingConnectionSource &&
-          e('div', {
-            style: {
-              position: 'absolute',
-              left: 16,
-              bottom: 16,
-              padding: '8px 12px',
-              backgroundColor: '#fff3cd',
-              border: '1px solid #ffeeba',
-              borderRadius: 4,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              zIndex: 10,
-            },
-          },
-            `Click a destination input port to finish the connection (or press Esc to cancel). Source: ${pendingConnectionSource.pipeName}[${pendingConnectionSource.slot}]`),
-      apiError &&
-          e('div', {
-            style: {
-              position: 'absolute',
-              right: 16,
-              bottom: 16,
-              padding: '8px 12px',
-              backgroundColor: '#f8d7da',
-              color: '#721c24',
-              border: '1px solid #f5c6cb',
-              borderRadius: 4,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              zIndex: 10,
-              maxWidth: 360,
-              cursor: 'pointer',
-            },
-            onClick: () => setApiError(''),
-            title: 'Click to dismiss',
-          },
-            apiError),
       // Pipe-info tooltip: rendered through a portal directly into <body> so it floats above
       // the Konva canvas without being clipped by Material UI's overflow rules. Only shows
       // when a pipe is hovered and the right-click menu isn't currently up.

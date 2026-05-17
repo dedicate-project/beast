@@ -88,6 +88,35 @@ class ResultsSummaryPipe : public Pipe {
    */
   [[nodiscard]] uint32_t getWindowSize() const noexcept;
 
+  /**
+   * @brief Opaque snapshot of the pipe's running statistics
+   *
+   * Used by `PipelineManager::mutatePipeline` to carry the stats across a structural
+   * edit (which otherwise rebuilds the pipe from JSON and would zero them out -- the
+   * "best ever resets to 0 when I edit anything" failure mode).
+   */
+  struct PersistentState {
+    std::deque<double> recent_scores;
+    uint64_t count_total = 0;
+    double last_score = 0.0;
+    double best_ever_score = 0.0;
+    std::vector<unsigned char> best_ever_data;
+    bool has_any = false;
+  };
+
+  /**
+   * @brief Snapshot the current statistics so a caller can re-apply them later
+   */
+  [[nodiscard]] PersistentState exportState() const;
+
+  /**
+   * @brief Restore statistics previously captured via `exportState`
+   *
+   * The rolling window is truncated to the current `window_size_` if the imported
+   * state was captured with a larger window.
+   */
+  void importState(PersistentState state);
+
  private:
   void recordScore(double score, const std::vector<unsigned char>& data);
 

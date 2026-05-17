@@ -78,4 +78,30 @@ void ResultsSummaryPipe::resetSummary() {
 
 uint32_t ResultsSummaryPipe::getWindowSize() const noexcept { return window_size_; }
 
+ResultsSummaryPipe::PersistentState ResultsSummaryPipe::exportState() const {
+  std::scoped_lock lock(summary_mutex_);
+  PersistentState state;
+  state.recent_scores = recent_scores_;
+  state.count_total = count_total_;
+  state.last_score = last_score_;
+  state.best_ever_score = best_ever_score_;
+  state.best_ever_data = best_ever_data_;
+  state.has_any = has_any_;
+  return state;
+}
+
+void ResultsSummaryPipe::importState(PersistentState state) {
+  std::scoped_lock lock(summary_mutex_);
+  recent_scores_ = std::move(state.recent_scores);
+  // Honour the post-edit `window_size_` -- the user may have shrunk it deliberately.
+  while (recent_scores_.size() > window_size_) {
+    recent_scores_.pop_front();
+  }
+  count_total_ = state.count_total;
+  last_score_ = state.last_score;
+  best_ever_score_ = state.best_ever_score;
+  best_ever_data_ = std::move(state.best_ever_data);
+  has_any_ = state.has_any;
+}
+
 } // namespace beast
