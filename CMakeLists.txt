@@ -164,7 +164,9 @@ add_library(${PROJECT_NAME}-vm
 
 # Evaluators library
 add_library(${PROJECT_NAME}-evaluators
+  src/evaluators/adder_evaluator.cpp
   src/evaluators/aggregation_evaluator.cpp
+  src/evaluators/maximum_evaluator.cpp
   src/evaluators/maze_evaluator.cpp
   src/evaluators/random_serial_data_passthrough_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
@@ -336,6 +338,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(math)
   declare_test(maze_evaluator)
   declare_test(misc)
+  declare_test(adder_evaluator)
   declare_test(demultiplexer_pipe)
   declare_test(fan_pipe)
   declare_test(multiplexer_pipe)

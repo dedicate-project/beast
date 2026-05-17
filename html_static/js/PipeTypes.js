@@ -179,6 +179,155 @@ export const PIPE_TYPE_DEFINITIONS = [
       };
     },
   },
+  // Helper that emits a {buildParameters, parseParameters, sections} bundle shared by the
+  // numeric-task evaluator pipes (Adder, Maximum, ...). Each one is an EvaluatorPipe whose
+  // child evaluator differs only in its parameters, so factoring out the EvaluatorPipe
+  // chrome keeps the per-task definition focused on its own knobs.
+  ...(() => {
+    const numericEvaluatorPipe = ({
+      type, label, description, image, evaluatorType, extraEvaluatorFields, evaluatorBuild,
+      evaluatorParse, defaultOutputCount = 1,
+    }) => ({
+      type,
+      label,
+      description,
+      buildAsType: 'EvaluatorPipe',
+      image,
+      inputs: 1,
+      outputs: defaultOutputCount,
+      sections: [
+        {
+          title: 'Pipe',
+          fields: [
+            {name: 'max_candidates', label: 'Max candidates per cycle', type: 'int', default: 20, min: 1},
+            {name: 'memory_variables', label: 'Memory variables', type: 'int', default: 32, min: 1},
+            {name: 'string_table_items', label: 'String table entries', type: 'int', default: 0, min: 0},
+            {name: 'string_table_item_length', label: 'String table item length', type: 'int', default: 0, min: 0},
+          ],
+        },
+        {
+          title: 'Task',
+          fields: extraEvaluatorFields,
+        },
+        {
+          title: 'Selection',
+          fields: [
+            {name: 'cut_off_score', label: 'Cut-off score', type: 'float', default: 0.0, min: 0.0, max: 1.0, step: 0.01},
+          ],
+        },
+        {
+          title: 'Genetic algorithm',
+          collapsedByDefault: true,
+          fields: [
+            {name: 'generations', label: 'Generations per cycle', type: 'int', default: evolutionParameterDefaults.generations, min: 1},
+            {name: 'crossover_probability', label: 'Crossover probability', type: 'float', default: evolutionParameterDefaults.crossover_probability, min: 0.0, max: 1.0, step: 0.05},
+            {name: 'mutation_probability', label: 'Mutation probability', type: 'float', default: evolutionParameterDefaults.mutation_probability, min: 0.0, max: 1.0, step: 0.01},
+            {name: 'byte_mutation_share', label: 'Byte-level mutation share', type: 'float', default: evolutionParameterDefaults.byte_mutation_share, min: 0.0, max: 1.0, step: 0.05},
+            {name: 'elitism', label: 'Elitism (keep best each gen)', type: 'bool', default: evolutionParameterDefaults.elitism},
+            {name: 'starting_program_size', label: 'Starting program size (0 = factory default)', type: 'int', default: evolutionParameterDefaults.starting_program_size, min: 0},
+            {name: 'max_genome_bytes', label: 'Max genome size (bytes)', type: 'int', default: evolutionParameterDefaults.max_genome_bytes, min: 1},
+          ],
+        },
+      ],
+      buildParameters: (values) => ({
+        max_candidates: values.max_candidates,
+        memory_variables: values.memory_variables,
+        string_table_items: values.string_table_items,
+        string_table_item_length: values.string_table_item_length,
+        cut_off_score: values.cut_off_score,
+        evaluators: [{
+          type: evaluatorType,
+          weight: 1.0,
+          invert_logic: false,
+          parameters: evaluatorBuild(values),
+        }],
+        evolution_parameters: {
+          ...evolutionParameterDefaults,
+          generations: values.generations,
+          crossover_probability: values.crossover_probability,
+          mutation_probability: values.mutation_probability,
+          byte_mutation_share: values.byte_mutation_share,
+          elitism: values.elitism,
+          starting_program_size: values.starting_program_size,
+          max_genome_bytes: values.max_genome_bytes,
+        },
+      }),
+      parseParameters: (params) => {
+        const task = (params.evaluators && params.evaluators[0] && params.evaluators[0].parameters) || {};
+        const ga = params.evolution_parameters || {};
+        return {
+          max_candidates: params.max_candidates,
+          memory_variables: params.memory_variables,
+          string_table_items: params.string_table_items,
+          string_table_item_length: params.string_table_item_length,
+          cut_off_score: params.cut_off_score,
+          ...evaluatorParse(task),
+          generations: ga.generations,
+          crossover_probability: ga.crossover_probability,
+          mutation_probability: ga.mutation_probability,
+          byte_mutation_share: ga.byte_mutation_share,
+          elitism: ga.elitism,
+          starting_program_size: ga.starting_program_size,
+          max_genome_bytes: ga.max_genome_bytes,
+        };
+      },
+    });
+    return [
+      numericEvaluatorPipe({
+        type: 'AdderEvaluatorPipe',
+        label: 'Adder Evaluator',
+        description:
+          'Evolves programs that compute a + b. Each evaluation runs N random pairs ' +
+          'through the candidate program and averages the per-trial score (1.0 = exact, ' +
+          'smooth decay with absolute error).',
+        image: '/img/adder_evaluator_pipe.png',
+        evaluatorType: 'AdderEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'value_range', label: 'Input range (±)', type: 'int', default: 32, min: 1},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 800, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count,
+          value_range: v.value_range,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count,
+          value_range: p.value_range,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'MaximumEvaluatorPipe',
+        label: 'Maximum Evaluator',
+        description:
+          'Evolves programs that return the maximum of N integer inputs. Tougher than ' +
+          'addition because it requires the program to compare values; useful for ' +
+          'curriculum learning once a population can already handle Adder.',
+        image: '/img/maximum_evaluator_pipe.png',
+        evaluatorType: 'MaximumEvaluator',
+        extraEvaluatorFields: [
+          {name: 'input_count', label: 'Inputs to compare (2-16)', type: 'int', default: 3, min: 2, max: 16},
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'value_range', label: 'Input range (±)', type: 'int', default: 64, min: 1},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1200, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          input_count: v.input_count,
+          trial_count: v.trial_count,
+          value_range: v.value_range,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          input_count: p.input_count,
+          trial_count: p.trial_count,
+          value_range: p.value_range,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+    ];
+  })(),
   {
     type: 'NullSinkPipe',
     label: 'Null Sink',
@@ -423,8 +572,14 @@ export function findPipeDefinition(pipe_json) {
   if (!pipe_json || !pipe_json.type) return null;
   if (pipe_json.type === 'EvaluatorPipe') {
     const evals = pipe_json.parameters && pipe_json.parameters.evaluators;
-    if (evals && evals[0] && evals[0].type === 'MazeEvaluator') {
-      return PIPE_TYPE_DEFINITIONS.find(def => def.type === 'MazeEvaluatorPipe');
+    const firstType = evals && evals[0] && evals[0].type;
+    const specialized = {
+      MazeEvaluator: 'MazeEvaluatorPipe',
+      AdderEvaluator: 'AdderEvaluatorPipe',
+      MaximumEvaluator: 'MaximumEvaluatorPipe',
+    }[firstType];
+    if (specialized) {
+      return PIPE_TYPE_DEFINITIONS.find(def => def.type === specialized);
     }
   }
   return PIPE_TYPE_DEFINITIONS.find(def => def.type === pipe_json.type);

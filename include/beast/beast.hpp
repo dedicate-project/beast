@@ -20,7 +20,9 @@
 #include <beast/version.hpp>
 #include <beast/vm_session.hpp>
 
+#include <beast/evaluators/adder_evaluator.hpp>
 #include <beast/evaluators/aggregation_evaluator.hpp>
+#include <beast/evaluators/maximum_evaluator.hpp>
 #include <beast/evaluators/maze_evaluator.hpp>
 #include <beast/evaluators/operator_usage_evaluator.hpp>
 #include <beast/evaluators/random_serial_data_passthrough_evaluator.hpp>

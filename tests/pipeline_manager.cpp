@@ -104,6 +104,87 @@ TEST_CASE("PipelineManager") {
     REQUIRE(back["pipes"]["summary"]["parameters"]["window_size"].get<uint32_t>() == 64);
   }
 
+  SECTION("AdderEvaluator round-trips through EvaluatorPipe JSON") {
+    const auto json = R"({
+        "pipes": {
+          "adder": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 10,
+              "memory_variables": 16,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "AdderEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "trial_count": 6,
+                  "value_range": 42,
+                  "max_steps_per_trial": 555
+                }
+              }]
+            }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(eval_pipe != nullptr);
+    const auto descs = eval_pipe->getEvaluators();
+    REQUIRE(descs.size() == 1);
+    const auto adder = std::dynamic_pointer_cast<AdderEvaluator>(descs.front().evaluator);
+    REQUIRE(adder != nullptr);
+    REQUIRE(adder->getTrialCount() == 6);
+    REQUIRE(adder->getValueRange() == 42);
+    REQUIRE(adder->getMaxStepsPerTrial() == 555);
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["adder"]["parameters"]["evaluators"][0]["type"].get<std::string>() ==
+            "AdderEvaluator");
+    REQUIRE(back["pipes"]["adder"]["parameters"]["evaluators"][0]["parameters"]["trial_count"]
+                .get<uint32_t>() == 6);
+  }
+
+  SECTION("MaximumEvaluator round-trips through EvaluatorPipe JSON") {
+    const auto json = R"({
+        "pipes": {
+          "maxer": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 8,
+              "memory_variables": 32,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "MaximumEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "input_count": 4,
+                  "trial_count": 5,
+                  "value_range": 99,
+                  "max_steps_per_trial": 777
+                }
+              }]
+            }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(eval_pipe != nullptr);
+    const auto descs = eval_pipe->getEvaluators();
+    REQUIRE(descs.size() == 1);
+    const auto maximum = std::dynamic_pointer_cast<MaximumEvaluator>(descs.front().evaluator);
+    REQUIRE(maximum != nullptr);
+    REQUIRE(maximum->getInputCount() == 4);
+    REQUIRE(maximum->getTrialCount() == 5);
+    REQUIRE(maximum->getValueRange() == 99);
+    REQUIRE(maximum->getMaxStepsPerTrial() == 777);
+  }
+
   SECTION("FanPipe round-trips through JSON serialisation") {
     const auto json = R"({
         "pipes": {

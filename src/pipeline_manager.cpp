@@ -5,6 +5,8 @@
 #include <unordered_map>
 
 // Internal
+#include <beast/evaluators/adder_evaluator.hpp>
+#include <beast/evaluators/maximum_evaluator.hpp>
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
@@ -267,6 +269,29 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else if (type == "MazeEvaluator") {
       evaluator = constructMazeEvaluatorFromJson(evaluator_json.value());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "AdderEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "value_range", "max_steps_per_trial"});
+      evaluator = std::make_shared<AdderEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          params["value_range"].get<int32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "MaximumEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params,
+                                {"input_count", "trial_count", "value_range",
+                                 "max_steps_per_trial"});
+      evaluator = std::make_shared<MaximumEvaluator>(
+          params["input_count"].get<uint32_t>(),
+          params["trial_count"].get<uint32_t>(),
+          params["value_range"].get<int32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else {
@@ -604,6 +629,19 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["parameters"]["cols"] = maze_eval->getCols();
       evaluator["parameters"]["difficulty"] = maze_eval->getDifficulty();
       evaluator["parameters"]["max_steps"] = maze_eval->getMaxSteps();
+    } else if (const auto adder_eval =
+                   std::dynamic_pointer_cast<AdderEvaluator>(description.evaluator)) {
+      evaluator["type"] = "AdderEvaluator";
+      evaluator["parameters"]["trial_count"] = adder_eval->getTrialCount();
+      evaluator["parameters"]["value_range"] = adder_eval->getValueRange();
+      evaluator["parameters"]["max_steps_per_trial"] = adder_eval->getMaxStepsPerTrial();
+    } else if (const auto max_eval =
+                   std::dynamic_pointer_cast<MaximumEvaluator>(description.evaluator)) {
+      evaluator["type"] = "MaximumEvaluator";
+      evaluator["parameters"]["input_count"] = max_eval->getInputCount();
+      evaluator["parameters"]["trial_count"] = max_eval->getTrialCount();
+      evaluator["parameters"]["value_range"] = max_eval->getValueRange();
+      evaluator["parameters"]["max_steps_per_trial"] = max_eval->getMaxStepsPerTrial();
     }
 
     evaluators.push_back(std::move(evaluator));
