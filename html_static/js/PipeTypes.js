@@ -197,6 +197,42 @@ export const PIPE_TYPE_DEFINITIONS = [
     buildParameters: (values) => ({max_candidates: values.max_candidates}),
     parseParameters: (params) => ({max_candidates: params.max_candidates}),
   },
+  {
+    type: 'ResultsSummaryPipe',
+    label: 'Results Summary',
+    description:
+      'Passthrough probe that reports score statistics (min/max/mean, best-ever, rolling ' +
+      'window) for every candidate flowing through it. Put one right after an evaluator ' +
+      'pipe to see how training is progressing, or between any two pipes to inspect ' +
+      'intermediate scores.',
+    image: '/img/results_summary_pipe.png',
+    inputs: 1,
+    outputs: 1,
+    sections: [
+      {
+        title: 'Buffer',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per cycle', type: 'int', default: 50, min: 1},
+        ],
+      },
+      {
+        title: 'Statistics',
+        // Collapsed by default; the window-size default is good for most uses.
+        collapsedByDefault: true,
+        fields: [
+          {name: 'window_size', label: 'Rolling window size (0 = default 256)', type: 'int', default: 0, min: 0},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      window_size: values.window_size,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      window_size: params.window_size,
+    }),
+  },
 ];
 
 // Build a flat values object for the form when editing a pipe. Falls back to the

@@ -7,6 +7,7 @@
 #include <sstream>
 
 // Internal
+#include <beast/pipes/results_summary_pipe.hpp>
 #include <beast/time_functions.hpp>
 #include <beast/version.hpp>
 
@@ -135,6 +136,38 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
                 static_cast<int32_t>(req_body["y"]);
             pipeline_manager_.savePipeline(pipeline.id);
             value["status"] = "success";
+          } else if (action == "reset_summary") {
+            // Targeted at ResultsSummaryPipe instances; lets the user clear the rolling
+            // statistics window (e.g. after bumping the maze difficulty) so the displayed
+            // numbers reflect the new regime without having to delete and re-create the
+            // pipe. Works on a running pipeline -- the summary internals are safely
+            // mutex-guarded and `resetSummary()` is cheap.
+            try {
+              if (!req_body.has("name")) {
+                value["status"] = "failed";
+                value["error"] = "name is required";
+              } else {
+                const auto pipe_name = static_cast<std::string>(req_body["name"]);
+                auto& descriptor = pipeline_manager_.getPipelineById(pipeline.id);
+                std::shared_ptr<ResultsSummaryPipe> target;
+                for (const auto& managed : descriptor.pipeline->getPipes()) {
+                  if (managed->name == pipe_name) {
+                    target = std::dynamic_pointer_cast<ResultsSummaryPipe>(managed->pipe);
+                    break;
+                  }
+                }
+                if (!target) {
+                  value["status"] = "failed";
+                  value["error"] = "no such ResultsSummaryPipe";
+                } else {
+                  target->resetSummary();
+                  value["status"] = "success";
+                }
+              }
+            } catch (const std::invalid_argument& exception) {
+              value["status"] = "failed";
+              value["error"] = exception.what();
+            }
           } else if (action == "add_pipe" || action == "delete_pipe" ||
                      action == "add_connection" || action == "delete_connection" ||
                      action == "update_pipe_parameters") {
@@ -186,6 +219,12 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
           pipeline.pipeline->isRunning() ? std::string("running") : std::string("stopped");
       value["pipes"] = crow::json::wvalue::list();
       uint32_t idx = 0;
+      // Index the live pipes so we can pull per-pipe extras (currently:
+      // ResultsSummaryPipe statistics) without doing a linear scan per metrics entry.
+      std::unordered_map<std::string, std::shared_ptr<Pipe>> pipes_by_name;
+      for (const auto& managed : pipeline.pipeline->getPipes()) {
+        pipes_by_name.emplace(managed->name, managed->pipe);
+      }
       for (const auto& pipe_pair : metrics.pipes) {
         crow::json::wvalue pipe_item;
         pipe_item["name"] = pipe_pair.first;
@@ -197,6 +236,27 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
         pipe_item["outputs"] = crow::json::wvalue::list();
         for (const auto& output_pair : pipe_pair.second.outputs_sent) {
           pipe_item["outputs"][output_pair.first] = output_pair.second;
+        }
+        // ResultsSummaryPipe surfaces score statistics here so the UI can render them
+        // alongside the throughput numbers. Other pipe types don't populate the field.
+        const auto pipe_iter = pipes_by_name.find(pipe_pair.first);
+        if (pipe_iter != pipes_by_name.end()) {
+          if (const auto summary_pipe =
+                  std::dynamic_pointer_cast<ResultsSummaryPipe>(pipe_iter->second)) {
+            const auto summary = summary_pipe->getSummary();
+            crow::json::wvalue summary_json;
+            summary_json["count_total"] = summary.count_total;
+            summary_json["count_window"] = summary.count_window;
+            summary_json["min_score"] = summary.min_score;
+            summary_json["max_score"] = summary.max_score;
+            summary_json["mean_score"] = summary.mean_score;
+            summary_json["last_score"] = summary.last_score;
+            summary_json["best_ever_score"] = summary.best_ever_score;
+            summary_json["best_ever_size"] =
+                static_cast<uint64_t>(summary.best_ever_data.size());
+            summary_json["window_size"] = summary_pipe->getWindowSize();
+            pipe_item["summary"] = std::move(summary_json);
+          }
         }
         value["pipes"][idx] = std::move(pipe_item);
         idx++;

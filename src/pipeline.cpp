@@ -253,7 +253,10 @@ Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
            !source_slot_connection->buffer.empty()) {
       auto data = std::move(source_slot_connection->buffer.front());
       source_slot_connection->buffer.pop_front();
-      managed_pipe->pipe->addInput(slot_index, data.data);
+      // Preserve the upstream-attached score so passthrough observers (notably
+      // ResultsSummaryPipe) can report on it without re-running the evaluator. Pipes that
+      // don't care still see `addInput(slot, bytes)` semantics through `drawInput()`.
+      managed_pipe->pipe->addInputWithScore(slot_index, std::move(data));
       metrics[slot_index]++;
     }
   }

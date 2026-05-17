@@ -63,21 +63,44 @@ class Pipe {
    * @brief Add a candidate program code to the input pool
    *
    * This function adds a given program code vector to the input candidate pool. These individuals
-   * will be used as initial population for evolution.
+   * will be used as initial population for evolution. The candidate is wrapped into an
+   * `OutputItem` with score 0.0 internally so the pipe can pass it on with score information
+   * later; callers that already have a score should use `addInputWithScore` instead.
    *
    * @param candidate The candidate program code to add to the input pool
    */
   void addInput(uint32_t slot_index, const std::vector<unsigned char>& candidate);
 
   /**
+   * @brief Add a candidate program code with its upstream score to the input pool
+   *
+   * Used by the `Pipeline` plumbing to preserve a candidate's score across pipe boundaries
+   * so downstream observers (notably `ResultsSummaryPipe`) can summarise it without
+   * re-evaluating. Existing pipes can still draw the candidate with the score-stripped
+   * `drawInput` interface; the score component is silently ignored.
+   */
+  void addInputWithScore(uint32_t slot_index, const OutputItem& candidate);
+
+  void addInputWithScore(uint32_t slot_index, OutputItem&& candidate);
+
+  /**
    * @class Pipe::drawInput
    * @brief Pull an input candidate from the input buffer
    *
-   * Returns the oldest input buffer candidate and removes it from the buffer.
+   * Returns the oldest input buffer candidate and removes it from the buffer. The upstream
+   * score is discarded; use `drawInputWithScore` instead when the score matters.
    *
    * @return An input candidate program code
    */
   [[nodiscard]] std::vector<unsigned char> drawInput(uint32_t slot_index);
+
+  /**
+   * @brief Pull an input candidate from the input buffer, preserving its upstream score
+   *
+   * Used by passthrough/observer pipes that want to read off the score the previous pipe
+   * tagged the candidate with.
+   */
+  [[nodiscard]] OutputItem drawInputWithScore(uint32_t slot_index);
 
   /**
    * @class Pipe::hasOutput
@@ -163,9 +186,14 @@ class Pipe {
  private:
   /**
    * @var Pipe::input_
-   * @brief Holds the input candidate programs
+   * @brief Holds the input candidate programs and their upstream-attached scores
+   *
+   * Storing `OutputItem` (rather than just the byte vector) lets the `Pipeline` carry a
+   * candidate's score from one pipe's output to the next pipe's input. Pipes that don't care
+   * about the score (factories, sinks, evaluators that re-score) keep using the legacy
+   * `addInput` / `drawInput` interface and never see the score field.
    */
-  std::vector<std::deque<std::vector<unsigned char>>> inputs_;
+  std::vector<std::deque<OutputItem>> inputs_;
 
   std::mutex inputs_mutex_;
 

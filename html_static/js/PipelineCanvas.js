@@ -185,6 +185,25 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       if (outputs.length > 0) {
         content.push(React.createElement('div', {key : 'outh'}, 'Outputs:'), ...outputs);
       }
+
+      // ResultsSummaryPipe attaches a `summary` block to its metrics entry. Surface the
+      // headline stats inline in the tooltip so a quick mouse-over tells the user how
+      // training is going without opening the dedicated panel.
+      if (pipe.summary) {
+        const s = pipe.summary;
+        const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
+        content.push(
+            React.createElement('div', {key : 'sumh', style : {marginTop : '0.4rem'}},
+                                'Score summary:'),
+            React.createElement('div', {key : 'sumn'},
+                                `* Seen total / window: ${s.count_total} / ${s.count_window}`),
+            React.createElement('div', {key : 'sumr'},
+                                `* min / mean / max: ${fmt(s.min_score)} / ${fmt(s.mean_score)} / ${fmt(s.max_score)}`),
+            React.createElement('div', {key : 'suml'},
+                                `* Last: ${fmt(s.last_score)}`),
+            React.createElement('div', {key : 'sumb'},
+                                `* Best ever: ${fmt(s.best_ever_score)} (${s.best_ever_size} bytes)`));
+      }
     }
     return e('div', {
       className : 'pipe-dialog',
@@ -1108,6 +1127,61 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           ? `Disconnect ${pendingDeleteConnection.source_pipe}[${pendingDeleteConnection.source_slot}] → ${pendingDeleteConnection.destination_pipe}[${pendingDeleteConnection.destination_slot}]?`
           : '',
       }),
+      // Top-right floating panel listing every ResultsSummaryPipe in the pipeline with
+      // its live stats. This is the primary place to see "how is the maze doing?" without
+      // having to hover over each pipe individually. Each entry exposes a Reset button
+      // that hits the `reset_summary` action so the user can clear the rolling window
+      // after bumping the maze difficulty.
+      (() => {
+        const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
+        const summaryPipes = pipesMetrics.filter(p => p && p.summary);
+        if (summaryPipes.length === 0) return null;
+        const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
+        return e('div', {
+          style: {
+            position: 'absolute',
+            right: 16,
+            top: 16,
+            padding: '10px 12px',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            border: '1px solid #ccc',
+            borderRadius: 4,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+            zIndex: 10,
+            maxWidth: 320,
+            fontFamily: 'sans-serif',
+            fontSize: 13,
+          },
+        },
+          e('div', {style: {fontWeight: 'bold', marginBottom: 6}}, 'Results summaries'),
+          ...summaryPipes.map((p, idx) =>
+            e('div', {
+              key: 'sp' + p.name,
+              style: {
+                paddingTop: idx === 0 ? 0 : 6,
+                marginTop: idx === 0 ? 0 : 6,
+                borderTop: idx === 0 ? 'none' : '1px solid #eee',
+              },
+            },
+              e('div', {style: {fontWeight: 'bold'}}, p.name),
+              e('div', null, `seen: ${p.summary.count_total} (window ${p.summary.count_window}/${p.summary.window_size || '--'})`),
+              e('div', null, `min/mean/max: ${fmt(p.summary.min_score)} / ${fmt(p.summary.mean_score)} / ${fmt(p.summary.max_score)}`),
+              e('div', null, `last: ${fmt(p.summary.last_score)}`),
+              e('div', null, `best ever: ${fmt(p.summary.best_ever_score)} (${p.summary.best_ever_size} bytes)`),
+              e('button', {
+                onClick: () => postUpdate({action: 'reset_summary', name: p.name}),
+                style: {
+                  marginTop: 4,
+                  padding: '2px 8px',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                },
+                title: 'Reset rolling window and best-ever (use after bumping difficulty)',
+              }, 'Reset'),
+            )),
+        );
+      })(),
+
       // Status bar for the in-flight connection authoring gesture, plus any API errors.
       // Both render as small floating banners inside the canvas viewport so the user gets
       // immediate feedback without us having to wire a separate notification system.

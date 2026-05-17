@@ -78,6 +78,50 @@ TEST_CASE("PipelineManager") {
     REQUIRE(json["pipes"][name]["type"].get<std::string>() == "NullSinkPipe");
   }
 
+  SECTION("ResultsSummaryPipe round-trips through JSON serialisation") {
+    const auto json = R"({
+        "pipes": {
+          "summary": {
+            "type": "ResultsSummaryPipe",
+            "parameters": { "max_candidates": 16, "window_size": 64 }
+          }
+        }})"_json;
+
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto& pipes = pipeline->getPipes();
+    REQUIRE(pipes.size() == 1);
+    const auto summary_pipe =
+        std::dynamic_pointer_cast<ResultsSummaryPipe>(pipes.front()->pipe);
+    REQUIRE(summary_pipe != nullptr);
+    REQUIRE(summary_pipe->getMaxCandidates() == 16);
+    REQUIRE(summary_pipe->getWindowSize() == 64);
+
+    // Round-tripping back to JSON preserves the parameters so the persisted on-disk
+    // representation is stable across save/load cycles.
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["summary"]["type"].get<std::string>() == "ResultsSummaryPipe");
+    REQUIRE(back["pipes"]["summary"]["parameters"]["max_candidates"].get<uint32_t>() == 16);
+    REQUIRE(back["pipes"]["summary"]["parameters"]["window_size"].get<uint32_t>() == 64);
+  }
+
+  SECTION("ResultsSummaryPipe defaults window_size when omitted") {
+    // Omitting `window_size` should pick the built-in default (256) rather than throwing
+    // -- the UI exposes the knob as optional and persists 0 when the user leaves it
+    // blank.
+    const auto json = R"({
+        "pipes": {
+          "summary": {
+            "type": "ResultsSummaryPipe",
+            "parameters": { "max_candidates": 4 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto summary_pipe =
+        std::dynamic_pointer_cast<ResultsSummaryPipe>(pipeline->getPipes().front()->pipe);
+    REQUIRE(summary_pipe != nullptr);
+    REQUIRE(summary_pipe->getWindowSize() == 256);
+  }
+
   SECTION("EvaluatorPipe+MazeEvaluator pipeline is correctly constructed from JSON") {
     const auto json = R"({
         "pipes": {

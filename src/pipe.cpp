@@ -13,7 +13,20 @@ Pipe::Pipe(uint32_t max_candidates, uint32_t input_slots, uint32_t output_slots)
 
 void Pipe::addInput(uint32_t slot_index, const std::vector<unsigned char>& candidate) {
   std::scoped_lock lock(inputs_mutex_);
+  // Wrap as an OutputItem with score 0.0; callers that have a real score should use
+  // addInputWithScore. We keep this signature for backwards-compatible external usage
+  // (initialization, tests) where there is no meaningful score.
+  inputs_[slot_index].push_back(OutputItem{candidate, 0.0});
+}
+
+void Pipe::addInputWithScore(uint32_t slot_index, const OutputItem& candidate) {
+  std::scoped_lock lock(inputs_mutex_);
   inputs_[slot_index].push_back(candidate);
+}
+
+void Pipe::addInputWithScore(uint32_t slot_index, OutputItem&& candidate) {
+  std::scoped_lock lock(inputs_mutex_);
+  inputs_[slot_index].push_back(std::move(candidate));
 }
 
 bool Pipe::inputHasSpace(uint32_t slot_index) {
@@ -27,9 +40,23 @@ std::vector<unsigned char> Pipe::drawInput(uint32_t slot_index) {
     throw std::underflow_error("No input candidates available to draw.");
   }
 
-  std::vector<unsigned char> item = inputs_[slot_index].front();
+  // Score is intentionally dropped here; callers that need it should use
+  // drawInputWithScore. Moving out of the OutputItem first lets us return the bytes
+  // without an extra copy.
+  std::vector<unsigned char> item = std::move(inputs_[slot_index].front().data);
   inputs_[slot_index].pop_front();
 
+  return item;
+}
+
+Pipe::OutputItem Pipe::drawInputWithScore(uint32_t slot_index) {
+  std::scoped_lock lock(inputs_mutex_);
+  if (inputs_[slot_index].empty()) {
+    throw std::underflow_error("No input candidates available to draw.");
+  }
+
+  OutputItem item = std::move(inputs_[slot_index].front());
+  inputs_[slot_index].pop_front();
   return item;
 }
 

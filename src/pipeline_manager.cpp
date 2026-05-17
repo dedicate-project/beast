@@ -8,6 +8,7 @@
 #include <beast/pipes/evolution_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
+#include <beast/pipes/results_summary_pipe.hpp>
 
 #include <beast/program_factory_base.hpp>
 #include <beast/random_program_factory.hpp>
@@ -394,6 +395,17 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
             pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
         created_pipes[pipe_name] = std::make_shared<NullSinkPipe>(max_candidates);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "ResultsSummaryPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        // `window_size` is optional; ResultsSummaryPipe falls back to its built-in default
+        // (256) when 0 is passed.
+        const uint32_t window_size =
+            pipe.value()["parameters"].value("window_size", static_cast<uint32_t>(0));
+        created_pipes[pipe_name] =
+            std::make_shared<ResultsSummaryPipe>(max_candidates, window_size);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "EvaluatorPipe") {
         checkForParameterPresenceInPipeJson(pipe,
                                             {"evaluators",
@@ -542,6 +554,10 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {
       pipe_json["type"] = "NullSinkPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+    } else if (auto summary_pipe = std::dynamic_pointer_cast<ResultsSummaryPipe>(pipe->pipe)) {
+      pipe_json["type"] = "ResultsSummaryPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["window_size"] = summary_pipe->getWindowSize();
     } else if (auto spec_pipe = std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
       pipe_json["type"] = "ProgramFactoryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();

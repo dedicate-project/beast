@@ -179,7 +179,8 @@ add_library(${PROJECT_NAME}-pipelines
   src/pipes/evaluator_pipe.cpp
   src/pipes/evolution_pipe.cpp
   src/pipes/null_sink_pipe.cpp
-  src/pipes/program_factory_pipe.cpp)
+  src/pipes/program_factory_pipe.cpp
+  src/pipes/results_summary_pipe.cpp)
 
 set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm)
 
@@ -333,6 +334,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(null_sink_pipe)
   declare_test(pipe)
   declare_test(pipeline)
+  declare_test(results_summary_pipe)
   declare_test(pipeline_manager)
   declare_test(pipeline_server)
   declare_test(pipelines)
