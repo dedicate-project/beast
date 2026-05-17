@@ -43,9 +43,9 @@ class VmSession {
    * independent from their intended I/O behavior.
    */
   enum class VariableIoBehavior {
-    Store = 0,  ///< Variable is used for in-memory storage only, no I/O behavior is expected
-    Input = 1,  ///< Variable is expected to receive input from outside
-    Output = 2  ///< Variable is expected to be read from outside
+    Store = 0, ///< Variable is used for in-memory storage only, no I/O behavior is expected
+    Input = 1, ///< Variable is expected to receive input from outside
+    Output = 2 ///< Variable is expected to be read from outside
   };
 
   /**
@@ -55,10 +55,10 @@ class VmSession {
    * state is stored. This struct describes these metadata elements.
    */
   struct VariableDescriptor {
-    Program::VariableType type;           ///< The declared type of the variable
-    VariableIoBehavior behavior;          ///< The intended behavior of the variable
-    bool changed_since_last_interaction;  ///< Whether the value was changed since it was last
-                                          ///  written/read, based on the intended behavior
+    Program::VariableType type;          ///< The declared type of the variable
+    VariableIoBehavior behavior;         ///< The intended behavior of the variable
+    bool changed_since_last_interaction; ///< Whether the value was changed since it was last
+                                         ///  written/read, based on the intended behavior
   };
 
   /**
@@ -73,12 +73,12 @@ class VmSession {
    * @sa getRuntimeStatistics(), informAboutStep(), resetRuntimeStatistics()
    */
   struct RuntimeStatistics {
-    uint32_t steps_executed;                         ///< How many steps were executed
-    bool terminated;                                 ///< Whether the program has terminated
-    bool abnormal_exit;                              ///< Whether the program execution was abnormal
-    int8_t return_code;                              ///< The program's return code
-    std::map<OpCode, uint32_t> operator_executions;  ///< How often which operator was executed
-    std::set<uint32_t> executed_indices;             ///< Which operator indices were executed
+    uint32_t steps_executed;                        ///< How many steps were executed
+    bool terminated;                                ///< Whether the program has terminated
+    bool abnormal_exit;                             ///< Whether the program execution was abnormal
+    int8_t return_code;                             ///< The program's return code
+    std::map<OpCode, uint32_t> operator_executions; ///< How often which operator was executed
+    std::set<uint32_t> executed_indices;            ///< Which operator indices were executed
   };
 
   /**
@@ -95,9 +95,8 @@ class VmSession {
    * @param string_table_count The maximum number of string table items
    * @param max_string_size The maximum length per string table item
    */
-  VmSession(
-      Program program, size_t variable_count, size_t string_table_count,
-      size_t max_string_size);
+  VmSession(Program program, size_t variable_count, size_t string_table_count,
+            size_t max_string_size);
 
   /**
    * @fn VmSession::informAboutStep
@@ -409,9 +408,8 @@ class VmSession {
    * @param follow_source_links Whether to resolve the source variable's links
    * @param follow_destination_links Whether to resolve the destination variable's links
    */
-  void addVariableToVariable(
-      int32_t source_variable, int32_t destination_variable,
-      bool follow_source_links, bool follow_destination_links);
+  void addVariableToVariable(int32_t source_variable, int32_t destination_variable,
+                             bool follow_source_links, bool follow_destination_links);
 
   /**
    * @fn VmSession::subtractConstantFromVariable
@@ -436,9 +434,8 @@ class VmSession {
    * @param follow_source_links Whether to resolve the source variable's links
    * @param follow_destination_links Whether to resolve the destination variable's links
    */
-  void subtractVariableFromVariable(
-      int32_t source_variable, int32_t destination_variable,
-      bool follow_source_links, bool follow_destination_links);
+  void subtractVariableFromVariable(int32_t source_variable, int32_t destination_variable,
+                                    bool follow_source_links, bool follow_destination_links);
 
   /**
    * @fn VmSession::relativeJumpToVariableAddressIfVariableGt0
@@ -453,9 +450,9 @@ class VmSession {
    * @param addr_variable The variable holding the target address
    * @param follow_addr_links Whether to resolve the target address variable's links
    */
-  void relativeJumpToVariableAddressIfVariableGt0(
-      int32_t condition_variable, bool follow_condition_links,
-      int32_t addr_variable, bool follow_addr_links);
+  void relativeJumpToVariableAddressIfVariableGt0(int32_t condition_variable,
+                                                  bool follow_condition_links,
+                                                  int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::relativeJumpToVariableAddressIfVariableLt0
@@ -470,9 +467,9 @@ class VmSession {
    * @param addr_variable The variable holding the target address
    * @param follow_addr_links Whether to resolve the target address variable's links
    */
-  void relativeJumpToVariableAddressIfVariableLt0(
-      int32_t condition_variable, bool follow_condition_links,
-      int32_t addr_variable, bool follow_addr_links);
+  void relativeJumpToVariableAddressIfVariableLt0(int32_t condition_variable,
+                                                  bool follow_condition_links,
+                                                  int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::relativeJumpToVariableAddressIfVariableEq0
@@ -487,9 +484,9 @@ class VmSession {
    * @param addr_variable The variable holding the target address
    * @param follow_addr_links Whether to resolve the target address variable's links
    */
-  void relativeJumpToVariableAddressIfVariableEq0(
-      int32_t condition_variable, bool follow_condition_links,
-      int32_t addr_variable, bool follow_addr_links);
+  void relativeJumpToVariableAddressIfVariableEq0(int32_t condition_variable,
+                                                  bool follow_condition_links,
+                                                  int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableGt0
@@ -504,9 +501,9 @@ class VmSession {
    * @param addr_variable The variable holding the target address
    * @param follow_addr_links Whether to resolve the target address variable's links
    */
-  void absoluteJumpToVariableAddressIfVariableGt0(
-      int32_t condition_variable, bool follow_condition_links,
-      int32_t addr_variable, bool follow_addr_links);
+  void absoluteJumpToVariableAddressIfVariableGt0(int32_t condition_variable,
+                                                  bool follow_condition_links,
+                                                  int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableLt0
@@ -521,9 +518,9 @@ class VmSession {
    * @param addr_variable The variable holding the target address
    * @param follow_addr_links Whether to resolve the target address variable's links
    */
-  void absoluteJumpToVariableAddressIfVariableLt0(
-      int32_t condition_variable, bool follow_condition_links,
-      int32_t addr_variable, bool follow_addr_links);
+  void absoluteJumpToVariableAddressIfVariableLt0(int32_t condition_variable,
+                                                  bool follow_condition_links,
+                                                  int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::absoluteJumpToVariableAddressIfVariableEq0
@@ -538,9 +535,9 @@ class VmSession {
    * @param addr_variable The variable holding the target address
    * @param follow_addr_links Whether to resolve the target address variable's links
    */
-  void absoluteJumpToVariableAddressIfVariableEq0(
-      int32_t condition_variable, bool follow_condition_links,
-      int32_t addr_variable, bool follow_addr_links);
+  void absoluteJumpToVariableAddressIfVariableEq0(int32_t condition_variable,
+                                                  bool follow_condition_links,
+                                                  int32_t addr_variable, bool follow_addr_links);
 
   /**
    * @fn VmSession::relativeJumpToAddressIfVariableGt0
@@ -554,8 +551,8 @@ class VmSession {
    * @param follow_condition_links Whether to resolve the comparison variable's links
    * @param addr The target address
    */
-  void relativeJumpToAddressIfVariableGt0(
-      int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void relativeJumpToAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links,
+                                          int32_t addr);
 
   /**
    * @fn VmSession::relativeJumpToAddressIfVariableLt0
@@ -569,8 +566,8 @@ class VmSession {
    * @param follow_condition_links Whether to resolve the comparison variable's links
    * @param addr The target address
    */
-  void relativeJumpToAddressIfVariableLt0(
-      int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void relativeJumpToAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links,
+                                          int32_t addr);
 
   /**
    * @fn VmSession::relativeJumpToAddressIfVariableEq0
@@ -584,8 +581,8 @@ class VmSession {
    * @param follow_condition_links Whether to resolve the comparison variable's links
    * @param addr The target address
    */
-  void relativeJumpToAddressIfVariableEq0(
-      int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void relativeJumpToAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links,
+                                          int32_t addr);
 
   /**
    * @fn VmSession::absoluteJumpToAddressIfVariableGt0
@@ -599,8 +596,8 @@ class VmSession {
    * @param follow_condition_links Whether to resolve the comparison variable's links
    * @param addr The target address
    */
-  void absoluteJumpToAddressIfVariableGt0(
-      int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void absoluteJumpToAddressIfVariableGt0(int32_t condition_variable, bool follow_condition_links,
+                                          int32_t addr);
 
   /**
    * @fn VmSession::absoluteJumpToAddressIfVariableLt0
@@ -614,8 +611,8 @@ class VmSession {
    * @param follow_condition_links Whether to resolve the comparison variable's links
    * @param addr The target address
    */
-  void absoluteJumpToAddressIfVariableLt0(
-      int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void absoluteJumpToAddressIfVariableLt0(int32_t condition_variable, bool follow_condition_links,
+                                          int32_t addr);
 
   /**
    * @fn VmSession::absoluteJumpToAddressIfVariableEq0
@@ -629,8 +626,8 @@ class VmSession {
    * @param follow_condition_links Whether to resolve the comparison variable's links
    * @param addr The target address
    */
-  void absoluteJumpToAddressIfVariableEq0(
-      int32_t condition_variable, bool follow_condition_links, int32_t addr);
+  void absoluteJumpToAddressIfVariableEq0(int32_t condition_variable, bool follow_condition_links,
+                                          int32_t addr);
 
   /**
    * @fn VmSession::loadMemorySizeIntoVariable
@@ -658,9 +655,8 @@ class VmSession {
    * @param follow_destination_links Whether to resolve the destination
    *        variable's links
    */
-  void checkIfVariableIsInput(
-      int32_t source_variable, bool follow_source_links,
-      int32_t destination_variable, bool follow_destination_links);
+  void checkIfVariableIsInput(int32_t source_variable, bool follow_source_links,
+                              int32_t destination_variable, bool follow_destination_links);
 
   /**
    * @fn VmSession::checkIfVariableIsOutput
@@ -677,9 +673,8 @@ class VmSession {
    * @param follow_destination_links Whether to resolve the destination
    *        variable's links
    */
-  void checkIfVariableIsOutput(
-      int32_t source_variable, bool follow_source_links,
-      int32_t destination_variable, bool follow_destination_links);
+  void checkIfVariableIsOutput(int32_t source_variable, bool follow_source_links,
+                               int32_t destination_variable, bool follow_destination_links);
 
   /**
    * @fn VmSession::copyVariable
@@ -693,9 +688,8 @@ class VmSession {
    * @param follow_destination_links Whether to resolve the destination
    *        variable's links
    */
-  void copyVariable(
-      int32_t source_variable, bool follow_source_links,
-      int32_t destination_variable, bool follow_destination_links);
+  void copyVariable(int32_t source_variable, bool follow_source_links, int32_t destination_variable,
+                    bool follow_destination_links);
 
   /**
    * @fn VmSession::loadInputCountIntoVariable
@@ -742,9 +736,8 @@ class VmSession {
    * @param variable_index The index of the input variable to check
    * @param follow_links Whether to resolve the variable's links
    */
-  void checkIfInputWasSet(
-      int32_t variable_index, bool follow_links,
-      int32_t destination_variable, bool follow_destination_links);
+  void checkIfInputWasSet(int32_t variable_index, bool follow_links, int32_t destination_variable,
+                          bool follow_destination_links);
 
   /**
    * @fn VmSession::loadStringTableLimitIntoVariable
@@ -831,8 +824,8 @@ class VmSession {
    * @param variable_index The variable the length should be stored in
    * @param follow_links Whether to resolve variable links
    */
-  void loadStringItemLengthIntoVariable(
-      int32_t string_table_index, int32_t variable_index, bool follow_links);
+  void loadStringItemLengthIntoVariable(int32_t string_table_index, int32_t variable_index,
+                                        bool follow_links);
 
   /**
    * @fn VmSession::loadStringItemIntoVariables
@@ -860,8 +853,8 @@ class VmSession {
    * @param follow_links Whether to resolve variable links
    * @sa loadVariableStringItemIntoVariables()
    */
-  void loadStringItemIntoVariables(
-      int32_t string_table_index, int32_t start_variable_index, bool follow_links);
+  void loadStringItemIntoVariables(int32_t string_table_index, int32_t start_variable_index,
+                                   bool follow_links);
 
   /**
    * @fn VmSession::performSystemCall
@@ -892,8 +885,8 @@ class VmSession {
    * @param variable_index The variable to store the call's result in
    * @param follow_links Whether to resolve the variable's links
    */
-  void performSystemCall(
-      int8_t major_code, int8_t minor_code, int32_t variable_index, bool follow_links);
+  void performSystemCall(int8_t major_code, int8_t minor_code, int32_t variable_index,
+                         bool follow_links);
 
   /**
    * @fn VmSession::bitShiftVariable
@@ -934,8 +927,8 @@ class VmSession {
    * @param variable_index The second variable (also the target)
    * @param follow_links Whether to resolve the second variable's links
    */
-  void bitWiseAndTwoVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseAndTwoVariables(int32_t variable_index_a, bool follow_links_a,
+                              int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::bitWiseOrTwoVariables
@@ -951,8 +944,8 @@ class VmSession {
    * @param variable_index The second variable (also the target)
    * @param follow_links Whether to resolve the second variable's links
    */
-  void bitWiseOrTwoVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseOrTwoVariables(int32_t variable_index_a, bool follow_links_a,
+                             int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::bitWiseXorTwoVariables
@@ -968,8 +961,8 @@ class VmSession {
    * @param variable_index The second variable (also the target)
    * @param follow_links Whether to resolve the second variable's links
    */
-  void bitWiseXorTwoVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void bitWiseXorTwoVariables(int32_t variable_index_a, bool follow_links_a,
+                              int32_t variable_index_b, bool follow_links_b);
 
   /**
    * @fn VmSession::moduloVariableByConstant
@@ -1000,9 +993,8 @@ class VmSession {
    * @param modulo_variable_index The variable to use as modulo value
    * @param modulo_follow_links Whether to resolve the modulo variable's links
    */
-  void moduloVariableByVariable(
-      int32_t variable_index, bool follow_links,
-      int32_t modulo_variable_index, bool modulo_follow_links);
+  void moduloVariableByVariable(int32_t variable_index, bool follow_links,
+                                int32_t modulo_variable_index, bool modulo_follow_links);
 
   /**
    * @fn VmSession::rotateVariable
@@ -1029,9 +1021,8 @@ class VmSession {
    * @param variable_index The variable whose value to push onto the stack
    * @param follow_links Whether to resolve the value variable's links
    */
-  void pushVariableOnStack(
-      int32_t stack_variable_index, bool stack_follow_links,
-      int32_t variable_index, bool follow_links);
+  void pushVariableOnStack(int32_t stack_variable_index, bool stack_follow_links,
+                           int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::pushConstantOnStack
@@ -1056,9 +1047,8 @@ class VmSession {
    * @param variable_index The variable in which to store the top stack item
    * @param follow_links Whether to resolve the target variable's links
    */
-  void popVariableFromStack(
-      int32_t stack_variable_index, bool stack_follow_links,
-      int32_t variable_index, bool follow_links);
+  void popVariableFromStack(int32_t stack_variable_index, bool stack_follow_links,
+                            int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::popTopItemFromStack
@@ -1085,9 +1075,8 @@ class VmSession {
    * @param variable_index The variable in which to store the top stack item
    * @param follow_links Whether to resolve the target variable's links
    */
-  void checkIfStackIsEmpty(
-      int32_t stack_variable_index, bool stack_follow_links,
-      int32_t variable_index, bool follow_links);
+  void checkIfStackIsEmpty(int32_t stack_variable_index, bool stack_follow_links,
+                           int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::swapVariables
@@ -1100,8 +1089,8 @@ class VmSession {
    * @param variable_index_b The second variable to swap
    * @param follow_links_b Whether to resolve the second variable's links
    */
-  void swapVariables(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b);
+  void swapVariables(int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b,
+                     bool follow_links_b);
 
   /**
    * @fn VmSession::setVariableStringTableEntry
@@ -1116,8 +1105,8 @@ class VmSession {
    * @param follow_links Whether to resolve the variable's links
    * @param string_content The string to store in the string table
    */
-  void setVariableStringTableEntry(
-      int32_t variable_index, bool follow_links, std::string_view string_content);
+  void setVariableStringTableEntry(int32_t variable_index, bool follow_links,
+                                   std::string_view string_content);
 
   /**
    * @fn VmSession::printVariableStringFromStringTable
@@ -1149,9 +1138,9 @@ class VmSession {
    * @param follow_links Whether to resolve the target variable's links
    * @sa loadStringItemLengthIntoVariable()
    */
-  void loadVariableStringItemLengthIntoVariable(
-      int32_t string_item_variable_index, bool string_item_follow_links,
-      int32_t variable_index, bool follow_links);
+  void loadVariableStringItemLengthIntoVariable(int32_t string_item_variable_index,
+                                                bool string_item_follow_links,
+                                                int32_t variable_index, bool follow_links);
 
   /**
    * @fn VmSession::loadVariableStringItemIntoVariables
@@ -1169,9 +1158,9 @@ class VmSession {
    * @param follow_links Whether to resolve the start variable's links
    * @sa loadStringItemIntoVariables()
    */
-  void loadVariableStringItemIntoVariables(
-      int32_t string_item_variable_index, bool string_item_follow_links,
-      int32_t start_variable_index, bool follow_links);
+  void loadVariableStringItemIntoVariables(int32_t string_item_variable_index,
+                                           bool string_item_follow_links,
+                                           int32_t start_variable_index, bool follow_links);
 
   /**
    * @fn VmSession::terminateWithVariableReturnCode
@@ -1201,9 +1190,8 @@ class VmSession {
    * @param places_follow_links Whether to resolve the places variable's links
    * @sa bitShiftVariableLeft()
    */
-  void variableBitShiftVariableLeft(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool places_follow_links);
+  void variableBitShiftVariableLeft(int32_t variable_index, bool follow_links,
+                                    int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::variableBitShiftVariableRight
@@ -1217,9 +1205,8 @@ class VmSession {
    * @param places_follow_links Whether to resolve the places variable's links
    * @sa bitShiftVariableRight()
    */
-  void variableBitShiftVariableRight(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool places_follow_links);
+  void variableBitShiftVariableRight(int32_t variable_index, bool follow_links,
+                                     int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::variableRotateVariableLeft
@@ -1234,9 +1221,8 @@ class VmSession {
    * @param places_follow_links Whether to resolve the places variable's links
    * @sa rotateVariableLeft(), rotateVariableRight(), variableRotateVariableRight()
    */
-  void variableRotateVariableLeft(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool places_follow_links);
+  void variableRotateVariableLeft(int32_t variable_index, bool follow_links,
+                                  int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::variableRotateVariableRight
@@ -1251,9 +1237,8 @@ class VmSession {
    * @param places_follow_links Whether to resolve the places variable's links
    * @sa rotateVariableLeft(), rotateVariableRight(), variableRotateVariableLeft()
    */
-  void variableRotateVariableRight(
-      int32_t variable_index, bool follow_links,
-      int32_t places_variable_index, bool places_follow_links);
+  void variableRotateVariableRight(int32_t variable_index, bool follow_links,
+                                   int32_t places_variable_index, bool places_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableGtConstant
@@ -1270,9 +1255,8 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void compareIfVariableGtConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableLtConstant
@@ -1289,9 +1273,8 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void compareIfVariableLtConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableEqConstant
@@ -1308,9 +1291,8 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void compareIfVariableEqConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableGtVariable
@@ -1328,9 +1310,9 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void compareIfVariableGtVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableGtVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableLtVariable
@@ -1348,9 +1330,9 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void compareIfVariableLtVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableLtVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::compareIfVariableEqVariable
@@ -1358,7 +1340,8 @@ class VmSession {
    *
    * See Program::compareIfVariableEqVariable for the intended operator use.
    *
-   * If the two variable values are equal, store `0x1` in the target variable. Store `0x0` otherwise.
+   * If the two variable values are equal, store `0x1` in the target variable. Store `0x0`
+   * otherwise.
    *
    * @param variable_index_a The first variable to compare
    * @param follow_links_a Whether to resolve the first variable's links
@@ -1367,9 +1350,9 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void compareIfVariableEqVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void compareIfVariableEqVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMaxOfVariableAndConstant
@@ -1383,9 +1366,8 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void getMaxOfVariableAndConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMinOfVariableAndConstant
@@ -1399,9 +1381,8 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void getMinOfVariableAndConstant(
-      int32_t variable_index, bool follow_links, int32_t constant,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndConstant(int32_t variable_index, bool follow_links, int32_t constant,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMaxOfVariableAndVariable
@@ -1416,9 +1397,9 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void getMaxOfVariableAndVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMaxOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::getMinOfVariableAndVariable
@@ -1433,9 +1414,9 @@ class VmSession {
    * @param target_variable_index The variable to store the result in
    * @param target_follow_links Whether to resolve the target variable's links
    */
-  void getMinOfVariableAndVariable(
-      int32_t variable_index_a, bool follow_links_a, int32_t variable_index_b, bool follow_links_b,
-      int32_t target_variable_index, bool target_follow_links);
+  void getMinOfVariableAndVariable(int32_t variable_index_a, bool follow_links_a,
+                                   int32_t variable_index_b, bool follow_links_b,
+                                   int32_t target_variable_index, bool target_follow_links);
 
   /**
    * @fn VmSession::printVariable
@@ -1561,6 +1542,6 @@ class VmSession {
   RuntimeStatistics runtime_statistics_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_VM_SESSION_HPP_
+#endif // BEAST_VM_SESSION_HPP_

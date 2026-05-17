@@ -20,8 +20,9 @@ TEST_CASE("inputs_can_be_determined", "io") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setVariableBehavior(input_variable_index, beast::VmSession::VariableIoBehavior::Input);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(result1_variable_index, true) == 0x1);
   REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
@@ -45,8 +46,9 @@ TEST_CASE("outputs_can_be_determined", "io") {
 
   beast::VmSession session(std::move(prg), 500, 100, 50);
   session.setVariableBehavior(output_variable_index, beast::VmSession::VariableIoBehavior::Output);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(result1_variable_index, true) == 0x1);
   REQUIRE(session.getVariableValue(result2_variable_index, true) == 0x0);
@@ -64,8 +66,9 @@ TEST_CASE("input_count_can_be_determined", "io") {
   session.setVariableBehavior(8, beast::VmSession::VariableIoBehavior::Output);
   session.setVariableBehavior(62, beast::VmSession::VariableIoBehavior::Output);
   session.setVariableBehavior(120, beast::VmSession::VariableIoBehavior::Input);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 2);
 }
@@ -82,8 +85,9 @@ TEST_CASE("output_count_can_be_determined", "io") {
   session.setVariableBehavior(8, beast::VmSession::VariableIoBehavior::Output);
   session.setVariableBehavior(62, beast::VmSession::VariableIoBehavior::Output);
   session.setVariableBehavior(120, beast::VmSession::VariableIoBehavior::Input);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 3);
 }
@@ -102,8 +106,9 @@ TEST_CASE("set_input_can_be_determined", "io") {
   session.setVariableBehavior(3, beast::VmSession::VariableIoBehavior::Input);
 
   session.setVariableValue(2, true, 1);
-  beast::CpuVirtualMachine vm;
-  while (vm.step(session, false)) {}
+  beast::CpuVirtualMachine virtual_machine;
+  while (virtual_machine.step(session, false)) {
+  }
 
   REQUIRE(session.getVariableValue(0, true) == 1);
   REQUIRE(session.getVariableValue(1, true) == 0);
@@ -119,13 +124,13 @@ TEST_CASE("checkig_noninput_variables_for_input_throws", "io") {
   prg.checkIfInputWasSet(variable_index, true, target_variable_index, true);
 
   beast::VmSession session(std::move(prg), 2, 0, 0);
-  beast::CpuVirtualMachine vm;
-  (void)vm.step(session, false);
-  (void)vm.step(session, false);
+  beast::CpuVirtualMachine virtual_machine;
+  (void)virtual_machine.step(session, false);
+  (void)virtual_machine.step(session, false);
   bool threw = false;
   try {
-    (void)vm.step(session, false);
-  } catch(...) {
+    (void)virtual_machine.step(session, false);
+  } catch (...) {
     threw = true;
   }
 

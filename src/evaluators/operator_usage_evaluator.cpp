@@ -2,9 +2,7 @@
 
 namespace beast {
 
-OperatorUsageEvaluator::OperatorUsageEvaluator(OpCode opcode)
-  : opcode_{opcode} {
-}
+OperatorUsageEvaluator::OperatorUsageEvaluator(OpCode opcode) : opcode_{opcode} {}
 
 double OperatorUsageEvaluator::evaluate(const VmSession& session) {
   VmSession::RuntimeStatistics statistics = session.getRuntimeStatistics();
@@ -15,9 +13,8 @@ double OperatorUsageEvaluator::evaluate(const VmSession& session) {
   }
 
   // score = specific operator executions / total operator executions
-  return
-      static_cast<double>(statistics.operator_executions[opcode_]) /
-      static_cast<double>(statistics.steps_executed);
+  return static_cast<double>(statistics.operator_executions[opcode_]) /
+         static_cast<double>(statistics.steps_executed);
 }
 
-}  // namespace beast
+} // namespace beast

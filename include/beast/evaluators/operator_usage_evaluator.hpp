@@ -1,6 +1,7 @@
 #ifndef BEAST_OPERATOR_USAGE_EVALUATOR_HPP_
 #define BEAST_OPERATOR_USAGE_EVALUATOR_HPP_
 
+// Internal
 #include <beast/evaluator.hpp>
 
 namespace beast {
@@ -28,6 +29,11 @@ class OperatorUsageEvaluator : public Evaluator {
   explicit OperatorUsageEvaluator(OpCode opcode);
 
   /**
+   * @brief Destructor added for vtable consistency
+   */
+  ~OperatorUsageEvaluator() override = default;
+
+  /**
    * @fn OperatorUsageEvaluator::evaluate
    * @brief Determines the portion of specific operators during execution
    *
@@ -37,7 +43,7 @@ class OperatorUsageEvaluator : public Evaluator {
    * @param session The session object to base the score determination on
    * @return A score value from 0.0 (specific op not found) to 1.0 (only specific op)
    */
-  double evaluate(const VmSession& session) override;
+  [[nodiscard]] double evaluate(const VmSession& session) override;
 
  private:
   /**
@@ -47,6 +53,6 @@ class OperatorUsageEvaluator : public Evaluator {
   OpCode opcode_;
 };
 
-}  // namespace beast
+} // namespace beast
 
-#endif  // BEAST_OPERATOR_USAGE_EVALUATOR_HPP_
+#endif // BEAST_OPERATOR_USAGE_EVALUATOR_HPP_

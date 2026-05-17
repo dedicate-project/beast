@@ -3,7 +3,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    # The branches below must be a subset of the branches above
     branches: [ "main" ]
   schedule:
     - cron: '32 23 * * 2'
@@ -26,15 +25,29 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
+    - name: Initialize CodeQL for C++
+      if: ${{ matrix.language == 'cpp' }}
       uses: github/codeql-action/init@v2
       with:
-        languages: ${{matrix.language}}
-    - name: Install dependencies
-      run: sudo apt-get install -y clang-tidy lcov ccache
-    - name: Build
+        languages: cpp
+        config-file: "codeql-config.yml"
+
+    - name: Initialize CodeQL for JavaScript
+      if: ${{ matrix.language == 'javascript' }}
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+
+    - name: Install C++ dependencies
+      if: matrix.language == 'cpp'
       run: |
+        # Install C++ dependencies if analyzing C++
+        ${{ matrix.language == 'cpp' && 'sudo apt-get install -y clang-tidy lcov ccache' || '' }}
+
+    - name: Build C++
+      if: matrix.language == 'cpp'
+      run: |
+        # Build C++ code if analyzing C++
         git submodule update --init --recursive
         mkdir build
         cd build

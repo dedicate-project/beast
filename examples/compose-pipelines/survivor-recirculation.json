@@ -1,0 +1,91 @@
+{
+  "name": "Survivor Recirculation",
+  "model": {
+    "pipes": {
+      "factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 16,
+          "max_size": 150,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0
+        }
+      },
+      "mux": {
+        "type": "MultiplexerPipe",
+        "parameters": { "max_candidates": 32, "input_slots": 2 }
+      },
+      "adder": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 32,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "AdderEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": { "trial_count": 8, "value_range": 32, "max_steps_per_trial": 800 }
+          }],
+          "evolution_parameters": {
+            "generations": 12,
+            "crossover_probability": 0.75,
+            "mutation_probability": 0.05,
+            "elitism": true,
+            "byte_mutation_share": 0.3,
+            "variable_count": 32,
+            "string_table_size": 0,
+            "string_table_item_length": 0,
+            "max_genome_bytes": 1024,
+            "starting_program_size": 150,
+            "opcode_weights": {}
+          }
+        }
+      },
+      "fan": {
+        "type": "FanPipe",
+        "parameters": { "max_candidates": 32, "window_seconds": 2.0 }
+      },
+      "stats": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 32, "window_size": 256 }
+      },
+      "fanout": {
+        "type": "DemultiplexerPipe",
+        "parameters": { "max_candidates": 16, "output_slots": 2, "strategy": "broadcast" }
+      },
+      "survivors": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": {
+          "max_candidates": 16,
+          "path": "/tmp/beast-adder-survivors.json",
+          "top_k": 8
+        }
+      }
+    },
+    "connections": [
+      {"source_pipe": "factory", "source_slot": 0, "destination_pipe": "mux",       "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "mux",     "source_slot": 0, "destination_pipe": "adder",     "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "adder",   "source_slot": 0, "destination_pipe": "fan",       "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "fan",     "source_slot": 0, "destination_pipe": "stats",     "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "stats",   "source_slot": 0, "destination_pipe": "fanout",    "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "fanout",  "source_slot": 0, "destination_pipe": "survivors", "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "fanout",  "source_slot": 1, "destination_pipe": "mux",       "destination_slot": 1, "buffer_size": 8}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "factory":   { "position": { "x":  60, "y": 200 } },
+      "mux":       { "position": { "x": 220, "y": 280 } },
+      "adder":     { "position": { "x": 380, "y": 280 } },
+      "fan":       { "position": { "x": 540, "y": 280 } },
+      "stats":     { "position": { "x": 700, "y": 280 } },
+      "fanout":    { "position": { "x": 860, "y": 280 } },
+      "survivors": { "position": { "x": 1020, "y": 280 } }
+    }
+  }
+}

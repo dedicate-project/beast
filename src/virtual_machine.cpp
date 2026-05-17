@@ -40,8 +40,6 @@ bool VirtualMachine::shouldDisplayMessageWithSeverity(MessageSeverity severity) 
   return static_cast<uint32_t>(severity) >= static_cast<uint32_t>(minimum_severity_);
 }
 
-void VirtualMachine::setSilent(bool silent) {
-  silent_ = silent;
-}
+void VirtualMachine::setSilent(bool silent) { silent_ = silent; }
 
-}  // namespace beast
+} // namespace beast

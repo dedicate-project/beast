@@ -1,0 +1,6 @@
+name: "Custom CodeQL Configuration"
+
+paths-ignore:
+  - "html_static/js/konva*"
+  - "html_static/js/react*"
+  - "html_static/js/material-ui*"
