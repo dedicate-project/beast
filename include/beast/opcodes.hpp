@@ -1,6 +1,11 @@
 #ifndef BEAST_OPCODES_HPP_
 #define BEAST_OPCODES_HPP_
 
+// Some libstdc++ revisions don't pull <cstdint> in transitively, and the underlying type of
+// `OpCode` below depends on `int8_t`. Including it explicitly avoids "int8_t has not been
+// declared" errors on stricter toolchains.
+#include <cstdint>
+
 namespace beast {
 
 /**

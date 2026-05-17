@@ -21,7 +21,8 @@ void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pip
   auto managed_pipe = std::make_shared<ManagedPipe>();
   managed_pipe->name = name;
   managed_pipe->pipe = pipe;
-  managed_pipe->should_run = false;
+  // should_run / is_running default-initialize to false via the in-class initializer on the
+  // atomic members; no explicit reset needed here.
   pipes_.push_back(std::move(managed_pipe));
 }
 
@@ -71,39 +72,43 @@ const std::list<std::shared_ptr<Pipeline::Connection>>& Pipeline::getConnections
 }
 
 void Pipeline::start() {
-  if (is_running_) {
+  if (is_running_.load(std::memory_order_acquire)) {
     throw std::invalid_argument("Pipeline is already running, cannot start it.");
   }
 
   for (std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
-    if (!managed_pipe->is_running) {
-      managed_pipe->should_run = true;
-      std::thread thread(&Pipeline::pipelineWorker, this, std::ref(managed_pipe));
+    if (!managed_pipe->is_running.load(std::memory_order_acquire)) {
+      managed_pipe->should_run.store(true, std::memory_order_release);
+      // Capture the shared_ptr by VALUE in the thread - capturing by reference (the previous
+      // `std::ref(managed_pipe)` form) keeps a dangling reference to a stack/list element whose
+      // address could change between the thread launch and first execution, and prevents the
+      // ManagedPipe from being kept alive purely by the worker.
+      std::thread thread(&Pipeline::pipelineWorker, this, managed_pipe);
       std::swap(managed_pipe->thread, thread);
-      managed_pipe->is_running = true;
+      managed_pipe->is_running.store(true, std::memory_order_release);
     }
   }
 
-  is_running_ = true;
+  is_running_.store(true, std::memory_order_release);
 }
 
 void Pipeline::stop() {
-  if (!is_running_) {
+  if (!is_running_.load(std::memory_order_acquire)) {
     throw std::invalid_argument("Pipeline is not running, cannot stop it.");
   }
 
   for (const std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
-    if (managed_pipe->is_running) {
-      managed_pipe->should_run = false;
+    if (managed_pipe->is_running.load(std::memory_order_acquire)) {
+      managed_pipe->should_run.store(false, std::memory_order_release);
       managed_pipe->thread.join();
-      managed_pipe->is_running = false;
+      managed_pipe->is_running.store(false, std::memory_order_release);
     }
   }
 
-  is_running_ = false;
+  is_running_.store(false, std::memory_order_release);
 }
 
-bool Pipeline::isRunning() const { return is_running_; }
+bool Pipeline::isRunning() const { return is_running_.load(std::memory_order_acquire); }
 
 Pipeline::PipelineMetrics Pipeline::getMetrics() {
   std::scoped_lock lock(metrics_mutex_);
@@ -140,6 +145,12 @@ void Pipeline::findConnections(
 std::unordered_map<uint32_t, uint32_t> Pipeline::processOutputSlots(
     const std::shared_ptr<ManagedPipe>& managed_pipe,
     const std::vector<std::shared_ptr<Connection>>& destination_connections) {
+  // `destination_connections` are connections in which `managed_pipe` is the SOURCE - i.e. the
+  // connections that carry this pipe's output downstream. To find the connection corresponding to
+  // a given local output slot, we therefore have to match the connection's `source_slot_index`
+  // (the slot index on the SOURCE side) against our iteration variable. Matching against
+  // `destination_slot_index` (which is an index on the downstream pipe) was a long-standing bug
+  // that silently worked only when every pipe used slot 0 everywhere.
   std::unordered_map<uint32_t, uint32_t> metrics;
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getOutputSlotCount();
        ++slot_index) {
@@ -151,7 +162,7 @@ std::unordered_map<uint32_t, uint32_t> Pipeline::processOutputSlots(
         std::find_if(destination_connections.begin(),
                      destination_connections.end(),
                      [slot_index](const std::shared_ptr<Connection>& connection) {
-                       return connection->destination_slot_index == slot_index;
+                       return connection->source_slot_index == slot_index;
                      });
 
     if (destination_slot_connection_iter == destination_connections.end()) {
@@ -175,6 +186,12 @@ std::unordered_map<uint32_t, uint32_t> Pipeline::processOutputSlots(
 std::unordered_map<uint32_t, uint32_t>
 Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
                             const std::vector<std::shared_ptr<Connection>>& source_connections) {
+  // `source_connections` are connections in which `managed_pipe` is the DESTINATION - i.e. the
+  // connections that feed this pipe's input from upstream. To find the connection corresponding
+  // to a given local input slot we therefore have to match the connection's
+  // `destination_slot_index` (the slot index on the DESTINATION side) against our iteration
+  // variable. Matching against `source_slot_index` was the symmetrical bug of the one in
+  // `processOutputSlots`.
   std::unordered_map<uint32_t, uint32_t> metrics;
   for (uint32_t slot_index = 0; slot_index < managed_pipe->pipe->getInputSlotCount();
        ++slot_index) {
@@ -183,7 +200,7 @@ Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
         std::find_if(source_connections.begin(),
                      source_connections.end(),
                      [slot_index](const std::shared_ptr<Connection>& connection) {
-                       return connection->source_slot_index == slot_index;
+                       return connection->destination_slot_index == slot_index;
                      });
 
     if (source_slot_connection_iter == source_connections.end()) {
@@ -191,15 +208,14 @@ Pipeline::processInputSlots(const std::shared_ptr<ManagedPipe>& managed_pipe,
     }
 
     const std::shared_ptr<Connection>& source_slot_connection = *source_slot_connection_iter;
-    if (source_slot_connection->buffer.empty()) {
-      continue;
-    }
-
     std::scoped_lock lock(source_slot_connection->buffer_mutex);
+    // Drain in FIFO order: the buffer is filled via `push_back` in processOutputSlots, so the
+    // oldest item lives at the front. The previous implementation popped from the back, which
+    // made the pipeline behave as LIFO and starved the oldest candidates indefinitely.
     while (managed_pipe->pipe->inputHasSpace(slot_index) &&
            !source_slot_connection->buffer.empty()) {
-      auto data = source_slot_connection->buffer.back();
-      source_slot_connection->buffer.pop_back();
+      auto data = std::move(source_slot_connection->buffer.front());
+      source_slot_connection->buffer.pop_front();
       managed_pipe->pipe->addInput(slot_index, data.data);
       metrics[slot_index]++;
     }
@@ -212,18 +228,27 @@ void Pipeline::pipelineWorker(const std::shared_ptr<ManagedPipe>& managed_pipe) 
   std::vector<std::shared_ptr<Connection>> destination_connections;
   findConnections(managed_pipe, source_connections, destination_connections);
 
-  while (managed_pipe->should_run) {
+  while (managed_pipe->should_run.load(std::memory_order_acquire)) {
     const auto input_metrics = processInputSlots(managed_pipe, source_connections);
 
     bool executed = false;
     if (!managed_pipe->pipe->outputsAreSaturated() && managed_pipe->pipe->inputsAreSaturated()) {
-      managed_pipe->pipe->execute();
-      executed = true;
+      try {
+        managed_pipe->pipe->execute();
+        executed = true;
+      } catch (const std::exception&) {
+        // Swallow exceptions from a single execution so a misbehaving pipe doesn't crash the
+        // entire pipeline. We deliberately drop the message here - the pipeline has no logger,
+        // and a future PR can add structured error reporting via the metrics channel.
+        executed = false;
+      }
     }
 
     const auto output_metrics = processOutputSlots(managed_pipe, destination_connections);
 
-    // Limit cycle time.
+    // Limit cycle time. The fixed 10 ms wait is intentional: it gives upstream/downstream pipes a
+    // chance to make progress without burning a core for purely structural work. A future PR can
+    // replace this with a condition_variable backed off connection events.
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     // Report metrics for this worker.

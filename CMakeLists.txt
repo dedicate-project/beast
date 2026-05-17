@@ -108,6 +108,7 @@ add_library(${PROJECT_NAME}-utils
 add_library(${PROJECT_NAME}-vm
   src/cpu_virtual_machine.cpp
   src/program.cpp
+  src/program_parser.cpp
   src/random_program_factory.cpp
   src/virtual_machine.cpp
   src/vm_session.cpp)
@@ -288,6 +289,7 @@ if(BEAST_BUILD_TESTS)
   declare_test(printing_and_string_table)
   declare_test(program)
   declare_test(program_factory_pipe)
+  declare_test(program_parser)
   declare_test(programs)
   declare_test(random_program_factory)
   declare_test(stacks)

@@ -2,6 +2,7 @@
 #define BEAST_PIPELINE_HPP_
 
 // Standard
+#include <atomic>
 #include <condition_variable>
 #include <deque>
 #include <list>
@@ -32,8 +33,11 @@ class Pipeline {
     std::string name;
     std::shared_ptr<Pipe> pipe;
     std::thread thread;
-    bool should_run;
-    bool is_running;
+    // Read by the worker thread on every loop iteration; written by start()/stop() on the owning
+    // thread. Without atomics, the worker could fail to observe a stop request (compiler may cache
+    // the load) and we would leak a thread or hang in stop().
+    std::atomic<bool> should_run{false};
+    std::atomic<bool> is_running{false};
   };
 
   /**
@@ -251,7 +255,7 @@ class Pipeline {
    * @var Pipeline::is_running_
    * @brief Holds a boolean status denoting whether this pipeline is currently running or not
    */
-  bool is_running_ = false;
+  std::atomic<bool> is_running_{false};
 };
 
 } // namespace beast

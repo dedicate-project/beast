@@ -2,6 +2,7 @@
 #define BEAST_PIPELINE_MANAGER_HPP_
 
 // Standard
+#include <atomic>
 #include <list>
 #include <mutex>
 #include <string>
@@ -177,7 +178,10 @@ class PipelineManager {
 
   std::thread metrics_collector_thread_;
 
-  bool should_run_metrics_collector_;
+  // Read by the metrics collector thread on every loop iteration; written by the destructor on the
+  // owning thread. Marked atomic so the worker is guaranteed to observe shutdown without a
+  // surrounding mutex.
+  std::atomic<bool> should_run_metrics_collector_{false};
 
   std::unordered_map<uint32_t, Pipeline::PipelineMetrics> metrics_;
 

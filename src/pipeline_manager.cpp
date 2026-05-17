@@ -42,13 +42,15 @@ PipelineManager::PipelineManager(const std::string& storage_path, uint32_t metri
   metrics_time_constant_ =
       static_cast<uint32_t>(std::ceil(metrics_interval_time / metrics_window_size));
 
-  should_run_metrics_collector_ = true;
+  should_run_metrics_collector_.store(true, std::memory_order_release);
   metrics_collector_thread_ = std::thread(&PipelineManager::metricsCollectorWorker, this);
 }
 
 PipelineManager::~PipelineManager() {
-  should_run_metrics_collector_ = false;
-  metrics_collector_thread_.join();
+  should_run_metrics_collector_.store(false, std::memory_order_release);
+  if (metrics_collector_thread_.joinable()) {
+    metrics_collector_thread_.join();
+  }
 }
 
 uint32_t PipelineManager::createPipeline(const std::string& name) {
@@ -435,7 +437,7 @@ uint32_t PipelineManager::getFreeId() const {
 
 void PipelineManager::metricsCollectorWorker() {
   std::unordered_map<uint32_t, std::deque<Pipeline::PipelineMetrics>> metrics_cache;
-  while (should_run_metrics_collector_) {
+  while (should_run_metrics_collector_.load(std::memory_order_acquire)) {
     // Remove the oldest element from the cache for each pipeline if maximum window size is reached.
     for (auto& metrics_pair : metrics_cache) {
       if (metrics_pair.second.size() >= metrics_window_size_) {
