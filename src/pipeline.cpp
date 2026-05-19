@@ -49,6 +49,13 @@ void Pipeline::addPipe(const std::string& name, const std::shared_ptr<Pipe>& pip
   managed_pipe->pipe = pipe;
   // should_run / is_running default-initialize to false via the in-class initializer on the
   // atomic members; no explicit reset needed here.
+  // If the pipeline has been started before (token exists), keep this pipe in sync so a
+  // future start() doesn't have to re-walk everyone. The usual flow is "addPipe before
+  // first start()" but pipeline manager allows mutation while stopped, and we want stop
+  // to behave correctly on every pipe regardless of attach order.
+  if (stop_token_ && pipe) {
+    pipe->setStopToken(stop_token_);
+  }
   pipes_.push_back(std::move(managed_pipe));
 }
 
@@ -102,6 +109,18 @@ void Pipeline::start() {
     throw std::invalid_argument("Pipeline is already running, cannot start it.");
   }
 
+  // Mint a fresh stop token for this run. Always allocate a new one (rather than reusing the
+  // previous one with a `.store(false)`) so we don't have to reason about an in-flight VM
+  // step from the previous cycle still holding a shared_ptr copy to the token -- the new
+  // instance is independent, and the old one stays alive only as long as some lingering
+  // VmSession needs it.
+  stop_token_ = std::make_shared<std::atomic<bool>>(false);
+  for (std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
+    if (managed_pipe->pipe) {
+      managed_pipe->pipe->setStopToken(stop_token_);
+    }
+  }
+
   for (std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
     if (!managed_pipe->is_running.load(std::memory_order_acquire)) {
       managed_pipe->should_run.store(true, std::memory_order_release);
@@ -123,7 +142,17 @@ void Pipeline::stop() {
     throw std::invalid_argument("Pipeline is not running, cannot stop it.");
   }
 
-  // Two-phase shutdown so we don't pay the 10ms wait_for ceiling per worker.
+  // Phase 0: flip the cooperative-cancellation token BEFORE any other shutdown bookkeeping.
+  // Worker threads that are currently deep inside an evolve() cycle (or a long VM step loop)
+  // poll this token at hot-path granularity (per genome, per VM step), so flipping it first
+  // shaves the entire in-flight cycle's worst case off the join() wait. Without this, stop()
+  // would block until each worker's natural cycle boundary -- minutes for a multi-round
+  // SHA-256 evaluator.
+  if (stop_token_) {
+    stop_token_->store(true, std::memory_order_release);
+  }
+
+  // Three-phase shutdown so we don't pay the 10ms wait_for ceiling per worker.
   // Phase 1: ask every worker to stop, then poke the activity cv once so any worker currently
   // blocked in wait_for() wakes up immediately and checks should_run on its next loop guard.
   for (const std::shared_ptr<ManagedPipe>& managed_pipe : pipes_) {
@@ -143,6 +172,11 @@ void Pipeline::stop() {
   }
 
   is_running_.store(false, std::memory_order_release);
+  // Leave `stop_token_` alone here -- start() will mint a fresh one on the next run. A
+  // VmSession or evaluator whose thread is *just* about to exit may still hold a copy of
+  // the shared_ptr; letting it drop naturally avoids a use-after-free if the load/store
+  // race the join window by a hair (in practice this is paranoia; the join already
+  // synchronises, but the cost of leaving the pointer in place is zero).
 }
 
 bool Pipeline::isRunning() const { return is_running_.load(std::memory_order_acquire); }

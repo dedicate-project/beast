@@ -51,11 +51,39 @@ void DemultiplexerPipe::execute() {
         storeOutput(slot, item);
       }
       storeOutput(output_slot_count_ - 1, std::move(item));
+    } else if (strategy_ == Strategy::LeastLoaded) {
+      // Pick the output slot with the fewest queued items, breaking ties with the
+      // round-robin cursor so equally-loaded slots still fan out evenly. This is the
+      // right routing policy when downstream branches have asymmetric throughput: the
+      // slow branch's buffer fills, and the demux quietly stops sending to it instead
+      // of stalling the whole pipeline (which is what RoundRobin would do). When every
+      // slot is at capacity we bail with back-pressure -- there's no "least-bad" target
+      // to pick once they're all full.
+      uint32_t best_slot = round_robin_cursor_;
+      uint32_t best_load = getOutputSlotAmount(best_slot);
+      for (uint32_t step = 1; step < output_slot_count_; ++step) {
+        const uint32_t slot = (round_robin_cursor_ + step) % output_slot_count_;
+        const uint32_t load = getOutputSlotAmount(slot);
+        if (load < best_load) {
+          best_load = load;
+          best_slot = slot;
+        }
+      }
+      if (best_load >= getMaxCandidates()) {
+        return;
+      }
+      auto item = drawInputWithScore(0);
+      storeOutput(best_slot, std::move(item));
+      // Advance the cursor past the just-served slot so the next tie-break breaks the
+      // other way. Without this the cursor would sit on the lightest slot indefinitely
+      // and a burst of identically-empty slots would always land on the lowest index.
+      round_robin_cursor_ = (best_slot + 1) % output_slot_count_;
     } else {
       // Round-robin: send to the next slot and advance the cursor. Stop the tick if the
       // chosen slot is full -- we deliberately don't skip ahead to a non-full slot so
       // we apply correct back-pressure (the user's wiring usually implies "go here next"
-      // and quietly rerouting can mask a downstream bottleneck).
+      // and quietly rerouting can mask a downstream bottleneck). If you want the demux
+      // to *skip* a saturated slot rather than stall, use `Strategy::LeastLoaded`.
       const uint32_t target = round_robin_cursor_;
       if (getOutputSlotAmount(target) >= getMaxCandidates()) {
         return;

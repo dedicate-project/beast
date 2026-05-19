@@ -244,6 +244,57 @@ TEST_CASE("PipelineManager") {
     REQUIRE(maximum->getMaxStepsPerTrial() == 777);
   }
 
+  SECTION("ScoreGraphPipe round-trips through PipelineManager JSON") {
+    // Same shape as the ResultsSummaryPipe coverage above: parse a single-pipe pipeline,
+    // confirm the parameters survive construction, then re-serialise and confirm the
+    // on-wire form is canonical. The optional parameters (`window_seconds`,
+    // `max_samples`) must round-trip exactly (no silent defaulting) when explicitly set.
+    const auto json = R"({
+        "pipes": {
+          "graph": {
+            "type": "ScoreGraphPipe",
+            "parameters": {
+              "max_candidates": 32,
+              "window_seconds": 12.5,
+              "max_samples": 200
+            }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto graph_pipe = std::dynamic_pointer_cast<ScoreGraphPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(graph_pipe != nullptr);
+    REQUIRE(graph_pipe->getMaxCandidates() == 32);
+    REQUIRE(graph_pipe->getWindowSeconds() == Approx(12.5));
+    REQUIRE(graph_pipe->getMaxSamples() == 200);
+
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["graph"]["type"].get<std::string>() == "ScoreGraphPipe");
+    REQUIRE(back["pipes"]["graph"]["parameters"]["max_candidates"].get<uint32_t>() == 32);
+    REQUIRE(back["pipes"]["graph"]["parameters"]["window_seconds"].get<double>() ==
+            Approx(12.5));
+    REQUIRE(back["pipes"]["graph"]["parameters"]["max_samples"].get<uint32_t>() == 200);
+  }
+
+  SECTION("ScoreGraphPipe optional parameters default cleanly when omitted") {
+    // Legacy/minimal JSON: only `max_candidates` is present. The parser must fall back
+    // to the implementation defaults (60s window, 1024 samples) so a hand-written
+    // minimal pipeline still loads.
+    const auto json = R"({
+        "pipes": {
+          "graph": {
+            "type": "ScoreGraphPipe",
+            "parameters": { "max_candidates": 50 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto graph_pipe = std::dynamic_pointer_cast<ScoreGraphPipe>(
+        pipeline->getPipes().front()->pipe);
+    REQUIRE(graph_pipe != nullptr);
+    REQUIRE(graph_pipe->getWindowSeconds() == Approx(60.0));
+    REQUIRE(graph_pipe->getMaxSamples() == 1024);
+  }
+
   SECTION("Sha256RoundEvaluator round-trips through EvaluatorPipe JSON") {
     // End-to-end JSON round-trip check: parse a pipeline whose only evaluator is the new
     // SHA-256 round evaluator, confirm the parameters survive the trip, and then
@@ -286,6 +337,11 @@ TEST_CASE("PipelineManager") {
     // constants-table lookup path here so a future refactor that swaps tables or
     // accidentally truncates the array can't slip past unnoticed.
     REQUIRE(sha->getRoundConstantValue() == 0xab1c5ed5U);
+    // The mode key is intentionally omitted from the input JSON above; the parser must
+    // fall back to Fixed so legacy ledgers (predating the mode parameter) keep their
+    // original scoring behaviour after upgrading.
+    REQUIRE(sha->getRoundConstantsMode() ==
+            Sha256RoundEvaluator::RoundConstantsMode::Fixed);
 
     const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
     REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["type"]
@@ -294,6 +350,151 @@ TEST_CASE("PipelineManager") {
                 ["round_constant_index"].get<uint32_t>() == 7);
     REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
                 ["max_steps_per_trial"].get<uint32_t>() == 3500);
+    // Even legacy ledgers gain the explicit mode key on the way out, so the next load
+    // sees the canonical form regardless of which version produced it.
+    REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
+                ["round_constants_mode"].get<std::string>() == "fixed");
+    // Same story for `rounds_per_trial`: legacy ledgers omit it, parser defaults to 1,
+    // serializer emits it explicitly so the on-wire form is canonical going forward.
+    REQUIRE(sha->getRoundsPerTrial() == 1);
+    REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
+                ["rounds_per_trial"].get<uint32_t>() == 1);
+  }
+
+  SECTION("Sha256RoundEvaluator round-trips rounds_per_trial when explicitly set") {
+    // Explicit non-default `rounds_per_trial` must survive the round-trip intact;
+    // exercising values at both ends of the legal range (2 = minimum multi-round, 64 =
+    // max-clamp boundary) catches off-by-one mistakes in either direction.
+    for (const uint32_t requested : {static_cast<uint32_t>(2), static_cast<uint32_t>(64)}) {
+      const std::string template_json = R"({
+          "pipes": {
+            "sha256_round": {
+              "type": "EvaluatorPipe",
+              "parameters": {
+                "max_candidates": 16,
+                "memory_variables": 32,
+                "string_table_items": 0,
+                "string_table_item_length": 0,
+                "cut_off_score": 0.0,
+                "evaluators": [{
+                  "type": "Sha256RoundEvaluator",
+                  "weight": 1.0,
+                  "invert_logic": false,
+                  "parameters": {
+                    "trial_count": 3,
+                    "round_constant_index": 0,
+                    "rounds_per_trial": __ROUNDS__,
+                    "max_steps_per_trial": 200
+                  }
+                }]
+              }
+            }
+          }})";
+      auto json_body = template_json;
+      json_body.replace(json_body.find("__ROUNDS__"), std::string("__ROUNDS__").size(),
+                        std::to_string(requested));
+      const auto json = nlohmann::json::parse(json_body);
+      const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+      const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+          pipeline->getPipes().front()->pipe);
+      REQUIRE(eval_pipe != nullptr);
+      const auto sha = std::dynamic_pointer_cast<Sha256RoundEvaluator>(
+          eval_pipe->getEvaluators().front().evaluator);
+      REQUIRE(sha != nullptr);
+      REQUIRE(sha->getRoundsPerTrial() == requested);
+      const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+      REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
+                  ["rounds_per_trial"].get<uint32_t>() == requested);
+    }
+  }
+
+  SECTION("Sha256RoundEvaluator round-trips the cycle_all and random_per_trial modes") {
+    // Mirror image of the section above but with each non-default mode explicitly set in
+    // the JSON. The parser has to recognise the strings, the evaluator has to retain the
+    // mode through construction, and the serialiser has to emit the same string back.
+    // Templated raw-string + simple substitution keeps the JSON readable; using
+    // nlohmann::json's initializer-list constructor for a structure this nested was a
+    // brace-counting trap.
+    const std::string json_template = R"({
+        "pipes": {
+          "sha256_round": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 16,
+              "memory_variables": 32,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "Sha256RoundEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "trial_count": 3,
+                  "round_constant_index": 1,
+                  "round_constants_mode": "__MODE__",
+                  "max_steps_per_trial": 200
+                }
+              }]
+            }
+          }
+        }})";
+
+    const std::vector<std::pair<std::string, Sha256RoundEvaluator::RoundConstantsMode>>
+        cases{{"cycle_all", Sha256RoundEvaluator::RoundConstantsMode::CycleAll},
+              {"random_per_trial",
+               Sha256RoundEvaluator::RoundConstantsMode::RandomPerTrial}};
+    for (const auto& [mode_string, expected_enum] : cases) {
+      auto json_body = json_template;
+      json_body.replace(json_body.find("__MODE__"), std::string("__MODE__").size(),
+                        mode_string);
+      const auto json = nlohmann::json::parse(json_body);
+
+      const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+      const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+          pipeline->getPipes().front()->pipe);
+      REQUIRE(eval_pipe != nullptr);
+      const auto sha = std::dynamic_pointer_cast<Sha256RoundEvaluator>(
+          eval_pipe->getEvaluators().front().evaluator);
+      REQUIRE(sha != nullptr);
+      REQUIRE(sha->getRoundConstantsMode() == expected_enum);
+      const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+      REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
+                  ["round_constants_mode"].get<std::string>() == mode_string);
+    }
+  }
+
+  SECTION("Sha256RoundEvaluator rejects unknown round_constants_mode strings") {
+    // A typo'd mode string is much more likely than a deliberate wrong value, so we want
+    // the parser to surface it loudly rather than silently picking a default. The error
+    // message has to name the offending value (so the user can locate it) and list the
+    // accepted values (so they don't have to dig through docs).
+    const auto json = R"({
+        "pipes": {
+          "sha256_round": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 16,
+              "memory_variables": 32,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "cut_off_score": 0.0,
+              "evaluators": [{
+                "type": "Sha256RoundEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "trial_count": 3,
+                  "round_constant_index": 0,
+                  "round_constants_mode": "all_of_them_at_once",
+                  "max_steps_per_trial": 200
+                }
+              }]
+            }
+          }
+        }})"_json;
+    REQUIRE_THROWS_AS(PipelineManager::constructPipelineFromJson(json),
+                      std::invalid_argument);
   }
 
   SECTION("Curriculum evaluators round-trip through EvaluatorPipe JSON") {
@@ -497,6 +698,27 @@ TEST_CASE("PipelineManager") {
       const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
       REQUIRE(back["pipes"]["dmx"]["parameters"]["strategy"].get<std::string>() == strategy);
     }
+  }
+
+  SECTION("FilterPipe round-trips threshold through JSON") {
+    const auto json = R"({
+        "pipes": {
+          "filt": {
+            "type": "FilterPipe",
+            "parameters": { "max_candidates": 24, "threshold": 0.42 }
+          }
+        }})"_json;
+    const auto pipeline = PipelineManager::constructPipelineFromJson(json);
+    const auto filt = std::dynamic_pointer_cast<FilterPipe>(pipeline->getPipes().front()->pipe);
+    REQUIRE(filt != nullptr);
+    REQUIRE(filt->getMaxCandidates() == 24);
+    REQUIRE(filt->getThreshold() == Approx(0.42));
+    REQUIRE(filt->getInputSlotCount() == 1);
+    REQUIRE(filt->getOutputSlotCount() == 2);
+    const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+    REQUIRE(back["pipes"]["filt"]["type"].get<std::string>() == "FilterPipe");
+    REQUIRE(back["pipes"]["filt"]["parameters"]["max_candidates"].get<uint32_t>() == 24);
+    REQUIRE(back["pipes"]["filt"]["parameters"]["threshold"].get<double>() == Approx(0.42));
   }
 
   SECTION("DemultiplexerPipe defaults to round_robin when strategy omitted") {
@@ -898,9 +1120,10 @@ TEST_CASE("PipelineManager") {
         std::filesystem::path(__FILE__).parent_path().parent_path();
     for (const auto* sample :
          {"ascending-mazes.json", "survivor-recirculation.json", "sha256-round.json",
-          "sha256-curriculum.json", "sha256-round-with-subroutines.json",
-          "primitives-gym.json", "maze-ladder-with-subroutines.json",
-          "cognitive-scaffolding-ab.json"}) {
+          "sha256-round-multi-k.json", "sha256-curriculum.json",
+          "sha256-round-with-subroutines.json", "primitives-gym.json",
+          "maze-ladder-with-subroutines.json", "cognitive-scaffolding-ab.json",
+          "adder-with-filter.json"}) {
       INFO(sample);
       const auto path = src_root / "examples" / "compose-pipelines" / sample;
       REQUIRE(std::filesystem::exists(path));

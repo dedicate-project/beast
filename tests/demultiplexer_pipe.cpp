@@ -7,6 +7,18 @@
 // BEAST
 #include <beast/beast.hpp>
 
+namespace {
+/// Thin subclass that exposes `storeOutput` so tests can set up asymmetric output-slot
+/// states (e.g. "slot 0 is full because downstream hasn't drained yet") without having
+/// to wire up a full pipeline graph. Demux routing decisions only depend on the slot
+/// loads, so this is sufficient for unit-level coverage.
+class TestableDemux : public beast::DemultiplexerPipe {
+ public:
+  using beast::DemultiplexerPipe::DemultiplexerPipe;
+  using beast::DemultiplexerPipe::storeOutput;
+};
+} // namespace
+
 TEST_CASE("DemultiplexerPipe round-robin spreads input across output slots") {
   beast::DemultiplexerPipe pipe(/*max_candidates=*/10, /*output_slots=*/3,
                                 beast::DemultiplexerPipe::Strategy::RoundRobin);
@@ -81,4 +93,55 @@ TEST_CASE("DemultiplexerPipe broadcast blocks when *any* slot is full") {
   pipe.addInputWithScore(0, beast::Pipe::OutputItem{{0xFF}, 0.99});
   pipe.execute();
   REQUIRE(pipe.getInputSlotAmount(0) == 1); // the new item stayed put
+}
+
+TEST_CASE("DemultiplexerPipe least-loaded skips a full slot instead of stalling") {
+  // The regression this guards: the original round-robin demux stuck its cursor on the
+  // slow/full slot and spun the worker without making progress, starving the fast slot
+  // (the SHA-256 pipeline stall the user reported). least-loaded must route around it.
+  TestableDemux pipe(/*max_candidates=*/4, /*output_slots=*/2,
+                     beast::DemultiplexerPipe::Strategy::LeastLoaded);
+  // Stuff slot 0 to capacity directly (simulating a slow downstream that hasn't drained
+  // its input yet) and queue more candidates on the input.
+  for (int i = 0; i < 4; ++i) {
+    pipe.storeOutput(0, beast::Pipe::OutputItem{{static_cast<unsigned char>(i)}, 0});
+  }
+  for (int i = 0; i < 3; ++i) {
+    pipe.addInputWithScore(0,
+                           beast::Pipe::OutputItem{{static_cast<unsigned char>(0xB0 | i)}, 0});
+  }
+  pipe.execute();
+  // All three new items must land on the empty slot 1 (slot 0 is full and skipped).
+  REQUIRE(pipe.getInputSlotAmount(0) == 0);
+  REQUIRE(pipe.getOutputSlotAmount(0) == 4);
+  REQUIRE(pipe.getOutputSlotAmount(1) == 3);
+}
+
+TEST_CASE("DemultiplexerPipe least-loaded fans out evenly when slots are symmetric") {
+  // When the demux degenerates to "all slots equally empty" it should still spread
+  // candidates round-robin so a symmetric workload isn't biased toward slot 0.
+  beast::DemultiplexerPipe pipe(/*max_candidates=*/10, /*output_slots=*/3,
+                                beast::DemultiplexerPipe::Strategy::LeastLoaded);
+  for (int i = 0; i < 6; ++i) {
+    pipe.addInputWithScore(0, beast::Pipe::OutputItem{{static_cast<unsigned char>(i)}, 0});
+  }
+  pipe.execute();
+  CHECK(pipe.getOutputSlotAmount(0) == 2);
+  CHECK(pipe.getOutputSlotAmount(1) == 2);
+  CHECK(pipe.getOutputSlotAmount(2) == 2);
+}
+
+TEST_CASE("DemultiplexerPipe least-loaded back-pressures when every slot is full") {
+  // If we genuinely can't route anywhere, the input must stay queued (no silent drops).
+  TestableDemux pipe(/*max_candidates=*/2, /*output_slots=*/2,
+                     beast::DemultiplexerPipe::Strategy::LeastLoaded);
+  pipe.storeOutput(0, beast::Pipe::OutputItem{{0x01}, 0});
+  pipe.storeOutput(0, beast::Pipe::OutputItem{{0x02}, 0});
+  pipe.storeOutput(1, beast::Pipe::OutputItem{{0x03}, 0});
+  pipe.storeOutput(1, beast::Pipe::OutputItem{{0x04}, 0});
+  pipe.addInputWithScore(0, beast::Pipe::OutputItem{{0xFF}, 0.0});
+  pipe.execute();
+  CHECK(pipe.getInputSlotAmount(0) == 1);
+  CHECK(pipe.getOutputSlotAmount(0) == 2);
+  CHECK(pipe.getOutputSlotAmount(1) == 2);
 }

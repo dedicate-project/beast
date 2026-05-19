@@ -113,6 +113,12 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const classes = useStyles();
   const [pipelineState, setPipelineState] = useState(pipeline.state);
   const pipelineStateRef = useRef("");
+  // 'starting' | 'stopping' | null. Stamped synchronously when the user clicks the
+  // start/stop button so the UI can disable the button and show a transition icon
+  // immediately, without waiting for the server's response or for the next polling tick
+  // to reflect the new state. Cleared automatically by the effect below once the polled
+  // `pipelineState` matches the requested end-state (or by a hard timeout, see effect).
+  const [pendingAction, setPendingAction] = useState(null);
   const [dimensions, setDimensions] =
       useState({width : window.innerWidth - 320, height : window.innerHeight - 200});
   const [stageInstance, setStageInstance] = useState(null);
@@ -129,6 +135,16 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const [oldModel, setOldModel] = useState({});
   const [model, setModel] = useState({});
   const [metadata, setMetadata] = useState({});
+
+  // Ref mirror of `model` for callbacks that were captured by a once-only useEffect (like
+  // the stage-level mousedown handler that drives the right-click menu). Without this,
+  // those callbacks close over the *initial* empty `{}` model and never see updates --
+  // which silently broke the "Edit pipe" menu item (modelRef.current would be `{}` so
+  // `modelPipes[pipe]` was always undefined and the dialog never opened).
+  const modelRef = useRef({});
+  React.useEffect(() => {
+    modelRef.current = model;
+  }, [model]);
 
   const [pipelineName, setPipelineName] = useState(pipeline.name);
 
@@ -243,6 +259,51 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
             React.createElement('div', {key : 'tht'},
                                 `* Total seen: ${t.total_seen}`));
       }
+      // ScoreGraphPipe attaches `score_graph`. Render a compact inline SVG sparkline
+      // in the tooltip so a hover gives the user the same shape information the
+      // right-panel sparkline shows, just smaller. We deliberately render here even
+      // when `summary` is also present (e.g. a future composite pipe) -- the two
+      // visualisations are complementary, not competing.
+      if (pipe.score_graph) {
+        const g = pipe.score_graph;
+        const samples = Array.isArray(g.samples) ? g.samples : [];
+        const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
+        content.push(
+            React.createElement('div', {key : 'sgh', style : {marginTop : '0.4rem'}},
+                                'Score graph:'),
+            React.createElement('div', {key : 'sgs'},
+                                `* ${samples.length} samples / last ${fmt(g.window_seconds)} s`),
+            React.createElement('div', {key : 'sgr'},
+                                `* min/mean/max: ${fmt(g.min_score)} / ${fmt(g.mean_score)} / ${fmt(g.max_score)}`));
+        if (samples.length >= 2) {
+          // Same projection math as renderScoreGraphInline; smaller dimensions to keep
+          // the tooltip narrow (the tooltip's minWidth is 200px, so cap the SVG below
+          // that with a margin for padding/borders).
+          const w = 180;
+          const h = 40;
+          const minS = Number.isFinite(g.min_score) ? g.min_score : 0;
+          const maxS = Number.isFinite(g.max_score) ? g.max_score : 1;
+          const span = Math.max(1e-6, maxS - minS);
+          const t0 = samples[0].t;
+          const tN = samples[samples.length - 1].t;
+          const tSpan = Math.max(1e-6, tN - t0);
+          const pts = samples.map(s => {
+            const x = ((s.t - t0) / tSpan) * w;
+            const y = h - ((s.score - minS) / span) * h;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+          }).join(' ');
+          content.push(React.createElement('svg', {
+              key: 'sgsvg',
+              width: w,
+              height: h,
+              style: {display: 'block', marginTop: 2, backgroundColor: '#fafafa',
+                       border: '1px solid #ddd'},
+            },
+            React.createElement('polyline', {
+              points: pts, fill: 'none', stroke: '#1976d2', strokeWidth: 1.5,
+            })));
+        }
+      }
     }
     return e('div', {
       className : 'pipe-dialog',
@@ -278,6 +339,29 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   const fanImagesRef = useRef({});
   const fanRatesRef = useRef({});
 
+  // Per-pipe live label below the icon. Used by ResultsSummary (best-ever score) and
+  // FanPipe (throughput) so the headline metric is visible at a glance without having
+  // to mouse over the pipe. The map is keyed by pipe name and contains the Konva.Text
+  // node so the metrics-driven update path can set .text() on it cheaply.
+  const canvasLabelsRef = useRef({});
+
+  // Per-pipe progress bar below the icon (and the label, if any), for pipe types that
+  // report `evolution_progress` -- i.e. all EvaluatorPipe subclasses. Keyed by pipe name;
+  // each entry is {bg, fg, label} where bg/fg are Konva.Rect and label is a Konva.Text.
+  // The metrics-driven update path scales `fg.width()` and rewrites `label.text()` once
+  // per poll. This makes the long batch nature of `evolve()` visible to the user, which
+  // matters because the rest of the canvas can look idle for tens of seconds at a time
+  // when expensive evaluators (e.g. SHA-256 multi-round) are in flight.
+  const canvasProgressBarsRef = useRef({});
+
+  // Per-port colored fill-state indicators, keyed by `pipeName:side:slot` -> {bg, fg,
+  // capacity}. Visually a slim vertical level meter parked just outside the port body
+  // (so it doesn't steal clicks from the port). The fill height tracks the slot
+  // occupancy and the colour ramps from green (empty) through yellow (half) to red
+  // (saturated), making back-pressure hot-spots pop out without having to read the
+  // metrics panel.
+  const canvasPortFillsRef = useRef({});
+
   // Connection flow animation: keep a per-edge rate derived from diffing the
   // cumulative outputs_sent[source_slot] values across metrics polls, and animate the
   // dash offset on the line at the frame rate so the dashes appear to "march" toward
@@ -305,6 +389,30 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       // localStorage may be disabled (private browsing); the panel still works in-session.
     }
   }, [resultsPanelCollapsed]);
+
+  // Per-pipe collapse map for the right-side summaries panel. Map<pipeName, boolean>
+  // where `true` = body hidden, header still visible. Some pipes are more interesting
+  // than others; this lets the user fold uninteresting ones away without losing them
+  // from the panel entirely. Persisted alongside the whole-panel collapse state.
+  const [collapsedSummaryPipes, setCollapsedSummaryPipes] = useState(() => {
+    try {
+      const raw = localStorage.getItem('beast.collapsed_summary_pipes');
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('beast.collapsed_summary_pipes',
+                           JSON.stringify(collapsedSummaryPipes));
+    } catch {
+      // localStorage may be disabled (private browsing); the panel still works in-session.
+    }
+  }, [collapsedSummaryPipes]);
+  const togglePipeCollapsed = (name) => {
+    setCollapsedSummaryPipes((prev) => ({...prev, [name]: !prev[name]}));
+  };
 
   // Drive the FanPipe spin animation. One Konva.Animation ticks at the layer's frame
   // rate and rotates each registered fan image by `rate * dt`, where `rate` is the
@@ -342,12 +450,133 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   useEffect(() => {
     const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
     const fanRates = {};
+    let anyLabelChanged = false;
     for (const p of pipesMetrics) {
       if (p && p.throughput && typeof p.throughput.candidates_per_second === 'number') {
         fanRates[p.name] = p.throughput.candidates_per_second;
       }
+      // Drive the under-pipe label for ResultsSummary (best-ever) and Fan (throughput).
+      // ScoreGraph pipes also show their best-ever score as a 1-D fallback if/when
+      // populated; the field doesn't exist yet for that pipe but the code path is
+      // already in place so no special-case is needed once it does.
+      const label = canvasLabelsRef.current[p && p.name];
+      if (label) {
+        let next = '';
+        if (p.summary) {
+          // Show best-ever score; falls back to last_score when best-ever isn't tracked.
+          const v = Number.isFinite(p.summary.best_ever_score)
+                        ? p.summary.best_ever_score
+                        : p.summary.last_score;
+          if (Number.isFinite(v)) {
+            const bytes = Number.isFinite(p.summary.best_ever_size)
+                              ? ` (${p.summary.best_ever_size}b)`
+                              : '';
+            next = `best ${Number(v).toFixed(3)}${bytes}`;
+          }
+        } else if (p.throughput && Number.isFinite(p.throughput.candidates_per_second)) {
+          // Two decimals for sub-Hz throughput, one for higher rates -- keeps the label
+          // narrow enough to fit the 80px width when rates climb into double digits.
+          const rate = p.throughput.candidates_per_second;
+          const formatted = rate < 10 ? rate.toFixed(2) : rate.toFixed(1);
+          next = `${formatted} / s`;
+        }
+        if (label.text() !== next) {
+          label.text(next);
+          anyLabelChanged = true;
+        }
+      }
+
+      // Per-port fill-state indicators. The metrics endpoint reports the per-slot
+      // current occupancy (`input_fills`/`output_fills`) and a `max_candidates`
+      // capacity for the pipe (same threshold the C++ side uses for saturation).
+      // We translate that into a height-and-colour update on each port's level meter.
+      // The colour ramp is intentionally aggressive at the high end -- the goal is to
+      // make it impossible to miss a saturated port.
+      const colourForFill = (ratio) => {
+        if (!Number.isFinite(ratio)) return '#bdbdbd';
+        if (ratio <= 0.01) return '#bdbdbd';     // grey: empty
+        if (ratio < 0.34) return '#4caf50';      // green
+        if (ratio < 0.67) return '#fbc02d';      // yellow
+        if (ratio < 0.95) return '#ff9800';      // orange
+        return '#e53935';                         // red: at/near capacity
+      };
+      const capacity = Number(p && p.max_candidates) || 0;
+      const applyFills = (side, list) => {
+        if (!Array.isArray(list)) return;
+        for (let slot = 0; slot < list.length; ++slot) {
+          const entry =
+              canvasPortFillsRef.current[p.name + ':' + side + ':' + slot];
+          if (!entry) continue;
+          const fill = Number(list[slot]) || 0;
+          const ratio = capacity > 0 ? Math.min(1, fill / capacity) : 0;
+          const targetHeight = Math.round(entry.maxHeight * ratio);
+          const targetY = entry.baseY - targetHeight;
+          const targetFill = colourForFill(ratio);
+          if (entry.fg.height() !== targetHeight) {
+            entry.fg.height(targetHeight);
+            entry.fg.y(targetY);
+            anyLabelChanged = true;
+          }
+          if (entry.fg.fill() !== targetFill) {
+            entry.fg.fill(targetFill);
+            anyLabelChanged = true;
+          }
+        }
+      };
+      if (p) {
+        applyFills('input', p.input_fills);
+        applyFills('output', p.output_fills);
+      }
+
+      // Per-EvaluatorPipe progress bar. We surface "evals done / expected" both as a
+      // proportional fill and as a small text readout. When the pipe is currently
+      // running we colour the bar primary-blue; when it's between cycles we recolour
+      // to grey at 100% so the user sees "last cycle is done, next one is queued"
+      // rather than a stalled-looking solid blue.
+      const barEntry = p && canvasProgressBarsRef.current[p.name];
+      const prog = p && p.evolution_progress;
+      if (barEntry && prog) {
+        const done = Number(prog.evaluations_this_cycle) || 0;
+        const expected = Math.max(1, Number(prog.expected_evaluations_this_cycle) || 0);
+        const ratio = Math.min(1, Math.max(0, done / expected));
+        const targetWidth = Math.round(barEntry.maxWidth * ratio);
+        const targetColour = prog.currently_running ? '#1976d2' : '#9e9e9e';
+        if (barEntry.fg.width() !== targetWidth) {
+          barEntry.fg.width(targetWidth);
+          anyLabelChanged = true;
+        }
+        if (barEntry.fg.fill() !== targetColour) {
+          barEntry.fg.fill(targetColour);
+          anyLabelChanged = true;
+        }
+        // Compact label below the bar. Format: `123/400  4.7s` when running,
+        // `last 6.1s` when between cycles. Keeps the label narrow enough for the
+        // 70 px space we reserved.
+        const fmtSec = (s) => {
+          const n = Number(s);
+          if (!Number.isFinite(n) || n <= 0) return '0s';
+          if (n < 10) return n.toFixed(1) + 's';
+          if (n < 60) return Math.round(n) + 's';
+          const m = Math.floor(n / 60);
+          const r = Math.round(n % 60);
+          return m + 'm' + (r > 0 ? r + 's' : '');
+        };
+        let nextLabel = '';
+        if (prog.currently_running) {
+          nextLabel = `${done}/${expected}  ${fmtSec(prog.seconds_in_cycle)}`;
+        } else if (Number(prog.last_cycle_seconds) > 0) {
+          nextLabel = `last ${fmtSec(prog.last_cycle_seconds)}`;
+        }
+        if (barEntry.label.text() !== nextLabel) {
+          barEntry.label.text(nextLabel);
+          anyLabelChanged = true;
+        }
+      }
     }
     fanRatesRef.current = fanRates;
+    if (anyLabelChanged && elementLayerRef.current) {
+      elementLayerRef.current.batchDraw();
+    }
 
     // Build a per-(pipe, slot) snapshot of cumulative outputs_sent so we can diff
     // against the previous snapshot. The metrics object exposes outputs as an array
@@ -424,7 +653,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
   // it on top of the AppBar / start-stop controls).
   const renderResultsPanel = () => {
     const pipesMetrics = metrics && Array.isArray(metrics["pipes"]) ? metrics["pipes"] : [];
-    const summaryPipes = pipesMetrics.filter(p => p && p.summary);
+    // Pull in both ResultsSummary and ScoreGraph pipes. Both expose a `summary` block;
+    // ScoreGraph additionally exposes a `score_graph` block which we render inline as a
+    // tiny sparkline below the summary numbers. Sort alphabetically by name and lock
+    // the order so the user's eye doesn't have to chase rows around when a score
+    // update shuffles the metrics array.
+    const summaryPipes = pipesMetrics
+        .filter(p => p && (p.summary || p.score_graph))
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name));
     if (summaryPipes.length === 0) return null;
     const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
     const headerStyle = {
@@ -435,6 +672,15 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       cursor: 'pointer',
       marginBottom: resultsPanelCollapsed ? 0 : 6,
     };
+    const rowHeaderStyle = (collapsed) => ({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      marginBottom: collapsed ? 0 : 4,
+      userSelect: 'none',
+    });
     return e('div', {
       style: {
         position: 'absolute',
@@ -446,7 +692,7 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         borderRadius: 4,
         boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
         zIndex: 10,
-        maxWidth: 300,
+        maxWidth: 320,
         fontFamily: 'sans-serif',
         fontSize: 12,
       },
@@ -459,8 +705,9 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         e('span', null, `Results summaries (${summaryPipes.length})`),
         e('span', {style: {marginLeft: 8, fontSize: 14}}, resultsPanelCollapsed ? '+' : '\u2212'),
       ),
-      !resultsPanelCollapsed && summaryPipes.map((p, idx) =>
-        e('div', {
+      !resultsPanelCollapsed && summaryPipes.map((p, idx) => {
+        const rowCollapsed = !!collapsedSummaryPipes[p.name];
+        return e('div', {
           key: 'sp' + p.name,
           style: {
             paddingTop: idx === 0 ? 0 : 6,
@@ -468,22 +715,83 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
             borderTop: idx === 0 ? 'none' : '1px solid #eee',
           },
         },
-          e('div', {style: {fontWeight: 'bold'}}, p.name),
-          e('div', null, `seen: ${p.summary.count_total} (window ${p.summary.count_window}/${p.summary.window_size || '--'})`),
-          e('div', null, `min/mean/max: ${fmt(p.summary.min_score)} / ${fmt(p.summary.mean_score)} / ${fmt(p.summary.max_score)}`),
-          e('div', null, `last: ${fmt(p.summary.last_score)}`),
-          e('div', null, `best ever: ${fmt(p.summary.best_ever_score)} (${p.summary.best_ever_size} bytes)`),
-          e('button', {
-            onClick: () => postUpdate({action: 'reset_summary', name: p.name}),
-            style: {
-              marginTop: 4,
-              padding: '2px 8px',
-              fontSize: 11,
-              cursor: 'pointer',
-            },
-            title: 'Reset rolling window and best-ever (use after bumping difficulty)',
-          }, 'Reset'),
-        )),
+          e('div', {
+            style: rowHeaderStyle(rowCollapsed),
+            onClick: () => togglePipeCollapsed(p.name),
+            title: rowCollapsed ? 'Click to expand' : 'Click to collapse',
+          },
+            e('span', null, p.name),
+            e('span', {style: {marginLeft: 8, fontSize: 12}}, rowCollapsed ? '+' : '\u2212'),
+          ),
+          !rowCollapsed && p.summary && e('div', {key: 'body'},
+            e('div', null, `seen: ${p.summary.count_total} (window ${p.summary.count_window}/${p.summary.window_size || '--'})`),
+            e('div', null, `min/mean/max: ${fmt(p.summary.min_score)} / ${fmt(p.summary.mean_score)} / ${fmt(p.summary.max_score)}`),
+            e('div', null, `last: ${fmt(p.summary.last_score)}`),
+            e('div', null, `best ever: ${fmt(p.summary.best_ever_score)} (${p.summary.best_ever_size} bytes)`),
+            e('button', {
+              onClick: () => postUpdate({action: 'reset_summary', name: p.name}),
+              style: {
+                marginTop: 4,
+                padding: '2px 8px',
+                fontSize: 11,
+                cursor: 'pointer',
+              },
+              title: 'Reset rolling window and best-ever (use after bumping difficulty)',
+            }, 'Reset'),
+          ),
+          !rowCollapsed && p.score_graph && renderScoreGraphInline(p),
+        );
+      }),
+    );
+  };
+
+  // Renders a tiny ScoreGraph sparkline inside the right-side summaries panel. Lives
+  // alongside renderResultsPanel so both pipes' rows look stylistically the same.
+  // Width is bounded by the panel's maxWidth (320 px - padding); height is fixed at
+  // 60 px so multiple ScoreGraph rows don't stack into a wall.
+  const renderScoreGraphInline = (p) => {
+    const g = p.score_graph;
+    const samples = Array.isArray(g.samples) ? g.samples : [];
+    const fmt = (v) => Number.isFinite(v) ? Number(v).toFixed(3) : '--';
+    if (samples.length === 0) {
+      return e('div', {
+        key: 'sg-empty',
+        style: {marginTop: 4, fontStyle: 'italic', color: '#888'},
+      }, 'Score graph: waiting for samples...');
+    }
+    const w = 280;
+    const h = 60;
+    const minS = Number.isFinite(g.min_score) ? g.min_score : Math.min(...samples.map(s => s.score));
+    const maxS = Number.isFinite(g.max_score) ? g.max_score : Math.max(...samples.map(s => s.score));
+    const span = Math.max(1e-6, maxS - minS);
+    const t0 = samples[0].t;
+    const tN = samples[samples.length - 1].t;
+    const tSpan = Math.max(1e-6, tN - t0);
+    const pts = samples.map(s => {
+      const x = ((s.t - t0) / tSpan) * w;
+      const y = h - ((s.score - minS) / span) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return e('div', {key: 'sg', style: {marginTop: 4}},
+      e('div', null, `score graph: ${samples.length} samples over ${fmt(g.window_seconds)} s`),
+      e('div', null, `min/mean/max: ${fmt(g.min_score)} / ${fmt(g.mean_score)} / ${fmt(g.max_score)}`),
+      e('svg', {
+        width: w,
+        height: h,
+        style: {
+          display: 'block',
+          marginTop: 2,
+          backgroundColor: '#fafafa',
+          border: '1px solid #ddd',
+        },
+      },
+        e('polyline', {
+          points: pts,
+          fill: 'none',
+          stroke: '#1976d2',
+          strokeWidth: 1.5,
+        }),
+      ),
     );
   };
 
@@ -543,9 +851,13 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         icon : "edit",
         disabled : running,
         action : () => {
-          // Pull the latest model snapshot rather than closing over a stale prop, since
-          // this lambda runs through `rightClickMenuItemsRef` which is set once per click.
-          const modelPipes = (model && model.pipes) || {};
+          // Read from `modelRef.current` rather than the captured `model` prop: the
+          // mousedown handler that builds these menu items lives inside a once-only
+          // useEffect, so by the time the user actually right-clicks, the `model`
+          // identifier in this lambda still points at the initial empty `{}`. The ref is
+          // updated on every render and gives us the latest snapshot.
+          const liveModel = modelRef.current || {};
+          const modelPipes = liveModel.pipes || {};
           if (modelPipes[pipe]) {
             setEditingPipe({name: pipe, pipe_json: modelPipes[pipe]});
             setAddPipeOpen(true);
@@ -895,6 +1207,47 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
         group.add(portRect);
 
+        // Fill-state indicator. A 3 px-wide vertical meter parked just outside the
+        // port body (input ports: to the left; output ports: to the right) so it
+        // never overlaps the port hit-region and never eats clicks. The background
+        // is a faint outline and the foreground grows from the bottom up as the
+        // port's slot occupancy increases. Both rectangles are added with
+        // `listening: false` so they're purely cosmetic. The metrics-driven update
+        // path looks up these nodes via canvasPortFillsRef.current and rewrites the
+        // foreground's height + fill colour every poll.
+        const indicatorWidth = 3;
+        const indicatorHeight = portHeight;
+        const indicatorGap = 2;
+        const indicatorX = side === 'input'
+                               ? x - indicatorGap - indicatorWidth
+                               : x + portWidth + indicatorGap;
+        const portFillBg = new Konva.Rect({
+          x: indicatorX,
+          y: y,
+          width: indicatorWidth,
+          height: indicatorHeight,
+          fill: '#eee',
+          stroke: '#999',
+          strokeWidth: 0.5,
+          listening: false,
+        });
+        const portFillFg = new Konva.Rect({
+          x: indicatorX,
+          y: y + indicatorHeight, // grow upward: start at full-height bottom edge
+          width: indicatorWidth,
+          height: 0,
+          fill: '#4caf50', // green at empty; the metrics path will recolour as it fills
+          listening: false,
+        });
+        group.add(portFillBg);
+        group.add(portFillFg);
+        canvasPortFillsRef.current[name + ':' + side + ':' + slot] = {
+          bg: portFillBg,
+          fg: portFillFg,
+          baseY: y + indicatorHeight,
+          maxHeight: indicatorHeight,
+        };
+
         return portRect;
       };
 
@@ -938,6 +1291,92 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         elementLayerRef.current.draw();
       };
       imageObj.src = src;
+
+      // Add a live label below the pipe icon for types that have an obvious headline
+      // metric. Currently:
+      //   ResultsSummaryPipe / ScoreGraphPipe -> best-ever score
+      //   FanPipe                             -> candidates/s
+      // The text is empty until the first metrics tick fills it in; the metrics useEffect
+      // calls .text() on this node every poll. Width is 80px to give the label a bit of
+      // slack beyond the 50px pipe body without breaking the existing connector geometry,
+      // and we centre-align so short and long values both look balanced under the icon.
+      if (type === 'ResultsSummaryPipe' || type === 'FanPipe' || type === 'ScoreGraphPipe') {
+        const labelText = new Konva.Text({
+          x: -15,
+          y: 56,
+          width: 80,
+          align: 'center',
+          text: '',
+          fontSize: 10,
+          fontStyle: 'bold',
+          fontFamily: 'sans-serif',
+          fill: '#222',
+          // Konva.Text intercepts pointer events by default; we want the label to be
+          // visual-only so clicks on the canvas underneath still work.
+          listening: false,
+        });
+        group.add(labelText);
+        canvasLabelsRef.current[name] = labelText;
+      }
+
+      // Progress bar below the pipe body for every EvaluatorPipe subclass (all our
+      // evolution stages). The bar shows how far the current evolve() cycle has
+      // progressed -- evaluations dispatched so far divided by the estimated total
+      // for the cycle. Cycle duration estimates are filled in below the bar so the
+      // user gets both a "% done" and a "n / m evals, t seconds" readout. The bar
+      // is hidden (zero-width fg, blank label) until the first metrics tick that
+      // reports `evolution_progress` for this pipe so non-evolution pipes that
+      // happen to match the suffix heuristic (currently none, but future-proof) get
+      // no visual.
+      const isEvolutionType =
+          typeof type === 'string' && type.endsWith('EvaluatorPipe');
+      if (isEvolutionType) {
+        const barWidth = 60;
+        const barHeight = 5;
+        const barX = (50 - barWidth) / 2;
+        const barY = 72;
+        const barBg = new Konva.Rect({
+          x: barX,
+          y: barY,
+          width: barWidth,
+          height: barHeight,
+          fill: '#eee',
+          stroke: '#888',
+          strokeWidth: 0.5,
+          cornerRadius: 1,
+          listening: false,
+        });
+        const barFg = new Konva.Rect({
+          x: barX,
+          y: barY,
+          width: 0,
+          height: barHeight,
+          fill: '#1976d2', // matches MUI primary; recoloured to grey when idle
+          cornerRadius: 1,
+          listening: false,
+        });
+        const barLabel = new Konva.Text({
+          x: -10,
+          y: barY + barHeight + 2,
+          width: 70,
+          align: 'center',
+          text: '',
+          fontSize: 8,
+          fontFamily: 'sans-serif',
+          fill: '#666',
+          listening: false,
+        });
+        group.add(barBg);
+        group.add(barFg);
+        group.add(barLabel);
+        canvasProgressBarsRef.current[name] = {
+          bg: barBg,
+          fg: barFg,
+          label: barLabel,
+          maxWidth: barWidth,
+          baseX: barX,
+        };
+      }
 
       // add the group to the layer
       elementLayerRef.current.add(group);
@@ -1061,6 +1500,26 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       if (fanImagesRef.current[key]) {
         delete fanImagesRef.current[key];
       }
+      if (canvasLabelsRef.current[key]) {
+        // The Konva.Text is owned by the group we just .remove()d above, so it's already
+        // detached from the layer -- we only need to drop the ref so a same-name re-add
+        // doesn't pick up a stale handle.
+        delete canvasLabelsRef.current[key];
+      }
+      if (canvasProgressBarsRef.current[key]) {
+        delete canvasProgressBarsRef.current[key];
+      }
+      // Drop any port-fill entries that belong to this pipe. The Konva nodes
+      // themselves are owned by the removed group, so no extra .destroy() call is
+      // needed -- we just need to evict the ref entries so a same-name re-add doesn't
+      // race with stale handles.
+      const fillPrefix = key + ':';
+      const fillKeys = Object.keys(canvasPortFillsRef.current);
+      for (const fk of fillKeys) {
+        if (fk.startsWith(fillPrefix)) {
+          delete canvasPortFillsRef.current[fk];
+        }
+      }
     };
     for (let key in removed_pipes) {
       detach(key);
@@ -1087,13 +1546,52 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     // Process connections. The stage useEffect runs before this one on first mount, but
     // we still defend against a missing ref in case React schedules things unusually under
     // concurrent mode.
+    //
+    // We *incrementally reconcile* rather than tearing down and rebuilding. The naive
+    // teardown-rebuild looked clean but caused a visible animation glitch: this effect
+    // re-fires on every `model` reference change, and the pipeline-state poller hands
+    // React a brand-new `model` object every second even when the JSON is unchanged
+    // byte-for-byte. Rebuilding meant every Konva.Line was born with `dashOffset: 0`,
+    // and the marching-ants animation appeared to snap back to phase zero once a
+    // second. Reconciliation preserves the existing Konva.Line (and its in-flight
+    // dashOffset) whenever the connection's endpoints are unchanged, and only spawns
+    // new Konva.Lines for truly new wiring.
     if (!connectionsLayerRef.current) return;
-    connectionsLayerRef.current.removeChildren();
-    // The line refs get rebuilt each redraw -- previously-rendered Konva.Line objects
-    // belong to the layer we just cleared so they're already invalid. Clear the map so
-    // the animation effect doesn't try to step a stale handle.
-    connectionLinesRef.current = {};
+    const layer = connectionsLayerRef.current;
+
+    // The pending-connection guide line is a transient overlay (re-built every tick
+    // while the user is dragging); it lives under a name so we can target it without
+    // touching the persistent connection lines. Wipe any guide from the previous tick.
+    layer.find('.connection-guide').forEach((node) => node.destroy());
+
+    const previousLines = connectionLinesRef.current || {};
+    const nextLines = {};
     const conns = (model && model["connections"]) ? model["connections"] : null;
+
+    // Compute the endpoint geometry of a connection. Bundled into a single helper
+    // because it gets called both during "is this line still valid?" checks and during
+    // fresh-line construction, and the two computations *must* agree (otherwise
+    // hovering an apparently-unchanged line would re-route it).
+    const endpointsFor = (connection) => {
+      const source_pipe = pipes[connection.source_pipe];
+      const destination_pipe = pipes[connection.destination_pipe];
+      if (!source_pipe || !destination_pipe) return null;
+      const source_port = source_pipe.ports.outputs[connection.source_slot];
+      const destination_port = destination_pipe.ports.inputs[connection.destination_slot];
+      if (!source_port || !destination_port) return null;
+      const sx = source_pipe.x() + source_port.x() + source_port.width();
+      const sy = source_pipe.y() + source_port.y() + source_port.height() / 2;
+      const dx = destination_pipe.x() + destination_port.x();
+      const dy = destination_pipe.y() + destination_port.y() + destination_port.height() / 2;
+      return {sx, sy, dx, dy};
+    };
+
+    // Snapshot the current points array of a Konva.Line as a string so we can compare
+    // it against the new geometry without piecewise float comparison. Both sides go
+    // through `orthogonalRoutePoints` which returns whole-pixel ints, so equality is
+    // safe (no FP drift).
+    const pointsKey = (pts) => pts.join(',');
+
     if (conns) {
       for (let connection_index in conns) {
         const connection = conns[connection_index];
@@ -1101,58 +1599,78 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
             !(connection.destination_pipe in pipes)) {
           continue;
         }
-        const source_pipe = pipes[connection.source_pipe];
-        const destination_pipe = pipes[connection.destination_pipe];
-        const source_port = source_pipe.ports.outputs[connection.source_slot];
-        const destination_port = destination_pipe.ports.inputs[connection.destination_slot];
-        if (!source_port || !destination_port) continue;
+        const endpoints = endpointsFor(connection);
+        if (!endpoints) continue;
 
-        const sx = source_pipe.x() + source_port.x() + source_port.width();
-        const sy = source_pipe.y() + source_port.y() + source_port.height() / 2;
-        const dx = destination_pipe.x() + destination_port.x();
-        const dy = destination_pipe.y() + destination_port.y() + destination_port.height() / 2;
-        const points = orthogonalRoutePoints(sx, sy, dx, dy);
+        const key = connection.source_pipe + ':' + connection.source_slot + '->' +
+                    connection.destination_pipe + ':' + connection.destination_slot;
+        const points = orthogonalRoutePoints(
+            endpoints.sx, endpoints.sy, endpoints.dx, endpoints.dy);
+        const newPointsKey = pointsKey(points);
 
-        const line = new Konva.Line({
-          points,
-          stroke : 'red',
-          strokeWidth : 3,
-          lineCap : 'round',
-          lineJoin : 'round',
-          // Use a dashed pattern; animating `dashOffset` over time gives the classic
-          // marching-ants flow animation without needing to render packet sprites.
-          dash : [8, 12],
-          dashOffset : 0,
-          hitStrokeWidth: 14,
-        });
+        let line = previousLines[key];
+        if (line) {
+          // Same connection key as last tick. If the endpoint geometry hasn't moved
+          // either, reuse the line as-is so its dashOffset (and thus animation phase)
+          // survives. If only the geometry changed (one of the endpoints was dragged),
+          // update the points but still keep the offset so the dashes don't snap.
+          const prevPointsKey = pointsKey(line.points());
+          if (prevPointsKey !== newPointsKey) {
+            line.points(points);
+          }
+          // Hand off to the next tick's reconciliation pass and stop tracking it as
+          // "previous" so the leftover-removal loop below doesn't destroy it.
+          delete previousLines[key];
+        } else {
+          line = new Konva.Line({
+            points,
+            stroke: 'red',
+            strokeWidth: 3,
+            lineCap: 'round',
+            lineJoin: 'round',
+            // Use a dashed pattern; animating `dashOffset` over time gives the classic
+            // marching-ants flow animation without needing to render packet sprites.
+            dash: [8, 12],
+            dashOffset: 0,
+            hitStrokeWidth: 14,
+          });
+          line.on('mouseover', () => {
+            line.stroke('#ff8c00');
+            line.getLayer().batchDraw();
+            // Latch the hovered connection so the stage-level right-click handler can
+            // pop the connection menu instead of the empty-canvas menu.
+            hoveredConnectionRef.current = line.connectionInfo;
+            const stage = line.getStage();
+            if (stage) stage.container().style.cursor = 'pointer';
+          });
+          line.on('mouseout', () => {
+            line.stroke('red');
+            line.getLayer().batchDraw();
+            hoveredConnectionRef.current = null;
+            const stage = line.getStage();
+            if (stage) stage.container().style.cursor = 'default';
+          });
+          layer.add(line);
+        }
+        // connectionInfo can change on a rebuild even when the key matches (e.g. slot
+        // indices were renumbered upstream); refresh it unconditionally.
         line.connectionInfo = {
           source_pipe: connection.source_pipe,
           source_slot: connection.source_slot,
           destination_pipe: connection.destination_pipe,
           destination_slot: connection.destination_slot,
         };
-        line.on('mouseover', () => {
-          line.stroke('#ff8c00');
-          line.getLayer().batchDraw();
-          // Latch the hovered connection so the stage-level right-click handler can
-          // pop the connection menu instead of the empty-canvas menu.
-          hoveredConnectionRef.current = line.connectionInfo;
-          const stage = line.getStage();
-          if (stage) stage.container().style.cursor = 'pointer';
-        });
-        line.on('mouseout', () => {
-          line.stroke('red');
-          line.getLayer().batchDraw();
-          hoveredConnectionRef.current = null;
-          const stage = line.getStage();
-          if (stage) stage.container().style.cursor = 'default';
-        });
-        connectionsLayerRef.current.add(line);
-        const key = connection.source_pipe + ':' + connection.source_slot + '->' +
-                    connection.destination_pipe + ':' + connection.destination_slot;
-        connectionLinesRef.current[key] = line;
+        nextLines[key] = line;
       }
     }
+
+    // Anything left in `previousLines` was a connection that no longer exists; destroy
+    // it so the layer doesn't accumulate orphan nodes across edits.
+    for (const stale_key in previousLines) {
+      previousLines[stale_key].destroy();
+    }
+    connectionLinesRef.current = nextLines;
+
     // While a connection is being authored, draw a guide line from the source port to
     // wherever the mouse last hovered. This makes the gesture feel responsive instead of
     // requiring the user to remember which port they clicked first. Same orthogonal
@@ -1172,10 +1690,10 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
           listening: false,
         });
         guide.name('connection-guide');
-        connectionsLayerRef.current.add(guide);
+        layer.add(guide);
       }
     }
-    connectionsLayerRef.current.draw();
+    layer.batchDraw();
   }, [ dragMovePoint, model, pendingConnectionSource ]);
 
   // Track mouse moves at the stage level so the guide line follows the cursor while the
@@ -1259,12 +1777,74 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     setDimensions({width : window.innerWidth - 320, height : window.innerHeight - 200});
   });
 
+  // Two-way reactive start/stop. The previous implementation fired GET and forgot, leaving
+  // the button enabled (so the user could spam-click it during the ~1s polling gap) and
+  // didn't give any visual feedback that the action was in flight. We now:
+  //
+  // 1. Stamp a `pendingAction` of 'starting' or 'stopping' immediately, which the button
+  //    rendering uses to disable itself and show a transition icon.
+  // 2. Force an immediate state refresh after the server responds (don't wait for the
+  //    next 1 s pipeline-state poll cycle).
+  // 3. Clear `pendingAction` automatically once the polled state matches the requested
+  //    end-state -- handled in a separate effect below so it works whether the state
+  //    flips in response to the user-initiated request OR a server-side change.
+  // 4. Hard-timeout the pending state at 8 s so a network blip can't strand the button
+  //    in disabled-forever land. Stop is now cooperative (sub-second to a couple of
+  //    seconds for a maxed-out SHA cycle) so 8 s is comfortably above the worst case.
   const handleButtonClick = async (id, action) => {
-    const response = await fetch(`/api/v1/pipelines/${id}/${action}`, {
-      method : "GET",
-    });
-    // Handle response if necessary
+    setPendingAction(action === 'start' ? 'starting' : 'stopping');
+    try {
+      const response = await fetch(`/api/v1/pipelines/${id}/${action}`, {
+        method: "GET",
+      });
+      if (!response.ok) {
+        setApiError(`Pipeline ${action} failed: ${response.status}`);
+        setPendingAction(null);
+        return;
+      }
+      try {
+        const body = await response.json();
+        if (body && body.status === 'failed' && body.error) {
+          setApiError(`Pipeline ${action} failed: ${body.error}`);
+          // Don't clear pending here -- the state may still have changed despite a
+          // server-side "already_running" / "not_running" error (concurrent action from
+          // another tab); let the polling effect resolve it.
+        }
+      } catch {
+        // Response body isn't JSON; ignore.
+      }
+      // Don't wait for the next polling tick -- force an immediate refresh so the button
+      // flips out of pending the moment the server has actually transitioned.
+      if (refreshPipelineStateRef.current) {
+        refreshPipelineStateRef.current();
+      }
+    } catch (e) {
+      setApiError(`Pipeline ${action} failed: ${e && e.message ? e.message : 'network error'}`);
+      setPendingAction(null);
+    }
   };
+
+  // Auto-clear the pending state once the server-reported state matches what the user
+  // asked for, OR after a hard timeout (so a hung server can't strand the button in
+  // disabled-forever land). The timeout fires the error path so the user has a hint of
+  // what went wrong.
+  useEffect(() => {
+    if (!pendingAction) return;
+    const targetState = pendingAction === 'starting' ? 'running' : 'stopped';
+    if (pipelineState === targetState) {
+      setPendingAction(null);
+      return;
+    }
+    const timeoutId = setTimeout(() => {
+      setPendingAction((cur) => {
+        if (cur === null) return null;
+        setApiError(`Pipeline ${cur} timed out -- server did not transition state. ` +
+                    'You can try again; the underlying pipeline may still be in flight.');
+        return null;
+      });
+    }, 8000);
+    return () => clearTimeout(timeoutId);
+  }, [pendingAction, pipelineState]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1286,13 +1866,18 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     // a refresh after a successful POST instead of waiting for the next poll cycle.
     refreshPipelineStateRef.current = fetchPipelineState;
     fetchPipelineState();
-    const interval = setInterval(fetchPipelineState, 1000);
+    // Tighter cadence while a start/stop is in flight: 250 ms instead of 1 s lets the UI
+    // catch the transition the moment it happens (typically <1 s with cooperative stop),
+    // so the disabled button flips back to enabled quickly. Steady-state stays at 1 s to
+    // keep network traffic low.
+    const intervalMs = pendingAction ? 250 : 1000;
+    const interval = setInterval(fetchPipelineState, intervalMs);
     return () => {
       clearInterval(interval);
       controller.abort();
       refreshPipelineStateRef.current = () => {};
     };
-  }, [ pipeline.id ]);
+  }, [ pipeline.id, pendingAction ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1303,6 +1888,17 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         if (!response.ok) throw new Error('not ok');
         const jsonData = await response.json();
         setMetrics(jsonData);
+        // The metrics endpoint always reports the current `state` too. Surface it through
+        // the same pipelineState ref the start/stop button consumes -- the metrics tick
+        // runs at 2 Hz vs. the pipeline-state tick at 1 Hz, so this halves the worst-case
+        // latency of seeing a server-side transition (typical case: stop completes 200 ms
+        // into a poll period, the next metrics tick at 500 ms unblocks the button before
+        // the slower 1-second pipeline poll would even fire).
+        if (jsonData && jsonData.state &&
+            jsonData.state !== pipelineStateRef.current) {
+          pipelineStateRef.current = jsonData.state;
+          setPipelineState(jsonData.state);
+        }
       } catch (e) {
         // Network blip or unmount; ignore.
       }
@@ -1393,15 +1989,36 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
               e("i", {className : "material-icons"}, "home")),
             e(Button, {
               variant : "contained",
+              disabled : !!pendingAction,
               style : {
-                backgroundColor : pipelineState === "running" ? "red" : "green",
+                // While a transition is in flight: a muted-grey background and a spinning
+                // hourglass icon make it obvious to the user that the click registered and
+                // the server is working on it. The button is also `disabled` so a frustrated
+                // double-click can't queue a second redundant request.
+                backgroundColor : pendingAction
+                                      ? "#b0b0b0"
+                                      : (pipelineState === "running" ? "red" : "green"),
                 color : "white",
+                minWidth : 48,
               },
               onClick : () =>
                   handleButtonClick(pipeline.id, pipelineState === "running" ? "stop" : "start"),
+              // Accessible hover text describing the pending action.
+              title : pendingAction === 'starting'
+                          ? 'Starting…'
+                          : (pendingAction === 'stopping'
+                                 ? 'Stopping… (cooperative cancellation in progress)'
+                                 : (pipelineState === 'running' ? 'Stop pipeline' : 'Start pipeline')),
             },
-              pipelineState === "running" ? e("i", {className : "material-icons"}, "stop")
-                                          : e("i", {className : "material-icons"}, "play_arrow")),
+              pendingAction === 'starting'
+                  ? e("i", {className : "material-icons", style : {animation : 'beast-spin 1.2s linear infinite'}},
+                      "hourglass_empty")
+                  : (pendingAction === 'stopping'
+                         ? e("i", {className : "material-icons", style : {animation : 'beast-spin 1.2s linear infinite'}},
+                             "hourglass_empty")
+                         : (pipelineState === "running"
+                                ? e("i", {className : "material-icons"}, "stop")
+                                : e("i", {className : "material-icons"}, "play_arrow")))),
             )),
       e("div", {
         style : {width : "100%", height : "calc(100% - 64px)", position : "relative"},

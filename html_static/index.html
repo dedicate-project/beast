@@ -7,6 +7,15 @@
     <link rel="icon" type="image/png" href="/img/beast_head_logo_small.png" />
     <link rel="stylesheet" href="/css/roboto.css" />
     <link rel="stylesheet" href="/css/material_icons.css" />
+    <style>
+      /* Spin animation used by transitional UI elements (e.g. the start/stop button
+         while a request is in flight). Kept here -- alongside the icon font import --
+         so the bundled JS doesn't have to inject a <style> element at runtime. */
+      @keyframes beast-spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+    </style>
     <script src="/js/react.18.production.min.js"></script>
     <script src="/js/react-dom.18.2.0.production.min.js"></script>
     <script src="/js/material-ui.production.min.js"></script>

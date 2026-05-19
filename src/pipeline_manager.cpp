@@ -22,12 +22,14 @@
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
 #include <beast/pipes/fan_pipe.hpp>
+#include <beast/pipes/filter_pipe.hpp>
 #include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
 #include <beast/pipes/program_storage_sink_pipe.hpp>
 #include <beast/pipes/program_storage_source_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
+#include <beast/pipes/score_graph_pipe.hpp>
 
 #include <beast/program_factory_base.hpp>
 #include <beast/random_program_factory.hpp>
@@ -310,10 +312,34 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
       const auto& params = evaluator_json.value()["parameters"];
       checkForKeyPresenceInJson(
           params, {"trial_count", "round_constant_index", "max_steps_per_trial"});
+      // `round_constants_mode` is a post-hoc addition: legacy pipelines that omit it get
+      // the pre-mode (single-K) behaviour. Accept the three canonical strings plus a few
+      // friendly aliases so users typing the JSON by hand have a forgiving target.
+      Sha256RoundEvaluator::RoundConstantsMode mode =
+          Sha256RoundEvaluator::RoundConstantsMode::Fixed;
+      if (params.contains("round_constants_mode")) {
+        const auto mode_str = params["round_constants_mode"].get<std::string>();
+        if (mode_str == "fixed") {
+          mode = Sha256RoundEvaluator::RoundConstantsMode::Fixed;
+        } else if (mode_str == "cycle_all" || mode_str == "cycle") {
+          mode = Sha256RoundEvaluator::RoundConstantsMode::CycleAll;
+        } else if (mode_str == "random_per_trial" || mode_str == "random") {
+          mode = Sha256RoundEvaluator::RoundConstantsMode::RandomPerTrial;
+        } else {
+          throw std::invalid_argument(
+              "Sha256RoundEvaluator: unknown round_constants_mode '" + mode_str +
+              "' (expected 'fixed', 'cycle_all', or 'random_per_trial')");
+        }
+      }
+      // `rounds_per_trial` is also optional and defaults to 1 (= original single-round
+      // behaviour). Legacy ledgers don't have to know about it; new ledgers can opt in
+      // to multi-round scoring by setting it to a number in [1, 64].
+      const uint32_t rounds_per_trial =
+          params.value("rounds_per_trial", static_cast<uint32_t>(1));
       evaluator = std::make_shared<Sha256RoundEvaluator>(
           params["trial_count"].get<uint32_t>(),
           params["round_constant_index"].get<uint32_t>(),
-          params["max_steps_per_trial"].get<uint32_t>());
+          params["max_steps_per_trial"].get<uint32_t>(), mode, rounds_per_trial);
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else if (type == "IdentityEvaluator") {
@@ -573,6 +599,19 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         created_pipes[pipe_name] =
             std::make_shared<ResultsSummaryPipe>(max_candidates, window_size);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "ScoreGraphPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        // Both `window_seconds` and `max_samples` are optional; ScoreGraphPipe falls
+        // back to its built-in defaults when 0 is passed (60s window, 1024 samples).
+        const double window_seconds =
+            pipe.value()["parameters"].value("window_seconds", 0.0);
+        const uint32_t max_samples =
+            pipe.value()["parameters"].value("max_samples", static_cast<uint32_t>(0));
+        created_pipes[pipe_name] = std::make_shared<ScoreGraphPipe>(
+            max_candidates, window_seconds, max_samples);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "MultiplexerPipe") {
         checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "input_slots"});
         const uint32_t max_candidates =
@@ -619,11 +658,21 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
             pipe.value()["parameters"]["output_slots"].get<uint32_t>();
         const std::string strategy_str =
             pipe.value()["parameters"].value("strategy", std::string("round_robin"));
-        const auto strategy = (strategy_str == "broadcast")
-                                  ? DemultiplexerPipe::Strategy::Broadcast
-                                  : DemultiplexerPipe::Strategy::RoundRobin;
+        DemultiplexerPipe::Strategy strategy = DemultiplexerPipe::Strategy::RoundRobin;
+        if (strategy_str == "broadcast") {
+          strategy = DemultiplexerPipe::Strategy::Broadcast;
+        } else if (strategy_str == "least_loaded") {
+          strategy = DemultiplexerPipe::Strategy::LeastLoaded;
+        }
         created_pipes[pipe_name] =
             std::make_shared<DemultiplexerPipe>(max_candidates, output_slots, strategy);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "FilterPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "threshold"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const double threshold = pipe.value()["parameters"]["threshold"].get<double>();
+        created_pipes[pipe_name] = std::make_shared<FilterPipe>(max_candidates, threshold);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "EvaluatorPipe") {
         checkForParameterPresenceInPipeJson(pipe,
@@ -785,6 +834,20 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["parameters"]["trial_count"] = sha_eval->getTrialCount();
       evaluator["parameters"]["round_constant_index"] = sha_eval->getRoundConstantIndex();
       evaluator["parameters"]["max_steps_per_trial"] = sha_eval->getMaxStepsPerTrial();
+      const char* mode_str = "fixed";
+      switch (sha_eval->getRoundConstantsMode()) {
+        case Sha256RoundEvaluator::RoundConstantsMode::Fixed:
+          mode_str = "fixed";
+          break;
+        case Sha256RoundEvaluator::RoundConstantsMode::CycleAll:
+          mode_str = "cycle_all";
+          break;
+        case Sha256RoundEvaluator::RoundConstantsMode::RandomPerTrial:
+          mode_str = "random_per_trial";
+          break;
+      }
+      evaluator["parameters"]["round_constants_mode"] = mode_str;
+      evaluator["parameters"]["rounds_per_trial"] = sha_eval->getRoundsPerTrial();
     } else if (const auto id_eval =
                    std::dynamic_pointer_cast<IdentityEvaluator>(description.evaluator)) {
       evaluator["type"] = "IdentityEvaluator";
@@ -896,6 +959,11 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "ResultsSummaryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["window_size"] = summary_pipe->getWindowSize();
+    } else if (auto graph_pipe = std::dynamic_pointer_cast<ScoreGraphPipe>(pipe->pipe)) {
+      pipe_json["type"] = "ScoreGraphPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["window_seconds"] = graph_pipe->getWindowSeconds();
+      pipe_json["parameters"]["max_samples"] = graph_pipe->getMaxSamples();
     } else if (auto mux_pipe = std::dynamic_pointer_cast<MultiplexerPipe>(pipe->pipe)) {
       pipe_json["type"] = "MultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
@@ -918,10 +986,22 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "DemultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["output_slots"] = demux_pipe->getOutputSlots();
-      pipe_json["parameters"]["strategy"] =
-          demux_pipe->getStrategy() == DemultiplexerPipe::Strategy::Broadcast
-              ? std::string("broadcast")
-              : std::string("round_robin");
+      switch (demux_pipe->getStrategy()) {
+        case DemultiplexerPipe::Strategy::Broadcast:
+          pipe_json["parameters"]["strategy"] = std::string("broadcast");
+          break;
+        case DemultiplexerPipe::Strategy::LeastLoaded:
+          pipe_json["parameters"]["strategy"] = std::string("least_loaded");
+          break;
+        case DemultiplexerPipe::Strategy::RoundRobin:
+        default:
+          pipe_json["parameters"]["strategy"] = std::string("round_robin");
+          break;
+      }
+    } else if (auto filter_pipe = std::dynamic_pointer_cast<FilterPipe>(pipe->pipe)) {
+      pipe_json["type"] = "FilterPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["threshold"] = filter_pipe->getThreshold();
     } else if (auto spec_pipe = std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
       pipe_json["type"] = "ProgramFactoryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();

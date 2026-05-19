@@ -157,6 +157,8 @@ add_library(${PROJECT_NAME}-utils
 add_library(${PROJECT_NAME}-vm
   src/cpu_virtual_machine.cpp
   src/program.cpp
+  src/program_c_codegen.cpp
+  src/program_disassembler.cpp
   src/program_parser.cpp
   src/random_program_factory.cpp
   src/subroutine_library.cpp
@@ -187,6 +189,7 @@ add_library(${PROJECT_NAME}-evaluators
 
 # Pipelines library
 add_library(${PROJECT_NAME}-pipelines
+  src/internal/beast_ga.cpp
   src/pipe.cpp
   src/pipeline.cpp
   src/pipeline_manager.cpp
@@ -195,12 +198,14 @@ add_library(${PROJECT_NAME}-pipelines
   src/pipes/evaluator_pipe.cpp
   src/pipes/evolution_pipe.cpp
   src/pipes/fan_pipe.cpp
+  src/pipes/filter_pipe.cpp
   src/pipes/multiplexer_pipe.cpp
   src/pipes/null_sink_pipe.cpp
   src/pipes/program_factory_pipe.cpp
   src/pipes/program_storage_sink_pipe.cpp
   src/pipes/program_storage_source_pipe.cpp
-  src/pipes/results_summary_pipe.cpp)
+  src/pipes/results_summary_pipe.cpp
+  src/pipes/score_graph_pipe.cpp)
 
 set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm)
 
@@ -355,6 +360,8 @@ if(BEAST_BUILD_TESTS)
   declare_test(call_subroutine)
   declare_test(demultiplexer_pipe)
   declare_test(fan_pipe)
+  declare_test(filter_pipe)
+  declare_test(adder_with_filter_smoke)
   declare_test(curriculum_evaluators)
   declare_test(sha256_round_evaluator)
   declare_test(multiplexer_pipe)
@@ -363,12 +370,15 @@ if(BEAST_BUILD_TESTS)
   declare_test(pipeline)
   declare_test(program_storage_pipes)
   declare_test(results_summary_pipe)
+  declare_test(score_graph_pipe)
   declare_test(pipeline_manager)
   declare_test(pipeline_server)
   declare_test(pipelines)
   declare_test(printing_and_string_table)
   declare_test(program)
   declare_test(program_factory_pipe)
+  declare_test(program_c_codegen)
+  declare_test(program_disassembler)
   declare_test(program_parser)
   declare_test(programs)
   declare_test(random_program_factory)

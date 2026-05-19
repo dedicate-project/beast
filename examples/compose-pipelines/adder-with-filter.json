@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "pipes": {
+      "adder": {
+        "position": {
+          "x": 380,
+          "y": 280
+        }
+      },
+      "discard": {
+        "position": {
+          "x": 940,
+          "y": 270
+        }
+      },
+      "factory": {
+        "position": {
+          "x": 65,
+          "y": 269
+        }
+      },
+      "filter": {
+        "position": {
+          "x": 700,
+          "y": 280
+        }
+      },
+      "mux": {
+        "position": {
+          "x": 220,
+          "y": 280
+        }
+      },
+      "split_pass": {
+        "position": {
+          "x": 939,
+          "y": 331
+        }
+      },
+      "stats": {
+        "position": {
+          "x": 540,
+          "y": 280
+        }
+      },
+      "survivors": {
+        "position": {
+          "x": 1113,
+          "y": 321
+        }
+      }
+    }
+  },
+  "model": {
+    "connections": [
+      {
+        "buffer_size": 16,
+        "destination_pipe": "mux",
+        "destination_slot": 0,
+        "source_pipe": "factory",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 32,
+        "destination_pipe": "adder",
+        "destination_slot": 0,
+        "source_pipe": "mux",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 32,
+        "destination_pipe": "stats",
+        "destination_slot": 0,
+        "source_pipe": "adder",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 32,
+        "destination_pipe": "filter",
+        "destination_slot": 0,
+        "source_pipe": "stats",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 32,
+        "destination_pipe": "discard",
+        "destination_slot": 0,
+        "source_pipe": "filter",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 16,
+        "destination_pipe": "split_pass",
+        "destination_slot": 0,
+        "source_pipe": "filter",
+        "source_slot": 1
+      },
+      {
+        "buffer_size": 16,
+        "destination_pipe": "survivors",
+        "destination_slot": 0,
+        "source_pipe": "split_pass",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 16,
+        "destination_pipe": "mux",
+        "destination_slot": 1,
+        "source_pipe": "split_pass",
+        "source_slot": 1
+      }
+    ],
+    "pipes": {
+      "adder": {
+        "parameters": {
+          "cut_off_score": 0.0,
+          "evaluators": [
+            {
+              "invert_logic": false,
+              "parameters": {
+                "max_steps_per_trial": 800,
+                "trial_count": 8,
+                "value_range": 32
+              },
+              "type": "AdderEvaluator",
+              "weight": 1.0
+            }
+          ],
+          "evolution_parameters": {
+            "byte_mutation_share": 0.3,
+            "crossover_probability": 0.75,
+            "elitism": true,
+            "generations": 12,
+            "max_genome_bytes": 1024,
+            "mutation_probability": 0.05,
+            "opcode_weights": {},
+            "starting_program_size": 150,
+            "string_table_item_length": 0,
+            "string_table_size": 0,
+            "variable_count": 32
+          },
+          "max_candidates": 32,
+          "memory_variables": 32,
+          "string_table_item_length": 0,
+          "string_table_items": 0
+        },
+        "type": "EvaluatorPipe"
+      },
+      "discard": {
+        "parameters": {
+          "max_candidates": 64
+        },
+        "type": "NullSinkPipe"
+      },
+      "factory": {
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 16,
+          "max_size": 150,
+          "memory_variables": 32,
+          "string_table_item_length": 0,
+          "string_table_items": 0
+        },
+        "type": "ProgramFactoryPipe"
+      },
+      "filter": {
+        "parameters": {
+          "max_candidates": 32,
+          "threshold": 0.05
+        },
+        "type": "FilterPipe"
+      },
+      "mux": {
+        "parameters": {
+          "input_slots": 2,
+          "max_candidates": 32
+        },
+        "type": "MultiplexerPipe"
+      },
+      "split_pass": {
+        "parameters": {
+          "max_candidates": 32,
+          "output_slots": 2,
+          "strategy": "broadcast"
+        },
+        "type": "DemultiplexerPipe"
+      },
+      "stats": {
+        "parameters": {
+          "max_candidates": 32,
+          "window_size": 256
+        },
+        "type": "ResultsSummaryPipe"
+      },
+      "survivors": {
+        "parameters": {
+          "max_candidates": 16,
+          "path": "/tmp/beast-adder-promoted.json",
+          "top_k": 16
+        },
+        "type": "ProgramStorageSinkPipe"
+      }
+    }
+  },
+  "name": "Adder with Filter (promote survivors)"
+}

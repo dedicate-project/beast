@@ -36,6 +36,21 @@ void VmSession::reset() noexcept {
   pointer_ = 0;
 }
 
+void VmSession::rewindProgramPointer() noexcept { pointer_ = 0; }
+
+void VmSession::setStopToken(std::shared_ptr<std::atomic<bool>> token) noexcept {
+  stop_token_ = std::move(token);
+}
+
+bool VmSession::isStopRequested() const noexcept {
+  // See Pipe::isStopRequested for the rationale on relaxed loads.
+  const auto token = stop_token_;
+  if (!token) {
+    return false;
+  }
+  return token->load(std::memory_order_relaxed);
+}
+
 const VmSession::RuntimeStatistics& VmSession::getRuntimeStatistics() const noexcept {
   return runtime_statistics_;
 }

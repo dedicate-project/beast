@@ -79,6 +79,41 @@ to climb (a uniform-random guess scores ~0.5 per word, an exact-match scores 1.0
 Pure exact-match scoring would degenerate into needle-in-a-haystack hash inversion --
 that's the cryptographic property of SHA-256 working *against* us.
 
+**Memorisation knobs.** Each evaluation runs `trial_count` trials with different random
+inputs, but the trial sequence is deterministic across evaluations (otherwise the GA
+couldn't distinguish improvement from noise). That makes the trial set a fixed *target*
+the candidate could in principle memorise as a lookup table instead of computing the
+real round function. Two parameters defend against that:
+
+- **`trial_count`** -- raise this to widen the target. The default is `8` for back-compat
+  with older pipelines; bump it to `16`-`64` for serious runs. Each extra trial adds
+  roughly 544 bits of answer the candidate would have to encode in its genome.
+- **`round_constants_mode`** -- `"fixed"` (default, single K every trial), `"cycle_all"`
+  (trial `t` uses `K[(round_constant_index + t) mod 64]`), or `"random_per_trial"`
+  (K drawn from the same deterministic per-evaluation RNG that picks the input state).
+  Non-`fixed` modes force the candidate to actually *read* the K input variable each
+  trial, which biases the search toward the real round formula rather than hard-coding
+  a single round constant.
+
+For a memorisation-resistant baseline pick `trial_count = 32` with
+`round_constants_mode = "cycle_all"` -- the search target then covers 32 distinct
+`(state, K, W)` triples drawn from 32 of the 64 SHA-256 rounds, which is well beyond
+what a 1024-byte genome can encode as a lookup table.
+
+**Multi-round chaining (`rounds_per_trial`).** A second axis: by default each trial
+runs *one* round transformation. Set `rounds_per_trial = R >= 2` to ask the candidate
+to internally apply the round transformation `R` times to a single input, with the
+same K and W, and write the *final* state. The reference applies the same R-round
+transformation and only the final state is scored. The rounds-count is exposed in
+variable 19, so the program can use it as a literal loop trip count. The step budget
+scales with `R` (effective steps = `max_steps_per_trial * R`) so a genome that
+actually loops the round body has room to do the work. R turns the search target
+from "compute one transformation" into "compute one transformation AND wrap it in a
+loop" -- a state-rotation-only program drops sharply from ~0.875 (R=1) toward ~0.5
+as R grows, while a program that genuinely implements both the round formula and the
+loop stays at 1.0 regardless of R. Use it to widen the fitness gap between
+"implements the formula plus loop" and "exploits the rotation ceiling".
+
 The GA is heavily biased toward bit-manipulation opcodes (XOR, AND, OR, INVERT,
 ROTATE, BitShift, ADD, COPY) via the `opcode_weights` map -- without that bias the
 random-program factory produces too many jumps, comparisons, and print instructions
@@ -93,6 +128,86 @@ pipeline does give you is the wiring on which to iterate: tune the opcode bias, 
 mutation rate, the max-genome size; seed the population with a hand-written round via
 `ProgramStorageSourcePipe`; or chain several `Sha256RoundEvaluator`s with different
 `round_constant_index` values to teach a polymorphic round.
+
+### `sha256-round-multi-k.json`
+
+Same wiring as `sha256-round.json` but with the memorisation-resistant settings called
+out above pre-baked: `trial_count = 32` and `round_constants_mode = "cycle_all"`. Use
+this in preference to `sha256-round.json` when you actually want to *learn* the round
+function instead of just measuring how far a small genome can stretch a lookup table.
+Identical layout, scoring, and opcode bias -- only the evaluator parameters differ, so
+A/B comparisons against the single-K baseline are clean.
+
+### `sha256-staged-multi-round.json`
+
+The recommended template for the multi-round (`rounds_per_trial >= 2`) experiment. The
+naive "feed a random factory into a multi-round evaluator" wiring fails for two
+compounding reasons:
+
+1. **No gradient.** Multi-round mode requires the candidate program to *loop* the round
+   body internally (it reads the trip count from variable 19). A 256-byte random program
+   from `RandomProgramFactory` will never implement a loop; it runs once, writes the
+   first round's intermediate state to the output slots, and is scored against the
+   N-round reference -- which is almost-random bit soup compared to a one-round
+   advancement. Every candidate scores ~0.5 (popcount-of-XOR averaged against a uniform
+   reference), the GA sees no signal, and the population walks randomly.
+2. **Per-cycle cost.** Multi-round multiplies the per-evaluation VM step budget by
+   `rounds_per_trial`, which combined with high `trial_count` / `generations` /
+   `populationSize` easily pushes one `evolve()` cycle into the multi-minute range. A
+   pipeline that takes 20 minutes between visible outputs looks deadlocked even when
+   it's just slow.
+
+The staged template fixes both:
+
+```
+Stage A (cheap, single-round, fresh exploration):
+factory_a -> eval_a_single_round -> stats_a -> fan_a -> sink_a_survivors
+                                                            │
+                                                            ▼   (file-based handoff)
+Stage B (cheap, multi-round, seeded from Stage A's survivors):
+source_b_seed -> eval_b_multi_round -> filter_b_above_random ─┬─> discard_b_noise
+                                                              └─> stats_b -> graph_b -> fan_b -> sink_b_best
+```
+
+Key design choices:
+
+- **Stage A and Stage B run in parallel within the same pipeline.** Stage A keeps
+  pushing fresh single-round survivors into a ledger file (`top_k = 16`); Stage B reads
+  that same ledger on every evaluation cycle, so its seed pool gets better over time
+  without any explicit hand-off.
+- **Stage B never sees a random program.** Its only `ProgramStorageSourcePipe` is Stage
+  A's ledger -- if Stage A hasn't produced anything yet, Stage B simply waits.
+- **Stage B is cheap by construction.** `trial_count = 4`, `generations = 10`,
+  `max_steps_per_trial = 2000`, `max_candidates = 16`; that's roughly 30x faster per
+  `evolve()` cycle than the "default everything" multi-round wiring, so cycles complete
+  in seconds and you actually see whether the GA is making progress.
+- **`FilterPipe` (threshold 0.55) drops noise.** Stage B's `cut_off_score = 0.55` keeps
+  random-baseline candidates out of the output slot in the first place; the
+  `filter_b_above_random` block is the second line of defence, routing anything still at
+  the random-walk floor to `discard_b_noise` instead of letting it pollute the best-of
+  ledger.
+- **A `ScoreGraphPipe` (`graph_b`, 120-second window) sits in Stage B's promotion path**
+  so you can watch the score climb in real time and tell apart "GA is climbing slowly"
+  from "GA is genuinely stuck at the floor".
+
+If you need to *visualise* the staged hand-off without restructuring the pipeline (e.g.
+you want Stage A's survivors to be seen by Stage B *and* logged separately), wire a
+`DemultiplexerPipe` between `fan_a` and `sink_a_survivors` with
+`strategy = "least_loaded"` (see below) -- that way a slow logging sink can't back up
+into Stage A.
+
+### `DemultiplexerPipe` strategies, quick reference
+
+- `round_robin` (default): strict back-pressure -- if the next output slot is full, the
+  whole pipe stalls. Correct for symmetric downstream branches; **wrong** for
+  asymmetric ones (the slow branch stalls the fast one).
+- `broadcast`: copy each candidate to every output slot. Correct when every branch
+  evaluates the same population against a different task.
+- `least_loaded`: pick the output with the shortest queue, breaking ties round-robin.
+  Correct when downstream branches have asymmetric throughput -- the slow branch's
+  buffer fills up and the demux just stops sending to it, instead of stalling the whole
+  upstream. Use this whenever one downstream evaluator is dramatically slower than the
+  others (multi-round vs. single-round, large maze vs. small maze, etc.).
 
 ### `sha256-curriculum.json`
 

@@ -36,6 +36,14 @@ double EvaluatorPipe::evaluate(const std::vector<unsigned char>& program_data) {
   if (subroutine_library_) {
     session.setSubroutineLibrary(subroutine_library_);
   }
+  // Forward the pipeline's cooperative-cancellation token so per-trial / per-round step
+  // loops inside expensive evaluators (notably Sha256RoundEvaluator with large
+  // `max_steps_per_trial` / `rounds_per_trial`) can short-circuit instead of running to
+  // their natural completion when the user hits Stop. Most evaluators perform a tight VM
+  // step loop; checking `session.isStopRequested()` per step is essentially free
+  // (one relaxed atomic load) but takes the stop latency from "minutes" to "milliseconds"
+  // for the worst-offender evaluators.
+  session.setStopToken(getStopToken());
   return evaluator_.evaluate(session);
 }
 

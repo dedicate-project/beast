@@ -1,8 +1,10 @@
 #include <beast/evaluators/sha256_round_evaluator.hpp>
 
 // Standard
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <limits>
 #include <random>
 
 // BEAST
@@ -33,6 +35,13 @@ constexpr uint32_t kInputK = 8;
 constexpr uint32_t kInputW = 9;
 constexpr uint32_t kInputTrialId = 10;
 constexpr uint32_t kOutputAOffset = 11; // Var 11..18
+// Var 19 is the rounds-per-trial count exposed to the program. Programs evolved before
+// this variable existed simply don't read it (and the variable defaults to 0 on read of
+// an unwritten input); single-round mode also leaves it at 1, so a pre-existing
+// single-round program is unaffected. When `rounds_per_trial > 1` the program is
+// expected to read this and internally loop that many times applying the round
+// transformation before writing the final state to the output slots.
+constexpr uint32_t kInputRoundsCount = 19;
 constexpr uint32_t kStateWordCount = 8;
 constexpr uint32_t kStateBitsPerWord = 32;
 
@@ -126,9 +135,32 @@ constexpr uint32_t clampRoundIndex(uint32_t requested) noexcept {
 
 Sha256RoundEvaluator::Sha256RoundEvaluator(uint32_t trial_count, uint32_t round_constant_index,
                                            uint32_t max_steps_per_trial)
+    : Sha256RoundEvaluator(trial_count, round_constant_index, max_steps_per_trial,
+                           RoundConstantsMode::Fixed, 1) {}
+
+Sha256RoundEvaluator::Sha256RoundEvaluator(uint32_t trial_count, uint32_t round_constant_index,
+                                           uint32_t max_steps_per_trial,
+                                           RoundConstantsMode round_constants_mode)
+    : Sha256RoundEvaluator(trial_count, round_constant_index, max_steps_per_trial,
+                           round_constants_mode, 1) {}
+
+Sha256RoundEvaluator::Sha256RoundEvaluator(uint32_t trial_count, uint32_t round_constant_index,
+                                           uint32_t max_steps_per_trial,
+                                           RoundConstantsMode round_constants_mode,
+                                           uint32_t rounds_per_trial)
     : trial_count_(trial_count == 0 ? 1 : trial_count),
       round_constant_index_(clampRoundIndex(round_constant_index)),
-      max_steps_per_trial_(max_steps_per_trial == 0 ? 4000 : max_steps_per_trial) {}
+      max_steps_per_trial_(max_steps_per_trial == 0 ? 4000 : max_steps_per_trial),
+      round_constants_mode_(round_constants_mode),
+      // Clamp [1, 64] -- the SHA-256 compression function is exactly 64 rounds, so going
+      // beyond that doesn't model anything real, and 0 would mean "no work" which is
+      // useless. Choose 1 (the original single-round behaviour) as the back-compat
+      // fallback for sentinel 0.
+      rounds_per_trial_(rounds_per_trial == 0
+                            ? 1U
+                            : (rounds_per_trial > kSha256RoundConstants.size()
+                                   ? static_cast<uint32_t>(kSha256RoundConstants.size())
+                                   : rounds_per_trial)) {}
 
 double Sha256RoundEvaluator::evaluate(const VmSession& session) {
   VmSession local_session = session;
@@ -144,21 +176,69 @@ double Sha256RoundEvaluator::evaluate(const VmSession& session) {
                                     VmSession::VariableIoBehavior::Input);
   local_session.setVariableBehavior(static_cast<int32_t>(kInputTrialId),
                                     VmSession::VariableIoBehavior::Input);
+  local_session.setVariableBehavior(static_cast<int32_t>(kInputRoundsCount),
+                                    VmSession::VariableIoBehavior::Input);
 
   // Seed deterministically per evaluation so two evaluations of the same program get
   // the same trial sequence; otherwise a flaky randomised score would prevent the GA
   // from telling improvement apart from noise. Same idiom as the other evaluators.
   std::mt19937 rng(0xA5A5C0DEU); // NOLINT(cert-msc51-cpp,cert-msc32-c)
   std::uniform_int_distribution<uint32_t> word_dist(0U, 0xFFFFFFFFU);
+  // 6-bit distribution used to pick a K index in RandomPerTrial mode. Cheaper than going
+  // through the 32-bit word_dist and modding -- this is just a hot inner-loop value.
+  std::uniform_int_distribution<uint32_t> k_index_dist(
+      0U, static_cast<uint32_t>(kSha256RoundConstants.size() - 1U));
 
-  const uint32_t k = kSha256RoundConstants.at(round_constant_index_);
+  // Choose K for round-invocation `invocation_index`. Same semantics across modes but the
+  // index is now a flat per-VM-invocation counter (`trial * rounds_per_trial + round`)
+  // rather than just the trial number, so multi-round chains see K vary per round when
+  // the mode is non-Fixed -- which is the whole point of multi-round mode. `Fixed`
+  // returns the pinned constant; `CycleAll` walks the table from the configured offset
+  // and wraps mod 64; `RandomPerTrial` draws from the deterministic RNG (preserving the
+  // original name even though "per trial" is misleading once R > 1 -- "per invocation"
+  // is more accurate now but the JSON / UI string remains stable for back-compat).
+  const auto resolveKForInvocation =
+      [this, &rng, &k_index_dist](uint32_t invocation_index) -> uint32_t {
+    switch (round_constants_mode_) {
+      case RoundConstantsMode::Fixed:
+        return kSha256RoundConstants.at(round_constant_index_);
+      case RoundConstantsMode::CycleAll: {
+        const uint32_t idx =
+            (round_constant_index_ + invocation_index) % kSha256RoundConstants.size();
+        return kSha256RoundConstants.at(idx);
+      }
+      case RoundConstantsMode::RandomPerTrial:
+        return kSha256RoundConstants.at(k_index_dist(rng));
+    }
+    return kSha256RoundConstants.at(round_constant_index_); // unreachable; keeps GCC quiet
+  };
 
   CpuVirtualMachine virtual_machine;
   virtual_machine.setSilent(true);
 
+  // The candidate gets `rounds_per_trial_` times the single-round step budget so a
+  // program that genuinely loops the round transformation N times still has room to
+  // execute. For N=1 this collapses to the original budget exactly. We do the
+  // multiplication in 64-bit math to avoid silent overflow at very large N (clamped
+  // back into uint32_t range at the end).
+  const uint32_t effective_step_budget = static_cast<uint32_t>(std::min<uint64_t>(
+      static_cast<uint64_t>(max_steps_per_trial_) * static_cast<uint64_t>(rounds_per_trial_),
+      static_cast<uint64_t>(std::numeric_limits<uint32_t>::max())));
+
   double total_score = 0.0;
   try {
     for (uint32_t trial = 0; trial < trial_count_; ++trial) {
+      // Draw K *before* the inputs so the RandomPerTrial draw lives at a fixed offset in
+      // the RNG stream and the subsequent state/W draws are aligned across all three
+      // modes (the cost of which is: Fixed/CycleAll waste one RNG word per trial vs the
+      // pre-mode version, but the cross-mode comparability is more valuable than the
+      // few-microsecond saving). When `rounds_per_trial_ > 1` the same K is reused for
+      // every round inside this trial -- chaining N rounds with the *same* K is what
+      // the candidate is being asked to implement; varying K across rounds within a
+      // trial would require exposing a K array to the program, which is a much bigger
+      // variable-layout change deferred for a future evaluator (full block compression).
+      const uint32_t k = resolveKForInvocation(trial);
+      (void)word_dist(rng); // burn one word so the input stream offset is mode-independent
       std::array<uint32_t, kStateWordCount> in{};
       for (uint32_t i = 0; i < kStateWordCount; ++i) {
         in.at(i) = word_dist(rng);
@@ -172,21 +252,44 @@ double Sha256RoundEvaluator::evaluate(const VmSession& session) {
                                      static_cast<int32_t>(w));
       local_session.setVariableValue(static_cast<int32_t>(kInputTrialId), true,
                                      static_cast<int32_t>(trial));
+      // Tell the program how many rounds it should apply. Programs that ignore this
+      // variable behave as if it didn't exist (which for N=1 is exactly correct, and
+      // for N>1 means the program will score whatever its hardcoded loop depth happens
+      // to land on -- usually 0 or 1).
+      local_session.setVariableValue(static_cast<int32_t>(kInputRoundsCount), true,
+                                     static_cast<int32_t>(rounds_per_trial_));
 
-      const auto expected = referenceRound(in, k, w);
+      // Reference: apply the SHA-256 round transformation N times in a row with the
+      // same K and W. This is the target the candidate's *single* program execution
+      // must reproduce -- the program is invoked once per trial and is expected to do
+      // its own looping using `kInputRoundsCount` (var 19) as the trip count.
+      auto expected = in;
+      for (uint32_t r = 0; r < rounds_per_trial_; ++r) {
+        expected = referenceRound(expected, k, w);
+      }
 
       // Step the VM until either: (a) every output variable has been written to (we
-      // declare the trial complete), (b) the program halts, or (c) the per-trial step
-      // budget is exhausted. Partial completion (some outputs written, others not) is
-      // still scored using the latest value of each output variable -- typically those
-      // unwritten variables hold 0, which scores against expected via popcount and so
-      // contributes a fractional credit instead of a hard 0.
+      // declare the trial complete), (b) the program halts, or (c) the effective step
+      // budget (per-round budget * N) is exhausted. Partial completion (some outputs
+      // written, others not) is still scored using the latest value of each output
+      // variable -- typically those unwritten variables hold 0, which scores against
+      // expected via popcount and so contributes a fractional credit instead of a
+      // hard 0.
       uint32_t steps = 0;
-      while (steps < max_steps_per_trial_) {
+      while (steps < effective_step_budget) {
         if (!virtual_machine.step(local_session, false)) {
           break;
         }
         ++steps;
+        // Cooperative cancellation: if the owning pipeline asked us to stop, bail out of
+        // the step loop immediately rather than burning through the remaining budget. The
+        // check is gated on a power-of-two stride so it doesn't cost a load per VM step
+        // for the common case where stop is never requested. Stride 64 is a compromise --
+        // small enough that a typical 4000-step budget responds within a millisecond, big
+        // enough that the relaxed atomic load has no measurable impact on hot evaluators.
+        if ((steps & 0x3FU) == 0 && local_session.isStopRequested()) {
+          return 0.0;
+        }
         bool all_outputs_ready = true;
         for (uint32_t i = 0; i < kStateWordCount; ++i) {
           if (!local_session.hasOutputDataAvailable(
@@ -224,6 +327,13 @@ uint32_t Sha256RoundEvaluator::getRoundConstantIndex() const noexcept {
 uint32_t Sha256RoundEvaluator::getMaxStepsPerTrial() const noexcept {
   return max_steps_per_trial_;
 }
+
+Sha256RoundEvaluator::RoundConstantsMode
+Sha256RoundEvaluator::getRoundConstantsMode() const noexcept {
+  return round_constants_mode_;
+}
+
+uint32_t Sha256RoundEvaluator::getRoundsPerTrial() const noexcept { return rounds_per_trial_; }
 
 uint32_t Sha256RoundEvaluator::getRoundConstantValue() const noexcept {
   return kSha256RoundConstants.at(round_constant_index_);

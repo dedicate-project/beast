@@ -1,0 +1,94 @@
+{
+  "name": "SHA-256 Round (multi-K, memorisation-resistant)",
+  "model": {
+    "pipes": {
+      "factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24,
+          "max_size": 400,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0
+        }
+      },
+      "sha256_round": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "Sha256RoundEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "trial_count": 32,
+              "round_constant_index": 0,
+              "round_constants_mode": "cycle_all",
+              "max_steps_per_trial": 4000
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 16,
+            "crossover_probability": 0.7,
+            "mutation_probability": 0.05,
+            "elitism": true,
+            "byte_mutation_share": 0.25,
+            "variable_count": 32,
+            "string_table_size": 0,
+            "string_table_item_length": 0,
+            "max_genome_bytes": 4096,
+            "starting_program_size": 256,
+            "opcode_weights": {
+              "10": 4.0,
+              "13": 3.0,
+              "28": 2.0,
+              "29": 2.0,
+              "30": 2.0,
+              "31": 3.0,
+              "32": 2.0,
+              "33": 4.0,
+              "34": 4.0,
+              "35": 4.0
+            }
+          }
+        }
+      },
+      "stats": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 24, "window_size": 256 }
+      },
+      "fan": {
+        "type": "FanPipe",
+        "parameters": { "max_candidates": 24, "window_seconds": 2.0 }
+      },
+      "best_of_run": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": {
+          "max_candidates": 24,
+          "path": "/tmp/beast-sha256-round-multi-k-best.json",
+          "top_k": 16
+        }
+      }
+    },
+    "connections": [
+      {"source_pipe": "factory",      "source_slot": 0, "destination_pipe": "sha256_round", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "sha256_round", "source_slot": 0, "destination_pipe": "stats",        "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "stats",        "source_slot": 0, "destination_pipe": "fan",          "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "fan",          "source_slot": 0, "destination_pipe": "best_of_run",  "destination_slot": 0, "buffer_size": 24}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "factory":      { "position": { "x":   60, "y": 280 } },
+      "sha256_round": { "position": { "x":  240, "y": 280 } },
+      "stats":        { "position": { "x":  440, "y": 280 } },
+      "fan":          { "position": { "x":  620, "y": 280 } },
+      "best_of_run":  { "position": { "x":  800, "y": 280 } }
+    }
+  }
+}

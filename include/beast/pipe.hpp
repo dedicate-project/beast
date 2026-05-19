@@ -2,8 +2,10 @@
 #define BEAST_PIPE_HPP_
 
 // Standard
+#include <atomic>
 #include <cstdint>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -103,6 +105,18 @@ class Pipe {
   [[nodiscard]] OutputItem drawInputWithScore(uint32_t slot_index);
 
   /**
+   * @brief Return the score of the next candidate at the front of the input buffer without
+   *        consuming it
+   *
+   * Used by pipes that have to decide where to route a candidate based on its score before
+   * committing to drawing it -- notably `FilterPipe`, which has to know which output slot
+   * the next item should land in before pulling it off the FIFO (so back-pressure on the
+   * wrong slot doesn't silently reorder candidates). Throws `std::underflow_error` if the
+   * slot is empty; callers should check `getInputSlotAmount` first.
+   */
+  [[nodiscard]] double peekInputScore(uint32_t slot_index);
+
+  /**
    * @class Pipe::hasOutput
    * @brief Denotes whether output finalists are available
    *
@@ -178,6 +192,42 @@ class Pipe {
    */
   virtual void execute() = 0;
 
+  /**
+   * @brief Attach a process-wide stop token used by long-running operations to short-circuit
+   *
+   * Pipelines own a single `std::atomic<bool>` instance that's shared across every pipe in the
+   * pipeline. `Pipeline::start()` mints a fresh `false` token and passes it to each pipe via
+   * this method; `Pipeline::stop()` flips the bit *before* asking workers to exit, giving
+   * cooperative long-running paths (currently: the BeastGA evaluator wrapper inside
+   * `EvolutionPipe` and the VM step loop in expensive `Evaluator`s) a chance to bail out fast
+   * instead of running to natural completion. Without this, stopping a SHA-256 multi-round
+   * pipeline would block until the in-flight evolve() cycle finishes -- often minutes.
+   *
+   * Idempotent and thread-safe. Passing a null token unsets the existing one (handy for
+   * tests / standalone pipe usage where there's no Pipeline at all).
+   */
+  void setStopToken(std::shared_ptr<std::atomic<bool>> token) noexcept;
+
+  /**
+   * @brief Cheap, lock-free check for "should I bail out now?"
+   *
+   * Returns false when no stop token has been attached (the standalone case) or when the
+   * token is in the not-requested state. Safe to call from any thread; designed for use in
+   * hot inner loops (per VM step, per genome evaluation).
+   */
+  [[nodiscard]] bool isStopRequested() const noexcept;
+
+  /**
+   * @brief Access the underlying stop token so downstream collaborators (notably
+   *        `VmSession`) can share the same flag without an extra round-trip through `Pipe`
+   *
+   * Returns the same null-safe shared_ptr semantics as `setStopToken`. The token outlives
+   * the pipeline only if a stray VmSession keeps a copy alive, which is exactly the safety
+   * property we want -- the worker thread can finish its in-flight step without dereferencing
+   * a freed atomic.
+   */
+  [[nodiscard]] std::shared_ptr<std::atomic<bool>> getStopToken() const noexcept;
+
  protected:
   void storeOutput(uint32_t slot_index, const OutputItem& output);
 
@@ -210,6 +260,17 @@ class Pipe {
    * @brief Denotes the population size of this pipe
    */
   uint32_t max_candidates_;
+
+  /**
+   * @var Pipe::stop_token_
+   * @brief Shared `std::atomic<bool>` flipped by `Pipeline::stop()` for cooperative cancellation
+   *
+   * Pointer (not value) because the same token is shared across every pipe in a pipeline; a
+   * single flip then short-circuits every pipe's in-flight long-running operation at once.
+   * Default-initialised to nullptr -- `isStopRequested()` treats nullptr as "no stop"
+   * so a Pipe built outside a Pipeline (tests, examples) still works without ceremony.
+   */
+  std::shared_ptr<std::atomic<bool>> stop_token_;
 };
 
 } // namespace beast

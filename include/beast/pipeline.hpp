@@ -283,6 +283,19 @@ class Pipeline {
    * @brief Holds a boolean status denoting whether this pipeline is currently running or not
    */
   std::atomic<bool> is_running_{false};
+
+  /**
+   * @var Pipeline::stop_token_
+   * @brief Cooperative-cancellation flag shared across every pipe in this pipeline
+   *
+   * Minted fresh in `start()` and stashed on each `Pipe` via `Pipe::setStopToken`. Flipped to
+   * `true` at the very top of `stop()` -- before we touch `should_run` -- so any in-flight
+   * `evolve()` or VM step loop sees the request immediately rather than only between
+   * iterations of the worker loop. The token outlives `stop()` (the worker may still be in
+   * its final iteration when stop() returns to the caller) but is cleared on the next
+   * `start()` so a restart sees a fresh `false` token without a destruction-window race.
+   */
+  std::shared_ptr<std::atomic<bool>> stop_token_;
 };
 
 } // namespace beast

@@ -540,24 +540,44 @@ export const PIPE_TYPE_DEFINITIONS = [
           'from var 9; writes the new (a..h) to vars 11..18. Scored bit-by-bit ' +
           '(Hamming distance) so the GA has a smooth gradient to climb -- pure ' +
           'exact-match scoring would degenerate into needle-in-a-haystack hash ' +
-          'inversion. First rung of a curriculum that eventually composes the schedule, ' +
-          'block compression and padding into a full SHA-256 hasher.',
+          'inversion. Trials per evaluation control how many distinct (state, K, W) ' +
+          'patterns the candidate is scored on -- raise it (and pick a non-fixed ' +
+          'round-constants mode) to stop the GA from memorising a small lookup table ' +
+          'instead of learning the round formula. First rung of a curriculum that ' +
+          'eventually composes the schedule, block compression and padding into a ' +
+          'full SHA-256 hasher.',
         image: '/img/sha256_round_evaluator_pipe.png',
         evaluatorType: 'Sha256RoundEvaluator',
         extraEvaluatorFields: [
-          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
-          {name: 'round_constant_index', label: 'SHA-256 round index (0-63)', type: 'int',
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 16, min: 1, max: 256},
+          {name: 'round_constant_index', label: 'SHA-256 round index / start offset (0-63)', type: 'int',
            default: 0, min: 0, max: 63},
-          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 4000, min: 1},
+          {
+            name: 'round_constants_mode', label: 'Round constants mode', type: 'enum',
+            options: [
+              {value: 'fixed',            label: 'Fixed (single K, easiest to memorise)'},
+              {value: 'cycle_all',        label: 'Cycle all (walk K table from start offset)'},
+              {value: 'random_per_trial', label: 'Random per trial (deterministic but varied)'},
+            ],
+            default: 'fixed',
+          },
+          {name: 'rounds_per_trial', label: 'Rounds per trial (program loops internally)', type: 'int',
+           default: 1, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per round (x rounds = trial budget)', type: 'int',
+           default: 4000, min: 1},
         ],
         evaluatorBuild: (v) => ({
           trial_count: v.trial_count,
           round_constant_index: v.round_constant_index,
+          round_constants_mode: v.round_constants_mode,
+          rounds_per_trial: v.rounds_per_trial,
           max_steps_per_trial: v.max_steps_per_trial,
         }),
         evaluatorParse: (p) => ({
           trial_count: p.trial_count,
           round_constant_index: p.round_constant_index,
+          round_constants_mode: p.round_constants_mode || 'fixed',
+          rounds_per_trial: p.rounds_per_trial != null ? p.rounds_per_trial : 1,
           max_steps_per_trial: p.max_steps_per_trial,
         }),
       }),
@@ -777,7 +797,9 @@ export const PIPE_TYPE_DEFINITIONS = [
     description:
       'Splits a single input stream across several output slots. Round-robin spreads work ' +
       'evenly across parallel downstream branches; broadcast copies every candidate to ' +
-      'every output (useful when evaluating the same population against several tasks).',
+      'every output (useful when evaluating the same population against several tasks); ' +
+      'least-loaded routes to whichever output has the shortest queue, which keeps a ' +
+      'slow branch from starving fast ones when downstream throughput is asymmetric.',
     image: '/img/demultiplexer_pipe.png',
     inputs: 1,
     outputs: (params) => Math.max(1, Math.min(16, Number(params.output_slots || 2))),
@@ -792,8 +814,9 @@ export const PIPE_TYPE_DEFINITIONS = [
             label: 'Distribution strategy',
             type: 'enum',
             options: [
-              {value: 'round_robin', label: 'Round-robin (one candidate per branch)'},
+              {value: 'round_robin', label: 'Round-robin (one candidate per branch, strict back-pressure)'},
               {value: 'broadcast', label: 'Broadcast (every branch sees every candidate)'},
+              {value: 'least_loaded', label: 'Least-loaded (skip slow/full branches)'},
             ],
             default: 'round_robin',
           },
@@ -809,6 +832,42 @@ export const PIPE_TYPE_DEFINITIONS = [
       max_candidates: params.max_candidates,
       output_slots: params.output_slots,
       strategy: params.strategy,
+    }),
+  },
+  {
+    type: 'FilterPipe',
+    label: 'Filter (by fitness)',
+    description:
+      'Routes each incoming candidate to one of two outputs based on its score: ' +
+      'strictly below the threshold goes to output 0 (reject branch), equal-or-above ' +
+      'goes to output 1 (pass branch). Useful for peeling survivors off into a ' +
+      'storage sink or a promotion stage while feeding the rest back through a ' +
+      'multiplexer for another round of mutation.',
+    image: '/img/filter_pipe.png',
+    inputs: 1,
+    outputs: 2,
+    sections: [
+      {
+        title: 'Filter',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per slot', type: 'int', default: 50, min: 1},
+          {
+            name: 'threshold',
+            label: 'Fitness threshold (score \u2265 passes; score < rejects)',
+            type: 'float',
+            default: 0.5,
+            step: 0.01,
+          },
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      threshold: values.threshold,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      threshold: params.threshold,
     }),
   },
   {
@@ -874,6 +933,48 @@ export const PIPE_TYPE_DEFINITIONS = [
     parseParameters: (params) => ({
       max_candidates: params.max_candidates,
       window_size: params.window_size,
+    }),
+  },
+  {
+    type: 'ScoreGraphPipe',
+    label: 'Score Graph',
+    description:
+      'Passthrough probe that records every candidate score along with the wall-clock ' +
+      'time it was seen, then renders the resulting time-series as a sparkline on hover ' +
+      'and a full-size line graph in the right-side summaries panel. Adjustable time ' +
+      'window; resets on pipeline restart. Pure observer -- forwards everything, drops ' +
+      'nothing.',
+    image: '/img/score_graph_pipe.png',
+    inputs: 1,
+    outputs: 1,
+    sections: [
+      {
+        title: 'Buffer',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per cycle', type: 'int', default: 50, min: 1},
+        ],
+      },
+      {
+        title: 'Time-series window',
+        // Most users will be happy with the defaults; only experts care to tune them.
+        collapsedByDefault: true,
+        fields: [
+          {name: 'window_seconds', label: 'Graph window (s, 0 = default 60s)',
+           type: 'float', default: 60.0, min: 0, step: 1.0},
+          {name: 'max_samples', label: 'Max samples (0 = default 1024)',
+           type: 'int', default: 1024, min: 0},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      window_seconds: values.window_seconds,
+      max_samples: values.max_samples,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      window_seconds: params.window_seconds != null ? params.window_seconds : 60.0,
+      max_samples: params.max_samples != null ? params.max_samples : 1024,
     }),
   },
 ];
