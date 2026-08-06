@@ -6,10 +6,12 @@
 #include <chrono>
 #include <cstdint>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <vector>
 
 // Internal
+#include <beast/internal/beast_ga.hpp>
 #include <beast/pipe.hpp>
 #include <beast/random_program_factory.hpp>
 #include <beast/vm_session.hpp>
@@ -202,6 +204,21 @@ class EvolutionPipe : public Pipe {
   [[nodiscard]] Progress getProgress() const noexcept;
 
   /**
+   * @brief Override the default per-genome thread-pool evaluator with a custom one.
+   *
+   * Used to install GPU-backed `BatchEvaluator` implementations -- e.g.
+   * `beast::cuda::CudaSha256RoundEvaluator`. The injected evaluator owns the entire
+   * generation's eval; the per-genome `evaluate()` method is bypassed completely while
+   * a custom evaluator is installed. Pass `nullptr` to restore the default thread-pool
+   * path.
+   *
+   * Lifetime: the evaluator must outlive any in-flight call to `execute()`. Setting it
+   * to nullptr while a cycle is in flight is undefined; only swap evaluators between
+   * cycles (before `start()` or after `stop()` joins).
+   */
+  void setBatchEvaluator(std::unique_ptr<internal::BatchEvaluator> evaluator);
+
+  /**
    * @brief Records one evaluator-callback invocation against the current cycle
    *
    * Public because the GA's `BatchEvaluator` wrapper is a `std::function` callback
@@ -227,6 +244,12 @@ class EvolutionPipe : public Pipe {
 
   /// Currently configured GA evolution parameters.
   EvolutionParameters evolution_parameters_{};
+
+  /// Optional override for the batch evaluator. nullptr (the default) means "build a
+  /// ThreadPoolBatchEvaluator wrapping `this->evaluate()` on each `execute()` call".
+  /// Non-null means BeastGA dispatches the entire generation's eval through the
+  /// injected evaluator -- typically a CUDA backend like `CudaSha256RoundEvaluator`.
+  std::unique_ptr<internal::BatchEvaluator> batch_evaluator_;
 
   /// Cycle bookkeeping. Updated by `execute()` (single-threaded per pipe) at cycle
   /// start/end, read by `getProgress()` from any thread under `progress_mutex_`.

@@ -56,6 +56,28 @@ class EvaluatorPipe : public EvolutionPipe {
   };
 
   /**
+   * @brief Execution backend selection for the GA's per-genome evaluation loop.
+   *
+   * The default is `Cpu`, which preserves the historical behaviour (the
+   * `ThreadPoolBatchEvaluator` wrapping `EvaluatorPipe::evaluate()`). `Gpu` explicitly
+   * routes through a CUDA-backed `BatchEvaluator` when the evaluator configuration
+   * is supported (see `applyBackendSelection` for the exact conditions); when those
+   * conditions aren't met (no CUDA device, no GPU build, unsupported evaluator type
+   * or count), `Gpu` silently falls back to CPU rather than failing the pipeline.
+   * `Auto` says "use GPU when you can, otherwise CPU" -- the safest opt-in for
+   * users running the same JSON on a mix of GPU and CPU-only hosts.
+   *
+   * The enum is always present in the API regardless of `BEAST_HAS_CUDA`. On a build
+   * without CUDA support, `Gpu` and `Auto` collapse to CPU at `applyBackendSelection`
+   * time -- the JSON is portable, only the backend selection changes.
+   */
+  enum class Backend {
+    Cpu = 0,  ///< Force CPU thread-pool evaluation. Default.
+    Gpu = 1,  ///< Force GPU when available; silently fall back to CPU otherwise.
+    Auto = 2  ///< Prefer GPU when available and applicable; CPU otherwise.
+  };
+
+  /**
    * @brief Initializes this EvaluatorPipe instance
    *
    * @param max_candidates The input/output size (number of candidate programs) of this pipe
@@ -173,6 +195,39 @@ class EvaluatorPipe : public EvolutionPipe {
    */
   [[nodiscard]] std::shared_ptr<const SubroutineLibrary> getSubroutineLibrary() const noexcept;
 
+  /**
+   * @brief Configure which backend the next `applyBackendSelection()` call should
+   *        install. The selection is NOT applied immediately -- the pipe loader
+   *        invokes `applyBackendSelection()` after every evaluator has been attached
+   *        so the backend factory can inspect the evaluator set.
+   */
+  void setBackend(Backend backend);
+
+  /**
+   * @brief Current backend choice. Defaults to `Backend::Cpu`.
+   */
+  [[nodiscard]] Backend getBackend() const noexcept;
+
+  /**
+   * @brief Install the `BatchEvaluator` that matches the configured `Backend`.
+   *
+   * Idempotent and cheap: re-applying the same backend swaps in a fresh
+   * `BatchEvaluator` (so a config change in the underlying CPU evaluator gets
+   * picked up next cycle). Call after `addEvaluator()` for every evaluator, before
+   * `start()`.
+   *
+   * Fallback policy:
+   *   - `Backend::Cpu` always uses the default thread-pool path (no-op effectively;
+   *     just clears any previously injected GPU evaluator).
+   *   - `Backend::Gpu` / `Backend::Auto` succeed iff: (a) the binary was built with
+   *     `BEAST_ENABLE_CUDA=ON`, (b) `cuda::isCudaAvailable()` returns true, (c) the
+   *     pipe has exactly one attached evaluator, and (d) that evaluator is a
+   *     `Sha256RoundEvaluator` (the only GPU-backed evaluator that ships today).
+   *     Anything else falls back to CPU silently; `Backend::Gpu` is "best-effort
+   *     opt-in", not a hard requirement that fails the pipeline.
+   */
+  void applyBackendSelection();
+
  private:
   /**
    * @var EvaluatorPipe::variable_count_
@@ -216,6 +271,10 @@ class EvaluatorPipe : public EvolutionPipe {
    * per-genome `VmSession`s the GA spawns each cycle without paying for copies.
    */
   std::shared_ptr<const SubroutineLibrary> subroutine_library_;
+
+  /// Backend choice for the GA's per-genome evaluation. Defaults to CPU so existing
+  /// pipeline JSON without a `backend` field behaves exactly as before.
+  Backend backend_ = Backend::Cpu;
 };
 
 } // namespace beast

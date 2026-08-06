@@ -359,6 +359,101 @@ TEST_CASE("PipelineManager") {
     REQUIRE(sha->getRoundsPerTrial() == 1);
     REQUIRE(back["pipes"]["sha256_round"]["parameters"]["evaluators"][0]["parameters"]
                 ["rounds_per_trial"].get<uint32_t>() == 1);
+    // Backend field is intentionally omitted from input above; the parser must default
+    // to `Cpu` and the serializer must NOT emit the field for the default value so
+    // legacy ledgers round-trip without sprouting new keys.
+    REQUIRE(eval_pipe->getBackend() == EvaluatorPipe::Backend::Cpu);
+    REQUIRE_FALSE(back["pipes"]["sha256_round"]["parameters"].contains("backend"));
+  }
+
+  SECTION("EvaluatorPipe backend selector round-trips through JSON") {
+    // The execution backend is opt-in: "cpu" (default), "gpu", or "auto". The
+    // pipeline loader must parse all three and the serializer must emit anything
+    // other than the default verbatim. We don't assert that a GPU actually gets
+    // installed (CudaSha256RoundEvaluator construction depends on a CUDA device);
+    // the parity test covers that side. Here we lock down the JSON contract.
+    for (const std::string& requested : {"cpu", "gpu", "auto"}) {
+      const std::string template_json = R"({
+          "pipes": {
+            "sha256_round": {
+              "type": "EvaluatorPipe",
+              "parameters": {
+                "max_candidates": 16,
+                "memory_variables": 32,
+                "string_table_items": 0,
+                "string_table_item_length": 0,
+                "backend": "BACKEND_PLACEHOLDER",
+                "evaluators": [{
+                  "type": "Sha256RoundEvaluator",
+                  "weight": 1.0,
+                  "invert_logic": false,
+                  "parameters": {
+                    "trial_count": 1,
+                    "round_constant_index": 0,
+                    "max_steps_per_trial": 256
+                  }
+                }]
+              }
+            }
+          }})";
+      std::string concrete = template_json;
+      const auto pos = concrete.find("BACKEND_PLACEHOLDER");
+      REQUIRE(pos != std::string::npos);
+      concrete.replace(pos, std::string("BACKEND_PLACEHOLDER").size(), requested);
+
+      const auto pipeline =
+          PipelineManager::constructPipelineFromJson(nlohmann::json::parse(concrete));
+      const auto eval_pipe = std::dynamic_pointer_cast<EvaluatorPipe>(
+          pipeline->getPipes().front()->pipe);
+      REQUIRE(eval_pipe != nullptr);
+
+      EvaluatorPipe::Backend expected = EvaluatorPipe::Backend::Cpu;
+      if (requested == "gpu") {
+        expected = EvaluatorPipe::Backend::Gpu;
+      } else if (requested == "auto") {
+        expected = EvaluatorPipe::Backend::Auto;
+      }
+      REQUIRE(eval_pipe->getBackend() == expected);
+
+      const auto back = PipelineManager::deconstructPipelineToJson(pipeline);
+      if (requested == "cpu") {
+        // Default value is elided to keep the on-wire form minimal for legacy pipelines.
+        REQUIRE_FALSE(back["pipes"]["sha256_round"]["parameters"].contains("backend"));
+      } else {
+        REQUIRE(back["pipes"]["sha256_round"]["parameters"]["backend"]
+                    .get<std::string>() == requested);
+      }
+    }
+  }
+
+  SECTION("EvaluatorPipe rejects an unknown backend string") {
+    // Unknown backend values throw at load time rather than silently downgrading.
+    // A typo (e.g. `"gpus"`) should be loud, not a confusing CPU-only run.
+    const auto json = R"({
+        "pipes": {
+          "sha256_round": {
+            "type": "EvaluatorPipe",
+            "parameters": {
+              "max_candidates": 16,
+              "memory_variables": 32,
+              "string_table_items": 0,
+              "string_table_item_length": 0,
+              "backend": "gpus",
+              "evaluators": [{
+                "type": "Sha256RoundEvaluator",
+                "weight": 1.0,
+                "invert_logic": false,
+                "parameters": {
+                  "trial_count": 1,
+                  "round_constant_index": 0,
+                  "max_steps_per_trial": 256
+                }
+              }]
+            }
+          }
+        }})"_json;
+    REQUIRE_THROWS_AS(PipelineManager::constructPipelineFromJson(json),
+                      std::invalid_argument);
   }
 
   SECTION("Sha256RoundEvaluator round-trips rounds_per_trial when explicitly set") {

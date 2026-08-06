@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.18) # CUDA support requires CMake >= 3.18 for the
+                                     # modern `enable_language(CUDA)` + CUDAToolkit
+                                     # find_package combo we use under BEAST_ENABLE_CUDA.
 project(beast
   LANGUAGES CXX
   VERSION 0.1.2
@@ -9,6 +11,16 @@ option(BEAST_BUILD_TESTS "Whether to build tests or not" YES)
 option(BEAST_BUILD_PIPELINES "Whether to build example pipelines or not" YES)
 option(BEAST_BUILD_PROGRAMS "Whether to build example programs or not" YES)
 option(BEAST_BUILD_DOCS "Whether to build documentation or not" YES)
+# Tier 2: GPU acceleration. Enabled by default so the `backend: "gpu" | "auto"` field
+# on EvaluatorPipe Just Works out of the box. Builds the `beast-cuda` library
+# containing `cuda::CudaSha256RoundEvaluator` (a `BatchEvaluator` implementation that
+# drops into any `EvolutionPipe::setBatchEvaluator`). Requires CUDA Toolkit
+# (`find_package(CUDAToolkit)`); on hosts without a CUDA driver the library still
+# builds and links, but `cuda::isCudaAvailable()` returns false at runtime and pipes
+# silently fall back to the CPU `ThreadPoolBatchEvaluator`. Configure with
+# `-DBEAST_ENABLE_CUDA=OFF` to skip the CUDA build entirely (saves ~20s of compile
+# time and removes the CUDA Toolkit requirement).
+option(BEAST_ENABLE_CUDA "Build the optional CUDA-backed GPU evaluators" YES)
 # Running clang-tidy with `-checks=*,-warnings-as-errors=*` is extremely sensitive to the local
 # clang-tidy version: a fresh checks list ships with every LLVM release and almost any newer
 # revision will refuse to compile against this codebase. We therefore make the check opt-in so
@@ -85,7 +97,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_COMPILER_LAUNCHER "ccache")
 
 if(NOT CMAKE_GENERATOR MATCHES "Visual Studio")
-  add_compile_options(-Werror -pedantic)
+  # Scope the strict-by-default flags to C++ only -- nvcc rejects `-pedantic` because
+  # it doesn't recognise the value for its own `-Werror` option, and a global add
+  # would otherwise leak into every CUDA translation unit.
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>
+                     $<$<COMPILE_LANGUAGE:CXX>:-pedantic>)
 endif()
 
 if(BEAST_BUILD_DOCS)
@@ -209,11 +225,96 @@ add_library(${PROJECT_NAME}-pipelines
 
 set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm)
 
+# ---- Optional CUDA backend ----------------------------------------------------------
+#
+# When `BEAST_ENABLE_CUDA=ON` we enable the CUDA language for the project and build a
+# small `beast-cuda` library containing the device kernels + host-side glue. The
+# library is linked into PROJECT_LIBS unconditionally (CMake propagates the link to
+# every consumer) so any pipeline binary can call into `beast::cuda::` symbols.
+#
+# A runtime check (`isCudaAvailable()`) gates actual GPU use, so a binary built with
+# CUDA support still runs on machines without a CUDA driver -- the GPU evaluator
+# constructor will fail, callers catch and fall back to CPU.
+if(BEAST_ENABLE_CUDA)
+  # Because BEAST_ENABLE_CUDA defaults to YES, we can't just hard-require the CUDA
+  # Toolkit -- contributors and CI hosts without a CUDA install would all see a
+  # cryptic configure failure on what is otherwise a CPU-only build. Probe for the
+  # toolkit first; if it isn't there, downgrade the flag, emit a one-line status,
+  # and continue with the CPU-only build. Users on CUDA-less hosts who want the
+  # warning gone can pass `-DBEAST_ENABLE_CUDA=OFF` explicitly.
+  include(CheckLanguage)
+  check_language(CUDA)
+  if(CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    find_package(CUDAToolkit QUIET)
+    if(NOT CUDAToolkit_FOUND)
+      message(STATUS
+        "BEAST_ENABLE_CUDA=ON but CUDAToolkit was not found; "
+        "disabling CUDA backend (the `backend: \"gpu\"` JSON knob will silently "
+        "fall back to CPU). Pass -DBEAST_ENABLE_CUDA=OFF to silence this notice.")
+      set(BEAST_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
+    endif()
+  else()
+    message(STATUS
+      "BEAST_ENABLE_CUDA=ON but no CUDA compiler was detected on PATH; "
+      "disabling CUDA backend (the `backend: \"gpu\"` JSON knob will silently "
+      "fall back to CPU). Pass -DBEAST_ENABLE_CUDA=OFF to silence this notice.")
+    set(BEAST_ENABLE_CUDA OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+# Second pass: the actual CUDA build only runs when the probe above succeeded. We
+# split it out so the option flip-to-OFF is visible to the rest of the file (target
+# install lists, beast-pipelines compile definitions, the parity test, ...).
+if(BEAST_ENABLE_CUDA)
+  # CMake 3.18+ requires every target to declare CUDA_ARCHITECTURES once the CUDA
+  # language is enabled, even for targets that contain no CUDA source. Set a sane
+  # default at the project level; the GPU library overrides it below with its own list.
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES "70;75;80;86;89")
+  endif()
+  add_library(${PROJECT_NAME}-cuda
+    src/cuda/compiler.cpp
+    src/cuda/opcode_coverage.cpp
+    src/cuda/cuda_sha256_round_evaluator.cu)
+  # Compute capability 7.0+ covers everything from Volta (V100) forward; Ada (the
+  # development host) is 8.9. We compile for a broad range to keep binaries portable;
+  # increase the floor (CUDA_ARCHITECTURES list) if a target site doesn't need pre-Ampere.
+  set_target_properties(${PROJECT_NAME}-cuda PROPERTIES
+    CUDA_ARCHITECTURES "70;75;80;86;89"
+    # No separable compilation -- the kernel lives in a single TU and we want it
+    # whole-program linkable into the consumer test/binary without an explicit nvcc
+    # device-link step. Saves the `__cudaRegisterLinkedBinary_*` undefined-reference
+    # mess at executable link time.
+    CUDA_SEPARABLE_COMPILATION OFF
+    CXX_CLANG_TIDY ""  # clang-tidy doesn't understand __global__ / __device__ markers.
+    CUDA_CLANG_TIDY ""
+  )
+  target_compile_options(${PROJECT_NAME}-cuda PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+  # Link beast-vm so the compiler can call into ProgramParser. beast-utils stays in
+  # PUBLIC so the static lib pulls in the right transitive symbols when consumers
+  # depend on us via beast-pipelines.
+  target_link_libraries(${PROJECT_NAME}-cuda
+    PUBLIC ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm CUDA::cudart)
+  # Make the library available to PROJECT_LIBS consumers so tests / pipelines see it.
+  list(APPEND PROJECT_LIBS ${PROJECT_NAME}-cuda)
+endif()
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}-evaluators galib maze)
 target_link_libraries(${PROJECT_NAME}-pipelines Threads::Threads)
+# `beast-pipelines` itself reaches into the CUDA evaluator when configuring a pipe
+# with `backend: "gpu"` from JSON (see `EvaluatorPipe::applyBackendSelection`).
+# When CUDA support isn't built, the same code paths see `BEAST_HAS_CUDA` undefined
+# and silently fall back to the CPU thread-pool evaluator -- pipeline JSON stays
+# portable across both build configurations.
+if(BEAST_ENABLE_CUDA)
+  target_link_libraries(${PROJECT_NAME}-pipelines ${PROJECT_NAME}-cuda)
+  target_compile_definitions(${PROJECT_NAME}-pipelines PUBLIC BEAST_HAS_CUDA)
+endif()
 
 add_executable(${PROJECT_NAME}-compose
   src/compose.cpp)
@@ -364,6 +465,17 @@ if(BEAST_BUILD_TESTS)
   declare_test(adder_with_filter_smoke)
   declare_test(curriculum_evaluators)
   declare_test(sha256_round_evaluator)
+  if(BEAST_ENABLE_CUDA)
+    # Tier 2 parity test: only built when the CUDA library is built. The test itself
+    # is safe to run on hosts without a CUDA device -- it skips with a warning.
+    declare_test(cuda_sha256_parity)
+    # Tier 3 contracts. cuda_opcode_coverage exercises the host-side annotation
+    # table only (no device required) but lives in beast-cuda's translation units
+    # for now, hence it's gated on BEAST_ENABLE_CUDA. cuda_opcode_parity does need
+    # a device and skips with a warning when none is present.
+    declare_test(cuda_opcode_coverage)
+    declare_test(cuda_opcode_parity)
+  endif()
   declare_test(multiplexer_pipe)
   declare_test(null_sink_pipe)
   declare_test(pipe)
@@ -390,8 +502,14 @@ if(BEAST_BUILD_TESTS)
 endif(BEAST_BUILD_TESTS)
 
 # Install targets
+set(BEAST_INSTALL_TARGETS
+  ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm ${PROJECT_NAME}-evaluators
+  ${PROJECT_NAME}-pipelines galib)
+if(BEAST_ENABLE_CUDA)
+  list(APPEND BEAST_INSTALL_TARGETS ${PROJECT_NAME}-cuda)
+endif()
 install(
-  TARGETS ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-pipelines galib
+  TARGETS ${BEAST_INSTALL_TARGETS}
   EXPORT ${PROJECT_NAME}-targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib

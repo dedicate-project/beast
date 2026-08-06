@@ -21,8 +21,8 @@
       },
       "demult1": {
         "position": {
-          "x": 1292,
-          "y": 112
+          "x": 1307,
+          "y": 147
         }
       },
       "factory_round": {
@@ -51,8 +51,8 @@
       },
       "fan5": {
         "position": {
-          "x": 1265,
-          "y": 318
+          "x": 754,
+          "y": 243
         }
       },
       "fan6": {
@@ -81,8 +81,8 @@
       },
       "null": {
         "position": {
-          "x": 1268,
-          "y": 169
+          "x": 1178,
+          "y": 118
         }
       },
       "origsource": {
@@ -99,14 +99,14 @@
       },
       "round_sink": {
         "position": {
-          "x": 1175,
-          "y": 421
+          "x": 966,
+          "y": 243
         }
       },
       "score": {
         "position": {
-          "x": 1056,
-          "y": 421
+          "x": 860,
+          "y": 243
         }
       },
       "sha1": {
@@ -375,7 +375,7 @@
         "parameters": {
           "loop": true,
           "max_candidates": 50,
-          "path": "/tmp/beast-sha-round.json"
+          "path": "/tmp/beast-sha-round-2.json"
         },
         "type": "ProgramStorageSourcePipe"
       },
@@ -389,7 +389,7 @@
       "round_sink": {
         "parameters": {
           "max_candidates": 16,
-          "path": "/tmp/beast-sha-round.json",
+          "path": "/tmp/beast-sha-round-2.json",
           "top_k": 8
         },
         "type": "ProgramStorageSinkPipe"
@@ -404,6 +404,7 @@
       },
       "sha1": {
         "parameters": {
+          "backend": "gpu",
           "cut_off_score": 0.0,
           "evaluators": [
             {
@@ -412,7 +413,7 @@
                 "max_steps_per_trial": 4000,
                 "round_constant_index": 0,
                 "round_constants_mode": "random_per_trial",
-                "rounds_per_trial": 1,
+                "rounds_per_trial": 2,
                 "trial_count": 4
               },
               "type": "Sha256RoundEvaluator",
@@ -432,7 +433,7 @@
             "string_table_size": 4,
             "variable_count": 16
           },
-          "max_candidates": 20,
+          "max_candidates": 1024,
           "memory_variables": 32,
           "string_table_item_length": 0,
           "string_table_items": 0

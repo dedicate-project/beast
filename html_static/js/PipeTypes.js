@@ -110,6 +110,26 @@ export const PIPE_TYPE_DEFINITIONS = [
         ],
       },
       {
+        // See the matching note in `numericEvaluatorPipe` for the fallback contract.
+        // The MazeEvaluator currently has no GPU port, so picking "gpu" here will fall
+        // back to CPU; the option is exposed for parity with the other evaluator pipes
+        // and so saved pipelines round-trip cleanly when a Maze pipe is dropped on a
+        // CUDA-enabled binary.
+        title: 'Execution backend',
+        collapsedByDefault: true,
+        fields: [
+          {
+            name: 'backend', label: 'Backend', type: 'enum',
+            options: [
+              {value: 'cpu',  label: 'CPU (default, always available)'},
+              {value: 'gpu',  label: 'GPU (CUDA; falls back to CPU if unavailable)'},
+              {value: 'auto', label: 'Auto (GPU when applicable, otherwise CPU)'},
+            ],
+            default: 'cpu',
+          },
+        ],
+      },
+      {
         title: 'Genetic algorithm',
         // Collapsed by default since the defaults are usually fine; the dialog renders
         // sections as collapsible accordions.
@@ -131,6 +151,9 @@ export const PIPE_TYPE_DEFINITIONS = [
       string_table_items: values.string_table_items,
       string_table_item_length: values.string_table_item_length,
       cut_off_score: values.cut_off_score,
+      // Backend key elided when CPU (the default) so legacy pipelines round-trip
+      // through Load -> Save without sprouting a no-op `backend: "cpu"` field.
+      ...(values.backend && values.backend !== 'cpu' ? {backend: values.backend} : {}),
       evaluators: [{
         type: 'MazeEvaluator',
         weight: 1.0,
@@ -169,6 +192,9 @@ export const PIPE_TYPE_DEFINITIONS = [
         difficulty: maze.difficulty,
         max_steps: maze.max_steps,
         cut_off_score: params.cut_off_score,
+        // Older Maze pipelines predate the backend selector; missing -> CPU so the
+        // form populates with a concrete option rather than an empty dropdown.
+        backend: params.backend || 'cpu',
         generations: ga.generations,
         crossover_probability: ga.crossover_probability,
         mutation_probability: ga.mutation_probability,
@@ -213,6 +239,27 @@ export const PIPE_TYPE_DEFINITIONS = [
           title: 'Selection',
           fields: [
             {name: 'cut_off_score', label: 'Cut-off score', type: 'float', default: 0.0, min: 0.0, max: 1.0, step: 0.01},
+          ],
+        },
+        {
+          // Backend dispatch is plumbed all the way to the C++ EvolutionPipe via
+          // EvaluatorPipe::applyBackendSelection. "gpu" / "auto" only actually use the
+          // GPU when (a) the binary was built with BEAST_ENABLE_CUDA, (b) a CUDA device
+          // is visible, and (c) the evaluator has a CUDA port (today only SHA-256). All
+          // other combinations silently fall back to the CPU thread pool -- pipelines
+          // stay portable between GPU and CPU-only hosts.
+          title: 'Execution backend',
+          collapsedByDefault: true,
+          fields: [
+            {
+              name: 'backend', label: 'Backend', type: 'enum',
+              options: [
+                {value: 'cpu',  label: 'CPU (default, always available)'},
+                {value: 'gpu',  label: 'GPU (CUDA; falls back to CPU if unavailable)'},
+                {value: 'auto', label: 'Auto (GPU when applicable, otherwise CPU)'},
+              ],
+              default: 'cpu',
+            },
           ],
         },
         {
@@ -267,6 +314,9 @@ export const PIPE_TYPE_DEFINITIONS = [
           string_table_items: values.string_table_items,
           string_table_item_length: values.string_table_item_length,
           cut_off_score: values.cut_off_score,
+          // Only emit the backend key when non-default, mirroring the C++ serializer:
+          // legacy pipelines round-trip without sprouting a `backend: "cpu"` key.
+          ...(values.backend && values.backend !== 'cpu' ? {backend: values.backend} : {}),
           evaluators: [{
             type: evaluatorType,
             weight: 1.0,
@@ -298,6 +348,9 @@ export const PIPE_TYPE_DEFINITIONS = [
           string_table_items: params.string_table_items,
           string_table_item_length: params.string_table_item_length,
           cut_off_score: params.cut_off_score,
+          // Missing `backend` in the on-wire form means CPU (the historical default);
+          // keep that mapping explicit so the form always renders with a selection.
+          backend: params.backend || 'cpu',
           ...evaluatorParse(task),
           generations: ga.generations,
           crossover_probability: ga.crossover_probability,

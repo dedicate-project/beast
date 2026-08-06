@@ -704,6 +704,29 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
           evaluator_pipe->addEvaluator(evaluator, weight, invert_logic);
         }
 
+        // Optional execution backend selector ("cpu" | "gpu" | "auto", defaults to
+        // "cpu"). The actual backend choice is committed by `applyBackendSelection`
+        // after every evaluator has been attached -- the GPU factory needs to inspect
+        // the evaluator type to decide whether it can satisfy the request. Unknown
+        // strings throw rather than silently downgrading to CPU, so a typo is loud.
+        if (pipe.value()["parameters"].contains("backend")) {
+          const auto backend_str =
+              pipe.value()["parameters"]["backend"].get<std::string>();
+          EvaluatorPipe::Backend backend = EvaluatorPipe::Backend::Cpu;
+          if (backend_str == "cpu") {
+            backend = EvaluatorPipe::Backend::Cpu;
+          } else if (backend_str == "gpu") {
+            backend = EvaluatorPipe::Backend::Gpu;
+          } else if (backend_str == "auto") {
+            backend = EvaluatorPipe::Backend::Auto;
+          } else {
+            throw std::invalid_argument(
+                "EvaluatorPipe: unknown backend '" + backend_str +
+                "' (expected one of: cpu, gpu, auto)");
+          }
+          evaluator_pipe->setBackend(backend);
+        }
+
         // Optional cut-off score and full EvolutionParameters set; see
         // `deconstructEvolutionParametersToJson` for the on-disk shape. Both blocks default
         // to the C++-side defaults when missing so older pipeline JSON files keep working.
@@ -740,6 +763,12 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
             evaluator_pipe->addSubroutineSource(source);
           }
         }
+
+        // Commit the backend choice now that all evaluators (and any subroutine
+        // sources) are attached -- the GPU factory inspects the evaluator set to
+        // decide whether it can satisfy a `gpu` / `auto` request. Cheap and
+        // idempotent; safe to call even when the JSON didn't carry a `backend` field.
+        evaluator_pipe->applyBackendSelection();
 
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else {
@@ -935,6 +964,19 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["parameters"]["cut_off_score"] = evaluator_pipe->getCutOffScore();
       pipe_json["parameters"]["evolution_parameters"] =
           deconstructEvolutionParametersToJson(evaluator_pipe->getEvolutionParameters());
+      // Backend selection. Only emitted when non-default so legacy pipeline JSON
+      // round-trips cleanly through load -> save without sprouting a `backend: "cpu"`
+      // field that wasn't there before.
+      switch (evaluator_pipe->getBackend()) {
+        case EvaluatorPipe::Backend::Cpu:
+          break;
+        case EvaluatorPipe::Backend::Gpu:
+          pipe_json["parameters"]["backend"] = "gpu";
+          break;
+        case EvaluatorPipe::Backend::Auto:
+          pipe_json["parameters"]["backend"] = "auto";
+          break;
+      }
       // Subroutine sources are only serialised when actually configured; an empty
       // array means "no library mounted" and writing the empty array would needlessly
       // clutter pipeline JSON files that pre-date the feature.

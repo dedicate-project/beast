@@ -490,12 +490,50 @@ void EvolutionPipe::execute() {
     return operatorAwareCrossover(a, b, this->evolution_parameters_, *mutate_rng);
   };
 
-  // Evaluator: CPU thread-pool implementation that wraps our virtual `evaluate()`. A
-  // future GPU implementation would replace this with a CUDA-backed `BatchEvaluator`
-  // -- no other code in this function changes.
-  ThreadPoolBatchEvaluator evaluator(
+  // Evaluator: either a caller-injected `BatchEvaluator` (typically a GPU backend like
+  // `cuda::CudaSha256RoundEvaluator`) or the default CPU thread-pool implementation
+  // that wraps our virtual `evaluate()`. The choice is per-pipe and lives on
+  // `batch_evaluator_`; the GA loop above this point doesn't change either way.
+  //
+  // For the injected case we still wrap with a recordEvaluatorCall adapter so the
+  // pipe's progress counter ticks correctly per genome. The adapter unwraps to the
+  // injected evaluator's `evaluate()` -- no double-batching, no extra synchronization.
+  ThreadPoolBatchEvaluator default_evaluator(
       [this](const std::vector<uint8_t>& bytes) { return this->evaluate(bytes); },
       [this] { this->recordEvaluatorCall(); });
+
+  // Adapter that drives `recordEvaluatorCall` once per genome even when the underlying
+  // evaluator is an injected (CUDA) backend. Keeps the progress bar honest across
+  // both code paths.
+  class RecordingAdapter : public internal::BatchEvaluator {
+   public:
+    RecordingAdapter(internal::BatchEvaluator& wrapped, EvolutionPipe* pipe)
+        : wrapped_{wrapped}, pipe_{pipe} {}
+    std::vector<double> evaluate(const std::vector<std::vector<uint8_t>>& genomes,
+                                 const std::atomic<bool>* stop_token) override {
+      for (size_t i = 0; i < genomes.size(); ++i) {
+        pipe_->recordEvaluatorCall();
+      }
+      return wrapped_.evaluate(genomes, stop_token);
+    }
+
+   private:
+    internal::BatchEvaluator& wrapped_;
+    EvolutionPipe* pipe_;
+  };
+
+  internal::BatchEvaluator* evaluator_ptr = nullptr;
+  RecordingAdapter recording_adapter(
+      batch_evaluator_ != nullptr ? *batch_evaluator_
+                                  : static_cast<internal::BatchEvaluator&>(default_evaluator),
+      this);
+  if (batch_evaluator_ != nullptr) {
+    // Inject the adapter on top of the user's BatchEvaluator so progress still ticks.
+    evaluator_ptr = &recording_adapter;
+  } else {
+    // The default evaluator already bumps the counter internally; no adapter needed.
+    evaluator_ptr = &default_evaluator;
+  }
 
   // Finalist streaming: every cutoff-crossing genome lands in the output buffer the
   // moment its score comes back, instead of waiting for the entire cycle. This is the
@@ -518,8 +556,8 @@ void EvolutionPipe::execute() {
   cfg.elitism = evolution_parameters_.elitism;
   cfg.tournament_size = 3;
 
-  internal::BeastGA ga(cfg, std::move(ops), evaluator, std::move(sink), std::move(hook),
-                       cut_off_score_);
+  internal::BeastGA ga(cfg, std::move(ops), *evaluator_ptr, std::move(sink),
+                       std::move(hook), cut_off_score_);
 
   // Stop token: we pass the raw atomic pointer through to BeastGA so each generation
   // can poll it. The shared_ptr stays alive in `Pipe::stop_token_` for the duration of
@@ -556,6 +594,10 @@ void EvolutionPipe::execute() {
     currently_running_ = false;
   }
   guard.committed = true;
+}
+
+void EvolutionPipe::setBatchEvaluator(std::unique_ptr<internal::BatchEvaluator> evaluator) {
+  batch_evaluator_ = std::move(evaluator);
 }
 
 void EvolutionPipe::recordEvaluatorCall() noexcept {
