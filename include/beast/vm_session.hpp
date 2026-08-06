@@ -2,12 +2,15 @@
 #define BEAST_VM_SESSION_HPP_
 
 // Standard
+#include <atomic>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <set>
 
 // Internal
 #include <beast/program.hpp>
+#include <beast/subroutine_library.hpp>
 
 namespace beast {
 
@@ -124,6 +127,43 @@ class VmSession {
   void reset() noexcept;
 
   /**
+   * @fn VmSession::rewindProgramPointer
+   * @brief Resets only the program-counter to 0, leaving variables and string state in place
+   *
+   * Lighter weight than @ref reset, which also wipes the variable table (including the
+   * `Input`/`Output` IO behaviour the caller painstakingly set up). Use this when you
+   * want to re-execute the same program from the top with the existing variable state
+   * carried forward (e.g. evaluators that chain multiple invocations of the same
+   * program against feedback-coupled inputs, like multi-round SHA-256 evaluation).
+   * Runtime statistics are intentionally *not* reset here -- callers typically want
+   * the cumulative step/opcode counts across the whole chain.
+   */
+  void rewindProgramPointer() noexcept;
+
+  /**
+   * @fn VmSession::setStopToken
+   * @brief Attach a cooperative-cancellation token used by evaluator step loops
+   *
+   * Pipeline-managed `Pipe`s share a single stop token; evaluators that drive this VmSession
+   * forward the token via `setStopToken` so the step loop can check `isStopRequested()` at
+   * every iteration. When the token flips to true, evaluators are expected to break out of
+   * their loop. The VM itself does not act on the token -- that would require coupling the
+   * VM to the cancellation concept, which we prefer to keep in the evaluator layer where the
+   * loop budget is known. Pass nullptr to detach. Idempotent and noexcept.
+   */
+  void setStopToken(std::shared_ptr<std::atomic<bool>> token) noexcept;
+
+  /**
+   * @fn VmSession::isStopRequested
+   * @brief Lock-free check on the attached stop token; false if no token is attached
+   *
+   * Hot-path safe (single relaxed atomic load through a copied shared_ptr). Designed for
+   * use inside `while (!session.hasHalted() && !session.isStopRequested() && ...)` style
+   * step loops. See `setStopToken` for the rationale.
+   */
+  [[nodiscard]] bool isStopRequested() const noexcept;
+
+  /**
    * @fn VmSession::getRuntimeStatistics
    * @brief Returns a reference to the runtime statistics
    *
@@ -191,6 +231,48 @@ class VmSession {
    * be prevented by regularly calling clearPrintBuffer.
    */
   void setMaximumPrintBufferLength(size_t maximum_print_buffer_length);
+
+  /**
+   * @brief Mount a subroutine library that backs `CallSubroutine` dispatches
+   *
+   * The library is held by `shared_ptr` so the caller (typically `EvaluatorPipe`)
+   * can build one library per evaluation cycle and share it across every per-genome
+   * `VmSession` it spawns without paying for copies. Pass an empty `shared_ptr` (or
+   * never call this method) to keep the session subroutine-free; every
+   * `CallSubroutine` then throws and marks the session as abnormal.
+   *
+   * The library is immutable for the lifetime of the session; rebuild it on the
+   * caller side if entries need to change.
+   */
+  void setSubroutineLibrary(std::shared_ptr<const SubroutineLibrary> library) noexcept;
+
+  /**
+   * @brief Return the currently mounted library (may be empty)
+   *
+   * Exposed so the VM dispatch path can look up a `CallSubroutine` target by id.
+   * `nullptr` is a perfectly normal return value -- it just means the session has
+   * no library mounted, which is the default for any session not created by an
+   * evaluator pipe that mounts one.
+   */
+  [[nodiscard]] std::shared_ptr<const SubroutineLibrary> getSubroutineLibrary() const noexcept;
+
+  /**
+   * @brief Maximum number of variables this session was configured for
+   *
+   * Exposed so VM-internal machinery (`CallSubroutine` dispatch) can mint callee
+   * sessions sized identically to the caller's address space.
+   */
+  [[nodiscard]] size_t getVariableCount() const noexcept;
+
+  /**
+   * @brief Maximum number of string table entries
+   */
+  [[nodiscard]] size_t getStringTableCount() const noexcept;
+
+  /**
+   * @brief Maximum length of any single string table entry
+   */
+  [[nodiscard]] size_t getMaxStringSize() const noexcept;
 
   /**
    * @fn VmSession::getData4
@@ -1540,6 +1622,26 @@ class VmSession {
    * @brief Holds this session's runtime statistics
    */
   RuntimeStatistics runtime_statistics_;
+
+  /**
+   * @var VmSession::subroutine_library_
+   * @brief Shared, immutable subroutine library backing `CallSubroutine` dispatches
+   *
+   * Held by `shared_ptr` because the typical owner is an evaluator pipe that builds
+   * a single library and shares it across many per-genome sessions. Defaults to
+   * `nullptr`; in that state every `CallSubroutine` dispatch throws.
+   */
+  std::shared_ptr<const SubroutineLibrary> subroutine_library_;
+
+  /**
+   * @var VmSession::stop_token_
+   * @brief Cooperative-cancellation flag forwarded from the owning `Pipe` / `Pipeline`
+   *
+   * Nullable; default-null means "no cancellation source attached" (e.g. a session built
+   * from a test, or by an evaluator that's not running under a Pipeline). Read in the hot
+   * path via `isStopRequested()`.
+   */
+  std::shared_ptr<std::atomic<bool>> stop_token_;
 };
 
 } // namespace beast

@@ -36,6 +36,21 @@ void VmSession::reset() noexcept {
   pointer_ = 0;
 }
 
+void VmSession::rewindProgramPointer() noexcept { pointer_ = 0; }
+
+void VmSession::setStopToken(std::shared_ptr<std::atomic<bool>> token) noexcept {
+  stop_token_ = std::move(token);
+}
+
+bool VmSession::isStopRequested() const noexcept {
+  // See Pipe::isStopRequested for the rationale on relaxed loads.
+  const auto token = stop_token_;
+  if (!token) {
+    return false;
+  }
+  return token->load(std::memory_order_relaxed);
+}
+
 const VmSession::RuntimeStatistics& VmSession::getRuntimeStatistics() const noexcept {
   return runtime_statistics_;
 }
@@ -68,6 +83,21 @@ bool VmSession::hasOutputDataAvailable(int32_t variable_index, bool follow_links
 void VmSession::setMaximumPrintBufferLength(size_t maximum_print_buffer_length) {
   maximum_print_buffer_length_ = maximum_print_buffer_length;
 }
+
+void VmSession::setSubroutineLibrary(
+    std::shared_ptr<const SubroutineLibrary> library) noexcept {
+  subroutine_library_ = std::move(library);
+}
+
+std::shared_ptr<const SubroutineLibrary> VmSession::getSubroutineLibrary() const noexcept {
+  return subroutine_library_;
+}
+
+size_t VmSession::getVariableCount() const noexcept { return variable_count_; }
+
+size_t VmSession::getStringTableCount() const noexcept { return string_table_count_; }
+
+size_t VmSession::getMaxStringSize() const noexcept { return max_string_size_; }
 
 int32_t VmSession::getData4() {
   int32_t data = program_.getData4(pointer_);

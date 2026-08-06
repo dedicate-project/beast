@@ -11,6 +11,34 @@ Pipe::Pipe(uint32_t max_candidates, uint32_t input_slots, uint32_t output_slots)
   outputs_.resize(output_slots);
 }
 
+void Pipe::setStopToken(std::shared_ptr<std::atomic<bool>> token) noexcept {
+  // Atomic shared_ptr replacement is not portable across all stdlibs we ship to (libstdc++
+  // exposes `std::atomic<std::shared_ptr<T>>` only from C++20 onwards and even then with
+  // caveats). The token is set exactly once per `Pipeline::start()` and cleared once per
+  // stop(); both happen on the controlling thread while no worker is running the pipe (the
+  // pipe is only added to a Pipeline before its first start() call). Plain assignment is
+  // therefore race-free in practice. `noexcept` because shared_ptr's move assignment is
+  // noexcept and we don't allocate.
+  stop_token_ = std::move(token);
+}
+
+bool Pipe::isStopRequested() const noexcept {
+  // Hot path: called per VM step in expensive evaluators and per genome in the GA wrapper.
+  // The shared_ptr is read on the calling thread (which set it) so no synchronisation is
+  // needed for the pointer itself; the load through the pointer is relaxed because the only
+  // consumer is a fast-path "should I bail?" check -- correctness doesn't depend on seeing
+  // the latest store the very nanosecond it lands, only on seeing it eventually.
+  const auto token = stop_token_; // copy the shared_ptr so a concurrent setStopToken is safe
+  if (!token) {
+    return false;
+  }
+  return token->load(std::memory_order_relaxed);
+}
+
+std::shared_ptr<std::atomic<bool>> Pipe::getStopToken() const noexcept {
+  return stop_token_;
+}
+
 void Pipe::addInput(uint32_t slot_index, const std::vector<unsigned char>& candidate) {
   std::scoped_lock lock(inputs_mutex_);
   // Wrap as an OutputItem with score 0.0; callers that have a real score should use
@@ -58,6 +86,14 @@ Pipe::OutputItem Pipe::drawInputWithScore(uint32_t slot_index) {
   OutputItem item = std::move(inputs_[slot_index].front());
   inputs_[slot_index].pop_front();
   return item;
+}
+
+double Pipe::peekInputScore(uint32_t slot_index) {
+  std::scoped_lock lock(inputs_mutex_);
+  if (inputs_[slot_index].empty()) {
+    throw std::underflow_error("No input candidates available to peek.");
+  }
+  return inputs_[slot_index].front().score;
 }
 
 bool Pipe::hasOutput(uint32_t slot_index) {

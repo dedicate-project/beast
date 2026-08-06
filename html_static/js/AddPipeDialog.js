@@ -42,9 +42,11 @@ function coerceFieldValue(field, raw) {
   if (field.type === 'bool') {
     return Boolean(raw);
   }
-  // 'string' and 'path' both render as a plain text input and are stored verbatim. We
-  // accept whatever the user typed (including the empty string) so the backend can
-  // surface a precise validation error if needed.
+  // 'json' stores raw text; parsing happens at buildParameters time so we can surface
+  // syntax errors to the user without losing what they typed. 'string' and 'path' both
+  // render as a plain text input and are stored verbatim. We accept whatever the user
+  // typed (including the empty string) so the backend can surface a precise validation
+  // error if needed.
   return raw == null ? '' : String(raw);
 }
 
@@ -78,6 +80,23 @@ function FieldInput({field, value, onChange}) {
       fullWidth: true,
       margin: 'dense',
       helperText: field.placeholder || undefined,
+    });
+  }
+  if (field.type === 'json') {
+    // Rendered as a multiline text area; the typed string is stored as-is and the
+    // pipe definition's buildParameters function is expected to JSON.parse it (and
+    // ignore parse errors with a sensible fallback). This keeps the UI footprint
+    // tiny for fields that are inherently array-of-records (subroutine sources) and
+    // would otherwise require a custom editor widget.
+    return e(TextField, {
+      label: field.label,
+      multiline: true,
+      minRows: field.minRows || 4,
+      value: value !== undefined && value !== null ? value : '',
+      onChange: handle,
+      fullWidth: true,
+      margin: 'dense',
+      helperText: field.placeholder || 'JSON array',
     });
   }
   // int/float share the same numeric input; we use type="number" so mobile keyboards

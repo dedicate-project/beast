@@ -23,6 +23,7 @@ const {
 const {render} = ReactDOM;
 const {useState, useEffect, createElement : e} = React;
 import {PipelineList} from './PipelineList.js';
+import {ProgramCollection} from './ProgramCollection.js';
 import {StateContext} from './context.js';
 
 const drawerWidth = 240;
@@ -122,7 +123,7 @@ export default function App() {
       icon : "hive",
       onClick : () => {
         setTitle('Program Collection');
-        setContent('You have no program collection');
+        setContent(e(ProgramCollection));
         setSelectedDrawerItem("program-collection");
       },
     },

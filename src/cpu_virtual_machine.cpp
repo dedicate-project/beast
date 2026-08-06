@@ -3,10 +3,15 @@
 // Standard
 #include <chrono>
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
 // Internal
 #include <beast/opcodes.hpp>
+#include <beast/program.hpp>
+#include <beast/subroutine_library.hpp>
 #include <beast/time_functions.hpp>
+#include <beast/vm_session.hpp>
 
 namespace {
 /**
@@ -21,6 +26,167 @@ std::string to_string(bool flag) noexcept { return flag ? "true" : "false"; }
 } // namespace
 
 namespace beast {
+
+namespace {
+
+struct CallerArg {
+  int32_t variable_index;
+  bool follow_links;
+};
+
+/// Read the operand bytes of a `CallSubroutine` instruction off the session stream.
+///
+/// On the dry-run path we still need to advance the instruction pointer so the next
+/// `step` sees the following instruction; on the live path we additionally need the
+/// decoded values to feed the callee VM.
+struct CallSubroutineOperands {
+  uint8_t subroutine_id;
+  uint8_t input_arity;
+  uint8_t output_arity;
+  std::vector<CallerArg> inputs;
+  std::vector<CallerArg> outputs;
+};
+
+CallSubroutineOperands readCallSubroutineOperands(VmSession& session) {
+  CallSubroutineOperands ops;
+  ops.subroutine_id = static_cast<uint8_t>(session.getData1());
+  ops.input_arity = static_cast<uint8_t>(session.getData1());
+  ops.output_arity = static_cast<uint8_t>(session.getData1());
+  ops.inputs.reserve(ops.input_arity);
+  for (uint8_t i = 0; i < ops.input_arity; ++i) {
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    ops.inputs.push_back({variable_index, follow_links});
+  }
+  ops.outputs.reserve(ops.output_arity);
+  for (uint8_t i = 0; i < ops.output_arity; ++i) {
+    const int32_t variable_index = session.getData4();
+    const bool follow_links = session.getData1() != 0x0;
+    ops.outputs.push_back({variable_index, follow_links});
+  }
+  return ops;
+}
+
+} // namespace
+
+bool CpuVirtualMachine::dispatchCallSubroutine(VmSession& session, bool dry_run) {
+  // Wire format matches `Program::callSubroutine` and `ProgramParser::parse`. We always
+  // drain the operand bytes from the session stream -- even on `dry_run` paths or
+  // hard-fail validation paths -- so the instruction pointer ends up positioned at the
+  // next instruction. Doing otherwise would leave the VM stuck re-reading the same
+  // operand bytes as an opcode on the next step.
+  const CallSubroutineOperands ops = readCallSubroutineOperands(session);
+
+  debug("call_subroutine(id=" + std::to_string(ops.subroutine_id) +
+        ", in_arity=" + std::to_string(ops.input_arity) +
+        ", out_arity=" + std::to_string(ops.output_arity) + ")");
+
+  if (dry_run) {
+    return true;
+  }
+
+  // Validate against the mounted library. Any kind of mismatch (no library, id out of
+  // range, arity mismatch, oversized arity) is fatal for this trial; the session is
+  // marked abnormal so the evaluator scores it as zero and the GA discards it. This is
+  // intentionally strict: a `CallSubroutine` that smuggles a no-op past the parser
+  // would otherwise reward the GA for nonsense.
+  auto library = session.getSubroutineLibrary();
+  if (!library) {
+    panic("CallSubroutine dispatched with no library mounted.");
+    session.setExitedAbnormally();
+    return false;
+  }
+  if (ops.input_arity > kMaxSubroutineArity || ops.output_arity > kMaxSubroutineArity) {
+    panic("CallSubroutine arity exceeds kMaxSubroutineArity.");
+    session.setExitedAbnormally();
+    return false;
+  }
+  if (ops.subroutine_id >= library->size()) {
+    panic("CallSubroutine id " + std::to_string(ops.subroutine_id) +
+          " out of range for library of size " + std::to_string(library->size()) + ".");
+    session.setExitedAbnormally();
+    return false;
+  }
+  const SubroutineEntry& entry = (*library)[ops.subroutine_id];
+  if (entry.input_arity != ops.input_arity || entry.output_arity != ops.output_arity) {
+    panic("CallSubroutine arity (" + std::to_string(ops.input_arity) + "/" +
+          std::to_string(ops.output_arity) + ") does not match registered arity (" +
+          std::to_string(entry.input_arity) + "/" + std::to_string(entry.output_arity) +
+          ").");
+    session.setExitedAbnormally();
+    return false;
+  }
+
+  try {
+    // Snapshot the caller's input values *first*, before the callee VM mutates anything.
+    // The reads can throw on undeclared variables; we surface that as a normal
+    // abnormal-exit rather than a hard crash so the evaluator can continue with the
+    // next trial.
+    std::vector<int32_t> input_values;
+    input_values.reserve(ops.input_arity);
+    for (const auto& arg : ops.inputs) {
+      input_values.push_back(session.getVariableValue(arg.variable_index, arg.follow_links));
+    }
+
+    // The callee session reuses the caller's variable/string-table parameters so a
+    // subroutine genome harvested from a standalone evaluator (whose own `variable_count`
+    // was sized for the same I/O shape) keeps working. The library itself is intentionally
+    // NOT propagated -- v1 explicitly disallows recursion, and an empty library on the
+    // callee guarantees that any stray CallSubroutine in the callee bytecode fails closed.
+    VmSession callee_session(Program(entry.bytecode), session.getVariableCount(),
+                             session.getStringTableCount(), session.getMaxStringSize());
+
+    for (uint8_t i = 0; i < ops.input_arity; ++i) {
+      callee_session.setVariableBehavior(static_cast<int32_t>(i),
+                                         VmSession::VariableIoBehavior::Input);
+      callee_session.setVariableValue(static_cast<int32_t>(i), true, input_values.at(i));
+    }
+    // Trial-id slot stays at 0 by default behaviour; mark it as input for layout
+    // consistency with `BitDistanceEvaluator`.
+    callee_session.setVariableBehavior(static_cast<int32_t>(ops.input_arity),
+                                       VmSession::VariableIoBehavior::Input);
+    const int32_t output_offset = static_cast<int32_t>(ops.input_arity) + 1;
+    for (uint8_t i = 0; i < ops.output_arity; ++i) {
+      callee_session.setVariableBehavior(output_offset + static_cast<int32_t>(i),
+                                         VmSession::VariableIoBehavior::Output);
+    }
+
+    // Step the callee until it terminates on its own OR exhausts its per-call step
+    // budget. Unlike `BitDistanceEvaluator`, we deliberately do NOT bail out as soon
+    // as every output is "available" -- a subroutine often writes to an output and
+    // then refines it (e.g. copy-input-to-output, then add-something-to-output), so
+    // an early bail-out would clip the last instruction. Per-call step budget is the
+    // dispatcher's only upper bound; the evaluator that mounts the library is
+    // responsible for sizing it sensibly.
+    const uint32_t max_steps = entry.max_steps_per_call == 0 ? 1U : entry.max_steps_per_call;
+    uint32_t steps = 0;
+    while (steps < max_steps) {
+      if (!step(callee_session, false)) {
+        break;
+      }
+      ++steps;
+    }
+
+    // Propagate output writes back to the caller. Slots that the callee never wrote to
+    // are read back as 0 (the default value), which scores via bit-distance against the
+    // expected output and gives the GA partial credit -- preferable to a hard zero that
+    // flattens the gradient.
+    for (uint8_t i = 0; i < ops.output_arity; ++i) {
+      const int32_t callee_value =
+          callee_session.getVariableValue(output_offset + static_cast<int32_t>(i), true);
+      session.setVariableValue(ops.outputs.at(i).variable_index, ops.outputs.at(i).follow_links,
+                               callee_value);
+    }
+  } catch (...) {
+    // Bad variable references on either side, library inconsistencies that somehow slip
+    // past the up-front checks, or callee-side exceptions all get funnelled to the same
+    // place: mark the caller abnormal and let the outer evaluator handle scoring.
+    panic("CallSubroutine raised an exception during execution.");
+    session.setExitedAbnormally();
+    return false;
+  }
+  return true;
+}
 
 bool CpuVirtualMachine::step(VmSession& session, bool dry_run) {
   OpCode instruction = OpCode::NoOp;
@@ -1000,6 +1166,12 @@ bool CpuVirtualMachine::step(VmSession& session, bool dry_run) {
                                           follow_links_b,
                                           target_variable,
                                           target_follow_links);
+    }
+  } break;
+
+  case OpCode::CallSubroutine: {
+    if (!dispatchCallSubroutine(session, dry_run)) {
+      return false;
     }
   } break;
 

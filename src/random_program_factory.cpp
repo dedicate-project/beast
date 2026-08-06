@@ -26,6 +26,30 @@ std::discrete_distribution<int32_t> makeOpcodeDistribution(const OpcodeWeights& 
   return std::discrete_distribution<int32_t>(weight_vector.begin(), weight_vector.end());
 }
 
+/// Build an opcode distribution that additionally suppresses CallSubroutine when no
+/// subroutine library is mounted.
+///
+/// CallSubroutine without a library is guaranteed-invalid bytecode (it can't reference
+/// any valid id), so we silently zero it out rather than relying on the caller to
+/// remember to weight it down. With a non-empty library, the explicit weight (if any)
+/// applies as normal; missing entries default to 1.0 like every other opcode.
+std::discrete_distribution<int32_t>
+makeOpcodeDistributionWithSubroutines(const OpcodeWeights& weights,
+                                      const SubroutineArityTable& subroutines) {
+  const auto count = static_cast<size_t>(OpCode::Size);
+  std::vector<double> weight_vector(count, 1.0);
+  for (const auto& [opcode, weight] : weights) {
+    const auto idx = static_cast<size_t>(opcode);
+    if (idx < count) {
+      weight_vector[idx] = weight;
+    }
+  }
+  if (subroutines.empty()) {
+    weight_vector[static_cast<size_t>(OpCode::CallSubroutine)] = 0.0;
+  }
+  return std::discrete_distribution<int32_t>(weight_vector.begin(), weight_vector.end());
+}
+
 /// Bundle of random distributions sized for a particular VM environment.
 ///
 /// Centralises RNG state so the streaming `generate()` path and the one-shot
@@ -46,12 +70,17 @@ struct RandomToolkit {
   std::uniform_int_distribution<int32_t> string_idx_dist;
   std::uniform_int_distribution<int32_t> str_len_dist;
   std::uniform_int_distribution<int32_t> char_dist;
+  std::uniform_int_distribution<int32_t> subroutine_id_dist;
+  /// Per-id arity table mirror so the emit path can look up arities without keeping
+  /// a separate parameter passed around in the giant switch.
+  SubroutineArityTable subroutines;
 
   RandomToolkit(std::mt19937& engine_ref, uint32_t program_size_for_addresses,
                 uint32_t memory_size, uint32_t string_table_size,
-                uint32_t string_table_item_length, const OpcodeWeights& opcode_weights = {})
+                uint32_t string_table_item_length, const OpcodeWeights& opcode_weights = {},
+                const SubroutineArityTable& subroutine_arities = {})
       : engine{engine_ref},
-        opcode_dist{makeOpcodeDistribution(opcode_weights)},
+        opcode_dist{makeOpcodeDistributionWithSubroutines(opcode_weights, subroutine_arities)},
         var_dist{0, std::max<int32_t>(0, static_cast<int32_t>(memory_size) - 1)},
         bool_dist{0, 1},
         int32_dist{std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max()},
@@ -62,7 +91,14 @@ struct RandomToolkit {
         abs_addr_dist{0, static_cast<int32_t>(program_size_for_addresses)},
         string_idx_dist{0, std::max<int32_t>(0, static_cast<int32_t>(string_table_size))},
         str_len_dist{0, static_cast<int32_t>(string_table_item_length)},
-        char_dist{33, 126} {}
+        char_dist{33, 126},
+        // Empty libraries don't reach the `CallSubroutine` emit path (the opcode is
+        // zero-weighted), but we still need a valid distribution to construct.
+        subroutine_id_dist{
+            0, subroutine_arities.empty()
+                   ? 0
+                   : static_cast<int32_t>(subroutine_arities.size()) - 1},
+        subroutines{subroutine_arities} {}
 
   bool boolean() { return bool_dist(engine) == 1; }
   int32_t variable() { return var_dist(engine); }
@@ -72,6 +108,7 @@ struct RandomToolkit {
   int32_t absAddr() { return abs_addr_dist(engine); }
   int32_t stringIdx() { return string_idx_dist(engine); }
   OpCode opcode() { return static_cast<OpCode>(opcode_dist(engine)); }
+  uint8_t subroutineId() { return static_cast<uint8_t>(subroutine_id_dist(engine)); }
 
   std::string string() {
     std::string out;
@@ -405,6 +442,28 @@ OpCode appendRandomOperator(Program& fragment, RandomToolkit& toolkit) {
     fragment.checkIfStackIsEmpty(
         toolkit.variable(), toolkit.boolean(), toolkit.variable(), toolkit.boolean());
     break;
+  case OpCode::CallSubroutine: {
+    // The opcode distribution is supposed to zero-weight CallSubroutine when the
+    // library is empty, but belt-and-suspenders: if we somehow reach here without
+    // a library, fall back to NoOp instead of emitting guaranteed-invalid bytes.
+    if (toolkit.subroutines.empty()) {
+      fragment.noop();
+      break;
+    }
+    const uint8_t id = toolkit.subroutineId();
+    const auto [input_arity, output_arity] = toolkit.subroutines.at(id);
+    std::vector<Program::SubroutineArgument> inputs;
+    inputs.reserve(input_arity);
+    for (uint8_t i = 0; i < input_arity; ++i) {
+      inputs.push_back({toolkit.variable(), toolkit.boolean()});
+    }
+    std::vector<Program::SubroutineArgument> outputs;
+    outputs.reserve(output_arity);
+    for (uint8_t i = 0; i < output_arity; ++i) {
+      outputs.push_back({toolkit.variable(), toolkit.boolean()});
+    }
+    fragment.callSubroutine(id, inputs, outputs);
+  } break;
   case OpCode::Size:
     // Sentinel; the opcode distribution excludes it. Reaching here means somebody passed a
     // weight map with the sentinel set to non-zero, so just emit a NoOp as a safe fallback.
@@ -430,9 +489,20 @@ Program RandomProgramFactory::generate(uint32_t size, uint32_t memory_size,
                                        uint32_t string_table_size,
                                        uint32_t string_table_item_length,
                                        const OpcodeWeights& weights) {
+  // Empty subroutine table is the legacy "no library mounted" path; `CallSubroutine`
+  // gets silently zero-weighted inside the toolkit.
+  return generate(size, memory_size, string_table_size, string_table_item_length, weights,
+                  SubroutineArityTable{});
+}
+
+Program RandomProgramFactory::generate(uint32_t size, uint32_t memory_size,
+                                       uint32_t string_table_size,
+                                       uint32_t string_table_item_length,
+                                       const OpcodeWeights& weights,
+                                       const SubroutineArityTable& subroutines) {
   Program prg(size);
   RandomToolkit toolkit(mersenne_engine_, size, memory_size, string_table_size,
-                        string_table_item_length, weights);
+                        string_table_item_length, weights, subroutines);
 
   while (true) {
     Program fragment;
@@ -451,20 +521,27 @@ RandomProgramFactory::generateRandomOperator(uint32_t memory_size, uint32_t stri
                                              uint32_t string_table_item_length,
                                              uint32_t max_bytes) {
   return generateRandomOperator(memory_size, string_table_size, string_table_item_length,
-                                max_bytes, OpcodeWeights{});
+                                max_bytes, OpcodeWeights{}, SubroutineArityTable{});
 }
 
 std::vector<unsigned char>
 RandomProgramFactory::generateRandomOperator(uint32_t memory_size, uint32_t string_table_size,
                                              uint32_t string_table_item_length,
                                              uint32_t max_bytes, const OpcodeWeights& weights) {
+  return generateRandomOperator(memory_size, string_table_size, string_table_item_length,
+                                max_bytes, weights, SubroutineArityTable{});
+}
+
+std::vector<unsigned char> RandomProgramFactory::generateRandomOperator(
+    uint32_t memory_size, uint32_t string_table_size, uint32_t string_table_item_length,
+    uint32_t max_bytes, const OpcodeWeights& weights, const SubroutineArityTable& subroutines) {
   // Static factory function: own a thread-local engine so we don't pay for random_device
   // construction on every call (the GA mutator calls this *per operator span*).
   thread_local std::mt19937 engine{std::random_device{}()};
 
   RandomToolkit toolkit(engine,
                         /*program_size_for_addresses=*/max_bytes, memory_size, string_table_size,
-                        string_table_item_length, weights);
+                        string_table_item_length, weights, subroutines);
 
   // Try a handful of times to land on an operator that fits within `max_bytes`. Only the
   // variable-length string operators can overshoot in practice.

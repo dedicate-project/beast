@@ -156,7 +156,13 @@ enum class OpCode : int8_t {
   PopTopItemFromStack = 0x4b,  ///< Pop the top item from a stack
   CheckIfStackIsEmpty = 0x4c,  ///< Check if a stack contains no items
 
-  Size = 0x4d ///< Used to determine operator count
+  // Subroutines
+  CallSubroutine = 0x4d, ///< Call a pre-mounted subroutine with caller-side input/output
+                         ///  variable indices. Variable-length encoding -- see
+                         ///  `Program::callSubroutine` and `ProgramParser::parse` for the
+                         ///  wire format.
+
+  Size = 0x4e ///< Used to determine operator count
 };
 
 } // namespace beast

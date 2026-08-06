@@ -299,6 +299,88 @@ TEST_CASE("pipeline") {
     REQUIRE(stop_duration < std::chrono::milliseconds(50));
   }
 
+  SECTION("stop_interrupts_a_long_running_evolution_quickly") {
+    // The key user-facing fix: a pipeline with an expensive evolution stage (here
+    // simulated with sleeps) used to make stop() block until the in-flight evolve() cycle
+    // finished -- minutes for SHA-256 multi-round. With the cooperative stop token wired
+    // through Pipeline -> Pipe -> EvolutionPipe -> GA evaluator wrapper, stop() should
+    // return promptly even when the worker is deep inside a long cycle.
+    class SlowEvolvePipe : public beast::EvolutionPipe {
+     public:
+      SlowEvolvePipe() : beast::EvolutionPipe(/*max_candidates=*/8) {}
+      [[nodiscard]] double
+      evaluate(const std::vector<unsigned char>& /*data*/) override {
+        ++calls;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        return 0.0;
+      }
+      std::atomic<uint32_t> calls{0};
+    };
+    auto pipe = std::make_shared<SlowEvolvePipe>();
+    beast::EvolutionPipe::EvolutionParameters params;
+    // 100 generations * 7 = 700 heavy calls at 1 ms each -> would block ~700ms per cycle.
+    // The test fails if stop() doesn't interrupt and waits for the full cycle.
+    params.generations = 100;
+    params.variable_count = 4;
+    params.starting_program_size = 16;
+    pipe->setEvolutionParameters(params);
+    // The pipeline worker only enters execute() once inputsAreSaturated() is true; for an
+    // EvolutionPipe that means max_candidates seed genomes in slot 0. Without this prime
+    // step the worker would idle and stop() would be vacuously fast.
+    const std::vector<unsigned char> seed(16, 0);
+    for (uint32_t i = 0; i < 8; ++i) {
+      pipe->addInput(0, seed);
+    }
+
+    beast::Pipeline pipeline;
+    pipeline.addPipe("slow", pipe);
+    pipeline.start();
+    // Wait until the slow evaluator has clearly entered a cycle so stop() lands mid-evolve.
+    // 30 ms is enough on every machine we've tested (the 1ms sleep per evaluator call gives
+    // the worker plenty of time to settle into the GA loop before we ask it to stop).
+    for (int i = 0; i < 50 && pipe->calls.load() < 5; ++i) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+    REQUIRE(pipe->calls.load() >= 1); // sanity-check the worker actually ran
+    const auto stop_start = std::chrono::steady_clock::now();
+    pipeline.stop();
+    const auto stop_duration = std::chrono::steady_clock::now() - stop_start;
+    // 400 ms is generous. The cycle's nominal duration is ~700 ms; without cancellation
+    // we'd land near or above that. With cancellation we typically observe <50 ms but the
+    // larger budget keeps the test stable on slow CI / containers.
+    REQUIRE(stop_duration < std::chrono::milliseconds(400));
+  }
+
+  SECTION("restart_after_stop_resets_the_stop_token") {
+    // Cooperative cancellation must NOT bleed across restarts. After stop()+start(), the
+    // shared stop flag visible to the pipe must be back at `false` even though the prior
+    // run had flipped it to `true`. We assert this directly rather than relying on a
+    // second cycle of worker activity -- the latter would have to dance around output
+    // saturation / input refill in an isolated single-pipe test, which adds noise
+    // unrelated to the token contract under test.
+    class ProbePipe : public beast::Pipe {
+     public:
+      ProbePipe() : beast::Pipe(/*max_candidates=*/1, /*input_slots=*/0, /*output_slots=*/0) {}
+      void execute() override {}
+      using beast::Pipe::isStopRequested;
+    };
+    auto pipe = std::make_shared<ProbePipe>();
+
+    beast::Pipeline pipeline;
+    pipeline.addPipe("p", pipe);
+
+    pipeline.start();
+    REQUIRE_FALSE(pipe->isStopRequested());
+    pipeline.stop();
+    REQUIRE(pipe->isStopRequested());
+
+    pipeline.start();
+    // start() must have minted a fresh false-token; the previously-true one must be gone
+    // from the pipe's view.
+    REQUIRE_FALSE(pipe->isStopRequested());
+    pipeline.stop();
+  }
+
   SECTION("destructor_stops_running_pipeline_without_terminate") {
     // Regression test for ~Pipeline(): a Pipeline that goes out of scope while still running
     // used to invoke ~std::thread on a joinable worker, which calls std::terminate(). The

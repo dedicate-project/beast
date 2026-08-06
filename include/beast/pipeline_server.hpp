@@ -84,6 +84,48 @@ class PipelineServer {
    */
   [[nodiscard]] crow::json::wvalue serveAllPipelines() const;
 
+  /**
+   * @brief Serve the discovered set of program ledgers referenced by storage pipes
+   *
+   * Scans every loaded pipeline for `ProgramStorageSinkPipe` / `ProgramStorageSourcePipe`
+   * instances, collects the union of their `path` parameters (deduplicated), and for
+   * each path reports which pipelines/pipes reference it along with whether the file
+   * currently exists and how many entries it contains.
+   *
+   * Used by the Program Collection page in the UI to populate the per-ledger sections
+   * without needing the user to know which pipelines persist where.
+   */
+  [[nodiscard]] crow::json::wvalue serveProgramCollection() const;
+
+  /**
+   * @brief Serve the parsed contents (programs) of a single ledger by path
+   *
+   * Reads the ledger JSON from disk (best effort -- returns an empty list if the file
+   * is missing/unreadable), and for each program disassembles it inline so the UI
+   * can render the bytecode view without an extra round-trip per program.
+   *
+   * The `path` query parameter MUST exactly match one of the paths returned by
+   * `serveProgramCollection`; we deliberately don't allow reading arbitrary files
+   * (the UI presents a fixed list, not a free-form picker), which keeps this endpoint
+   * from being a generic file-read primitive.
+   *
+   * @param req Crow request; the `path` is taken from the `path` query parameter.
+   */
+  [[nodiscard]] crow::json::wvalue serveLedger(const crow::request& req) const;
+
+  /**
+   * @brief Generate self-contained C source for a program byte sequence
+   *
+   * POST body shape: `{ "data": [int byte values 0-255 OR -128..127], "source": "..." }`.
+   * The `source` field is an optional human-readable description that's threaded into
+   * the generated file's top-comment banner (e.g. "from /tmp/foo.json, score 0.886").
+   *
+   * Returns: `{ "status": "success", "c_code": "..." }`. The C code is a complete C
+   * file that compiles with `cc program.c -o program` and runs as a standalone CLI
+   * tool; see `ProgramCCodeGenerator` for the runtime details.
+   */
+  [[nodiscard]] static crow::json::wvalue serveCCodeForProgram(const crow::request& req);
+
  private:
   // Update-action handlers. All of them write into the supplied `value` (status/error/etc.)
   // and translate exceptions thrown by the pipeline manager into structured failure

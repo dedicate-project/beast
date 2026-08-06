@@ -1,0 +1,152 @@
+{
+  "name": "Maze Ladder (subroutine-assisted)",
+  "model": {
+    "pipes": {
+      "small_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 120,
+          "memory_variables": 64, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "small_maze": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 64,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "MazeEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "rows": 6, "cols": 6, "difficulty": 0.20, "max_steps": 3000 }
+          }],
+          "evolution_parameters": {
+            "generations": 12, "crossover_probability": 0.7, "mutation_probability": 0.06,
+            "elitism": true, "byte_mutation_share": 0.20,
+            "variable_count": 64, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 768, "starting_program_size": 64,
+            "opcode_weights": {}
+          }
+        }
+      },
+      "small_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "small_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-maze-small.json", "top_k": 16 } },
+
+      "medium_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 200,
+          "memory_variables": 64, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "small_seed": {
+        "type": "ProgramStorageSourcePipe",
+        "parameters": { "max_candidates": 24, "path": "/tmp/beast-maze-small.json", "loop": true }
+      },
+      "medium_mux": { "type": "MultiplexerPipe", "parameters": { "max_candidates": 24, "input_slots": 2 } },
+      "medium_maze": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 64,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "MazeEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "rows": 12, "cols": 12, "difficulty": 0.30, "max_steps": 6000 }
+          }],
+          "evolution_parameters": {
+            "generations": 12, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.20,
+            "variable_count": 64, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 1024, "starting_program_size": 128,
+            "opcode_weights": {}
+          }
+        }
+      },
+      "medium_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "medium_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-maze-medium.json", "top_k": 16 } },
+
+      "large_factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24, "max_size": 300,
+          "memory_variables": 64, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "medium_seed": {
+        "type": "ProgramStorageSourcePipe",
+        "parameters": { "max_candidates": 24, "path": "/tmp/beast-maze-medium.json", "loop": true }
+      },
+      "large_mux": { "type": "MultiplexerPipe", "parameters": { "max_candidates": 24, "input_slots": 2 } },
+      "large_maze": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24, "memory_variables": 64,
+          "string_table_items": 0, "string_table_item_length": 0, "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "MazeEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "rows": 24, "cols": 24, "difficulty": 0.35, "max_steps": 12000 }
+          }],
+          "evolution_parameters": {
+            "generations": 10, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.20,
+            "variable_count": 64, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 1536, "starting_program_size": 192,
+            "opcode_weights": { "77": 2.5 }
+          },
+          "subroutines": [
+            {
+              "ledger_path": "/tmp/beast-popcount.json",
+              "top_k": 1, "input_arity": 1, "output_arity": 1, "max_steps_per_call": 600
+            },
+            {
+              "ledger_path": "/tmp/beast-min4.json",
+              "top_k": 1, "input_arity": 4, "output_arity": 1, "max_steps_per_call": 1000
+            }
+          ]
+        }
+      },
+      "large_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 24, "window_size": 96 } },
+      "large_sink":  { "type": "ProgramStorageSinkPipe", "parameters": { "max_candidates": 24, "path": "/tmp/beast-maze-large.json", "top_k": 8 } }
+    },
+    "connections": [
+      {"source_pipe": "small_factory", "source_slot": 0, "destination_pipe": "small_maze",   "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "small_maze",    "source_slot": 0, "destination_pipe": "small_stats",  "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "small_stats",   "source_slot": 0, "destination_pipe": "small_sink",   "destination_slot": 0, "buffer_size": 24},
+
+      {"source_pipe": "medium_factory", "source_slot": 0, "destination_pipe": "medium_mux",   "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "small_seed",     "source_slot": 0, "destination_pipe": "medium_mux",   "destination_slot": 1, "buffer_size": 24},
+      {"source_pipe": "medium_mux",     "source_slot": 0, "destination_pipe": "medium_maze",  "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "medium_maze",    "source_slot": 0, "destination_pipe": "medium_stats", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "medium_stats",   "source_slot": 0, "destination_pipe": "medium_sink",  "destination_slot": 0, "buffer_size": 24},
+
+      {"source_pipe": "large_factory", "source_slot": 0, "destination_pipe": "large_mux",   "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "medium_seed",   "source_slot": 0, "destination_pipe": "large_mux",   "destination_slot": 1, "buffer_size": 24},
+      {"source_pipe": "large_mux",     "source_slot": 0, "destination_pipe": "large_maze",  "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "large_maze",    "source_slot": 0, "destination_pipe": "large_stats", "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "large_stats",   "source_slot": 0, "destination_pipe": "large_sink",  "destination_slot": 0, "buffer_size": 24}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "small_factory": { "position": { "x":  40, "y":  80 } },
+      "small_maze":    { "position": { "x": 220, "y":  80 } },
+      "small_stats":   { "position": { "x": 450, "y":  80 } },
+      "small_sink":    { "position": { "x": 650, "y":  80 } },
+
+      "medium_factory":{ "position": { "x":  40, "y": 260 } },
+      "small_seed":    { "position": { "x":  40, "y": 360 } },
+      "medium_mux":    { "position": { "x": 220, "y": 300 } },
+      "medium_maze":   { "position": { "x": 400, "y": 300 } },
+      "medium_stats":  { "position": { "x": 600, "y": 300 } },
+      "medium_sink":   { "position": { "x": 800, "y": 300 } },
+
+      "large_factory": { "position": { "x":  40, "y": 500 } },
+      "medium_seed":   { "position": { "x":  40, "y": 600 } },
+      "large_mux":     { "position": { "x": 220, "y": 540 } },
+      "large_maze":    { "position": { "x": 400, "y": 540 } },
+      "large_stats":   { "position": { "x": 600, "y": 540 } },
+      "large_sink":    { "position": { "x": 800, "y": 540 } }
+    }
+  }
+}

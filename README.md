@@ -143,6 +143,97 @@ To not build the tests (and save some time while developing or you just don't ne
 cmake -DBEAST_BUILD_TESTS=NO ..
 ```
 
+### Optional GPU backend (CUDA)
+
+BEAST ships an optional CUDA backend that runs the SHA-256 round evaluator on the GPU
+via `cuda::CudaSha256RoundEvaluator` -- a `BatchEvaluator` that drops into any
+`EvolutionPipe::setBatchEvaluator`. Programs are compiled once on the host (BEAST
+bytecode → a tight 16-byte instruction stream), uploaded to device memory, and run by
+a `__device__` VM covering the arithmetic / bit / comparison / constant-target-jump
+opcode subset typical of evolved SHA-256 candidates. Opcodes the device VM doesn't
+implement (system calls, string tables, stacks, subroutines, variable-target jumps)
+fold to no-ops at compile time.
+
+CUDA support is **on by default**. The configure step probes for a CUDA compiler and
+the CUDA Toolkit: if either is missing, the option auto-flips to OFF with a one-line
+status message and the build proceeds CPU-only. There's nothing to install for the
+common case beyond the regular dependencies. To force the GPU build off (e.g. to
+skip the ~20 s extra compile time on a CPU-only laptop):
+```bash
+cmake -DBEAST_ENABLE_CUDA=OFF ..
+```
+
+For maximum runtime speed, **always configure a release build** -- debug builds
+default to `-O0` plus coverage instrumentation, which makes the CPU-side host
+code 10-100x slower (and dwarfs any GPU speedup):
+```bash
+cmake -DCMAKE_BUILD_TYPE=Release -DBEAST_BUILD_TESTS=OFF ..
+cmake --build . -j$(nproc)
+```
+
+Without a CUDA-capable GPU the CUDA-enabled binary still runs:
+`cuda::isCudaAvailable()` returns false on hosts without a driver, and any pipe that
+would have injected the GPU evaluator falls back to the CPU `ThreadPoolBatchEvaluator`.
+
+#### Sizing pipelines for the GPU
+
+The GPU kernel runs **one thread per genome per generation**, so GPU utilisation
+is driven by the GA population size, not the individual genome length:
+
+| Pipe knob                                  | What it controls                                                       | GPU implication                                                                                          |
+|--------------------------------------------|------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| `EvaluatorPipe.max_candidates`             | GA population per generation (== GPU batch size per launch)            | The big lever. Must be ≥ 32 to fill one warp; ≥ 256 to start hiding launch overhead; **≥ 1024 to actually saturate a modern GPU** (e.g. RTX 5880 has 110 SMs and wants thousands of threads in flight). |
+| `evolution_parameters.starting_program_size` / `max_genome_bytes` | Per-thread instruction stream length         | Longer programs mean more work per thread, which amortises CUDA launch + H2D copy overhead. 256-512 bytes is a good floor; 4 KB is fine.                                  |
+| `evaluators[0].parameters.max_steps_per_trial` × `trial_count` × `rounds_per_trial` | Total VM steps per thread                  | Same story as genome length: more steps = more compute per launch. The SHA-256 example uses 4000 × 8 × 1 = 32k steps per thread, plenty.                                  |
+| `EvaluatorPipe.memory_variables`           | Variable count per VM                                                  | The GPU register file is fixed at 32; values above 32 are clamped on the GPU (CPU is unbounded). Stay at ≤ 32 for bit-exact CPU/GPU parity.                                |
+
+Rule of thumb for the SHA-256 round on an RTX 5880: bump `max_candidates` from
+the CPU-friendly default of 24 to **1024 or more** before you'll see the GPU pull
+ahead. The bundled
+[`examples/compose-pipelines/sha256-round-gpu.json`](examples/compose-pipelines/sha256-round-gpu.json)
+uses `max_candidates: 1024` and `"backend": "auto"` as a ready-to-load starting
+point. Don't raise the GA `generations` per cycle along with the population --
+keeping it at 8-16 keeps the UI's progress counters responsive while still
+issuing big batches to the GPU.
+
+#### Selecting the backend from pipeline JSON
+
+Activate the GPU path per-pipe by setting `parameters.backend` on an `EvaluatorPipe`:
+
+```json
+"sha256_round": {
+  "type": "EvaluatorPipe",
+  "parameters": {
+    "backend": "auto",                // "cpu" (default) | "gpu" | "auto"
+    "evaluators": [{ "type": "Sha256RoundEvaluator", ... }]
+    // ... rest of the pipe config ...
+  }
+}
+```
+
+The Compose UI exposes the same knob in the per-pipe edit dialog under
+"Execution backend". The selection rules are:
+
+| Value   | Behaviour                                                                                                                         |
+|---------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `cpu`   | Use the CPU thread-pool evaluator (the default; identical to all prior versions).                                                 |
+| `gpu`   | Use the CUDA evaluator when (a) built with `BEAST_ENABLE_CUDA`, (b) a CUDA device is visible, and (c) the evaluator has a GPU port (today only `Sha256RoundEvaluator`). Otherwise silently falls back to CPU. |
+| `auto`  | Same as `gpu`, intended for JSON shared across GPU and CPU-only hosts.                                                            |
+
+The field is optional; pipelines without a `backend` key keep their prior CPU
+behaviour exactly. A worked example lives at
+[`examples/compose-pipelines/sha256-round-gpu.json`](examples/compose-pipelines/sha256-round-gpu.json),
+which mirrors the stock `sha256-round.json` but adds `"backend": "auto"` so it
+opportunistically uses the GPU when one is present.
+
+CPU/GPU parity is enforced by `tests/cuda_sha256_parity.cpp`: identical genome bytes
+produce identical scores on both backends (bit-exact for the supported-opcode subset).
+The performance win is workload-dependent -- BEAST's typical populations of 32-128
+genomes leave most of the GPU's SMs idle, and the device VM is divergence-bound by
+its 40-way switch dispatch. The Tier 2 architecture sets up future improvements
+(warp-cooperative scheduling, multi-pipeline GPU sharing, larger batched workloads)
+without changing the user-facing API.
+
 If you want to create a coverage report, install these additional dependencies:
 ```bash
 sudo apt install lcov npm

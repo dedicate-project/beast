@@ -101,6 +101,21 @@ int main(int argc, char** argv) {
         .methods("GET"_method)([&pipeline_server](const crow::request& /*req*/) {
           return pipeline_server.serveAllPipelines();
         });
+    CROW_ROUTE(app, "/api/v1/program-collection")
+        .methods("GET"_method)([&pipeline_server](const crow::request& /*req*/) {
+          return pipeline_server.serveProgramCollection();
+        });
+    // ledger fetch + C-code generation are two endpoints on the same conceptual
+    // resource (a single ledger / a single program in a ledger). They live next to
+    // the listing route above so the routing table reads as one logical group.
+    CROW_ROUTE(app, "/api/v1/program-collection/ledger")
+        .methods("GET"_method)([&pipeline_server](const crow::request& req) {
+          return pipeline_server.serveLedger(req);
+        });
+    CROW_ROUTE(app, "/api/v1/program-collection/c-code")
+        .methods("POST"_method)([](const crow::request& req) {
+          return beast::PipelineServer::serveCCodeForProgram(req);
+        });
     CROW_ROUTE(app, "/<path>")
         .methods("GET"_method)(
             [&html_root](const crow::request& /*req*/,

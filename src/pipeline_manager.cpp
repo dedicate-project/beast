@@ -6,17 +6,30 @@
 
 // Internal
 #include <beast/evaluators/adder_evaluator.hpp>
+#include <beast/evaluators/bit_reverse_evaluator.hpp>
+#include <beast/evaluators/bitwise_evaluator.hpp>
+#include <beast/evaluators/identity_evaluator.hpp>
 #include <beast/evaluators/maximum_evaluator.hpp>
+#include <beast/evaluators/minimum_evaluator.hpp>
+#include <beast/evaluators/parity_evaluator.hpp>
+#include <beast/evaluators/popcount_evaluator.hpp>
+#include <beast/evaluators/rotate_evaluator.hpp>
+#include <beast/evaluators/sha256_ch_evaluator.hpp>
+#include <beast/evaluators/sha256_maj_evaluator.hpp>
+#include <beast/evaluators/sha256_round_evaluator.hpp>
+#include <beast/evaluators/sha256_sigma_evaluator.hpp>
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>
 #include <beast/pipes/evolution_pipe.hpp>
 #include <beast/pipes/fan_pipe.hpp>
+#include <beast/pipes/filter_pipe.hpp>
 #include <beast/pipes/multiplexer_pipe.hpp>
 #include <beast/pipes/null_sink_pipe.hpp>
 #include <beast/pipes/program_factory_pipe.hpp>
 #include <beast/pipes/program_storage_sink_pipe.hpp>
 #include <beast/pipes/program_storage_source_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
+#include <beast/pipes/score_graph_pipe.hpp>
 
 #include <beast/program_factory_base.hpp>
 #include <beast/random_program_factory.hpp>
@@ -294,6 +307,131 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
           params["max_steps_per_trial"].get<uint32_t>());
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256RoundEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(
+          params, {"trial_count", "round_constant_index", "max_steps_per_trial"});
+      // `round_constants_mode` is a post-hoc addition: legacy pipelines that omit it get
+      // the pre-mode (single-K) behaviour. Accept the three canonical strings plus a few
+      // friendly aliases so users typing the JSON by hand have a forgiving target.
+      Sha256RoundEvaluator::RoundConstantsMode mode =
+          Sha256RoundEvaluator::RoundConstantsMode::Fixed;
+      if (params.contains("round_constants_mode")) {
+        const auto mode_str = params["round_constants_mode"].get<std::string>();
+        if (mode_str == "fixed") {
+          mode = Sha256RoundEvaluator::RoundConstantsMode::Fixed;
+        } else if (mode_str == "cycle_all" || mode_str == "cycle") {
+          mode = Sha256RoundEvaluator::RoundConstantsMode::CycleAll;
+        } else if (mode_str == "random_per_trial" || mode_str == "random") {
+          mode = Sha256RoundEvaluator::RoundConstantsMode::RandomPerTrial;
+        } else {
+          throw std::invalid_argument(
+              "Sha256RoundEvaluator: unknown round_constants_mode '" + mode_str +
+              "' (expected 'fixed', 'cycle_all', or 'random_per_trial')");
+        }
+      }
+      // `rounds_per_trial` is also optional and defaults to 1 (= original single-round
+      // behaviour). Legacy ledgers don't have to know about it; new ledgers can opt in
+      // to multi-round scoring by setting it to a number in [1, 64].
+      const uint32_t rounds_per_trial =
+          params.value("rounds_per_trial", static_cast<uint32_t>(1));
+      evaluator = std::make_shared<Sha256RoundEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          params["round_constant_index"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>(), mode, rounds_per_trial);
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "IdentityEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "width", "max_steps_per_trial"});
+      evaluator = std::make_shared<IdentityEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["width"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "BitwiseEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "operation", "max_steps_per_trial"});
+      evaluator = std::make_shared<BitwiseEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          BitwiseEvaluator::parseOperation(params["operation"].get<std::string>()),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "RotateEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(
+          params, {"trial_count", "amount", "direction", "max_steps_per_trial"});
+      evaluator = std::make_shared<RotateEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["amount"].get<uint32_t>(),
+          RotateEvaluator::parseDirection(params["direction"].get<std::string>()),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256SigmaEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "variant", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256SigmaEvaluator>(
+          params["trial_count"].get<uint32_t>(),
+          Sha256SigmaEvaluator::parseVariant(params["variant"].get<std::string>()),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256ChEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256ChEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "Sha256MajEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<Sha256MajEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "PopcountEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<PopcountEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "ParityEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "width", "max_steps_per_trial"});
+      evaluator = std::make_shared<ParityEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["width"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "BitReverseEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "max_steps_per_trial"});
+      evaluator = std::make_shared<BitReverseEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "MinimumEvaluator") {
+      checkForKeyPresenceInJson(evaluator_json.value(), {"parameters"});
+      const auto& params = evaluator_json.value()["parameters"];
+      checkForKeyPresenceInJson(params, {"trial_count", "width", "max_steps_per_trial"});
+      evaluator = std::make_shared<MinimumEvaluator>(
+          params["trial_count"].get<uint32_t>(), params["width"].get<uint32_t>(),
+          params["max_steps_per_trial"].get<uint32_t>());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else {
       throw std::invalid_argument("Invalid evaluator type: " + type);
     }
@@ -461,6 +599,19 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
         created_pipes[pipe_name] =
             std::make_shared<ResultsSummaryPipe>(max_candidates, window_size);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "ScoreGraphPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        // Both `window_seconds` and `max_samples` are optional; ScoreGraphPipe falls
+        // back to its built-in defaults when 0 is passed (60s window, 1024 samples).
+        const double window_seconds =
+            pipe.value()["parameters"].value("window_seconds", 0.0);
+        const uint32_t max_samples =
+            pipe.value()["parameters"].value("max_samples", static_cast<uint32_t>(0));
+        created_pipes[pipe_name] = std::make_shared<ScoreGraphPipe>(
+            max_candidates, window_seconds, max_samples);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "MultiplexerPipe") {
         checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "input_slots"});
         const uint32_t max_candidates =
@@ -507,11 +658,21 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
             pipe.value()["parameters"]["output_slots"].get<uint32_t>();
         const std::string strategy_str =
             pipe.value()["parameters"].value("strategy", std::string("round_robin"));
-        const auto strategy = (strategy_str == "broadcast")
-                                  ? DemultiplexerPipe::Strategy::Broadcast
-                                  : DemultiplexerPipe::Strategy::RoundRobin;
+        DemultiplexerPipe::Strategy strategy = DemultiplexerPipe::Strategy::RoundRobin;
+        if (strategy_str == "broadcast") {
+          strategy = DemultiplexerPipe::Strategy::Broadcast;
+        } else if (strategy_str == "least_loaded") {
+          strategy = DemultiplexerPipe::Strategy::LeastLoaded;
+        }
         created_pipes[pipe_name] =
             std::make_shared<DemultiplexerPipe>(max_candidates, output_slots, strategy);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "FilterPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates", "threshold"});
+        const uint32_t max_candidates =
+            pipe.value()["parameters"]["max_candidates"].get<uint32_t>();
+        const double threshold = pipe.value()["parameters"]["threshold"].get<double>();
+        created_pipes[pipe_name] = std::make_shared<FilterPipe>(max_candidates, threshold);
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "EvaluatorPipe") {
         checkForParameterPresenceInPipeJson(pipe,
@@ -543,6 +704,29 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
           evaluator_pipe->addEvaluator(evaluator, weight, invert_logic);
         }
 
+        // Optional execution backend selector ("cpu" | "gpu" | "auto", defaults to
+        // "cpu"). The actual backend choice is committed by `applyBackendSelection`
+        // after every evaluator has been attached -- the GPU factory needs to inspect
+        // the evaluator type to decide whether it can satisfy the request. Unknown
+        // strings throw rather than silently downgrading to CPU, so a typo is loud.
+        if (pipe.value()["parameters"].contains("backend")) {
+          const auto backend_str =
+              pipe.value()["parameters"]["backend"].get<std::string>();
+          EvaluatorPipe::Backend backend = EvaluatorPipe::Backend::Cpu;
+          if (backend_str == "cpu") {
+            backend = EvaluatorPipe::Backend::Cpu;
+          } else if (backend_str == "gpu") {
+            backend = EvaluatorPipe::Backend::Gpu;
+          } else if (backend_str == "auto") {
+            backend = EvaluatorPipe::Backend::Auto;
+          } else {
+            throw std::invalid_argument(
+                "EvaluatorPipe: unknown backend '" + backend_str +
+                "' (expected one of: cpu, gpu, auto)");
+          }
+          evaluator_pipe->setBackend(backend);
+        }
+
         // Optional cut-off score and full EvolutionParameters set; see
         // `deconstructEvolutionParametersToJson` for the on-disk shape. Both blocks default
         // to the C++-side defaults when missing so older pipeline JSON files keep working.
@@ -554,6 +738,37 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
           evaluator_pipe->setEvolutionParameters(constructEvolutionParametersFromJson(
               pipe.value()["parameters"]["evolution_parameters"]));
         }
+        // Optional subroutine library configuration. Sources are mounted in array
+        // order; their `subroutine_id` indices are stable as long as the array
+        // and each source's `top_k` don't change between configurations.
+        if (pipe.value()["parameters"].contains("subroutines") &&
+            pipe.value()["parameters"]["subroutines"].is_array()) {
+          for (const auto& source_json : pipe.value()["parameters"]["subroutines"]) {
+            EvaluatorPipe::SubroutineSource source;
+            if (source_json.contains("ledger_path")) {
+              source.ledger_path = source_json["ledger_path"].get<std::string>();
+            }
+            if (source_json.contains("top_k")) {
+              source.top_k = source_json["top_k"].get<uint32_t>();
+            }
+            if (source_json.contains("input_arity")) {
+              source.input_arity = source_json["input_arity"].get<uint8_t>();
+            }
+            if (source_json.contains("output_arity")) {
+              source.output_arity = source_json["output_arity"].get<uint8_t>();
+            }
+            if (source_json.contains("max_steps_per_call")) {
+              source.max_steps_per_call = source_json["max_steps_per_call"].get<uint32_t>();
+            }
+            evaluator_pipe->addSubroutineSource(source);
+          }
+        }
+
+        // Commit the backend choice now that all evaluators (and any subroutine
+        // sources) are attached -- the GPU factory inspects the evaluator set to
+        // decide whether it can satisfy a `gpu` / `auto` request. Cheap and
+        // idempotent; safe to call even when the JSON didn't carry a `backend` field.
+        evaluator_pipe->applyBackendSelection();
 
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else {
@@ -642,6 +857,86 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["parameters"]["trial_count"] = max_eval->getTrialCount();
       evaluator["parameters"]["value_range"] = max_eval->getValueRange();
       evaluator["parameters"]["max_steps_per_trial"] = max_eval->getMaxStepsPerTrial();
+    } else if (const auto sha_eval =
+                   std::dynamic_pointer_cast<Sha256RoundEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256RoundEvaluator";
+      evaluator["parameters"]["trial_count"] = sha_eval->getTrialCount();
+      evaluator["parameters"]["round_constant_index"] = sha_eval->getRoundConstantIndex();
+      evaluator["parameters"]["max_steps_per_trial"] = sha_eval->getMaxStepsPerTrial();
+      const char* mode_str = "fixed";
+      switch (sha_eval->getRoundConstantsMode()) {
+        case Sha256RoundEvaluator::RoundConstantsMode::Fixed:
+          mode_str = "fixed";
+          break;
+        case Sha256RoundEvaluator::RoundConstantsMode::CycleAll:
+          mode_str = "cycle_all";
+          break;
+        case Sha256RoundEvaluator::RoundConstantsMode::RandomPerTrial:
+          mode_str = "random_per_trial";
+          break;
+      }
+      evaluator["parameters"]["round_constants_mode"] = mode_str;
+      evaluator["parameters"]["rounds_per_trial"] = sha_eval->getRoundsPerTrial();
+    } else if (const auto id_eval =
+                   std::dynamic_pointer_cast<IdentityEvaluator>(description.evaluator)) {
+      evaluator["type"] = "IdentityEvaluator";
+      evaluator["parameters"]["trial_count"] = id_eval->getTrialCount();
+      evaluator["parameters"]["width"] = id_eval->getWidth();
+      evaluator["parameters"]["max_steps_per_trial"] = id_eval->getMaxStepsPerTrial();
+    } else if (const auto bw_eval =
+                   std::dynamic_pointer_cast<BitwiseEvaluator>(description.evaluator)) {
+      evaluator["type"] = "BitwiseEvaluator";
+      evaluator["parameters"]["trial_count"] = bw_eval->getTrialCount();
+      evaluator["parameters"]["operation"] =
+          BitwiseEvaluator::operationName(bw_eval->getOperation());
+      evaluator["parameters"]["max_steps_per_trial"] = bw_eval->getMaxStepsPerTrial();
+    } else if (const auto rot_eval =
+                   std::dynamic_pointer_cast<RotateEvaluator>(description.evaluator)) {
+      evaluator["type"] = "RotateEvaluator";
+      evaluator["parameters"]["trial_count"] = rot_eval->getTrialCount();
+      evaluator["parameters"]["amount"] = rot_eval->getAmount();
+      evaluator["parameters"]["direction"] =
+          RotateEvaluator::directionName(rot_eval->getDirection());
+      evaluator["parameters"]["max_steps_per_trial"] = rot_eval->getMaxStepsPerTrial();
+    } else if (const auto sigma_eval =
+                   std::dynamic_pointer_cast<Sha256SigmaEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256SigmaEvaluator";
+      evaluator["parameters"]["trial_count"] = sigma_eval->getTrialCount();
+      evaluator["parameters"]["variant"] =
+          Sha256SigmaEvaluator::variantName(sigma_eval->getVariant());
+      evaluator["parameters"]["max_steps_per_trial"] = sigma_eval->getMaxStepsPerTrial();
+    } else if (const auto ch_eval =
+                   std::dynamic_pointer_cast<Sha256ChEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256ChEvaluator";
+      evaluator["parameters"]["trial_count"] = ch_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = ch_eval->getMaxStepsPerTrial();
+    } else if (const auto maj_eval =
+                   std::dynamic_pointer_cast<Sha256MajEvaluator>(description.evaluator)) {
+      evaluator["type"] = "Sha256MajEvaluator";
+      evaluator["parameters"]["trial_count"] = maj_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = maj_eval->getMaxStepsPerTrial();
+    } else if (const auto pop_eval =
+                   std::dynamic_pointer_cast<PopcountEvaluator>(description.evaluator)) {
+      evaluator["type"] = "PopcountEvaluator";
+      evaluator["parameters"]["trial_count"] = pop_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = pop_eval->getMaxStepsPerTrial();
+    } else if (const auto par_eval =
+                   std::dynamic_pointer_cast<ParityEvaluator>(description.evaluator)) {
+      evaluator["type"] = "ParityEvaluator";
+      evaluator["parameters"]["trial_count"] = par_eval->getTrialCount();
+      evaluator["parameters"]["width"] = par_eval->getWidth();
+      evaluator["parameters"]["max_steps_per_trial"] = par_eval->getMaxStepsPerTrial();
+    } else if (const auto rev_eval =
+                   std::dynamic_pointer_cast<BitReverseEvaluator>(description.evaluator)) {
+      evaluator["type"] = "BitReverseEvaluator";
+      evaluator["parameters"]["trial_count"] = rev_eval->getTrialCount();
+      evaluator["parameters"]["max_steps_per_trial"] = rev_eval->getMaxStepsPerTrial();
+    } else if (const auto min_eval =
+                   std::dynamic_pointer_cast<MinimumEvaluator>(description.evaluator)) {
+      evaluator["type"] = "MinimumEvaluator";
+      evaluator["parameters"]["trial_count"] = min_eval->getTrialCount();
+      evaluator["parameters"]["width"] = min_eval->getWidth();
+      evaluator["parameters"]["max_steps_per_trial"] = min_eval->getMaxStepsPerTrial();
     }
 
     evaluators.push_back(std::move(evaluator));
@@ -669,6 +964,34 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["parameters"]["cut_off_score"] = evaluator_pipe->getCutOffScore();
       pipe_json["parameters"]["evolution_parameters"] =
           deconstructEvolutionParametersToJson(evaluator_pipe->getEvolutionParameters());
+      // Backend selection. Only emitted when non-default so legacy pipeline JSON
+      // round-trips cleanly through load -> save without sprouting a `backend: "cpu"`
+      // field that wasn't there before.
+      switch (evaluator_pipe->getBackend()) {
+        case EvaluatorPipe::Backend::Cpu:
+          break;
+        case EvaluatorPipe::Backend::Gpu:
+          pipe_json["parameters"]["backend"] = "gpu";
+          break;
+        case EvaluatorPipe::Backend::Auto:
+          pipe_json["parameters"]["backend"] = "auto";
+          break;
+      }
+      // Subroutine sources are only serialised when actually configured; an empty
+      // array means "no library mounted" and writing the empty array would needlessly
+      // clutter pipeline JSON files that pre-date the feature.
+      const auto& sources = evaluator_pipe->getSubroutineSources();
+      if (!sources.empty()) {
+        nlohmann::json sources_json = nlohmann::json::array();
+        for (const auto& source : sources) {
+          sources_json.push_back({{"ledger_path", source.ledger_path},
+                                  {"top_k", source.top_k},
+                                  {"input_arity", source.input_arity},
+                                  {"output_arity", source.output_arity},
+                                  {"max_steps_per_call", source.max_steps_per_call}});
+        }
+        pipe_json["parameters"]["subroutines"] = sources_json;
+      }
     } else if (std::dynamic_pointer_cast<EvolutionPipe>(pipe->pipe)) {
       pipe_json["type"] = "EvolutionPipe";
     } else if (std::dynamic_pointer_cast<NullSinkPipe>(pipe->pipe)) {
@@ -678,6 +1001,11 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "ResultsSummaryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["window_size"] = summary_pipe->getWindowSize();
+    } else if (auto graph_pipe = std::dynamic_pointer_cast<ScoreGraphPipe>(pipe->pipe)) {
+      pipe_json["type"] = "ScoreGraphPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["window_seconds"] = graph_pipe->getWindowSeconds();
+      pipe_json["parameters"]["max_samples"] = graph_pipe->getMaxSamples();
     } else if (auto mux_pipe = std::dynamic_pointer_cast<MultiplexerPipe>(pipe->pipe)) {
       pipe_json["type"] = "MultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
@@ -700,10 +1028,22 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["type"] = "DemultiplexerPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["output_slots"] = demux_pipe->getOutputSlots();
-      pipe_json["parameters"]["strategy"] =
-          demux_pipe->getStrategy() == DemultiplexerPipe::Strategy::Broadcast
-              ? std::string("broadcast")
-              : std::string("round_robin");
+      switch (demux_pipe->getStrategy()) {
+        case DemultiplexerPipe::Strategy::Broadcast:
+          pipe_json["parameters"]["strategy"] = std::string("broadcast");
+          break;
+        case DemultiplexerPipe::Strategy::LeastLoaded:
+          pipe_json["parameters"]["strategy"] = std::string("least_loaded");
+          break;
+        case DemultiplexerPipe::Strategy::RoundRobin:
+        default:
+          pipe_json["parameters"]["strategy"] = std::string("round_robin");
+          break;
+      }
+    } else if (auto filter_pipe = std::dynamic_pointer_cast<FilterPipe>(pipe->pipe)) {
+      pipe_json["type"] = "FilterPipe";
+      pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
+      pipe_json["parameters"]["threshold"] = filter_pipe->getThreshold();
     } else if (auto spec_pipe = std::dynamic_pointer_cast<ProgramFactoryPipe>(pipe->pipe)) {
       pipe_json["type"] = "ProgramFactoryPipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();

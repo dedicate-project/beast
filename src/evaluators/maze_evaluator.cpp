@@ -73,6 +73,13 @@ double MazeEvaluator::evaluate(const VmSession& session) {
   const auto ideal_path = target_maze.solve();
   try {
     while (virtual_machine.step(local_session, false)) {
+      // Cooperative cancellation. Maze runs can be long (large mazes, dense GA pop), so
+      // we check the pipeline's stop token periodically. Stride 64 amortises the load
+      // cost; the user-perceived stop latency stays well below 1 ms even on the largest
+      // mazes we ship.
+      if ((current_steps & 0x3FU) == 0 && local_session.isStopRequested()) {
+        return 0.02;
+      }
       if (local_session.hasOutputDataAvailable(move_output, true)) {
         // A move command was issued. Process it here.
         const auto move = local_session.getVariableValue(move_output, true);

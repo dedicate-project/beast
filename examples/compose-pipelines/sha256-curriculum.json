@@ -1,0 +1,155 @@
+{
+  "name": "SHA-256 Curriculum",
+  "model": {
+    "pipes": {
+      "factory_id": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 32, "max_size": 200,
+          "memory_variables": 32, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "id_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 32, "memory_variables": 32,
+          "string_table_items": 0, "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "IdentityEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 6, "width": 4, "max_steps_per_trial": 1500 }
+          }],
+          "evolution_parameters": {
+            "generations": 24, "crossover_probability": 0.7, "mutation_probability": 0.06,
+            "elitism": true, "byte_mutation_share": 0.25,
+            "variable_count": 32, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 1024, "starting_program_size": 64,
+            "opcode_weights": { "10": 6.0, "13": 2.0 }
+          }
+        }
+      },
+      "id_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 32, "window_size": 128 } },
+      "id_sink": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": { "max_candidates": 32, "path": "/tmp/beast-sha-id.json", "top_k": 16 }
+      },
+
+      "factory_rot": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 32, "max_size": 300,
+          "memory_variables": 16, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "id_seed": {
+        "type": "ProgramStorageSourcePipe",
+        "parameters": { "max_candidates": 32, "path": "/tmp/beast-sha-id.json", "loop": true }
+      },
+      "rot_mux": { "type": "MultiplexerPipe", "parameters": { "max_candidates": 32, "input_slots": 2 } },
+      "rot_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 32, "memory_variables": 16,
+          "string_table_items": 0, "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "RotateEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 6, "amount": 2, "direction": "right",
+                            "max_steps_per_trial": 1200 }
+          }],
+          "evolution_parameters": {
+            "generations": 24, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.25,
+            "variable_count": 16, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 1024, "starting_program_size": 128,
+            "opcode_weights": { "10": 3.0, "34": 6.0, "35": 6.0, "28": 2.0, "29": 2.0 }
+          }
+        }
+      },
+      "rot_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 32, "window_size": 128 } },
+      "rot_sink": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": { "max_candidates": 32, "path": "/tmp/beast-sha-rot.json", "top_k": 16 }
+      },
+
+      "factory_sigma": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 32, "max_size": 400,
+          "memory_variables": 16, "string_table_items": 0, "string_table_item_length": 0
+        }
+      },
+      "rot_seed": {
+        "type": "ProgramStorageSourcePipe",
+        "parameters": { "max_candidates": 32, "path": "/tmp/beast-sha-rot.json", "loop": true }
+      },
+      "sigma_mux": { "type": "MultiplexerPipe", "parameters": { "max_candidates": 32, "input_slots": 2 } },
+      "sigma_stage": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 32, "memory_variables": 16,
+          "string_table_items": 0, "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "Sha256SigmaEvaluator", "weight": 1.0, "invert_logic": false,
+            "parameters": { "trial_count": 6, "variant": "big0", "max_steps_per_trial": 2000 }
+          }],
+          "evolution_parameters": {
+            "generations": 20, "crossover_probability": 0.7, "mutation_probability": 0.05,
+            "elitism": true, "byte_mutation_share": 0.25,
+            "variable_count": 16, "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 2048, "starting_program_size": 200,
+            "opcode_weights": { "10": 3.0, "33": 6.0, "34": 4.0, "35": 4.0, "28": 2.0, "29": 2.0 }
+          }
+        }
+      },
+      "sigma_stats": { "type": "ResultsSummaryPipe", "parameters": { "max_candidates": 32, "window_size": 128 } },
+      "sigma_sink": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": { "max_candidates": 32, "path": "/tmp/beast-sha-sigma.json", "top_k": 16 }
+      }
+    },
+    "connections": [
+      {"source_pipe": "factory_id",  "source_slot": 0, "destination_pipe": "id_stage",   "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "id_stage",    "source_slot": 0, "destination_pipe": "id_stats",   "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "id_stats",    "source_slot": 0, "destination_pipe": "id_sink",    "destination_slot": 0, "buffer_size": 32},
+
+      {"source_pipe": "factory_rot", "source_slot": 0, "destination_pipe": "rot_mux",    "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "id_seed",     "source_slot": 0, "destination_pipe": "rot_mux",    "destination_slot": 1, "buffer_size": 32},
+      {"source_pipe": "rot_mux",     "source_slot": 0, "destination_pipe": "rot_stage",  "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "rot_stage",   "source_slot": 0, "destination_pipe": "rot_stats",  "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "rot_stats",   "source_slot": 0, "destination_pipe": "rot_sink",   "destination_slot": 0, "buffer_size": 32},
+
+      {"source_pipe": "factory_sigma","source_slot": 0, "destination_pipe": "sigma_mux", "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "rot_seed",     "source_slot": 0, "destination_pipe": "sigma_mux", "destination_slot": 1, "buffer_size": 32},
+      {"source_pipe": "sigma_mux",    "source_slot": 0, "destination_pipe": "sigma_stage","destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "sigma_stage",  "source_slot": 0, "destination_pipe": "sigma_stats","destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "sigma_stats",  "source_slot": 0, "destination_pipe": "sigma_sink", "destination_slot": 0, "buffer_size": 32}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "factory_id":    { "position": { "x":   60, "y": 100 } },
+      "id_stage":      { "position": { "x":  220, "y": 100 } },
+      "id_stats":      { "position": { "x":  400, "y": 100 } },
+      "id_sink":       { "position": { "x":  580, "y": 100 } },
+
+      "factory_rot":   { "position": { "x":   60, "y": 280 } },
+      "id_seed":       { "position": { "x":   60, "y": 380 } },
+      "rot_mux":       { "position": { "x":  220, "y": 320 } },
+      "rot_stage":     { "position": { "x":  400, "y": 320 } },
+      "rot_stats":     { "position": { "x":  580, "y": 320 } },
+      "rot_sink":      { "position": { "x":  760, "y": 320 } },
+
+      "factory_sigma": { "position": { "x":   60, "y": 500 } },
+      "rot_seed":      { "position": { "x":   60, "y": 600 } },
+      "sigma_mux":     { "position": { "x":  220, "y": 540 } },
+      "sigma_stage":   { "position": { "x":  400, "y": 540 } },
+      "sigma_stats":   { "position": { "x":  580, "y": 540 } },
+      "sigma_sink":    { "position": { "x":  760, "y": 540 } }
+    }
+  }
+}

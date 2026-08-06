@@ -110,6 +110,26 @@ export const PIPE_TYPE_DEFINITIONS = [
         ],
       },
       {
+        // See the matching note in `numericEvaluatorPipe` for the fallback contract.
+        // The MazeEvaluator currently has no GPU port, so picking "gpu" here will fall
+        // back to CPU; the option is exposed for parity with the other evaluator pipes
+        // and so saved pipelines round-trip cleanly when a Maze pipe is dropped on a
+        // CUDA-enabled binary.
+        title: 'Execution backend',
+        collapsedByDefault: true,
+        fields: [
+          {
+            name: 'backend', label: 'Backend', type: 'enum',
+            options: [
+              {value: 'cpu',  label: 'CPU (default, always available)'},
+              {value: 'gpu',  label: 'GPU (CUDA; falls back to CPU if unavailable)'},
+              {value: 'auto', label: 'Auto (GPU when applicable, otherwise CPU)'},
+            ],
+            default: 'cpu',
+          },
+        ],
+      },
+      {
         title: 'Genetic algorithm',
         // Collapsed by default since the defaults are usually fine; the dialog renders
         // sections as collapsible accordions.
@@ -131,6 +151,9 @@ export const PIPE_TYPE_DEFINITIONS = [
       string_table_items: values.string_table_items,
       string_table_item_length: values.string_table_item_length,
       cut_off_score: values.cut_off_score,
+      // Backend key elided when CPU (the default) so legacy pipelines round-trip
+      // through Load -> Save without sprouting a no-op `backend: "cpu"` field.
+      ...(values.backend && values.backend !== 'cpu' ? {backend: values.backend} : {}),
       evaluators: [{
         type: 'MazeEvaluator',
         weight: 1.0,
@@ -169,6 +192,9 @@ export const PIPE_TYPE_DEFINITIONS = [
         difficulty: maze.difficulty,
         max_steps: maze.max_steps,
         cut_off_score: params.cut_off_score,
+        // Older Maze pipelines predate the backend selector; missing -> CPU so the
+        // form populates with a concrete option rather than an empty dropdown.
+        backend: params.backend || 'cpu',
         generations: ga.generations,
         crossover_probability: ga.crossover_probability,
         mutation_probability: ga.mutation_probability,
@@ -216,6 +242,27 @@ export const PIPE_TYPE_DEFINITIONS = [
           ],
         },
         {
+          // Backend dispatch is plumbed all the way to the C++ EvolutionPipe via
+          // EvaluatorPipe::applyBackendSelection. "gpu" / "auto" only actually use the
+          // GPU when (a) the binary was built with BEAST_ENABLE_CUDA, (b) a CUDA device
+          // is visible, and (c) the evaluator has a CUDA port (today only SHA-256). All
+          // other combinations silently fall back to the CPU thread pool -- pipelines
+          // stay portable between GPU and CPU-only hosts.
+          title: 'Execution backend',
+          collapsedByDefault: true,
+          fields: [
+            {
+              name: 'backend', label: 'Backend', type: 'enum',
+              options: [
+                {value: 'cpu',  label: 'CPU (default, always available)'},
+                {value: 'gpu',  label: 'GPU (CUDA; falls back to CPU if unavailable)'},
+                {value: 'auto', label: 'Auto (GPU when applicable, otherwise CPU)'},
+              ],
+              default: 'cpu',
+            },
+          ],
+        },
+        {
           title: 'Genetic algorithm',
           collapsedByDefault: true,
           fields: [
@@ -228,30 +275,70 @@ export const PIPE_TYPE_DEFINITIONS = [
             {name: 'max_genome_bytes', label: 'Max genome size (bytes)', type: 'int', default: evolutionParameterDefaults.max_genome_bytes, min: 1},
           ],
         },
-      ],
-      buildParameters: (values) => ({
-        max_candidates: values.max_candidates,
-        memory_variables: values.memory_variables,
-        string_table_items: values.string_table_items,
-        string_table_item_length: values.string_table_item_length,
-        cut_off_score: values.cut_off_score,
-        evaluators: [{
-          type: evaluatorType,
-          weight: 1.0,
-          invert_logic: false,
-          parameters: evaluatorBuild(values),
-        }],
-        evolution_parameters: {
-          ...evolutionParameterDefaults,
-          generations: values.generations,
-          crossover_probability: values.crossover_probability,
-          mutation_probability: values.mutation_probability,
-          byte_mutation_share: values.byte_mutation_share,
-          elitism: values.elitism,
-          starting_program_size: values.starting_program_size,
-          max_genome_bytes: values.max_genome_bytes,
+        {
+          // The library is rebuilt at the start of every cycle from the configured
+          // ledger paths, so changes here take effect on the next cycle without
+          // restarting the pipeline. Each entry adds one or more subroutines to the
+          // shared library indexed by ascending `subroutine_id`.
+          title: 'Subroutines (advanced)',
+          collapsedByDefault: true,
+          fields: [
+            {
+              name: 'subroutines',
+              label: 'Subroutine sources (JSON array)',
+              type: 'json',
+              minRows: 6,
+              default: '[]',
+              placeholder:
+                'JSON array of {ledger_path, top_k, input_arity, output_arity, max_steps_per_call}',
+            },
+          ],
         },
-      }),
+      ],
+      buildParameters: (values) => {
+        // Subroutines field is a raw JSON string; parse defensively so a typo in the
+        // form doesn't drop the whole pipe -- the backend will surface a precise error
+        // if the parsed array is malformed.
+        let subroutines = [];
+        try {
+          const parsed = JSON.parse(values.subroutines || '[]');
+          if (Array.isArray(parsed)) {
+            subroutines = parsed;
+          }
+        } catch (err) {
+          subroutines = [];
+        }
+        const params = {
+          max_candidates: values.max_candidates,
+          memory_variables: values.memory_variables,
+          string_table_items: values.string_table_items,
+          string_table_item_length: values.string_table_item_length,
+          cut_off_score: values.cut_off_score,
+          // Only emit the backend key when non-default, mirroring the C++ serializer:
+          // legacy pipelines round-trip without sprouting a `backend: "cpu"` key.
+          ...(values.backend && values.backend !== 'cpu' ? {backend: values.backend} : {}),
+          evaluators: [{
+            type: evaluatorType,
+            weight: 1.0,
+            invert_logic: false,
+            parameters: evaluatorBuild(values),
+          }],
+          evolution_parameters: {
+            ...evolutionParameterDefaults,
+            generations: values.generations,
+            crossover_probability: values.crossover_probability,
+            mutation_probability: values.mutation_probability,
+            byte_mutation_share: values.byte_mutation_share,
+            elitism: values.elitism,
+            starting_program_size: values.starting_program_size,
+            max_genome_bytes: values.max_genome_bytes,
+          },
+        };
+        if (subroutines.length > 0) {
+          params.subroutines = subroutines;
+        }
+        return params;
+      },
       parseParameters: (params) => {
         const task = (params.evaluators && params.evaluators[0] && params.evaluators[0].parameters) || {};
         const ga = params.evolution_parameters || {};
@@ -261,6 +348,9 @@ export const PIPE_TYPE_DEFINITIONS = [
           string_table_items: params.string_table_items,
           string_table_item_length: params.string_table_item_length,
           cut_off_score: params.cut_off_score,
+          // Missing `backend` in the on-wire form means CPU (the historical default);
+          // keep that mapping explicit so the form always renders with a selection.
+          backend: params.backend || 'cpu',
           ...evaluatorParse(task),
           generations: ga.generations,
           crossover_probability: ga.crossover_probability,
@@ -269,6 +359,10 @@ export const PIPE_TYPE_DEFINITIONS = [
           elitism: ga.elitism,
           starting_program_size: ga.starting_program_size,
           max_genome_bytes: ga.max_genome_bytes,
+          // Pretty-print for editability when we round-trip back into the form.
+          subroutines: params.subroutines
+            ? JSON.stringify(params.subroutines, null, 2)
+            : '[]',
         };
       },
     });
@@ -323,6 +417,313 @@ export const PIPE_TYPE_DEFINITIONS = [
           input_count: p.input_count,
           trial_count: p.trial_count,
           value_range: p.value_range,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'IdentityEvaluatorPipe',
+        label: 'Identity Evaluator',
+        description:
+          'Curriculum stage 0: copy N input words verbatim to N output words. The ' +
+          'trivial first lesson -- proves the genome can address every output slot. ' +
+          'Survivors here make excellent seed material for downstream stages (rotate, ' +
+          'sigma, ch, maj, ...) via a ProgramStorageSink + Source loop.',
+        image: '/img/identity_evaluator_pipe.png',
+        evaluatorType: 'IdentityEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'width', label: 'Words to copy (1-16)', type: 'int', default: 8, min: 1, max: 16},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, width: v.width, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, width: p.width, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'BitwiseEvaluatorPipe',
+        label: 'Bitwise Evaluator',
+        description:
+          'Curriculum stage that scores programs on computing one specific bitwise ' +
+          'operation (XOR / AND / OR for two inputs at vars 0,1; NOT for one input at ' +
+          'var 0). Use to grow a population that\'s fluent in the bit primitives the ' +
+          'SHA-256 round actually needs.',
+        image: '/img/bitwise_evaluator_pipe.png',
+        evaluatorType: 'BitwiseEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {
+            name: 'operation', label: 'Operation', type: 'enum',
+            options: [
+              {value: 'xor', label: 'XOR (a ^ b)'},
+              {value: 'and', label: 'AND (a & b)'},
+              {value: 'or',  label: 'OR (a | b)'},
+              {value: 'not', label: 'NOT (~a)'},
+            ],
+            default: 'xor',
+          },
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, operation: v.operation,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, operation: p.operation || 'xor',
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'RotateEvaluatorPipe',
+        label: 'Rotate Evaluator',
+        description:
+          'Curriculum stage that scores programs on right-rotating (or left-rotating) ' +
+          'a single input word by a fixed amount. SHA-256 uses ten distinct rotation ' +
+          'amounts (2, 6, 7, 11, 13, 17, 18, 19, 22, 25); instantiate one rotate pipe ' +
+          'per amount to teach each as a separate skill, then merge the surviving ' +
+          'populations into the Sigma / round stages downstream.',
+        image: '/img/rotate_evaluator_pipe.png',
+        evaluatorType: 'RotateEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'amount', label: 'Rotation amount (1-31)', type: 'int', default: 2, min: 1, max: 31},
+          {
+            name: 'direction', label: 'Direction', type: 'enum',
+            options: [
+              {value: 'right', label: 'Right (rotr)'},
+              {value: 'left', label: 'Left (rotl)'},
+            ],
+            default: 'right',
+          },
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1200, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, amount: v.amount, direction: v.direction,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, amount: p.amount, direction: p.direction || 'right',
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256SigmaEvaluatorPipe',
+        label: 'SHA-256 Sigma Evaluator',
+        description:
+          'Curriculum stage targeting one of the four SHA-256 sigma functions ' +
+          '(BigSigma0/1 used inside the round body, SmallSigma0/1 used inside the ' +
+          'message-schedule expansion). Each variant is the XOR of 2-3 rotations / ' +
+          'shifts -- the smallest meaningful composite of the rotate + bitwise ' +
+          'primitives. A great waypoint between the per-skill stages and the full ' +
+          'round.',
+        image: '/img/sha256_sigma_evaluator_pipe.png',
+        evaluatorType: 'Sha256SigmaEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {
+            name: 'variant', label: 'Sigma variant', type: 'enum',
+            options: [
+              {value: 'big0',   label: 'BigSigma0  (rotr2 ^ rotr13 ^ rotr22)'},
+              {value: 'big1',   label: 'BigSigma1  (rotr6 ^ rotr11 ^ rotr25)'},
+              {value: 'small0', label: 'SmallSigma0 (rotr7 ^ rotr18 ^ shr3)'},
+              {value: 'small1', label: 'SmallSigma1 (rotr17 ^ rotr19 ^ shr10)'},
+            ],
+            default: 'big0',
+          },
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 2000, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, variant: v.variant,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, variant: p.variant || 'big0',
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256ChEvaluatorPipe',
+        label: 'SHA-256 Ch Evaluator',
+        description:
+          'Curriculum stage for the SHA-256 "choose" function: Ch(x, y, z) = ' +
+          '(x AND y) XOR ((NOT x) AND z). Three inputs (vars 0, 1, 2), one output ' +
+          '(var 4). The reference function is 4 bitwise opcodes -- one of the more ' +
+          'compact building blocks of the round body.',
+        image: '/img/sha256_ch_evaluator_pipe.png',
+        evaluatorType: 'Sha256ChEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256MajEvaluatorPipe',
+        label: 'SHA-256 Maj Evaluator',
+        description:
+          'Curriculum stage for the SHA-256 "majority" function: Maj(x, y, z) = ' +
+          '(x AND y) XOR (x AND z) XOR (y AND z). Three inputs (vars 0, 1, 2), one ' +
+          'output (var 4). Five bitwise opcodes in BEAST -- a sibling to Ch.',
+        image: '/img/sha256_maj_evaluator_pipe.png',
+        evaluatorType: 'Sha256MajEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'Sha256RoundEvaluatorPipe',
+        label: 'SHA-256 Round Evaluator',
+        description:
+          'Evolves programs that reproduce one round of the SHA-256 compression ' +
+          'function. Reads working state (a..h) from vars 0..7, K from var 8 and W ' +
+          'from var 9; writes the new (a..h) to vars 11..18. Scored bit-by-bit ' +
+          '(Hamming distance) so the GA has a smooth gradient to climb -- pure ' +
+          'exact-match scoring would degenerate into needle-in-a-haystack hash ' +
+          'inversion. Trials per evaluation control how many distinct (state, K, W) ' +
+          'patterns the candidate is scored on -- raise it (and pick a non-fixed ' +
+          'round-constants mode) to stop the GA from memorising a small lookup table ' +
+          'instead of learning the round formula. First rung of a curriculum that ' +
+          'eventually composes the schedule, block compression and padding into a ' +
+          'full SHA-256 hasher.',
+        image: '/img/sha256_round_evaluator_pipe.png',
+        evaluatorType: 'Sha256RoundEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 16, min: 1, max: 256},
+          {name: 'round_constant_index', label: 'SHA-256 round index / start offset (0-63)', type: 'int',
+           default: 0, min: 0, max: 63},
+          {
+            name: 'round_constants_mode', label: 'Round constants mode', type: 'enum',
+            options: [
+              {value: 'fixed',            label: 'Fixed (single K, easiest to memorise)'},
+              {value: 'cycle_all',        label: 'Cycle all (walk K table from start offset)'},
+              {value: 'random_per_trial', label: 'Random per trial (deterministic but varied)'},
+            ],
+            default: 'fixed',
+          },
+          {name: 'rounds_per_trial', label: 'Rounds per trial (program loops internally)', type: 'int',
+           default: 1, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per round (x rounds = trial budget)', type: 'int',
+           default: 4000, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count,
+          round_constant_index: v.round_constant_index,
+          round_constants_mode: v.round_constants_mode,
+          rounds_per_trial: v.rounds_per_trial,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count,
+          round_constant_index: p.round_constant_index,
+          round_constants_mode: p.round_constants_mode || 'fixed',
+          rounds_per_trial: p.rounds_per_trial != null ? p.rounds_per_trial : 1,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'PopcountEvaluatorPipe',
+        label: 'Popcount Evaluator',
+        description:
+          'Primitive gym: count the set bits in a single 32-bit input word. Solvable in ' +
+          'a few opcodes with the classic Hacker\'s Delight trick. Scoring uses numeric ' +
+          'distance (the output is 0..32, not a bitfield, so bit-Hamming would lie about ' +
+          'how close the candidate is). Survivors make a small, fast subroutine that ' +
+          'downstream consumers can mount to count features in any input word.',
+        image: '/img/popcount_evaluator_pipe.png',
+        evaluatorType: 'PopcountEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 800, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'ParityEvaluatorPipe',
+        label: 'Parity Evaluator',
+        description:
+          'Primitive gym: XOR-reduce N input words (default 4) to one output word. The ' +
+          'easiest meaningful target in the whole suite -- three XOR opcodes plus the ' +
+          'load/store overhead. A useful "is everything wired up correctly" smoke test ' +
+          'and a tiny subroutine for downstream signature/digest features.',
+        image: '/img/parity_evaluator_pipe.png',
+        evaluatorType: 'ParityEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'width', label: 'Words to XOR (2-8)', type: 'int', default: 4, min: 2, max: 8},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 800, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, width: v.width,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, width: p.width || 4,
+          max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'BitReverseEvaluatorPipe',
+        label: 'Bit-Reverse Evaluator',
+        description:
+          'Primitive gym: reverse the bit order of a single 32-bit input word (bit 0 ' +
+          'becomes bit 31, etc.). Solvable in ~10-30 opcodes with shift+mask, or via the ' +
+          'classic 5-stage Hacker\'s Delight swap pattern. Bit-Hamming scoring fits ' +
+          'perfectly because the output is a full bitfield. A nice mid-difficulty target ' +
+          'that pulls the population toward the shift/mask opcodes.',
+        image: '/img/bit_reverse_evaluator_pipe.png',
+        evaluatorType: 'BitReverseEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, max_steps_per_trial: p.max_steps_per_trial,
+        }),
+      }),
+      numericEvaluatorPipe({
+        type: 'MinimumEvaluatorPipe',
+        label: 'Minimum Evaluator',
+        description:
+          'Primitive gym: return the smallest of N input words. Pushes the GA to ' +
+          'discover the compare-and-swap pattern (CompareLessThan + branch + variable ' +
+          'reassignment). Scoring uses log-scale numeric distance so "off by one" scores ' +
+          'much closer to 1.0 than "off by a million" -- the gradient stays meaningful ' +
+          'across the full uint32 range.',
+        image: '/img/minimum_evaluator_pipe.png',
+        evaluatorType: 'MinimumEvaluator',
+        extraEvaluatorFields: [
+          {name: 'trial_count', label: 'Trials per evaluation', type: 'int', default: 8, min: 1, max: 64},
+          {name: 'width', label: 'Inputs to compare (2-8)', type: 'int', default: 4, min: 2, max: 8},
+          {name: 'max_steps_per_trial', label: 'VM steps per trial', type: 'int', default: 1500, min: 1},
+        ],
+        evaluatorBuild: (v) => ({
+          trial_count: v.trial_count, width: v.width,
+          max_steps_per_trial: v.max_steps_per_trial,
+        }),
+        evaluatorParse: (p) => ({
+          trial_count: p.trial_count, width: p.width || 4,
           max_steps_per_trial: p.max_steps_per_trial,
         }),
       }),
@@ -449,7 +850,9 @@ export const PIPE_TYPE_DEFINITIONS = [
     description:
       'Splits a single input stream across several output slots. Round-robin spreads work ' +
       'evenly across parallel downstream branches; broadcast copies every candidate to ' +
-      'every output (useful when evaluating the same population against several tasks).',
+      'every output (useful when evaluating the same population against several tasks); ' +
+      'least-loaded routes to whichever output has the shortest queue, which keeps a ' +
+      'slow branch from starving fast ones when downstream throughput is asymmetric.',
     image: '/img/demultiplexer_pipe.png',
     inputs: 1,
     outputs: (params) => Math.max(1, Math.min(16, Number(params.output_slots || 2))),
@@ -464,8 +867,9 @@ export const PIPE_TYPE_DEFINITIONS = [
             label: 'Distribution strategy',
             type: 'enum',
             options: [
-              {value: 'round_robin', label: 'Round-robin (one candidate per branch)'},
+              {value: 'round_robin', label: 'Round-robin (one candidate per branch, strict back-pressure)'},
               {value: 'broadcast', label: 'Broadcast (every branch sees every candidate)'},
+              {value: 'least_loaded', label: 'Least-loaded (skip slow/full branches)'},
             ],
             default: 'round_robin',
           },
@@ -481,6 +885,42 @@ export const PIPE_TYPE_DEFINITIONS = [
       max_candidates: params.max_candidates,
       output_slots: params.output_slots,
       strategy: params.strategy,
+    }),
+  },
+  {
+    type: 'FilterPipe',
+    label: 'Filter (by fitness)',
+    description:
+      'Routes each incoming candidate to one of two outputs based on its score: ' +
+      'strictly below the threshold goes to output 0 (reject branch), equal-or-above ' +
+      'goes to output 1 (pass branch). Useful for peeling survivors off into a ' +
+      'storage sink or a promotion stage while feeding the rest back through a ' +
+      'multiplexer for another round of mutation.',
+    image: '/img/filter_pipe.png',
+    inputs: 1,
+    outputs: 2,
+    sections: [
+      {
+        title: 'Filter',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per slot', type: 'int', default: 50, min: 1},
+          {
+            name: 'threshold',
+            label: 'Fitness threshold (score \u2265 passes; score < rejects)',
+            type: 'float',
+            default: 0.5,
+            step: 0.01,
+          },
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      threshold: values.threshold,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      threshold: params.threshold,
     }),
   },
   {
@@ -548,6 +988,48 @@ export const PIPE_TYPE_DEFINITIONS = [
       window_size: params.window_size,
     }),
   },
+  {
+    type: 'ScoreGraphPipe',
+    label: 'Score Graph',
+    description:
+      'Passthrough probe that records every candidate score along with the wall-clock ' +
+      'time it was seen, then renders the resulting time-series as a sparkline on hover ' +
+      'and a full-size line graph in the right-side summaries panel. Adjustable time ' +
+      'window; resets on pipeline restart. Pure observer -- forwards everything, drops ' +
+      'nothing.',
+    image: '/img/score_graph_pipe.png',
+    inputs: 1,
+    outputs: 1,
+    sections: [
+      {
+        title: 'Buffer',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per cycle', type: 'int', default: 50, min: 1},
+        ],
+      },
+      {
+        title: 'Time-series window',
+        // Most users will be happy with the defaults; only experts care to tune them.
+        collapsedByDefault: true,
+        fields: [
+          {name: 'window_seconds', label: 'Graph window (s, 0 = default 60s)',
+           type: 'float', default: 60.0, min: 0, step: 1.0},
+          {name: 'max_samples', label: 'Max samples (0 = default 1024)',
+           type: 'int', default: 1024, min: 0},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      window_seconds: values.window_seconds,
+      max_samples: values.max_samples,
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      window_seconds: params.window_seconds != null ? params.window_seconds : 60.0,
+      max_samples: params.max_samples != null ? params.max_samples : 1024,
+    }),
+  },
 ];
 
 // Build a flat values object for the form when editing a pipe. Falls back to the
@@ -577,6 +1059,17 @@ export function findPipeDefinition(pipe_json) {
       MazeEvaluator: 'MazeEvaluatorPipe',
       AdderEvaluator: 'AdderEvaluatorPipe',
       MaximumEvaluator: 'MaximumEvaluatorPipe',
+      IdentityEvaluator: 'IdentityEvaluatorPipe',
+      BitwiseEvaluator: 'BitwiseEvaluatorPipe',
+      RotateEvaluator: 'RotateEvaluatorPipe',
+      Sha256SigmaEvaluator: 'Sha256SigmaEvaluatorPipe',
+      Sha256ChEvaluator: 'Sha256ChEvaluatorPipe',
+      PopcountEvaluator: 'PopcountEvaluatorPipe',
+      ParityEvaluator: 'ParityEvaluatorPipe',
+      BitReverseEvaluator: 'BitReverseEvaluatorPipe',
+      MinimumEvaluator: 'MinimumEvaluatorPipe',
+      Sha256MajEvaluator: 'Sha256MajEvaluatorPipe',
+      Sha256RoundEvaluator: 'Sha256RoundEvaluatorPipe',
     }[firstType];
     if (specialized) {
       return PIPE_TYPE_DEFINITIONS.find(def => def.type === specialized);

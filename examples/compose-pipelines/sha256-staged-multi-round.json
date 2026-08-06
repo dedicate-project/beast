@@ -1,0 +1,202 @@
+{
+  "name": "SHA-256 Round (staged: single-round survivors feed multi-round)",
+  "model": {
+    "pipes": {
+      "factory_a": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 24,
+          "max_size": 400,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0
+        }
+      },
+      "eval_a_single_round": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 24,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "Sha256RoundEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "trial_count": 8,
+              "round_constant_index": 0,
+              "round_constants_mode": "cycle_all",
+              "rounds_per_trial": 1,
+              "max_steps_per_trial": 4000
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 16,
+            "crossover_probability": 0.7,
+            "mutation_probability": 0.05,
+            "elitism": true,
+            "byte_mutation_share": 0.25,
+            "variable_count": 32,
+            "string_table_size": 0,
+            "string_table_item_length": 0,
+            "max_genome_bytes": 4096,
+            "starting_program_size": 256,
+            "opcode_weights": {
+              "10": 4.0,
+              "13": 3.0,
+              "28": 2.0,
+              "29": 2.0,
+              "30": 2.0,
+              "31": 3.0,
+              "32": 2.0,
+              "33": 4.0,
+              "34": 4.0,
+              "35": 4.0
+            }
+          }
+        }
+      },
+      "stats_a": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 24, "window_size": 256 }
+      },
+      "fan_a": {
+        "type": "FanPipe",
+        "parameters": { "max_candidates": 24, "window_seconds": 2.0 }
+      },
+      "sink_a_survivors": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": {
+          "max_candidates": 24,
+          "path": "/tmp/beast-sha256-staged-stage-a-survivors.json",
+          "top_k": 16
+        }
+      },
+
+      "source_b_seed": {
+        "type": "ProgramStorageSourcePipe",
+        "parameters": {
+          "max_candidates": 16,
+          "path": "/tmp/beast-sha256-staged-stage-a-survivors.json",
+          "loop": true
+        }
+      },
+      "eval_b_multi_round": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 16,
+          "memory_variables": 32,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.55,
+          "evaluators": [{
+            "type": "Sha256RoundEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "trial_count": 4,
+              "round_constant_index": 0,
+              "round_constants_mode": "cycle_all",
+              "rounds_per_trial": 2,
+              "max_steps_per_trial": 2000
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 10,
+            "crossover_probability": 0.7,
+            "mutation_probability": 0.05,
+            "elitism": true,
+            "byte_mutation_share": 0.25,
+            "variable_count": 32,
+            "string_table_size": 0,
+            "string_table_item_length": 0,
+            "max_genome_bytes": 4096,
+            "starting_program_size": 256,
+            "opcode_weights": {
+              "10": 4.0,
+              "13": 3.0,
+              "28": 2.0,
+              "29": 2.0,
+              "30": 2.0,
+              "31": 3.0,
+              "32": 2.0,
+              "33": 4.0,
+              "34": 4.0,
+              "35": 4.0
+            }
+          }
+        }
+      },
+      "filter_b_above_random": {
+        "type": "FilterPipe",
+        "parameters": {
+          "max_candidates": 16,
+          "threshold": 0.55
+        }
+      },
+      "discard_b_noise": {
+        "type": "NullSinkPipe",
+        "parameters": { "max_candidates": 50 }
+      },
+      "stats_b": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 16, "window_size": 128 }
+      },
+      "graph_b": {
+        "type": "ScoreGraphPipe",
+        "parameters": {
+          "max_candidates": 16,
+          "window_seconds": 120.0,
+          "max_samples": 1024
+        }
+      },
+      "fan_b": {
+        "type": "FanPipe",
+        "parameters": { "max_candidates": 16, "window_seconds": 2.0 }
+      },
+      "sink_b_best": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": {
+          "max_candidates": 16,
+          "path": "/tmp/beast-sha256-staged-stage-b-best.json",
+          "top_k": 16
+        }
+      }
+    },
+    "connections": [
+      {"source_pipe": "factory_a",             "source_slot": 0, "destination_pipe": "eval_a_single_round",  "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "eval_a_single_round",   "source_slot": 0, "destination_pipe": "stats_a",              "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "stats_a",               "source_slot": 0, "destination_pipe": "fan_a",                "destination_slot": 0, "buffer_size": 24},
+      {"source_pipe": "fan_a",                 "source_slot": 0, "destination_pipe": "sink_a_survivors",     "destination_slot": 0, "buffer_size": 24},
+
+      {"source_pipe": "source_b_seed",         "source_slot": 0, "destination_pipe": "eval_b_multi_round",   "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "eval_b_multi_round",    "source_slot": 0, "destination_pipe": "filter_b_above_random","destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "filter_b_above_random", "source_slot": 0, "destination_pipe": "discard_b_noise",      "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "filter_b_above_random", "source_slot": 1, "destination_pipe": "stats_b",              "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "stats_b",               "source_slot": 0, "destination_pipe": "graph_b",              "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "graph_b",               "source_slot": 0, "destination_pipe": "fan_b",                "destination_slot": 0, "buffer_size": 16},
+      {"source_pipe": "fan_b",                 "source_slot": 0, "destination_pipe": "sink_b_best",          "destination_slot": 0, "buffer_size": 16}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "factory_a":             { "position": { "x":   40, "y": 140 } },
+      "eval_a_single_round":   { "position": { "x":  220, "y": 140 } },
+      "stats_a":               { "position": { "x":  420, "y": 140 } },
+      "fan_a":                 { "position": { "x":  600, "y": 140 } },
+      "sink_a_survivors":      { "position": { "x":  780, "y": 140 } },
+
+      "source_b_seed":         { "position": { "x":   40, "y": 360 } },
+      "eval_b_multi_round":    { "position": { "x":  220, "y": 360 } },
+      "filter_b_above_random": { "position": { "x":  420, "y": 360 } },
+      "discard_b_noise":       { "position": { "x":  600, "y": 280 } },
+      "stats_b":               { "position": { "x":  600, "y": 440 } },
+      "graph_b":               { "position": { "x":  780, "y": 440 } },
+      "fan_b":                 { "position": { "x":  960, "y": 440 } },
+      "sink_b_best":           { "position": { "x": 1140, "y": 440 } }
+    }
+  }
+}

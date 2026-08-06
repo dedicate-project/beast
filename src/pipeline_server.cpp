@@ -6,9 +6,23 @@
 #include <iomanip>
 #include <sstream>
 
+// Standard
+#include <filesystem>
+#include <fstream>
+#include <set>
+
+// Third-party
+#include <nlohmann/json.hpp>
+
 // Internal
+#include <beast/pipes/evolution_pipe.hpp>
 #include <beast/pipes/fan_pipe.hpp>
+#include <beast/pipes/program_storage_sink_pipe.hpp>
+#include <beast/pipes/program_storage_source_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
+#include <beast/pipes/score_graph_pipe.hpp>
+#include <beast/program_c_codegen.hpp>
+#include <beast/program_disassembler.hpp>
 #include <beast/time_functions.hpp>
 #include <beast/version.hpp>
 
@@ -242,8 +256,53 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
         // alongside the throughput numbers. Other pipe types don't populate the field.
         const auto pipe_iter = pipes_by_name.find(pipe_pair.first);
         if (pipe_iter != pipes_by_name.end()) {
+          // Per-slot fill state: the UI renders this as a coloured indicator next to
+          // each port so the user can see at a glance which ports are saturated /
+          // back-pressured. Reported as both the absolute count and the per-slot
+          // capacity so the client can render however it likes (percentage, raw, ...).
+          // The capacity is the pipe's max_candidates -- the same threshold every
+          // pipe's input/output slot uses for saturation decisions.
+          const auto& pipe_ptr = pipe_iter->second;
+          const uint32_t capacity = pipe_ptr->getMaxCandidates();
+          pipe_item["max_candidates"] = capacity;
+          {
+            crow::json::wvalue input_fills = crow::json::wvalue::list();
+            const uint32_t input_slot_count = pipe_ptr->getInputSlotCount();
+            for (uint32_t slot = 0; slot < input_slot_count; ++slot) {
+              input_fills[slot] = pipe_ptr->getInputSlotAmount(slot);
+            }
+            pipe_item["input_fills"] = std::move(input_fills);
+          }
+          {
+            crow::json::wvalue output_fills = crow::json::wvalue::list();
+            const uint32_t output_slot_count = pipe_ptr->getOutputSlotCount();
+            for (uint32_t slot = 0; slot < output_slot_count; ++slot) {
+              output_fills[slot] = pipe_ptr->getOutputSlotAmount(slot);
+            }
+            pipe_item["output_fills"] = std::move(output_fills);
+          }
+          // EvolutionPipe (and its subclass EvaluatorPipe) surfaces cycle progress so
+          // the UI can render a progress bar under each evolution-stage block. The
+          // bursts-then-silence pattern of long evolve() cycles makes the rest of the
+          // UI look idle; the progress bar gives the user a "this pipe IS working,
+          // here's how far along it is" signal that would otherwise have to be
+          // inferred from rate counters.
+          if (const auto evolution_pipe =
+                  std::dynamic_pointer_cast<EvolutionPipe>(pipe_ptr)) {
+            const auto prog = evolution_pipe->getProgress();
+            crow::json::wvalue progress_json;
+            progress_json["cycle_index"] = prog.cycle_index;
+            progress_json["currently_running"] = prog.currently_running;
+            progress_json["evaluations_this_cycle"] = prog.evaluations_this_cycle;
+            progress_json["expected_evaluations_this_cycle"] =
+                prog.expected_evaluations_this_cycle;
+            progress_json["seconds_in_cycle"] = prog.seconds_in_cycle;
+            progress_json["last_cycle_seconds"] = prog.last_cycle_seconds;
+            progress_json["last_cycle_best_score"] = prog.last_cycle_best_score;
+            pipe_item["evolution_progress"] = std::move(progress_json);
+          }
           if (const auto summary_pipe =
-                  std::dynamic_pointer_cast<ResultsSummaryPipe>(pipe_iter->second)) {
+                  std::dynamic_pointer_cast<ResultsSummaryPipe>(pipe_ptr)) {
             const auto summary = summary_pipe->getSummary();
             crow::json::wvalue summary_json;
             summary_json["count_total"] = summary.count_total;
@@ -258,7 +317,7 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
             summary_json["window_size"] = summary_pipe->getWindowSize();
             pipe_item["summary"] = std::move(summary_json);
           }
-          if (const auto fan_pipe = std::dynamic_pointer_cast<FanPipe>(pipe_iter->second)) {
+          if (const auto fan_pipe = std::dynamic_pointer_cast<FanPipe>(pipe_ptr)) {
             const auto throughput = fan_pipe->getThroughput();
             crow::json::wvalue throughput_json;
             throughput_json["total_seen"] = throughput.total_seen;
@@ -266,6 +325,31 @@ crow::json::wvalue PipelineServer::servePipelineAction(const crow::request& req,
             throughput_json["window_seconds"] = throughput.window_seconds;
             throughput_json["candidates_per_second"] = throughput.candidates_per_second;
             pipe_item["throughput"] = std::move(throughput_json);
+          }
+          // ScoreGraphPipe surfaces the rolling time-series here. We materialise the
+          // samples list inline so the UI can render the sparkline without a follow-up
+          // request; the per-poll JSON payload grows by ~24 bytes per sample (timestamp +
+          // score + JSON brackets), which at the default 1024-sample cap is ~24 KB per
+          // ScoreGraph pipe per poll. That's small enough to live in the same payload as
+          // the other metrics; if it ever becomes a hotspot the natural fix is to gate
+          // samples behind a `?include_score_graph_samples=1` query parameter.
+          if (const auto graph_pipe =
+                  std::dynamic_pointer_cast<ScoreGraphPipe>(pipe_ptr)) {
+            const auto snap = graph_pipe->getSnapshot();
+            crow::json::wvalue graph_json;
+            graph_json["window_seconds"] = snap.window_seconds;
+            graph_json["total_seen"] = snap.total_seen;
+            graph_json["min_score"] = snap.min_score;
+            graph_json["max_score"] = snap.max_score;
+            graph_json["mean_score"] = snap.mean_score;
+            graph_json["last_score"] = snap.last_score;
+            for (size_t si = 0; si < snap.samples.size(); ++si) {
+              crow::json::wvalue sample_json;
+              sample_json["t"] = snap.samples[si].t_seconds;
+              sample_json["score"] = snap.samples[si].score;
+              graph_json["samples"][si] = std::move(sample_json);
+            }
+            pipe_item["score_graph"] = std::move(graph_json);
           }
         }
         value["pipes"][idx] = std::move(pipe_item);
@@ -519,6 +603,243 @@ crow::json::wvalue PipelineServer::serveAllPipelines() const {
     value[idx] = std::move(pipeline_item);
     idx++;
   }
+  return value;
+}
+
+namespace {
+
+/// One reference to a ledger from a single pipe in a single pipeline. The UI uses this
+/// to show "where is this file being read/written" without the user having to crawl
+/// through every pipeline.
+struct LedgerReference {
+  uint32_t pipeline_id;
+  std::string pipeline_name;
+  std::string pipe_name;
+  std::string role; // "sink" or "source"
+};
+
+/// Aggregate of every reference to a particular ledger path. Built once per
+/// `/api/v1/program-collection` request by walking every pipeline.
+struct LedgerInfo {
+  std::vector<LedgerReference> references;
+};
+
+/// Load a ledger JSON file from disk and return the parsed entries, sorted by
+/// descending score. Tolerant: missing/unreadable/malformed files return empty.
+std::vector<Pipe::OutputItem> loadLedgerFromDisk(const std::string& path) {
+  std::vector<Pipe::OutputItem> entries;
+  if (path.empty()) {
+    return entries;
+  }
+  std::ifstream in(path);
+  if (!in) {
+    return entries;
+  }
+  try {
+    nlohmann::json doc;
+    in >> doc;
+    if (!doc.is_array()) {
+      return entries;
+    }
+    for (const auto& entry : doc) {
+      if (!entry.contains("data") || !entry.contains("score")) {
+        continue;
+      }
+      Pipe::OutputItem item;
+      item.score = entry["score"].get<double>();
+      item.data = entry["data"].get<std::vector<unsigned char>>();
+      entries.push_back(std::move(item));
+    }
+  } catch (...) {
+    // Same best-effort behaviour as ProgramStorageSinkPipe: a malformed ledger isn't
+    // worth surfacing as an error -- the UI just shows an empty entry list and the
+    // user can investigate manually if they care.
+    return {};
+  }
+  std::sort(entries.begin(), entries.end(),
+            [](const Pipe::OutputItem& a, const Pipe::OutputItem& b) { return a.score > b.score; });
+  return entries;
+}
+
+} // namespace
+
+crow::json::wvalue PipelineServer::serveProgramCollection() const {
+  // Build an ordered map of ledger path -> references so the JSON output is stable
+  // across requests (helps the UI render without rearranging rows).
+  std::map<std::string, LedgerInfo> ledgers;
+  for (const auto& managed : pipeline_manager_.getPipelines()) {
+    for (const auto& pipe : managed.pipeline->getPipes()) {
+      if (!pipe || !pipe->pipe) {
+        continue;
+      }
+      std::string path;
+      std::string role;
+      if (const auto sink = std::dynamic_pointer_cast<ProgramStorageSinkPipe>(pipe->pipe)) {
+        path = sink->getPath();
+        role = "sink";
+      } else if (const auto source =
+                     std::dynamic_pointer_cast<ProgramStorageSourcePipe>(pipe->pipe)) {
+        path = source->getPath();
+        role = "source";
+      }
+      if (path.empty()) {
+        continue;
+      }
+      ledgers[path].references.push_back(
+          LedgerReference{managed.id, managed.name, pipe->name, role});
+    }
+  }
+
+  crow::json::wvalue value;
+  value["status"] = "success";
+  value["ledgers"] = crow::json::wvalue::list();
+  size_t li = 0;
+  for (const auto& [path, info] : ledgers) {
+    crow::json::wvalue entry;
+    entry["path"] = path;
+    // File-system metadata is read fresh each time so the UI shows up-to-date
+    // existence / size information; cheap because there's usually only a handful of
+    // ledgers per session.
+    std::error_code ec;
+    const auto fs_path = std::filesystem::path(path);
+    const bool exists = std::filesystem::exists(fs_path, ec);
+    entry["exists"] = exists;
+    if (exists) {
+      const auto size = std::filesystem::file_size(fs_path, ec);
+      entry["size_bytes"] = static_cast<uint64_t>(ec ? 0 : size);
+    } else {
+      entry["size_bytes"] = static_cast<uint64_t>(0);
+    }
+    // Quick program count via loading + counting. Cheap for typical top-K = 10
+    // ledgers; if a future workflow ships ledgers with thousands of entries we'd want
+    // to swap this for a streaming line-counter, but not yet.
+    entry["program_count"] = static_cast<uint64_t>(loadLedgerFromDisk(path).size());
+
+    entry["references"] = crow::json::wvalue::list();
+    for (size_t ri = 0; ri < info.references.size(); ++ri) {
+      crow::json::wvalue ref;
+      ref["pipeline_id"] = info.references[ri].pipeline_id;
+      ref["pipeline_name"] = info.references[ri].pipeline_name;
+      ref["pipe_name"] = info.references[ri].pipe_name;
+      ref["role"] = info.references[ri].role;
+      entry["references"][ri] = std::move(ref);
+    }
+
+    value["ledgers"][li] = std::move(entry);
+    ++li;
+  }
+  return value;
+}
+
+crow::json::wvalue PipelineServer::serveLedger(const crow::request& req) const {
+  crow::json::wvalue value;
+  auto* const path_param = req.url_params.get("path");
+  if (path_param == nullptr) {
+    value["status"] = "failed";
+    value["error"] = "missing 'path' query parameter";
+    return value;
+  }
+  const std::string path(path_param);
+
+  // Validate the requested path against the known set: anything else is rejected so
+  // this endpoint can't be turned into a generic file-read primitive. We rebuild the
+  // set on each call (cheap, small) instead of caching it, which would need
+  // invalidation any time a pipeline changes its storage path.
+  std::set<std::string> known_paths;
+  for (const auto& managed : pipeline_manager_.getPipelines()) {
+    for (const auto& pipe : managed.pipeline->getPipes()) {
+      if (!pipe || !pipe->pipe) {
+        continue;
+      }
+      if (const auto sink = std::dynamic_pointer_cast<ProgramStorageSinkPipe>(pipe->pipe)) {
+        if (!sink->getPath().empty()) {
+          known_paths.insert(sink->getPath());
+        }
+      } else if (const auto src =
+                     std::dynamic_pointer_cast<ProgramStorageSourcePipe>(pipe->pipe)) {
+        if (!src->getPath().empty()) {
+          known_paths.insert(src->getPath());
+        }
+      }
+    }
+  }
+  if (known_paths.find(path) == known_paths.end()) {
+    value["status"] = "failed";
+    value["error"] = "path is not referenced by any current pipeline";
+    return value;
+  }
+
+  const auto entries = loadLedgerFromDisk(path);
+  value["status"] = "success";
+  value["path"] = path;
+  value["programs"] = crow::json::wvalue::list();
+  for (size_t i = 0; i < entries.size(); ++i) {
+    crow::json::wvalue program_json;
+    program_json["score"] = entries[i].score;
+    program_json["size"] = static_cast<uint64_t>(entries[i].data.size());
+    // Embed the raw bytes as an array of unsigned 8-bit integers. The UI uses this to
+    // POST back when requesting the C-code conversion -- saves round-tripping through
+    // a file path or hex-encoded string.
+    program_json["data"] = crow::json::wvalue::list();
+    for (size_t b = 0; b < entries[i].data.size(); ++b) {
+      program_json["data"][b] = static_cast<uint64_t>(entries[i].data[b]);
+    }
+
+    // Inline disassembly so the UI can show the bytecode view immediately on expand,
+    // no extra round-trip needed. Small relative to the bytes themselves.
+    const auto disasm = ProgramDisassembler::disassemble(entries[i].data);
+    program_json["disassembly_clean"] = disasm.clean;
+    program_json["disassembly_trailing_garbage_bytes"] = disasm.trailing_garbage_bytes;
+    program_json["disassembly"] = crow::json::wvalue::list();
+    for (size_t di = 0; di < disasm.instructions.size(); ++di) {
+      const auto& inst = disasm.instructions[di];
+      crow::json::wvalue inst_json;
+      inst_json["offset"] = inst.offset;
+      inst_json["length"] = inst.length;
+      inst_json["mnemonic"] = inst.mnemonic;
+      inst_json["text"] = inst.text;
+      inst_json["bytes_hex"] = inst.bytes_hex;
+      program_json["disassembly"][di] = std::move(inst_json);
+    }
+    value["programs"][i] = std::move(program_json);
+  }
+  return value;
+}
+
+crow::json::wvalue PipelineServer::serveCCodeForProgram(const crow::request& req) {
+  crow::json::wvalue value;
+  std::vector<unsigned char> bytes;
+  std::string source;
+  try {
+    const auto body = nlohmann::json::parse(req.body);
+    if (!body.contains("data") || !body["data"].is_array()) {
+      value["status"] = "failed";
+      value["error"] = "missing or non-array 'data' field";
+      return value;
+    }
+    for (const auto& byte_json : body["data"]) {
+      // Accept both unsigned (0..255) and signed (-128..127) byte representations
+      // since the ledger JSON serialises as int. We normalise into uint8 here.
+      const auto raw = byte_json.get<int64_t>();
+      if (raw < -128 || raw > 255) {
+        value["status"] = "failed";
+        value["error"] = "byte value out of range";
+        return value;
+      }
+      bytes.push_back(static_cast<unsigned char>(raw & 0xFF));
+    }
+    if (body.contains("source") && body["source"].is_string()) {
+      source = body["source"].get<std::string>();
+    }
+  } catch (const std::exception& ex) {
+    value["status"] = "failed";
+    value["error"] = std::string("invalid request body: ") + ex.what();
+    return value;
+  }
+  ProgramCCodeGenerator::Options opts;
+  opts.source_description = source;
+  value["status"] = "success";
+  value["c_code"] = ProgramCCodeGenerator::generate(bytes, opts);
   return value;
 }
 

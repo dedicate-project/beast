@@ -1,0 +1,454 @@
+{
+  "metadata": {
+    "pipes": {
+      "Mult1": {
+        "position": {
+          "x": 114,
+          "y": 138
+        }
+      },
+      "Source1": {
+        "position": {
+          "x": 3,
+          "y": 169
+        }
+      },
+      "Source2": {
+        "position": {
+          "x": 3,
+          "y": 223
+        }
+      },
+      "demult1": {
+        "position": {
+          "x": 1307,
+          "y": 147
+        }
+      },
+      "factory_round": {
+        "position": {
+          "x": 3,
+          "y": 115
+        }
+      },
+      "fan1": {
+        "position": {
+          "x": 220,
+          "y": 138
+        }
+      },
+      "fan2": {
+        "position": {
+          "x": 860,
+          "y": 154
+        }
+      },
+      "fan3": {
+        "position": {
+          "x": 220,
+          "y": 211
+        }
+      },
+      "fan5": {
+        "position": {
+          "x": 754,
+          "y": 243
+        }
+      },
+      "fan6": {
+        "position": {
+          "x": 1072,
+          "y": 118
+        }
+      },
+      "fan7": {
+        "position": {
+          "x": 1072,
+          "y": 182
+        }
+      },
+      "filter1": {
+        "position": {
+          "x": 966,
+          "y": 154
+        }
+      },
+      "mult2": {
+        "position": {
+          "x": 326,
+          "y": 149
+        }
+      },
+      "null": {
+        "position": {
+          "x": 1178,
+          "y": 118
+        }
+      },
+      "origsource": {
+        "position": {
+          "x": 3,
+          "y": 277
+        }
+      },
+      "ressum": {
+        "position": {
+          "x": 754,
+          "y": 154
+        }
+      },
+      "round_sink": {
+        "position": {
+          "x": 966,
+          "y": 243
+        }
+      },
+      "score": {
+        "position": {
+          "x": 860,
+          "y": 243
+        }
+      },
+      "sha1": {
+        "position": {
+          "x": 554,
+          "y": 152
+        }
+      },
+      "src12": {
+        "position": {
+          "x": 3,
+          "y": 330
+        }
+      }
+    }
+  },
+  "model": {
+    "connections": [
+      {
+        "buffer_size": 50,
+        "destination_pipe": "Mult1",
+        "destination_slot": 0,
+        "source_pipe": "factory_round",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "Mult1",
+        "destination_slot": 1,
+        "source_pipe": "Source1",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "Mult1",
+        "destination_slot": 2,
+        "source_pipe": "Source2",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "fan1",
+        "destination_slot": 0,
+        "source_pipe": "Mult1",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "mult2",
+        "destination_slot": 0,
+        "source_pipe": "fan1",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "mult2",
+        "destination_slot": 1,
+        "source_pipe": "fan3",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "fan6",
+        "destination_slot": 0,
+        "source_pipe": "filter1",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "null",
+        "destination_slot": 0,
+        "source_pipe": "fan6",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "fan7",
+        "destination_slot": 0,
+        "source_pipe": "filter1",
+        "source_slot": 1
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "demult1",
+        "destination_slot": 0,
+        "source_pipe": "fan7",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "fan5",
+        "destination_slot": 0,
+        "source_pipe": "demult1",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "fan3",
+        "destination_slot": 0,
+        "source_pipe": "demult1",
+        "source_slot": 1
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "Mult1",
+        "destination_slot": 3,
+        "source_pipe": "origsource",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "Mult1",
+        "destination_slot": 4,
+        "source_pipe": "src12",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "score",
+        "destination_slot": 0,
+        "source_pipe": "fan5",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "round_sink",
+        "destination_slot": 0,
+        "source_pipe": "score",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "fan2",
+        "destination_slot": 0,
+        "source_pipe": "ressum",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "filter1",
+        "destination_slot": 0,
+        "source_pipe": "fan2",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "sha1",
+        "destination_slot": 0,
+        "source_pipe": "mult2",
+        "source_slot": 0
+      },
+      {
+        "buffer_size": 50,
+        "destination_pipe": "ressum",
+        "destination_slot": 0,
+        "source_pipe": "sha1",
+        "source_slot": 0
+      }
+    ],
+    "pipes": {
+      "Mult1": {
+        "parameters": {
+          "input_slots": 5,
+          "max_candidates": 50
+        },
+        "type": "MultiplexerPipe"
+      },
+      "Source1": {
+        "parameters": {
+          "loop": true,
+          "max_candidates": 50,
+          "path": "/tmp/beast-maze-large.json"
+        },
+        "type": "ProgramStorageSourcePipe"
+      },
+      "Source2": {
+        "parameters": {
+          "loop": true,
+          "max_candidates": 50,
+          "path": "/tmp/beast-adder-promoted.json"
+        },
+        "type": "ProgramStorageSourcePipe"
+      },
+      "demult1": {
+        "parameters": {
+          "max_candidates": 50,
+          "output_slots": 2,
+          "strategy": "least_loaded"
+        },
+        "type": "DemultiplexerPipe"
+      },
+      "factory_round": {
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 16,
+          "max_size": 500,
+          "memory_variables": 32,
+          "string_table_item_length": 0,
+          "string_table_items": 0
+        },
+        "type": "ProgramFactoryPipe"
+      },
+      "fan1": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_seconds": 2.0
+        },
+        "type": "FanPipe"
+      },
+      "fan2": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_seconds": 2.0
+        },
+        "type": "FanPipe"
+      },
+      "fan3": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_seconds": 2.0
+        },
+        "type": "FanPipe"
+      },
+      "fan5": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_seconds": 2.0
+        },
+        "type": "FanPipe"
+      },
+      "fan6": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_seconds": 2.0
+        },
+        "type": "FanPipe"
+      },
+      "fan7": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_seconds": 2.0
+        },
+        "type": "FanPipe"
+      },
+      "filter1": {
+        "parameters": {
+          "max_candidates": 50,
+          "threshold": 0.5
+        },
+        "type": "FilterPipe"
+      },
+      "mult2": {
+        "parameters": {
+          "input_slots": 2,
+          "max_candidates": 50
+        },
+        "type": "MultiplexerPipe"
+      },
+      "null": {
+        "parameters": {
+          "max_candidates": 100
+        },
+        "type": "NullSinkPipe"
+      },
+      "origsource": {
+        "parameters": {
+          "loop": true,
+          "max_candidates": 50,
+          "path": "/tmp/beast-sha-round-2.json"
+        },
+        "type": "ProgramStorageSourcePipe"
+      },
+      "ressum": {
+        "parameters": {
+          "max_candidates": 50,
+          "window_size": 256
+        },
+        "type": "ResultsSummaryPipe"
+      },
+      "round_sink": {
+        "parameters": {
+          "max_candidates": 16,
+          "path": "/tmp/beast-sha-round-2.json",
+          "top_k": 8
+        },
+        "type": "ProgramStorageSinkPipe"
+      },
+      "score": {
+        "parameters": {
+          "max_candidates": 50,
+          "max_samples": 1024,
+          "window_seconds": 60.0
+        },
+        "type": "ScoreGraphPipe"
+      },
+      "sha1": {
+        "parameters": {
+          "backend": "gpu",
+          "cut_off_score": 0.0,
+          "evaluators": [
+            {
+              "invert_logic": false,
+              "parameters": {
+                "max_steps_per_trial": 4000,
+                "round_constant_index": 0,
+                "round_constants_mode": "random_per_trial",
+                "rounds_per_trial": 2,
+                "trial_count": 4
+              },
+              "type": "Sha256RoundEvaluator",
+              "weight": 1.0
+            }
+          ],
+          "evolution_parameters": {
+            "byte_mutation_share": 0.2,
+            "crossover_probability": 0.7,
+            "elitism": true,
+            "generations": 50,
+            "max_genome_bytes": 2048,
+            "mutation_probability": 0.05,
+            "opcode_weights": {},
+            "starting_program_size": 0,
+            "string_table_item_length": 16,
+            "string_table_size": 4,
+            "variable_count": 16
+          },
+          "max_candidates": 1024,
+          "memory_variables": 32,
+          "string_table_item_length": 0,
+          "string_table_items": 0
+        },
+        "type": "EvaluatorPipe"
+      },
+      "src12": {
+        "parameters": {
+          "loop": true,
+          "max_candidates": 50,
+          "path": "/tmp/beast-maze-large.json"
+        },
+        "type": "ProgramStorageSourcePipe"
+      }
+    }
+  },
+  "name": "SHA-256 Round (subroutine-assisted)"
+}
