@@ -60,6 +60,115 @@ losing accumulated progress: editing knobs in the UI no longer wipes the
 calls), and `ProgramStorageSinkPipe` keeps a JSON ledger you can reload via
 `ProgramStorageSourcePipe` after a server restart.
 
+### `taskworld-train-verify.json`
+
+The flagship pipeline for evolving **autonomous agents** that navigate a partially
+observable grid world and solve multi-step tasks (fetch keys, open locked doors,
+collect items, reach a goal), then **verifies that the agents generalise to worlds they
+never trained on**.
+
+```
+factory ────┐
+            ├─> mux -> stage1 -> … -> stage3 -> stats3 -> stage4 -> stats4 -> fanout ─┬─> champions (ledger)
+warm_start ─┘                                                                        └─> verify (held-out report)
+```
+
+Four `TaskWorldEvaluator` stages form an escalating curriculum -- stage 1 is pure
+navigation (5x5, reach the goal), stage 2 adds one collectible item (6x6), stage 3
+is the full task (7x7, one item plus a key and a locked door, denser walls), and
+**stage 4 is partial observability**: the global goal compass is switched off
+(`"goal_compass": false`) so the agent can no longer read a bearing to the goal from
+anywhere on the map. It must instead explore, recognise the goal when it falls inside
+its own line-of-sight window, and remember where things are -- the next capability
+frontier once agents can solve the fully-observed task. Stage 4 deliberately drops back
+to a door-free 7x7 world so that the *only* new variable relative to stage 3 is the
+perception change. Each stage
+seeds its GA population from the finalists streamed by the previous stage, so the
+curriculum warm-starts itself rung by rung. A `ResultsSummaryPipe` between each stage
+exposes the rolling win-rate so you can watch each rung in the UI. The `broadcast`
+`DemultiplexerPipe` at the tail sends every champion to two places: a
+`ProgramStorageSinkPipe` ledger (`/tmp/beast-taskworld-champions.json`) and -- crucially
+-- a `VerificationSinkPipe`.
+
+Champions are recirculated for further evolution through the file-based `warm_start`
+(`ProgramStorageSourcePipe`), which re-reads the champions ledger and feeds it back into
+the `mux` alongside a steady stream of fresh random programs. Keeping the recirculation
+file-based (rather than an in-graph loop-back edge) preserves a constant influx of fresh
+diversity, which matters here: with a noisy, milestone-shaped fitness, flooding the
+population with a stage's own mediocre finalists causes premature convergence, whereas
+fresh randoms keep the search from collapsing onto a "wander in place" local optimum.
+
+**Train / verify split.** Every `TaskWorldEvaluator` addresses worlds through a
+reproducible seed pool: `seed % pool_modulus` selects a residue class, and
+`pool_residues` says which classes this evaluator is allowed to draw. The training
+stages use residues `[1, 2, 3, 4]`; the `verify` sink uses the disjoint residue `[0]`
+with the *same* size and settings as the final rung, stage 4 (7x7, one item,
+compass off). Because the pools are disjoint by
+construction, the score the verification sink reports is a true measure of
+generalisation, and `train_score - mean_score` (written to the report as
+`generalization_gap`) tells you whether the agents are learning to navigate or just
+memorising the training worlds.
+
+**The verification report.** `VerificationSinkPipe` performs **no evolution** -- it
+replays each incoming champion against a fixed set of `verify_worlds` (24 in this
+example) held-out worlds and records per-program `success_rate` (fraction of worlds
+whose task was fully completed), `mean_score`, `mean_items`, the incoming `train_score`,
+and the `generalization_gap`. The top-K programs by success rate are written atomically
+to `/tmp/beast-taskworld-verify.json`.
+
+A short CPU run reaches a champion score around `0.4` on the training curriculum, with
+the held-out verify `mean_score` tracking the `train_score` almost exactly (a
+`generalization_gap` near zero) -- partial-milestone competence that transfers to unseen
+worlds rather than memorised layouts. Full task `success_rate` on the hardest rung needs
+a much longer run (or a larger `radius` / `worlds_per_eval`, the cheapest levers).
+
+**The agent membrane.** Each step, the program reads a line-of-sight window of tile
+codes (`(2*radius+1)^2` variables) plus scalar sensors -- current food, keys held,
+items remaining, a coarse two-axis compass to the goal, and a goal-visible flag -- and
+writes a move (0-3) to a single output variable. Setting `"goal_compass": false` (as
+stage 4 does) pins the two compass sensors to a constant so they carry no signal,
+turning the task partially observable; the local goal-visible flag is untouched, since
+seeing the goal inside the perception window is legitimate observation, not a global
+crutch. Pickups and door-opening happen
+automatically on entering a tile. With `radius = 2` you need at least 32
+`memory_variables`; the example uses 40 to leave a little scratch space. A blocked move
+(wall, edge, or a locked door with no key) is a no-op that the agent survives -- the
+episode is *not* terminated on the first bump -- so a program that navigates well but
+occasionally mis-steps still accrues progress.
+
+**Milestone-shaped fitness.** Rather than a single sparse "reached the goal" bit, the
+score blends completing the task (0.45), fraction of items collected (0.20), fraction
+of doors opened (0.10), how much closer the agent got to its next objective (0.15), and
+efficiency relative to the optimal plan (0.10), renormalised over whichever components
+apply to the stage. On top of that sits a small, capped exploration bonus for entering
+*distinct* cells (not oscillating in place): random VM programs almost never emit a move
+at all, so without a reward for simply moving, every non-solver would score exactly zero
+and the GA would have nothing to select on. The bonus gives evolution a staircase --
+move ⇒ explore ⇒ approach the objective ⇒ complete it -- so stage 1's `ResultsSummary`
+climbs off the floor within a few cycles as the sanity check that evolution is working.
+
+Worlds are guaranteed solvable by construction (keys are always placed before the doors
+they open along the route to the goal) and double-checked by an exact planner, so an
+agent can in principle complete every world it is scored on.
+
+**GPU acceleration.** Each `EvaluatorPipe` stage carries `"backend": "auto"`. When BEAST
+is built with CUDA (`-DBEAST_ENABLE_CUDA=ON`, the default) *and* a device is present,
+`auto` routes the whole generation's evaluation to a CUDA batch evaluator; otherwise it
+transparently falls back to the multi-threaded CPU evaluator, so the same JSON runs
+everywhere. Unlike the SHA-256 GPU path (a "set inputs, run to completion" problem), the
+TaskWorld evaluator is *interactive*, so the **entire episode** runs on the device: the
+grid, line-of-sight perception, movement / pickups / door-unlocking, food, and the
+milestone score all live in the kernel, with one thread per `(genome, world)`. Set
+`"backend": "cpu"` to force the CPU path or `"backend": "gpu"` to require the GPU (which
+still falls back to CPU if the config exceeds the device limits: grid `<= 256` cells,
+`(2*radius+1)^2 + 7 <= 64` so `radius <= 3`, and `<= 8` items). The device path
+reimplements perception / movement / scoring, so its scores are statistically equivalent
+to -- not bit-identical with -- the CPU path (independent world samples, different
+floating-point accumulation order). It delivers roughly a 5x throughput gain over a
+single CPU core and scales with population size; on a many-core host the CPU thread pool
+is still competitive for the small shipped worlds, and the GPU pulls ahead most on
+GPU-heavy / CPU-light machines, larger worlds, and larger populations.
+
 ### `sha256-round.json`
 
 Starting point for evolving a full SHA-256 hash function. This pipeline targets the

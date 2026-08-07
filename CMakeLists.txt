@@ -201,6 +201,7 @@ add_library(${PROJECT_NAME}-evaluators
   src/evaluators/sha256_round_evaluator.cpp
   src/evaluators/sha256_sigma_evaluator.cpp
   src/evaluators/runtime_statistics_evaluator.cpp
+  src/evaluators/task_world_evaluator.cpp
   src/evaluators/operator_usage_evaluator.cpp)
 
 # Pipelines library
@@ -221,7 +222,8 @@ add_library(${PROJECT_NAME}-pipelines
   src/pipes/program_storage_sink_pipe.cpp
   src/pipes/program_storage_source_pipe.cpp
   src/pipes/results_summary_pipe.cpp
-  src/pipes/score_graph_pipe.cpp)
+  src/pipes/score_graph_pipe.cpp
+  src/pipes/verification_sink_pipe.cpp)
 
 set(PROJECT_LIBS ${PROJECT_NAME}-pipelines ${PROJECT_NAME}-evaluators ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm)
 
@@ -276,7 +278,8 @@ if(BEAST_ENABLE_CUDA)
   add_library(${PROJECT_NAME}-cuda
     src/cuda/compiler.cpp
     src/cuda/opcode_coverage.cpp
-    src/cuda/cuda_sha256_round_evaluator.cu)
+    src/cuda/cuda_sha256_round_evaluator.cu
+    src/cuda/cuda_task_world_evaluator.cu)
   # Compute capability 7.0+ covers everything from Volta (V100) forward; Ada (the
   # development host) is 8.9. We compile for a broad range to keep binaries portable;
   # increase the floor (CUDA_ARCHITECTURES list) if a target site doesn't need pre-Ampere.
@@ -295,8 +298,11 @@ if(BEAST_ENABLE_CUDA)
   # Link beast-vm so the compiler can call into ProgramParser. beast-utils stays in
   # PUBLIC so the static lib pulls in the right transitive symbols when consumers
   # depend on us via beast-pipelines.
+  # beast-vm: ProgramParser for the compiler. beast-evaluators + maze: the TaskWorld GPU
+  # evaluator reuses TaskWorldEvaluator's Config/seed-draw policy and maze::TaskWorld world
+  # generation on the host before uploading layouts to the device.
   target_link_libraries(${PROJECT_NAME}-cuda
-    PUBLIC ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm CUDA::cudart)
+    PUBLIC ${PROJECT_NAME}-utils ${PROJECT_NAME}-vm ${PROJECT_NAME}-evaluators maze CUDA::cudart)
   # Make the library available to PROJECT_LIBS consumers so tests / pipelines see it.
   list(APPEND PROJECT_LIBS ${PROJECT_NAME}-cuda)
 endif()
@@ -456,6 +462,9 @@ if(BEAST_BUILD_TESTS)
   declare_test(jumps)
   declare_test(math)
   declare_test(maze_evaluator)
+  declare_test(maze_seeded)
+  declare_test(task_world_evaluator)
+  declare_test(verification_sink_pipe)
   declare_test(misc)
   declare_test(adder_evaluator)
   declare_test(call_subroutine)
@@ -475,6 +484,7 @@ if(BEAST_BUILD_TESTS)
     # a device and skips with a warning when none is present.
     declare_test(cuda_opcode_coverage)
     declare_test(cuda_opcode_parity)
+    declare_test(cuda_task_world)
   endif()
   declare_test(multiplexer_pipe)
   declare_test(null_sink_pipe)

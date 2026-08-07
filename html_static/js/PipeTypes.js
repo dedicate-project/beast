@@ -23,6 +23,33 @@ const evolutionParameterDefaults = {
   opcode_weights: {},
 };
 
+// Parse a comma-separated residue list ("0, 2, 4") into an array of non-negative integers.
+// Falls back to `fallback` when the input is empty or contains no valid entries so the
+// TaskWorld seed pool is never accidentally left without residues.
+function parseResidueList(value, fallback) {
+  if (Array.isArray(value)) {
+    const cleaned = value.map(Number).filter((n) => Number.isInteger(n) && n >= 0);
+    return cleaned.length > 0 ? cleaned : fallback.slice();
+  }
+  if (typeof value !== 'string') {
+    return fallback.slice();
+  }
+  const parsed = value
+    .split(',')
+    .map((part) => parseInt(part.trim(), 10))
+    .filter((n) => Number.isInteger(n) && n >= 0);
+  return parsed.length > 0 ? parsed : fallback.slice();
+}
+
+// Inverse of parseResidueList: render an array of residues back into a comma-separated
+// string for display in the edit form.
+function formatResidueList(value, fallback) {
+  if (Array.isArray(value) && value.length > 0) {
+    return value.join(',');
+  }
+  return fallback;
+}
+
 export const PIPE_TYPE_DEFINITIONS = [
   {
     type: 'ProgramFactoryPipe',
@@ -195,6 +222,156 @@ export const PIPE_TYPE_DEFINITIONS = [
         // Older Maze pipelines predate the backend selector; missing -> CPU so the
         // form populates with a concrete option rather than an empty dropdown.
         backend: params.backend || 'cpu',
+        generations: ga.generations,
+        crossover_probability: ga.crossover_probability,
+        mutation_probability: ga.mutation_probability,
+        byte_mutation_share: ga.byte_mutation_share,
+        elitism: ga.elitism,
+        starting_program_size: ga.starting_program_size,
+        max_genome_bytes: ga.max_genome_bytes,
+      };
+    },
+  },
+  {
+    type: 'TaskWorldEvaluatorPipe',
+    label: 'Task World Evaluator',
+    description:
+      'Wraps an EvaluatorPipe around a TaskWorldEvaluator to evolve agents that navigate a ' +
+      'seeded grid world, fetch keys, open locked doors, collect items, and reach a goal. ' +
+      'Draws worlds from a seed pool so training and verification stay on disjoint worlds.',
+    buildAsType: 'EvaluatorPipe',
+    image: '/img/maze_evaluator_pipe.png',
+    inputs: 1,
+    outputs: 1,
+    sections: [
+      {
+        title: 'Pipe',
+        fields: [
+          {name: 'max_candidates', label: 'Max candidates per cycle', type: 'int', default: 20, min: 1},
+          {name: 'memory_variables', label: 'Memory variables', type: 'int', default: 64, min: 1},
+          {name: 'string_table_items', label: 'String table entries', type: 'int', default: 0, min: 0},
+          {name: 'string_table_item_length', label: 'String table item length', type: 'int', default: 0, min: 0},
+        ],
+      },
+      {
+        title: 'World',
+        fields: [
+          {name: 'rows', label: 'Rows', type: 'int', default: 9, min: 5},
+          {name: 'cols', label: 'Columns', type: 'int', default: 9, min: 5},
+          {name: 'difficulty', label: 'Difficulty (0-1)', type: 'float', default: 0.2, min: 0.0, max: 1.0, step: 0.05},
+        ],
+      },
+      {
+        title: 'Task',
+        fields: [
+          {name: 'num_items', label: 'Items to collect', type: 'int', default: 2, min: 0},
+          {name: 'num_keys', label: 'Keys', type: 'int', default: 0, min: 0},
+          {name: 'num_doors', label: 'Locked doors', type: 'int', default: 0, min: 0},
+          {name: 'num_food', label: 'Food tiles', type: 'int', default: 2, min: 0},
+        ],
+      },
+      {
+        title: 'Perception & budget',
+        fields: [
+          {name: 'radius', label: 'Perception radius', type: 'int', default: 2, min: 1},
+          {name: 'max_steps', label: 'Max VM steps per world', type: 'int', default: 2000, min: 1},
+          {name: 'worlds_per_eval', label: 'Worlds averaged per evaluation', type: 'int', default: 2, min: 1},
+          {name: 'starting_food', label: 'Starting food (0 = world default)', type: 'int', default: 0, min: 0},
+          {name: 'goal_compass', label: 'Global goal compass (off = partial observability)', type: 'bool', default: true},
+        ],
+      },
+      {
+        title: 'Seed pool (train/verify split)',
+        collapsedByDefault: true,
+        fields: [
+          {name: 'seed_base', label: 'Seed base', type: 'int', default: 1, min: 0},
+          {name: 'pool_modulus', label: 'Pool modulus', type: 'int', default: 5, min: 1},
+          {name: 'pool_residues', label: 'Train residues (comma-separated)', type: 'text', default: '1,2,3,4'},
+        ],
+      },
+      {
+        title: 'Selection',
+        fields: [
+          {name: 'cut_off_score', label: 'Cut-off score', type: 'float', default: 0.0, min: 0.0, max: 1.0, step: 0.01},
+        ],
+      },
+      {
+        title: 'Genetic algorithm',
+        collapsedByDefault: true,
+        fields: [
+          {name: 'generations', label: 'Generations per cycle', type: 'int', default: evolutionParameterDefaults.generations, min: 1},
+          {name: 'crossover_probability', label: 'Crossover probability', type: 'float', default: evolutionParameterDefaults.crossover_probability, min: 0.0, max: 1.0, step: 0.05},
+          {name: 'mutation_probability', label: 'Mutation probability', type: 'float', default: evolutionParameterDefaults.mutation_probability, min: 0.0, max: 1.0, step: 0.01},
+          {name: 'byte_mutation_share', label: 'Byte-level mutation share', type: 'float', default: evolutionParameterDefaults.byte_mutation_share, min: 0.0, max: 1.0, step: 0.05},
+          {name: 'elitism', label: 'Elitism (keep best each gen)', type: 'bool', default: evolutionParameterDefaults.elitism},
+          {name: 'starting_program_size', label: 'Starting program size (0 = factory default)', type: 'int', default: evolutionParameterDefaults.starting_program_size, min: 0},
+          {name: 'max_genome_bytes', label: 'Max genome size (bytes)', type: 'int', default: evolutionParameterDefaults.max_genome_bytes, min: 1},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      memory_variables: values.memory_variables,
+      string_table_items: values.string_table_items,
+      string_table_item_length: values.string_table_item_length,
+      cut_off_score: values.cut_off_score,
+      evaluators: [{
+        type: 'TaskWorldEvaluator',
+        weight: 1.0,
+        invert_logic: false,
+        parameters: {
+          rows: values.rows,
+          cols: values.cols,
+          difficulty: values.difficulty,
+          num_items: values.num_items,
+          num_keys: values.num_keys,
+          num_doors: values.num_doors,
+          num_food: values.num_food,
+          radius: values.radius,
+          max_steps: values.max_steps,
+          worlds_per_eval: values.worlds_per_eval,
+          starting_food: values.starting_food,
+          goal_compass: values.goal_compass,
+          seed_base: values.seed_base,
+          pool_modulus: values.pool_modulus,
+          pool_residues: parseResidueList(values.pool_residues, [1, 2, 3, 4]),
+        },
+      }],
+      evolution_parameters: {
+        ...evolutionParameterDefaults,
+        generations: values.generations,
+        crossover_probability: values.crossover_probability,
+        mutation_probability: values.mutation_probability,
+        byte_mutation_share: values.byte_mutation_share,
+        elitism: values.elitism,
+        starting_program_size: values.starting_program_size,
+        max_genome_bytes: values.max_genome_bytes,
+      },
+    }),
+    parseParameters: (params) => {
+      const world = (params.evaluators && params.evaluators[0] && params.evaluators[0].parameters) || {};
+      const ga = params.evolution_parameters || {};
+      return {
+        max_candidates: params.max_candidates,
+        memory_variables: params.memory_variables,
+        string_table_items: params.string_table_items,
+        string_table_item_length: params.string_table_item_length,
+        rows: world.rows,
+        cols: world.cols,
+        difficulty: world.difficulty,
+        num_items: world.num_items,
+        num_keys: world.num_keys,
+        num_doors: world.num_doors,
+        num_food: world.num_food,
+        radius: world.radius,
+        max_steps: world.max_steps,
+        worlds_per_eval: world.worlds_per_eval,
+        starting_food: world.starting_food,
+        goal_compass: world.goal_compass != null ? world.goal_compass : true,
+        seed_base: world.seed_base,
+        pool_modulus: world.pool_modulus,
+        pool_residues: formatResidueList(world.pool_residues, '1,2,3,4'),
+        cut_off_score: params.cut_off_score,
         generations: ga.generations,
         crossover_probability: ga.crossover_probability,
         mutation_probability: ga.mutation_probability,
@@ -781,6 +958,114 @@ export const PIPE_TYPE_DEFINITIONS = [
     }),
   },
   {
+    type: 'VerificationSinkPipe',
+    label: 'Verification Sink',
+    description:
+      'Replays incoming programs against a fixed set of held-out TaskWorld seeds (disjoint ' +
+      'from the training pool) WITHOUT evolving them, and writes a JSON generalization ' +
+      'report: per-program success rate, mean score, and the train-verify gap. Point it at ' +
+      'the same world size/difficulty as training but with the verification residues.',
+    image: '/img/program_storage_sink_pipe.png',
+    inputs: 1,
+    outputs: 0,
+    sections: [
+      {
+        title: 'Report',
+        fields: [
+          {name: 'max_candidates', label: 'Max input buffer', type: 'int', default: 50, min: 1},
+          {name: 'path', label: 'Report file path', type: 'path',
+           placeholder: 'Absolute path, e.g. /tmp/taskworld-verify.json. Leave blank to log nothing.',
+           default: ''},
+          {name: 'top_k', label: 'Retain top K (0 = default 10)', type: 'int', default: 10, min: 0},
+          {name: 'verify_worlds', label: 'Held-out worlds per program', type: 'int', default: 16, min: 1},
+        ],
+      },
+      {
+        title: 'Program VM',
+        fields: [
+          {name: 'memory_variables', label: 'Memory variables', type: 'int', default: 64, min: 1},
+          {name: 'string_table_items', label: 'String table entries', type: 'int', default: 0, min: 0},
+          {name: 'string_table_item_length', label: 'String table item length', type: 'int', default: 0, min: 0},
+        ],
+      },
+      {
+        title: 'World',
+        fields: [
+          {name: 'rows', label: 'Rows', type: 'int', default: 9, min: 5},
+          {name: 'cols', label: 'Columns', type: 'int', default: 9, min: 5},
+          {name: 'difficulty', label: 'Difficulty (0-1)', type: 'float', default: 0.2, min: 0.0, max: 1.0, step: 0.05},
+        ],
+      },
+      {
+        title: 'Task',
+        fields: [
+          {name: 'num_items', label: 'Items to collect', type: 'int', default: 2, min: 0},
+          {name: 'num_keys', label: 'Keys', type: 'int', default: 0, min: 0},
+          {name: 'num_doors', label: 'Locked doors', type: 'int', default: 0, min: 0},
+          {name: 'num_food', label: 'Food tiles', type: 'int', default: 2, min: 0},
+          {name: 'radius', label: 'Perception radius', type: 'int', default: 2, min: 1},
+          {name: 'max_steps', label: 'Max VM steps per world', type: 'int', default: 2000, min: 1},
+          {name: 'starting_food', label: 'Starting food (0 = world default)', type: 'int', default: 0, min: 0},
+          {name: 'goal_compass', label: 'Global goal compass (off = partial observability)', type: 'bool', default: true},
+        ],
+      },
+      {
+        title: 'Held-out seed pool',
+        fields: [
+          {name: 'seed_base', label: 'Seed base', type: 'int', default: 1, min: 0},
+          {name: 'pool_modulus', label: 'Pool modulus', type: 'int', default: 5, min: 1},
+          {name: 'pool_residues', label: 'Verify residues (comma-separated)', type: 'text', default: '0'},
+        ],
+      },
+    ],
+    buildParameters: (values) => ({
+      max_candidates: values.max_candidates,
+      path: values.path || '',
+      top_k: values.top_k,
+      verify_worlds: values.verify_worlds,
+      memory_variables: values.memory_variables,
+      string_table_items: values.string_table_items,
+      string_table_item_length: values.string_table_item_length,
+      rows: values.rows,
+      cols: values.cols,
+      difficulty: values.difficulty,
+      num_items: values.num_items,
+      num_keys: values.num_keys,
+      num_doors: values.num_doors,
+      num_food: values.num_food,
+      radius: values.radius,
+      max_steps: values.max_steps,
+      starting_food: values.starting_food,
+      goal_compass: values.goal_compass,
+      seed_base: values.seed_base,
+      pool_modulus: values.pool_modulus,
+      pool_residues: parseResidueList(values.pool_residues, [0]),
+    }),
+    parseParameters: (params) => ({
+      max_candidates: params.max_candidates,
+      path: params.path || '',
+      top_k: params.top_k != null ? params.top_k : 10,
+      verify_worlds: params.verify_worlds != null ? params.verify_worlds : 16,
+      memory_variables: params.memory_variables != null ? params.memory_variables : 64,
+      string_table_items: params.string_table_items || 0,
+      string_table_item_length: params.string_table_item_length || 0,
+      rows: params.rows,
+      cols: params.cols,
+      difficulty: params.difficulty,
+      num_items: params.num_items,
+      num_keys: params.num_keys,
+      num_doors: params.num_doors,
+      num_food: params.num_food,
+      radius: params.radius,
+      max_steps: params.max_steps,
+      starting_food: params.starting_food,
+      goal_compass: params.goal_compass != null ? params.goal_compass : true,
+      seed_base: params.seed_base,
+      pool_modulus: params.pool_modulus,
+      pool_residues: formatResidueList(params.pool_residues, '0'),
+    }),
+  },
+  {
     type: 'ProgramStorageSourcePipe',
     label: 'Storage Source',
     description:
@@ -1057,6 +1342,7 @@ export function findPipeDefinition(pipe_json) {
     const firstType = evals && evals[0] && evals[0].type;
     const specialized = {
       MazeEvaluator: 'MazeEvaluatorPipe',
+      TaskWorldEvaluator: 'TaskWorldEvaluatorPipe',
       AdderEvaluator: 'AdderEvaluatorPipe',
       MaximumEvaluator: 'MaximumEvaluatorPipe',
       IdentityEvaluator: 'IdentityEvaluatorPipe',

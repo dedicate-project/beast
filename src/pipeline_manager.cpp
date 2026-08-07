@@ -30,11 +30,13 @@
 #include <beast/pipes/program_storage_source_pipe.hpp>
 #include <beast/pipes/results_summary_pipe.hpp>
 #include <beast/pipes/score_graph_pipe.hpp>
+#include <beast/pipes/verification_sink_pipe.hpp>
 
 #include <beast/program_factory_base.hpp>
 #include <beast/random_program_factory.hpp>
 
 #include <beast/evaluators/maze_evaluator.hpp>
+#include <beast/evaluators/task_world_evaluator.hpp>
 
 namespace beast {
 
@@ -282,6 +284,10 @@ PipelineManager::constructEvaluatorsFromJson(const nlohmann::json& json) {
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else if (type == "MazeEvaluator") {
       evaluator = constructMazeEvaluatorFromJson(evaluator_json.value());
+      weight = evaluator_json.value()["weight"].get<double>();
+      invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
+    } else if (type == "TaskWorldEvaluator") {
+      evaluator = constructTaskWorldEvaluatorFromJson(evaluator_json.value());
       weight = evaluator_json.value()["weight"].get<double>();
       invert_logic = evaluator_json.value()["invert_logic"].get<bool>();
     } else if (type == "AdderEvaluator") {
@@ -538,6 +544,55 @@ PipelineManager::constructMazeEvaluatorFromJson(const nlohmann::json& json) {
   return std::make_shared<MazeEvaluator>(rows, cols, difficulty, max_steps);
 }
 
+TaskWorldEvaluator::Config
+PipelineManager::constructTaskWorldConfigFromJson(const nlohmann::json& parameters) {
+  TaskWorldEvaluator::Config config;
+  config.rows = parameters.value("rows", config.rows);
+  config.cols = parameters.value("cols", config.cols);
+  config.difficulty = parameters.value("difficulty", config.difficulty);
+  config.num_items = parameters.value("num_items", config.num_items);
+  config.num_keys = parameters.value("num_keys", config.num_keys);
+  config.num_doors = parameters.value("num_doors", config.num_doors);
+  config.num_food = parameters.value("num_food", config.num_food);
+  config.radius = parameters.value("radius", config.radius);
+  config.max_steps = parameters.value("max_steps", config.max_steps);
+  config.worlds_per_eval = parameters.value("worlds_per_eval", config.worlds_per_eval);
+  config.starting_food = parameters.value("starting_food", config.starting_food);
+  config.goal_compass = parameters.value("goal_compass", config.goal_compass);
+  config.seed_base = parameters.value("seed_base", config.seed_base);
+  config.pool_modulus = parameters.value("pool_modulus", config.pool_modulus);
+  if (parameters.contains("pool_residues") && parameters["pool_residues"].is_array()) {
+    config.pool_residues = parameters["pool_residues"].get<std::vector<uint32_t>>();
+  }
+  return config;
+}
+
+void PipelineManager::writeTaskWorldConfigToJson(nlohmann::json& parameters,
+                                                 const TaskWorldEvaluator::Config& config) {
+  parameters["rows"] = config.rows;
+  parameters["cols"] = config.cols;
+  parameters["difficulty"] = config.difficulty;
+  parameters["num_items"] = config.num_items;
+  parameters["num_keys"] = config.num_keys;
+  parameters["num_doors"] = config.num_doors;
+  parameters["num_food"] = config.num_food;
+  parameters["radius"] = config.radius;
+  parameters["max_steps"] = config.max_steps;
+  parameters["worlds_per_eval"] = config.worlds_per_eval;
+  parameters["starting_food"] = config.starting_food;
+  parameters["goal_compass"] = config.goal_compass;
+  parameters["seed_base"] = config.seed_base;
+  parameters["pool_modulus"] = config.pool_modulus;
+  parameters["pool_residues"] = config.pool_residues;
+}
+
+std::shared_ptr<Evaluator>
+PipelineManager::constructTaskWorldEvaluatorFromJson(const nlohmann::json& json) {
+  checkForKeyPresenceInJson(json, {"parameters"});
+  return std::make_shared<TaskWorldEvaluator>(
+      constructTaskWorldConfigFromJson(json["parameters"]));
+}
+
 std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohmann::json& json) {
   std::shared_ptr<Pipeline> pipeline = std::make_shared<Pipeline>();
   std::map<std::string, std::shared_ptr<Pipe>, std::less<>> created_pipes;
@@ -631,6 +686,24 @@ std::shared_ptr<Pipeline> PipelineManager::constructPipelineFromJson(const nlohm
             pipe.value()["parameters"].value("top_k", static_cast<uint32_t>(0));
         created_pipes[pipe_name] =
             std::make_shared<ProgramStorageSinkPipe>(max_candidates, path, top_k);
+        pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
+      } else if (pipe_type == "VerificationSinkPipe") {
+        checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
+        const auto& params = pipe.value()["parameters"];
+        const uint32_t max_candidates = params["max_candidates"].get<uint32_t>();
+        const std::string path = params.value("path", std::string{});
+        const uint32_t top_k = params.value("top_k", static_cast<uint32_t>(0));
+        const uint32_t verify_worlds = params.value("verify_worlds", static_cast<uint32_t>(8));
+        const uint32_t memory_variables =
+            params.value("memory_variables", static_cast<uint32_t>(64));
+        const uint32_t string_table_items =
+            params.value("string_table_items", static_cast<uint32_t>(0));
+        const uint32_t string_table_item_length =
+            params.value("string_table_item_length", static_cast<uint32_t>(0));
+        auto config = constructTaskWorldConfigFromJson(params);
+        created_pipes[pipe_name] = std::make_shared<VerificationSinkPipe>(
+            max_candidates, path, top_k, verify_worlds, memory_variables, string_table_items,
+            string_table_item_length, std::move(config));
         pipeline->addPipe(pipe_name, created_pipes[pipe_name]);
       } else if (pipe_type == "ProgramStorageSourcePipe") {
         checkForParameterPresenceInPipeJson(pipe, {"max_candidates"});
@@ -844,6 +917,10 @@ nlohmann::json PipelineManager::deconstructEvaluatorsToJson(
       evaluator["parameters"]["cols"] = maze_eval->getCols();
       evaluator["parameters"]["difficulty"] = maze_eval->getDifficulty();
       evaluator["parameters"]["max_steps"] = maze_eval->getMaxSteps();
+    } else if (const auto task_world_eval =
+                   std::dynamic_pointer_cast<TaskWorldEvaluator>(description.evaluator)) {
+      evaluator["type"] = "TaskWorldEvaluator";
+      writeTaskWorldConfigToJson(evaluator["parameters"], task_world_eval->getConfig());
     } else if (const auto adder_eval =
                    std::dynamic_pointer_cast<AdderEvaluator>(description.evaluator)) {
       evaluator["type"] = "AdderEvaluator";
@@ -1015,6 +1092,17 @@ PipelineManager::deconstructPipelineToJson(const std::shared_ptr<Pipeline>& pipe
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();
       pipe_json["parameters"]["path"] = storage_sink->getPath();
       pipe_json["parameters"]["top_k"] = storage_sink->getTopK();
+    } else if (auto verify_sink = std::dynamic_pointer_cast<VerificationSinkPipe>(pipe->pipe)) {
+      pipe_json["type"] = "VerificationSinkPipe";
+      auto& parameters = pipe_json["parameters"];
+      parameters["max_candidates"] = pipe->pipe->getMaxCandidates();
+      parameters["path"] = verify_sink->getPath();
+      parameters["top_k"] = verify_sink->getTopK();
+      parameters["verify_worlds"] = verify_sink->getVerifyWorlds();
+      parameters["memory_variables"] = verify_sink->getMemorySize();
+      parameters["string_table_items"] = verify_sink->getStringTableSize();
+      parameters["string_table_item_length"] = verify_sink->getStringTableItemLength();
+      writeTaskWorldConfigToJson(parameters, verify_sink->getConfig());
     } else if (auto storage_source = std::dynamic_pointer_cast<ProgramStorageSourcePipe>(pipe->pipe)) {
       pipe_json["type"] = "ProgramStorageSourcePipe";
       pipe_json["parameters"]["max_candidates"] = pipe->pipe->getMaxCandidates();

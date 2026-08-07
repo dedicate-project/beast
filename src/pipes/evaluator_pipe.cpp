@@ -10,12 +10,14 @@
 
 // Internal
 #include <beast/evaluators/sha256_round_evaluator.hpp>
+#include <beast/evaluators/task_world_evaluator.hpp>
 
 // CUDA: only compiled in when BEAST_ENABLE_CUDA was set at configure time. The
 // `BEAST_HAS_CUDA` macro is plumbed through by CMake (target_compile_definitions on
 // beast-pipelines). When absent, every Backend::Gpu request falls back to CPU.
 #ifdef BEAST_HAS_CUDA
 #include <beast/cuda/cuda_sha256_round_evaluator.hpp>
+#include <beast/cuda/cuda_task_world_evaluator.hpp>
 #endif
 
 namespace beast {
@@ -109,24 +111,35 @@ void EvaluatorPipe::applyBackendSelection() {
     return;
   }
 
-  // The only evaluator with a GPU port today is `Sha256RoundEvaluator`. Aggregating
-  // multiple evaluators on the GPU would need a multi-evaluator batch kernel, which
-  // isn't part of this tier; if the pipe is configured with anything else, we'd
-  // rather quietly run on CPU than silently mis-score the candidate.
+  // GPU ports exist for a fixed set of single-evaluator pipes. Aggregating multiple
+  // evaluators on the GPU would need a multi-evaluator batch kernel, which isn't part
+  // of this tier; if the pipe is configured with anything else, we'd rather quietly run
+  // on CPU than silently mis-score the candidate.
   const auto& evaluators = evaluator_.getEvaluators();
   if (evaluators.size() != 1) {
     return;
   }
-  auto sha256 = std::dynamic_pointer_cast<Sha256RoundEvaluator>(evaluators.front().evaluator);
-  if (!sha256) {
+
+  // SHA-256 rounds: bit-equivalent GPU port (verified by tests/cuda_sha256_parity.cpp).
+  if (auto sha256 =
+          std::dynamic_pointer_cast<Sha256RoundEvaluator>(evaluators.front().evaluator)) {
+    setBatchEvaluator(std::make_unique<cuda::CudaSha256RoundEvaluator>(
+        *sha256, static_cast<uint32_t>(variable_count_)));
     return;
   }
 
-  // Construct the GPU evaluator with the SAME configuration the CPU evaluator has,
-  // so scores from the GPU batch path are bit-equivalent to the CPU evaluate() path
-  // (verified by tests/cuda_sha256_parity.cpp).
-  setBatchEvaluator(std::make_unique<cuda::CudaSha256RoundEvaluator>(
-      *sha256, static_cast<uint32_t>(variable_count_)));
+  // TaskWorld: the whole interactive episode (environment + VM + milestone scoring) runs
+  // on the device. Statistically equivalent to the CPU path, not bit-identical. Only
+  // installed when the world/window/item sizes fit the device evaluator's limits.
+  if (auto task_world =
+          std::dynamic_pointer_cast<TaskWorldEvaluator>(evaluators.front().evaluator)) {
+    if (cuda::CudaTaskWorldEvaluator::supportsConfig(task_world->getConfig(),
+                                                     static_cast<uint32_t>(variable_count_))) {
+      setBatchEvaluator(std::make_unique<cuda::CudaTaskWorldEvaluator>(
+          *task_world, static_cast<uint32_t>(variable_count_)));
+    }
+    return;
+  }
 #endif // BEAST_HAS_CUDA
 }
 

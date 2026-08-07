@@ -16,6 +16,7 @@
 #include <beast/pipes/evolution_pipe.hpp>
 
 #include <beast/evaluators/aggregation_evaluator.hpp>
+#include <beast/evaluators/task_world_evaluator.hpp>
 
 namespace beast {
 
@@ -142,6 +143,24 @@ class PipelineManager {
 
   [[nodiscard]] static std::shared_ptr<Evaluator>
   constructMazeEvaluatorFromJson(const nlohmann::json& json);
+
+  [[nodiscard]] static std::shared_ptr<Evaluator>
+  constructTaskWorldEvaluatorFromJson(const nlohmann::json& json);
+
+  /**
+   * @brief Parses a TaskWorldEvaluator::Config out of a JSON `parameters` object.
+   *
+   * Every field is optional and falls back to the Config default, so both the evaluator
+   * and the VerificationSinkPipe can share one parser.
+   */
+  [[nodiscard]] static TaskWorldEvaluator::Config
+  constructTaskWorldConfigFromJson(const nlohmann::json& parameters);
+
+  /**
+   * @brief Serializes a TaskWorldEvaluator::Config into the given JSON `parameters` object.
+   */
+  static void writeTaskWorldConfigToJson(nlohmann::json& parameters,
+                                         const TaskWorldEvaluator::Config& config);
 
   /**
    * @brief Deserializes a JSON object into an `EvolutionPipe::EvolutionParameters` struct.

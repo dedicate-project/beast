@@ -40,6 +40,7 @@
 #include <beast/evaluators/sha256_maj_evaluator.hpp>
 #include <beast/evaluators/sha256_round_evaluator.hpp>
 #include <beast/evaluators/sha256_sigma_evaluator.hpp>
+#include <beast/evaluators/task_world_evaluator.hpp>
 
 #include <beast/pipes/demultiplexer_pipe.hpp>
 #include <beast/pipes/evaluator_pipe.hpp>

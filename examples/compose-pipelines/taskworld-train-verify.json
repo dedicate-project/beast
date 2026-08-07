@@ -1,0 +1,225 @@
+{
+  "name": "TaskWorld Train + Verify",
+  "model": {
+    "pipes": {
+      "factory": {
+        "type": "ProgramFactoryPipe",
+        "parameters": {
+          "factory": "RandomProgramFactory",
+          "max_candidates": 96,
+          "max_size": 300,
+          "memory_variables": 40,
+          "string_table_items": 0,
+          "string_table_item_length": 0
+        }
+      },
+      "warm_start": {
+        "type": "ProgramStorageSourcePipe",
+        "parameters": {
+          "max_candidates": 32,
+          "path": "/tmp/beast-taskworld-champions.json",
+          "loop": true
+        }
+      },
+      "mux": {
+        "type": "MultiplexerPipe",
+        "parameters": { "max_candidates": 128, "input_slots": 2 }
+      },
+      "stage1": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 128,
+          "backend": "auto",
+          "memory_variables": 40,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "TaskWorldEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "rows": 5, "cols": 5, "difficulty": 0.0,
+              "num_items": 0, "num_keys": 0, "num_doors": 0, "num_food": 4,
+              "radius": 2, "max_steps": 400, "worlds_per_eval": 3, "starting_food": 0,
+              "seed_base": 1, "pool_modulus": 5, "pool_residues": [1, 2, 3, 4]
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 15, "crossover_probability": 0.75, "mutation_probability": 0.12,
+            "elitism": true, "byte_mutation_share": 0.3, "variable_count": 40,
+            "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 2048, "starting_program_size": 300,
+            "opcode_weights": { "8": 6.0, "52": 3.0, "46": 2.0, "47": 2.0, "48": 2.0 }
+          }
+        }
+      },
+      "stats1": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 128, "window_size": 256 }
+      },
+      "stage2": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 128,
+          "backend": "auto",
+          "memory_variables": 40,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "TaskWorldEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "rows": 6, "cols": 6, "difficulty": 0.1,
+              "num_items": 1, "num_keys": 0, "num_doors": 0, "num_food": 4,
+              "radius": 2, "max_steps": 600, "worlds_per_eval": 3, "starting_food": 0,
+              "seed_base": 1, "pool_modulus": 5, "pool_residues": [1, 2, 3, 4]
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 18, "crossover_probability": 0.75, "mutation_probability": 0.1,
+            "elitism": true, "byte_mutation_share": 0.3, "variable_count": 40,
+            "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 2048, "starting_program_size": 300,
+            "opcode_weights": { "8": 6.0, "52": 3.0, "46": 2.0, "47": 2.0, "48": 2.0 }
+          }
+        }
+      },
+      "stats2": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 128, "window_size": 256 }
+      },
+      "stage3": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 128,
+          "backend": "auto",
+          "memory_variables": 40,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "TaskWorldEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "rows": 7, "cols": 7, "difficulty": 0.12,
+              "num_items": 1, "num_keys": 1, "num_doors": 1, "num_food": 6,
+              "radius": 2, "max_steps": 900, "worlds_per_eval": 3, "starting_food": 0,
+              "seed_base": 1, "pool_modulus": 5, "pool_residues": [1, 2, 3, 4]
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 20, "crossover_probability": 0.75, "mutation_probability": 0.1,
+            "elitism": true, "byte_mutation_share": 0.3, "variable_count": 40,
+            "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 2048, "starting_program_size": 300,
+            "opcode_weights": { "8": 6.0, "52": 3.0, "46": 2.0, "47": 2.0, "48": 2.0 }
+          }
+        }
+      },
+      "stats3": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 128, "window_size": 256 }
+      },
+      "stage4": {
+        "type": "EvaluatorPipe",
+        "parameters": {
+          "max_candidates": 128,
+          "backend": "auto",
+          "memory_variables": 40,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "cut_off_score": 0.0,
+          "evaluators": [{
+            "type": "TaskWorldEvaluator",
+            "weight": 1.0,
+            "invert_logic": false,
+            "parameters": {
+              "rows": 7, "cols": 7, "difficulty": 0.1,
+              "num_items": 1, "num_keys": 0, "num_doors": 0, "num_food": 6,
+              "radius": 2, "max_steps": 1200, "worlds_per_eval": 4, "starting_food": 0,
+              "goal_compass": false,
+              "seed_base": 1, "pool_modulus": 5, "pool_residues": [1, 2, 3, 4]
+            }
+          }],
+          "evolution_parameters": {
+            "generations": 24, "crossover_probability": 0.75, "mutation_probability": 0.1,
+            "elitism": true, "byte_mutation_share": 0.3, "variable_count": 40,
+            "string_table_size": 0, "string_table_item_length": 0,
+            "max_genome_bytes": 2048, "starting_program_size": 300,
+            "opcode_weights": { "8": 6.0, "52": 3.0, "46": 2.0, "47": 2.0, "48": 2.0 }
+          }
+        }
+      },
+      "stats4": {
+        "type": "ResultsSummaryPipe",
+        "parameters": { "max_candidates": 128, "window_size": 256 }
+      },
+      "fanout": {
+        "type": "DemultiplexerPipe",
+        "parameters": { "max_candidates": 64, "output_slots": 2, "strategy": "broadcast" }
+      },
+      "champions": {
+        "type": "ProgramStorageSinkPipe",
+        "parameters": {
+          "max_candidates": 32,
+          "path": "/tmp/beast-taskworld-champions.json",
+          "top_k": 16
+        }
+      },
+      "verify": {
+        "type": "VerificationSinkPipe",
+        "parameters": {
+          "max_candidates": 32,
+          "path": "/tmp/beast-taskworld-verify.json",
+          "top_k": 12,
+          "verify_worlds": 24,
+          "memory_variables": 40,
+          "string_table_items": 0,
+          "string_table_item_length": 0,
+          "rows": 7, "cols": 7, "difficulty": 0.1,
+          "num_items": 1, "num_keys": 0, "num_doors": 0, "num_food": 6,
+          "radius": 2, "max_steps": 1200, "starting_food": 0,
+          "goal_compass": false,
+          "seed_base": 1, "pool_modulus": 5, "pool_residues": [0]
+        }
+      }
+    },
+    "connections": [
+      {"source_pipe": "factory",    "source_slot": 0, "destination_pipe": "mux",       "destination_slot": 0, "buffer_size": 96},
+      {"source_pipe": "warm_start", "source_slot": 0, "destination_pipe": "mux",       "destination_slot": 1, "buffer_size": 32},
+      {"source_pipe": "mux",        "source_slot": 0, "destination_pipe": "stage1",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stage1",     "source_slot": 0, "destination_pipe": "stats1",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stats1",     "source_slot": 0, "destination_pipe": "stage2",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stage2",     "source_slot": 0, "destination_pipe": "stats2",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stats2",     "source_slot": 0, "destination_pipe": "stage3",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stage3",     "source_slot": 0, "destination_pipe": "stats3",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stats3",     "source_slot": 0, "destination_pipe": "stage4",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stage4",     "source_slot": 0, "destination_pipe": "stats4",    "destination_slot": 0, "buffer_size": 128},
+      {"source_pipe": "stats4",     "source_slot": 0, "destination_pipe": "fanout",    "destination_slot": 0, "buffer_size": 64},
+      {"source_pipe": "fanout",     "source_slot": 0, "destination_pipe": "champions", "destination_slot": 0, "buffer_size": 32},
+      {"source_pipe": "fanout",     "source_slot": 1, "destination_pipe": "verify",    "destination_slot": 0, "buffer_size": 32}
+    ]
+  },
+  "metadata": {
+    "pipes": {
+      "factory":    { "position": { "x":  40, "y": 120 } },
+      "warm_start": { "position": { "x":  40, "y": 300 } },
+      "mux":        { "position": { "x": 220, "y": 200 } },
+      "stage1":     { "position": { "x": 380, "y": 200 } },
+      "stats1":     { "position": { "x": 540, "y": 200 } },
+      "stage2":     { "position": { "x": 700, "y": 200 } },
+      "stats2":     { "position": { "x": 860, "y": 200 } },
+      "stage3":     { "position": { "x": 1020, "y": 200 } },
+      "stats3":     { "position": { "x": 1180, "y": 200 } },
+      "stage4":     { "position": { "x": 1340, "y": 200 } },
+      "stats4":     { "position": { "x": 1500, "y": 200 } },
+      "fanout":     { "position": { "x": 1660, "y": 200 } },
+      "champions":  { "position": { "x": 1820, "y":  80 } },
+      "verify":     { "position": { "x": 1820, "y": 260 } }
+    }
+  }
+}
