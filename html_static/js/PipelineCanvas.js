@@ -920,6 +920,10 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     gridLayerRef.current = new Konva.Layer({
       x : -dimensions.width,  // Negative offset by half of the width
       y : -dimensions.height, // Negative offset by half of the height
+      // Purely decorative: keep it out of hit-testing so a left-click that lands on a
+      // grid line still resolves to the stage (== "empty background") and starts a pan
+      // rather than being swallowed by the line.
+      listening : false,
     });
     drawGrid(gridLayerRef.current, dimensions.width, dimensions.height, 20,
              3); // Grid size = 20, gridSizeMultiplier = 3
@@ -935,12 +939,19 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
     drawBorder(borderLayerRef.current, dimensions.width, dimensions.height);
     stage.add(borderLayerRef.current);
 
+    // Begin panning the whole canvas from the current pointer position. Shared by the
+    // middle-mouse gesture and the left-drag-on-background gesture below.
+    const beginPan = () => {
+      setDragging(true);
+      draggingRef.current = true;
+      lastDragPointRef.current = stage.getPointerPosition();
+      stage.container().style.cursor = 'grabbing';
+    };
+
     stage.on("mousedown", (e) => {
       // Check if the middle mouse button is pressed
       if (e.evt.button === 1) {
-        setDragging(true);
-        draggingRef.current = true;
-        lastDragPointRef.current = stage.getPointerPosition();
+        beginPan();
       } else if (e.evt.button === 2) {
         e.evt.preventDefault();           // This prevents the native context menu
         e.evt.stopPropagation();
@@ -980,12 +991,19 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
         setContextMenuPosition(adjustedPosition);
         setShowContextMenu(true);
       } else if (e.evt.button === 0) {
-        // Left-click on empty canvas cancels any in-flight connection authoring gesture.
-        // We compare the event target to the stage itself rather than to a layer so port
-        // clicks (which bubble up from a Konva.Rect inside a Group) still complete
-        // connections normally.
-        if (e.target === stage && pendingConnectionSourceRef.current) {
-          cancelPendingConnection();
+        // Left-button on the empty background. We compare the event target to the stage
+        // itself rather than to a layer so clicks on a pipe body (which bubble up from a
+        // Konva.Rect inside a draggable Group) or a port still drive pipe-drag / connection
+        // authoring normally -- only genuinely empty space reaches here.
+        if (e.target === stage) {
+          if (pendingConnectionSourceRef.current) {
+            // A pending connection takes priority: an empty-space click cancels it (a plain
+            // click won't move, so no pan happens either way).
+            cancelPendingConnection();
+          } else {
+            // Otherwise start panning the whole canvas by click-and-drag on the background.
+            beginPan();
+          }
         }
       }
     });
@@ -1005,20 +1023,29 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
 
         elementLayerRef.current.batchDraw();
         gridLayerRef.current.batchDraw();
+        connectionsLayerRef.current.batchDraw();
 
         lastDragPointRef.current = pointerPosition;
+      } else if (e.target === stage) {
+        // Not dragging, hovering empty background: hint that it can be grabbed to pan.
+        // Ports, connection lines, and pipe bodies manage their own cursors, so we only
+        // touch it when the event actually targets the stage itself.
+        stage.container().style.cursor = 'grab';
       }
     });
 
-    stage.on("mouseup", () => {
-      draggingRef.current = false;
+    const endPan = () => {
+      if (draggingRef.current) {
+        draggingRef.current = false;
+        setDragging(false);
+        stage.container().style.cursor = 'default';
+      }
       setCurrentlyDraggedPipe("");
-    });
+    };
 
-    stage.on("mouseout", () => {
-      draggingRef.current = false;
-      setCurrentlyDraggedPipe("");
-    });
+    stage.on("mouseup", endPan);
+
+    stage.on("mouseout", endPan);
 
     // Clean up the Konva stage when the canvas unmounts (e.g. user navigates back to the
     // pipeline list). Without this the entire stage tree, image objects, and event handlers
@@ -1386,11 +1413,22 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       group.on('mouseover', () => {
         hoveredPipeRef.current = name;
         setHoveredPipe(name);
+        // Pipe bodies are draggable; hint that with a move cursor (unless a pan is in
+        // progress, in which case the grabbing cursor should win). Ports override this
+        // with a pointer cursor via their own mouseover handler.
+        if (!draggingRef.current) {
+          const stage = group.getStage();
+          if (stage) stage.container().style.cursor = 'move';
+        }
       });
 
       group.on('mouseout', () => {
         hoveredPipeRef.current = "";
         setHoveredPipe("");
+        if (!draggingRef.current) {
+          const stage = group.getStage();
+          if (stage) stage.container().style.cursor = 'default';
+        }
       });
 
       group.on('mousemove dragmove', (event) => {
@@ -1926,9 +1964,18 @@ export function PipelineCanvas({pipeline, onBackButtonClick}) {
       gridLayerRef.current.y(-dimensions.height); // Reset Y position
       gridLayerRef.current.batchDraw();
     }
-
-    elementLayerRef.current.x(0);
-    elementLayerRef.current.y(0);
+    if (elementLayerRef.current) {
+      elementLayerRef.current.x(0);
+      elementLayerRef.current.y(0);
+      elementLayerRef.current.batchDraw();
+    }
+    // The connections layer is panned alongside the elements, so it has to be recentred
+    // too -- otherwise "home" would leave the wiring offset from the pipes it connects.
+    if (connectionsLayerRef.current) {
+      connectionsLayerRef.current.x(0);
+      connectionsLayerRef.current.y(0);
+      connectionsLayerRef.current.batchDraw();
+    }
   };
 
   const handleOpenRenameDialog = () => {
